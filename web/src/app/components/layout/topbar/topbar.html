@@ -1,0 +1,52 @@
+<mat-toolbar class="topbar">
+  <div class="topbar-left">
+    <button 
+      mat-icon-button 
+      (click)="toggleSidebar()"
+      class="menu-toggle"
+      [class.hidden]="!(layoutService.isHandset$ | async)"
+      aria-label="Toggle menu">
+      <mat-icon>menu</mat-icon>
+    </button>
+    <span class="topbar-title">SGR - Sistema de Gerenciamento de Restaurantes</span>
+  </div>
+
+  <div class="topbar-spacer"></div>
+
+  <div class="topbar-right">
+    <div class="user-info" *ngIf="usuario">
+      <span class="user-name" *ngIf="layoutService.isDesktop$ | async">{{ usuario.nomeCompleto }}</span>
+      <button 
+        mat-icon-button 
+        [matMenuTriggerFor]="userMenu"
+        class="user-menu-button">
+        <mat-icon>account_circle</mat-icon>
+      </button>
+      <mat-menu #userMenu="matMenu">
+        <div class="menu-header">
+          <div class="menu-user-info">
+            <mat-icon>account_circle</mat-icon>
+            <div>
+              <div class="menu-user-name">{{ usuario.nomeCompleto }}</div>
+              <div class="menu-user-email">{{ usuario.email }}</div>
+            </div>
+          </div>
+        </div>
+        <mat-divider></mat-divider>
+        <button mat-menu-item>
+          <mat-icon>person</mat-icon>
+          <span>Perfil</span>
+        </button>
+        <button mat-menu-item>
+          <mat-icon>settings</mat-icon>
+          <span>Configurações</span>
+        </button>
+        <mat-divider></mat-divider>
+        <button mat-menu-item (click)="logout()">
+          <mat-icon>logout</mat-icon>
+          <span>Sair</span>
+        </button>
+      </mat-menu>
+    </div>
+  </div>
+</mat-toolbar>

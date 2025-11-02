@@ -132,6 +132,17 @@ Todas as entidades principais devem incluir campos de auditoria quando aplicáve
 - Reactive Forms para formulários
 - RxJS para programação reativa
 
+### Responsividade:
+- **Sistema 100% responsivo** - O sistema deve funcionar perfeitamente em:
+  - Celulares (smartphones) - breakpoint mobile
+  - Tablets - breakpoint tablet
+  - Desktops - breakpoint desktop
+- Usar Angular Material BreakpointObserver para detectar tamanhos de tela
+- Implementar layout adaptativo (sidebar vira drawer no mobile, menus adaptativos, etc.)
+- Testar em diferentes resoluções e dispositivos
+- Mobile-first approach quando aplicável
+- Garantir que todos os componentes sejam acessíveis e usáveis em telas pequenas
+
 ## Banco de Dados
 
 ### Connection Strings:
@@ -171,6 +182,7 @@ src/SGR.Api/
 4. **Nunca expor entidades diretamente** - Sempre usar DTOs nos controllers
 5. **Manter auditoria** - Todos os registros importantes devem ter campos de auditoria
 6. **Tema dark obrigatório** - Todo o frontend deve seguir o tema escuro
+7. **100% Responsivo** - O sistema deve funcionar perfeitamente em celulares, tablets e desktops. Todos os componentes devem ser adaptáveis e testados em diferentes resoluções.
 
 ## Exemplo de Entidade Completa (.NET Moderno)
 

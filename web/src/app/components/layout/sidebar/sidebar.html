@@ -1,0 +1,27 @@
+<div class="sidebar-container" [class.collapsed]="layoutService.sidebarCollapsed()">
+  <div class="sidebar-header">
+    <h2 *ngIf="!layoutService.sidebarCollapsed()" class="sidebar-title">SGR</h2>
+    <button 
+      mat-icon-button 
+      (click)="toggleSidebar()"
+      [matTooltip]="layoutService.sidebarCollapsed() ? 'Expandir menu' : 'Colapsar menu'"
+      class="toggle-button">
+      <mat-icon>{{ layoutService.sidebarCollapsed() ? 'chevron_right' : 'chevron_left' }}</mat-icon>
+    </button>
+  </div>
+
+  <nav class="sidebar-nav">
+    <mat-nav-list>
+      <a 
+        *ngFor="let item of menuItems" 
+        mat-list-item 
+        [routerLink]="item.route"
+        routerLinkActive="active"
+        [matTooltip]="layoutService.sidebarCollapsed() ? item.label : ''"
+        [matTooltipPosition]="'right'">
+        <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
+        <span *ngIf="!layoutService.sidebarCollapsed()" matListItemTitle>{{ item.label }}</span>
+      </a>
+    </mat-nav-list>
+  </nav>
+</div>

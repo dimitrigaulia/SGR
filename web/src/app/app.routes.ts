@@ -9,7 +9,14 @@ export const routes: Routes = [
   {
     path: 'home',
     canActivate: [authGuard],
-    loadComponent: () => import('./app').then(m => m.App)
+    loadComponent: () => import('./components/layout/layout').then(m => m.LayoutComponent),
+    children: [
+      {
+        path: '',
+        loadComponent: () => import('./app').then(m => m.App)
+      },
+      // Adicionar outras rotas protegidas aqui como children
+    ]
   },
   {
     path: '**',

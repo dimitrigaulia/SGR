@@ -1,0 +1,148 @@
+.topbar {
+  display: flex;
+  align-items: center;
+  background-color: var(--mat-sys-surface-container);
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+  border-top: none; // Sem borda superior
+  height: 64px;
+  min-height: 64px;
+  max-height: 64px;
+  padding: 0 !important;
+  padding-left: 16px !important; // Padding apenas à esquerda (alinhado com sidebar header)
+  padding-right: 16px !important; // Padding à direita
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  width: 100%;
+  margin: 0 !important; // Sem margem
+  border-radius: 0 !important; // Sem cantos arredondados
+  
+  // Remover estilos padrão do mat-toolbar
+  ::ng-deep {
+    .mat-toolbar-row,
+    .mat-toolbar-single-row {
+      height: 64px;
+      padding: 0 !important;
+      margin: 0 !important;
+      border-top: none !important;
+    }
+    
+    // Garantir que não há espaços no mat-toolbar
+    mat-toolbar {
+      margin: 0 !important;
+      padding: 0 !important;
+      border-top: none !important;
+    }
+  }
+  
+  // A topbar se moverá automaticamente com o sidenav-content
+}
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+
+  .menu-toggle {
+    margin: 0; // Sem margem
+    padding: 0; // Sem padding extra
+    
+    &.hidden {
+      display: none;
+    }
+    
+    // Garantir visibilidade no mobile
+    @media (max-width: 960px) {
+      display: flex !important;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+
+  .topbar-title {
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--mat-sys-on-surface);
+    white-space: nowrap;
+  }
+}
+
+.topbar-spacer {
+  flex: 1 1 auto;
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+
+  .user-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    .user-name {
+      font-size: 14px;
+      color: var(--mat-sys-on-surface);
+    }
+
+    .user-menu-button {
+      mat-icon {
+        font-size: 32px;
+        width: 32px;
+        height: 32px;
+        color: var(--mat-sys-primary);
+      }
+    }
+  }
+}
+
+.menu-header {
+  padding: 16px;
+  min-width: 200px;
+
+  .menu-user-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    mat-icon {
+      font-size: 48px;
+      width: 48px;
+      height: 48px;
+      color: var(--mat-sys-primary);
+    }
+
+    .menu-user-name {
+      font-weight: 500;
+      font-size: 14px;
+      color: var(--mat-sys-on-surface);
+    }
+
+    .menu-user-email {
+      font-size: 12px;
+      color: var(--mat-sys-on-surface-variant);
+      margin-top: 4px;
+    }
+  }
+}
+
+// Mobile adjustments
+@media (max-width: 960px) {
+  .topbar-title {
+    font-size: 16px !important;
+    display: none; // Ocultar título no mobile se necessário
+  }
+
+  .menu-toggle {
+    display: block !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .topbar-title {
+    display: none; // Ocultar título em telas muito pequenas
+  }
+}
+
+
