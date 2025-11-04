@@ -9,7 +9,6 @@ export const routes: Routes = [
   {
     path: 'home',
     canActivate: [authGuard],
-    loadComponent: () => import('./components/layout/layout').then(m => m.LayoutComponent),
     children: [
       {
         path: '',
