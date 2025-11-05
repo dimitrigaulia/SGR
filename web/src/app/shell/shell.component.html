@@ -61,7 +61,11 @@
           <mat-icon>person</mat-icon>
           <span>Perfil</span>
         </button>
-        <button mat-menu-item>
+        <button mat-menu-item (click)="toggleTheme()">
+          <mat-icon>{{ themeIcon() }}</mat-icon>
+          <span>{{ themeIcon() === 'light_mode' ? 'Tema claro' : 'Tema escuro' }}</span>
+        </button>
+        <button mat-menu-item (click)="onLogout()">
           <mat-icon>logout</mat-icon>
           <span>Sair</span>
         </button>

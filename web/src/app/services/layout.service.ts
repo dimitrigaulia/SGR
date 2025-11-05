@@ -1,4 +1,5 @@
-import { Injectable, signal, inject } from '@angular/core';
+import { Injectable, signal, inject, computed } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { MatSidenav } from '@angular/material/sidenav';
 import { Observable, map, shareReplay } from 'rxjs';
@@ -10,6 +11,12 @@ export class LayoutService {
   private _sidebarCollapsed = signal<boolean>(false);
   private sidenav?: MatSidenav;
   private breakpointObserver = inject(BreakpointObserver);
+  private document = inject(DOCUMENT);
+
+  // Tema (dark|light)
+  private _themeMode = signal<'dark' | 'light'>('dark');
+  readonly themeMode = this._themeMode.asReadonly();
+  readonly isDarkTheme = computed(() => this._themeMode() === 'dark');
 
   sidebarCollapsed = this._sidebarCollapsed.asReadonly();
 
@@ -46,6 +53,9 @@ export class LayoutService {
     if (savedState !== null) {
       this._sidebarCollapsed.set(JSON.parse(savedState));
     }
+
+    const savedTheme = (localStorage.getItem('themeMode') as 'dark' | 'light' | null) ?? 'dark';
+    this.setTheme(savedTheme);
   }
 
   toggleSidebar(): void {
@@ -72,5 +82,17 @@ export class LayoutService {
       console.warn('Sidenav não está disponível');
     }
   }
-}
 
+  // Tema
+  setTheme(mode: 'dark' | 'light') {
+    this._themeMode.set(mode);
+    localStorage.setItem('themeMode', mode);
+    const root = this.document.documentElement;
+    root.classList.remove('dark-theme', 'light-theme');
+    root.classList.add(mode === 'dark' ? 'dark-theme' : 'light-theme');
+  }
+
+  toggleTheme() {
+    this.setTheme(this._themeMode() === 'dark' ? 'light' : 'dark');
+  }
+}

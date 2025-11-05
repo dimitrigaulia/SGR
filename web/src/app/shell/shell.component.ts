@@ -12,6 +12,9 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDividerModule } from '@angular/material/divider';
+import { Router } from '@angular/router';
+import { AuthService } from '../services/auth.service';
+import { LayoutService } from '../services/layout.service';
 
 interface NavItem {
   icon: string;
@@ -44,6 +47,9 @@ export class ShellComponent implements AfterViewInit {
   @ViewChild('sidenav') sidenav!: MatSidenav;
   
   private bp = inject(BreakpointObserver);
+  private router = inject(Router);
+  private auth = inject(AuthService);
+  private layout = inject(LayoutService);
 
   // Itens de navegação (ajuste conforme as rotas do SGR)
   readonly navItems: NavItem[] = [
@@ -61,6 +67,7 @@ export class ShellComponent implements AfterViewInit {
   // Nome do usuário/empresa (exemplo)
   readonly brand = 'SGR';
   readonly currentYear = new Date().getFullYear();
+  readonly themeIcon = computed(() => (this.layout.isDarkTheme() ? 'light_mode' : 'dark_mode'));
 
   constructor() {
     this.bp.observe([Breakpoints.Handset]).subscribe(res => {
@@ -119,5 +126,15 @@ export class ShellComponent implements AfterViewInit {
     }
     return !this.sideCollapsed(); // Desktop baseado no estado collapsed
   });
+
+  // Ações do topo
+  toggleTheme() {
+    this.layout.toggleTheme();
+  }
+
+  onLogout() {
+    this.auth.logout();
+    this.router.navigate(['/']);
+  }
 }
 
