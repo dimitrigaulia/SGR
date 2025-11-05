@@ -1,0 +1,134 @@
+$app-sidenav-width: 260px;
+$app-sidenav-width-collapsed: 72px;
+
+.app-container {
+  height: 100dvh;
+  width: 100%;
+  background: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+}
+
+// Garantir que o drawer content também use tema escuro
+::ng-deep {
+  .mat-drawer-content {
+    background: var(--mat-sys-surface) !important;
+    color: var(--mat-sys-on-surface) !important;
+  }
+}
+
+.app-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+
+  .toolbar-title {
+    font-weight: 600;
+    letter-spacing: 0.2px;
+  }
+}
+
+.app-sidenav {
+  width: $app-sidenav-width;
+  border-right: 0;
+  background: var(--mat-sys-surface-container-low);
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &.mat-drawer-side {
+    box-shadow: inset -1px 0 0 rgba(0, 0, 0, 0.06);
+  }
+
+  .side-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 8px 4px 8px;
+
+    .brand {
+      font-weight: 700;
+      font-size: 1.1rem;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+
+    &.collapsed {
+      justify-content: center;
+      padding: 12px 4px 4px 4px;
+    }
+  }
+
+  .mat-mdc-list-item {
+    border-radius: 12px;
+    margin: 4px 8px;
+    min-height: 48px;
+
+    &.active {
+      background-color: var(--mat-sys-primary-container);
+      color: var(--mat-sys-on-primary-container);
+    }
+
+    mat-icon {
+      margin-right: 0;
+    }
+  }
+
+  .side-footer {
+    padding: 8px 16px 16px;
+    color: var(--mat-sys-on-surface-variant);
+    font-size: 0.75rem;
+  }
+}
+
+// Ajuste para sidenav colapsada no desktop usando atributo
+@media (min-width: 960px) {
+  ::ng-deep {
+    .app-sidenav.mat-drawer-side {
+      width: $app-sidenav-width !important;
+      
+      &.collapsed {
+        width: $app-sidenav-width-collapsed !important;
+      }
+    }
+
+    // Ajustar margin do conteúdo quando colapsado
+    .app-sidenav.mat-drawer-side.collapsed.mat-drawer-opened ~ .mat-drawer-content {
+      margin-left: $app-sidenav-width-collapsed !important;
+    }
+  }
+}
+
+.app-main {
+  padding-block: 16px;
+  background: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+  min-height: calc(100dvh - 64px); // Altura total menos a toolbar
+}
+
+.spacer {
+  flex: 1;
+}
+
+// Responsividade
+@media (max-width: 959px) {
+  .hide-desktop {
+    display: inline-flex;
+  }
+
+  .hide-mobile {
+    display: none;
+  }
+
+  .app-sidenav {
+    width: 260px !important;
+  }
+}
+
+@media (min-width: 960px) {
+  .hide-desktop {
+    display: none;
+  }
+
+  .hide-mobile {
+    display: inline-flex;
+  }
+}
+

@@ -1,0 +1,76 @@
+<mat-drawer-container class="app-container" [hasBackdrop]="isHandset()">
+  <mat-drawer
+    #sidenav
+    class="app-sidenav"
+    [class.collapsed]="sideCollapsed() && !isHandset()"
+    [mode]="sidenavMode()"
+    [opened]="sidenavOpened()">
+    <div class="side-header" [class.collapsed]="sideCollapsed() || isHandset()">
+      <button
+        mat-icon-button
+        (click)="toggleCollapse()"
+        aria-label="Alternar sidebar"
+        class="hide-mobile">
+        <mat-icon>{{ sideCollapsed() ? 'chevron_right' : 'chevron_left' }}</mat-icon>
+      </button>
+      <span class="brand" *ngIf="!sideCollapsed() && !isHandset()">{{ brand }}</span>
+    </div>
+
+    <mat-nav-list>
+      <a
+        mat-list-item
+        *ngFor="let item of navItems"
+        [routerLink]="item.route"
+        routerLinkActive="active"
+        [matTooltip]="(sideCollapsed() || isHandset()) ? item.label : ''"
+        matTooltipPosition="right"
+        aria-label="Ir para {{ item.label }}"
+        (click)="onNavItemClick()">
+        <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
+        <div matListItemTitle *ngIf="!sideCollapsed() && !isHandset()">{{ item.label }}</div>
+      </a>
+    </mat-nav-list>
+
+    <div class="side-footer" *ngIf="!sideCollapsed() && !isHandset()">
+      <mat-divider></mat-divider>
+      <small>v{{ brand }} • {{ currentYear }}</small>
+    </div>
+  </mat-drawer>
+
+  <mat-drawer-content>
+    <mat-toolbar color="primary" class="app-toolbar">
+      <button
+        mat-icon-button
+        (click)="toggleCollapse()"
+        class="hide-desktop"
+        aria-label="Abrir/fechar menu">
+        <mat-icon>menu</mat-icon>
+      </button>
+      <span class="toolbar-title">{{ brand }}</span>
+      <span class="spacer"></span>
+
+      <!-- Ações topo (exemplos) -->
+      <button mat-icon-button aria-label="Notificações">
+        <mat-icon>notifications</mat-icon>
+      </button>
+      <button mat-icon-button [matMenuTriggerFor]="userMenu" aria-label="Usuário">
+        <mat-icon>account_circle</mat-icon>
+      </button>
+      <mat-menu #userMenu="matMenu">
+        <button mat-menu-item>
+          <mat-icon>person</mat-icon>
+          <span>Perfil</span>
+        </button>
+        <button mat-menu-item>
+          <mat-icon>logout</mat-icon>
+          <span>Sair</span>
+        </button>
+      </mat-menu>
+    </mat-toolbar>
+
+    <main class="app-main container">
+      <router-outlet></router-outlet>
+    </main>
+  </mat-drawer-content>
+</mat-drawer-container>
+
