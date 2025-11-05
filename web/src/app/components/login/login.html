@@ -13,10 +13,10 @@
           <mat-label>Email</mat-label>
           <input matInput formControlName="email" type="email" placeholder="Digite seu email">
           <mat-error *ngIf="loginForm.get('email')?.hasError('required')">
-            Email Ã© obrigatÃ³rio
+            Email é obrigatório
           </mat-error>
           <mat-error *ngIf="loginForm.get('email')?.hasError('email')">
-            Email invÃ¡lido
+            Email inválido
           </mat-error>
         </mat-form-field>
 
@@ -24,7 +24,7 @@
           <mat-label>Senha</mat-label>
           <input matInput formControlName="senha" type="password" placeholder="Digite sua senha">
           <mat-error *ngIf="loginForm.get('senha')?.hasError('required')">
-            Senha Ã© obrigatÃ³ria
+            Senha é obrigatória
           </mat-error>
         </mat-form-field>
 

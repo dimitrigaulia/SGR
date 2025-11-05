@@ -62,7 +62,7 @@ export class ShellComponent implements AfterViewInit {
   readonly isHandset = signal(false);
   readonly sideCollapsed = signal(false);
 
-  // Nome do usuÃ¡rio/empresa (exemplo)
+  // Nome do usuário/empresa (exemplo)
   readonly brand = 'SGR';
   readonly currentYear = new Date().getFullYear();
   readonly themeIcon = computed(() => (this.layout.isDarkTheme() ? 'light_mode' : 'dark_mode'));
@@ -73,7 +73,7 @@ export class ShellComponent implements AfterViewInit {
       if (res.matches) {
         this.sideCollapsed.set(true); // compacta em telas pequenas
       }
-      // Ajustar sidenav apÃ³s view estar pronta
+      // Ajustar sidenav após view estar pronta
       setTimeout(() => {
         if (this.sidenav) {
           if (res.matches) {
@@ -87,7 +87,7 @@ export class ShellComponent implements AfterViewInit {
   }
 
   ngAfterViewInit() {
-    // Garantir que sidenav estÃ¡ aberto no desktop apÃ³s inicializaÃ§Ã£o
+    // Garantir que sidenav está aberto no desktop após inicialização
     if (!this.isHandset() && this.sidenav) {
       setTimeout(() => {
         if (this.sidenav && !this.isHandset()) {
@@ -110,7 +110,7 @@ export class ShellComponent implements AfterViewInit {
   }
 
   onNavItemClick() {
-    // Fechar sidenav no mobile apÃ³s clicar em um item
+    // Fechar sidenav no mobile após clicar em um item
     if (this.isHandset() && this.sidenav) {
       this.sidenav.close();
     }
@@ -125,7 +125,7 @@ export class ShellComponent implements AfterViewInit {
     return !this.sideCollapsed(); // Desktop baseado no estado collapsed
   });
 
-  // AÃ§Ãµes do topo
+  // Ações do topo
   toggleTheme() {
     this.layout.toggleTheme();
   }

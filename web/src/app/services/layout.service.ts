@@ -79,7 +79,7 @@ export class LayoutService {
     if (this.sidenav) {
       this.sidenav.toggle();
     } else {
-      console.warn('Sidenav nÃ£o estÃ¡ disponÃ­vel');
+      console.warn('Sidenav não está disponível');
     }
   }
 

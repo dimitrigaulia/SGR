@@ -129,7 +129,7 @@ Todas as entidades principais devem incluir campos de auditoria quando aplicáve
 ### Estrutura:
 - Usar Angular Material para componentes UI
 - Tema dark obrigatório (já configurado)
-- Reactive Forms para formulários
+- Formulários preferencialmente Template‑Driven (mais simples), usando validadores assíncronos quando necessário
 - RxJS para programação reativa
 
 ### Responsividade:

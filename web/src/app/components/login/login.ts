@@ -57,7 +57,7 @@ export class Login {
       },
       error: (error) => {
         this.isLoading = false;
-        this.errorMessage = error.error?.message || 'Email ou senha invÃ¡lidos';
+        this.errorMessage = error.error?.message || 'Email ou senha inválidos';
       }
     });
   }

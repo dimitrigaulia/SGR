@@ -1,6 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -13,12 +13,11 @@ import { PerfilService, CreatePerfilRequest, UpdatePerfilRequest } from '../../.
 @Component({
   standalone: true,
   selector: 'app-perfil-form',
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, MatFormFieldModule, MatInputModule, MatButtonModule, MatSlideToggleModule, MatSnackBarModule],
+  imports: [CommonModule, FormsModule, RouterLink, MatFormFieldModule, MatInputModule, MatButtonModule, MatSlideToggleModule, MatSnackBarModule],
   templateUrl: './perfil-form.component.html',
   styleUrls: ['./perfil-form.component.scss']
 })
 export class PerfilFormComponent {
-  private fb = inject(FormBuilder);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private service = inject(PerfilService);
@@ -27,39 +26,33 @@ export class PerfilFormComponent {
   id = signal<number | null>(null);
   isView = signal<boolean>(false);
   error = signal<string>('');
-
-  form = this.fb.group({
-    nome: ['', [Validators.required, Validators.maxLength(100)]],
-    isAtivo: [true]
-  });
+  model = { nome: '', isAtivo: true };
 
   constructor() {
     const st: any = this.router.getCurrentNavigation()?.extras.state ?? window.history.state;
     const id = st?.id as number | undefined;
     const view = !!st?.view;
     this.isView.set(view);
-    if (view) this.form.disable();
+    // Em template-driven, usamos [disabled] nos campos
     if (id) {
       this.id.set(id);
-      this.service.get(id).subscribe(e => {
-        this.form.patchValue({ nome: e.nome, isAtivo: e.isAtivo });
-      });
+      this.service.get(id).subscribe(e => { this.model = { nome: e.nome, isAtivo: e.isAtivo }; });
     }
   }
 
   save() {
     this.error.set('');
-    if (this.form.invalid) return;
     if (this.isView()) return;
-    const v = this.form.value;
+    if (!this.model.nome) { this.toast.error('Nome é obrigatório'); return; }
+    const v = this.model;
     if (this.id() === null) {
-      const req: CreatePerfilRequest = { nome: v.nome!, isAtivo: !!v.isAtivo };
+      const req: CreatePerfilRequest = { nome: v.nome, isAtivo: !!v.isAtivo };
       this.service.create(req).subscribe({
         next: () => { this.toast.success('Perfil criado'); this.router.navigate(['/perfis']); },
         error: err => { const msg = err.error?.message || 'Erro ao salvar perfil'; this.toast.error(msg); this.error.set(msg); }
       });
     } else {
-      const req: UpdatePerfilRequest = { nome: v.nome!, isAtivo: !!v.isAtivo };
+      const req: UpdatePerfilRequest = { nome: v.nome, isAtivo: !!v.isAtivo };
       this.service.update(this.id()!, req).subscribe({
         next: () => { this.toast.success('Perfil atualizado'); this.router.navigate(['/perfis']); },
         error: err => { const msg = err.error?.message || 'Erro ao salvar perfil'; this.toast.error(msg); this.error.set(msg); }
