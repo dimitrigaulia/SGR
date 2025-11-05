@@ -6,13 +6,6 @@
     [mode]="sidenavMode()"
     [opened]="sidenavOpened()">
     <div class="side-header" [class.collapsed]="sideCollapsed() || isHandset()">
-      <button
-        mat-icon-button
-        (click)="toggleCollapse()"
-        aria-label="Alternar sidebar"
-        class="hide-mobile">
-        <mat-icon>{{ sideCollapsed() ? 'chevron_right' : 'chevron_left' }}</mat-icon>
-      </button>
       <span class="brand" *ngIf="!sideCollapsed() && !isHandset()">{{ brand }}</span>
     </div>
 

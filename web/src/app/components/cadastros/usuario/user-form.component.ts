@@ -1,7 +1,7 @@
 ﻿import { Component, computed, inject, signal, ViewChild, ElementRef } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormBuilder, ReactiveFormsModule, Validators, AsyncValidatorFn, AbstractControl, ValidationErrors } from "@angular/forms";
-import { Router } from "@angular/router";
+import { Router, RouterLink } from "@angular/router";
 import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatInputModule } from "@angular/material/input";
 import { MatButtonModule } from "@angular/material/button";
@@ -18,7 +18,7 @@ import { UploadService } from "../../../services/upload.service";
 @Component({
   standalone: true,
   selector: 'app-user-form',
-  imports: [CommonModule, ReactiveFormsModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatSelectModule, MatSlideToggleModule, MatSnackBarModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, MatFormFieldModule, MatInputModule, MatButtonModule, MatSelectModule, MatSlideToggleModule, MatSnackBarModule],
   templateUrl: './user-form.component.html',
   styleUrls: ['./user-form.component.scss']
 })

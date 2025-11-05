@@ -19,7 +19,7 @@ $app-sidenav-width-collapsed: 72px;
 .app-toolbar {
   position: sticky;
   top: 0;
-  z-index: 5;
+  z-index: 10;
 
   .toolbar-title {
     font-weight: 600;
@@ -32,6 +32,7 @@ $app-sidenav-width-collapsed: 72px;
   border-right: 0;
   background: var(--mat-app-background-color);
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1;
 
   &.mat-drawer-side {
     box-shadow: inset -1px 0 0 rgba(0, 0, 0, 0.06);
@@ -40,7 +41,7 @@ $app-sidenav-width-collapsed: 72px;
   .side-header {
     display: flex;
     align-items: center;
-    gap: 8px;
+    justify-content: center;
     padding: 12px 8px 4px 8px;
 
     .brand {
@@ -51,7 +52,6 @@ $app-sidenav-width-collapsed: 72px;
     }
 
     &.collapsed {
-      justify-content: center;
       padding: 12px 4px 4px 4px;
     }
   }
@@ -66,8 +66,18 @@ $app-sidenav-width-collapsed: 72px;
       color: var(--mat-app-text-color);
     }
 
-    mat-icon {
-      margin-right: 0;
+    ::ng-deep {
+      .mdc-list-item__content {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+
+      mat-icon[matListItemIcon] {
+        margin-right: 0;
+        margin-inline-end: 0;
+        flex-shrink: 0;
+      }
     }
   }
 
@@ -89,7 +99,12 @@ $app-sidenav-width-collapsed: 72px;
       }
     }
 
-    // Ajustar margin do conteúdo quando colapsado
+    // Ajustar margin do conteúdo baseado no estado da sidebar
+    .app-sidenav.mat-drawer-side.mat-drawer-opened ~ .mat-drawer-content {
+      margin-left: $app-sidenav-width !important;
+      transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
     .app-sidenav.mat-drawer-side.collapsed.mat-drawer-opened ~ .mat-drawer-content {
       margin-left: $app-sidenav-width-collapsed !important;
     }
