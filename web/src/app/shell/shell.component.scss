@@ -4,15 +4,15 @@ $app-sidenav-width-collapsed: 72px;
 .app-container {
   height: 100dvh;
   width: 100%;
-  background: var(--mat-sys-surface);
-  color: var(--mat-sys-on-surface);
+  background: var(--mat-app-background-color);
+  color: var(--mat-app-text-color);
 }
 
 // Garantir que o drawer content também use tema escuro
 ::ng-deep {
   .mat-drawer-content {
-    background: var(--mat-sys-surface) !important;
-    color: var(--mat-sys-on-surface) !important;
+    background: var(--mat-app-background-color) !important;
+    color: var(--mat-app-text-color) !important;
   }
 }
 
@@ -30,7 +30,7 @@ $app-sidenav-width-collapsed: 72px;
 .app-sidenav {
   width: $app-sidenav-width;
   border-right: 0;
-  background: var(--mat-sys-surface-container-low);
+  background: var(--mat-app-background-color);
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
   &.mat-drawer-side {
@@ -62,8 +62,8 @@ $app-sidenav-width-collapsed: 72px;
     min-height: 48px;
 
     &.active {
-      background-color: var(--mat-sys-primary-container);
-      color: var(--mat-sys-on-primary-container);
+      background-color: color-mix(in srgb, var(--mat-app-text-color) 12%, transparent);
+      color: var(--mat-app-text-color);
     }
 
     mat-icon {
@@ -73,7 +73,7 @@ $app-sidenav-width-collapsed: 72px;
 
   .side-footer {
     padding: 8px 16px 16px;
-    color: var(--mat-sys-on-surface-variant);
+    color: color-mix(in srgb, var(--mat-app-text-color) 70%, transparent);
     font-size: 0.75rem;
   }
 }
@@ -98,8 +98,8 @@ $app-sidenav-width-collapsed: 72px;
 
 .app-main {
   padding-block: 16px;
-  background: var(--mat-sys-surface);
-  color: var(--mat-sys-on-surface);
+  background: var(--mat-app-background-color);
+  color: var(--mat-app-text-color);
   min-height: calc(100dvh - 64px); // Altura total menos a toolbar
 }
 

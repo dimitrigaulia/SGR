@@ -53,7 +53,7 @@ export class Login {
     this.authService.login(loginRequest).subscribe({
       next: () => {
         this.isLoading = false;
-        this.router.navigate(['/home']);
+        this.router.navigate(['/dashboard']);
       },
       error: (error) => {
         this.isLoading = false;

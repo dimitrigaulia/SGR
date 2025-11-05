@@ -1,4 +1,5 @@
 @use '@angular/material' as mat;
+@include mat.core();
 
 // Tema claro
 $theme-light: mat.define-theme((
@@ -46,14 +47,13 @@ html, body {
   margin: 0;
   padding: 0;
   font-family: Roboto, "Helvetica Neue", sans-serif;
-  background-color: var(--mat-sys-surface);
-  color: var(--mat-sys-on-surface);
+  background-color: var(--mat-app-background-color);
+  color: var(--mat-app-text-color);
 }
 
 body {
-  background-color: var(--mat-sys-surface);
-  color: var(--mat-sys-on-surface);
-  font: var(--mat-sys-body-medium);
+  background-color: var(--mat-app-background-color);
+  color: var(--mat-app-text-color);
 }
 
 app-root {
