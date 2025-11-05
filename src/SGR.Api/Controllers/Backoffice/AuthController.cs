@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using SGR.Api.Models.DTOs;
 using SGR.Api.Services.Interfaces;
 
@@ -27,10 +27,11 @@ public class AuthController : ControllerBase
 
         if (response == null)
         {
-            return Unauthorized(new { message = "Email ou senha inválidos" });
+            return Unauthorized(new { message = "Email ou senha invÃ¡lidos" });
         }
 
         return Ok(response);
     }
 }
+
 

@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using SGR.Api.Models.Entities;
 
 namespace SGR.Api.Data;
@@ -17,7 +17,7 @@ public class ApplicationDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        // Configuração Perfil
+        // ConfiguraÃ§Ã£o Perfil
         modelBuilder.Entity<Perfil>(entity =>
         {
             entity.ToTable("Perfil");
@@ -28,7 +28,7 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.UsuarioAtualizacao).HasMaxLength(100);
         });
 
-        // Configuração Usuario
+        // ConfiguraÃ§Ã£o Usuario
         modelBuilder.Entity<Usuario>(entity =>
         {
             entity.ToTable("Usuario");
@@ -38,6 +38,8 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.Email).HasMaxLength(200).IsRequired();
             entity.Property(e => e.SenhaHash).HasMaxLength(500).IsRequired();
             entity.Property(e => e.PathImagem).HasMaxLength(500);
+            entity.Property(e => e.UsuarioCriacao).HasMaxLength(100);
+            entity.Property(e => e.DataCriacao).IsRequired();
             entity.Property(e => e.UsuarioAtualizacao).HasMaxLength(100);
 
             // Índice único para Email
@@ -51,4 +53,7 @@ public class ApplicationDbContext : DbContext
         });
     }
 }
+
+
+
 

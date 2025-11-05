@@ -26,12 +26,12 @@ $theme-dark: mat.define-theme((
 
 // Tema escuro também aplicado na classe .dark-theme (para garantir)
 .dark-theme { 
-  @include mat.all-component-colors($theme-dark);
+  @include mat.all-component-themes($theme-dark);
 }
 
 // Tema claro (aplicar na classe .light-theme se necessário)
 .light-theme { 
-  @include mat.all-component-colors($theme-light);
+  @include mat.all-component-themes($theme-light);
 }
 
 // Utilitários

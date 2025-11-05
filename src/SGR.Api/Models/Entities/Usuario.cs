@@ -9,6 +9,8 @@ public class Usuario
     public string Email { get; set; } = string.Empty; // Usado também para login
     public string SenhaHash { get; set; } = string.Empty;
     public string? PathImagem { get; set; }
+    public string? UsuarioCriacao { get; set; }
+    public DateTime DataCriacao { get; set; }
     public string? UsuarioAtualizacao { get; set; }
     public DateTime? DataAtualizacao { get; set; }
 

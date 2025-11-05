@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -11,7 +11,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 
 builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+// Learn more about configurinãopenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
 // Configure Entity Framework Core com PostgreSQL
@@ -21,7 +21,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 // Configure JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("Jwt");
-var secretKey = jwtSettings["SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey não configurada");
+var secretKey = jwtSettings["SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey nÃ£o configurada");
 
 builder.Services.AddAuthentication(options =>
 {
@@ -44,6 +44,8 @@ builder.Services.AddAuthentication(options =>
 
 // Register Services
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IUsuarioService, UsuarioService>();
+builder.Services.AddScoped<IPerfilService, PerfilService>();
 
 // Configure CORS to allow requests from Angular frontend
 builder.Services.AddCors(options =>
@@ -66,6 +68,13 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var context = services.GetRequiredService<ApplicationDbContext>();
+        try
+        {
+            context.Database.ExecuteSqlRaw("ALTER TABLE \"Usuario\" ADD COLUMN IF NOT EXISTS \"UsuarioCriacao\" character varying(100);");
+            context.Database.ExecuteSqlRaw("ALTER TABLE \"Usuario\" ADD COLUMN IF NOT EXISTS \"DataCriacao\" timestamp with time zone NOT NULL DEFAULT (now() at time zone 'utc');");
+        }
+        catch { }
+
         DbInitializer.Initialize(context);
     }
     catch (Exception ex)
@@ -82,7 +91,7 @@ app.UseCors();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
-    // Em desenvolvimento, não forçar HTTPS redirection para evitar problemas com CORS
+    // Em desenvolvimento, nÃ£o forÃ§ar HTTPS redirection para evitar problemas com CORS
 }
 else
 {
@@ -91,7 +100,10 @@ else
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseStaticFiles();
 
 app.MapControllers();
 
 app.Run();
+
+

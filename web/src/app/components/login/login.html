@@ -1,4 +1,4 @@
-<div class="login-container">
+﻿<div class="login-container">
   <mat-card class="login-card">
     <mat-card-header>
       <div class="header-content">
@@ -13,10 +13,10 @@
           <mat-label>Email</mat-label>
           <input matInput formControlName="email" type="email" placeholder="Digite seu email">
           <mat-error *ngIf="loginForm.get('email')?.hasError('required')">
-            Email é obrigatório
+            Email Ã© obrigatÃ³rio
           </mat-error>
           <mat-error *ngIf="loginForm.get('email')?.hasError('email')">
-            Email inválido
+            Email invÃ¡lido
           </mat-error>
         </mat-form-field>
 
@@ -24,7 +24,7 @@
           <mat-label>Senha</mat-label>
           <input matInput formControlName="senha" type="password" placeholder="Digite sua senha">
           <mat-error *ngIf="loginForm.get('senha')?.hasError('required')">
-            Senha é obrigatória
+            Senha Ã© obrigatÃ³ria
           </mat-error>
         </mat-form-field>
 
@@ -39,3 +39,4 @@
     </mat-card-content>
   </mat-card>
 </div>
+

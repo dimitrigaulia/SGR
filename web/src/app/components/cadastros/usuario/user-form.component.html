@@ -1,0 +1,55 @@
+﻿<div class="container form">
+  <h2>{{ isEdit() ? (isView() ? 'Visualizar usuário' : 'Editar usuário') : 'Cadastro de usuário' }}</h2>
+
+  <form [formGroup]="form" (ngSubmit)="save()">
+    <mat-form-field appearance="outline" class="full">
+      <mat-label>Nome completo</mat-label>
+      <input matInput formControlName="nomeCompleto" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full">
+      <mat-label>Email</mat-label>
+      <input matInput type="email" formControlName="email" />
+      <mat-error *ngIf="form.get('email')?.hasError('required')">Email é obrigatório</mat-error>
+      <mat-error *ngIf="form.get('email')?.hasError('email')">Email inválido</mat-error>
+      <mat-error *ngIf="form.get('email')?.hasError('emailTaken')">Este email já está em uso</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full">
+      <mat-label>Perfil</mat-label>
+      <mat-select formControlName="perfilId">
+        <mat-option *ngFor="let p of perfis()" [value]="p.id">{{ p.nome }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-slide-toggle formControlName="isAtivo">Ativo</mat-slide-toggle>
+
+    <ng-container *ngIf="!isEdit()">
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Senha</mat-label>
+        <input matInput type="password" formControlName="senha" />
+      </mat-form-field>
+    </ng-container>
+
+    <ng-container *ngIf="isEdit()">
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Nova senha (opcional)</mat-label>
+        <input matInput type="password" formControlName="novaSenha" />
+      </mat-form-field>
+    </ng-container>
+
+    <div class="avatar-row">
+      <img *ngIf="form.get('pathImagem')?.value" [src]="form.get('pathImagem')?.value" alt="avatar" width="64" height="64" style="border-radius:50%" />
+      <button mat-stroked-button type="button" (click)="triggerFile()" [disabled]="isView()">{{ form.get('pathImagem')?.value ? 'Alterar foto' : 'Adicionar foto' }}</button>
+      <button mat-button type="button" color="warn" (click)="clearAvatar()" *ngIf="form.get('pathImagem')?.value && !isView()">Remover</button>
+      <input type="file" accept="image/png,image/jpeg" hidden #fileInput (change)="onFile($event)" />
+    </div>
+
+    <div class="error" *ngIf="error()">{{ error() }}</div>
+
+    <div class="actions">
+      <button mat-stroked-button type="button" routerLink="/usuarios">Voltar</button>
+      <button mat-raised-button color="primary" type="submit" *ngIf="!isView()">Salvar</button>
+    </div>
+  </form>
+</div>

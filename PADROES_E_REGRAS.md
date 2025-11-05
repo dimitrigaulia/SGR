@@ -1,4 +1,4 @@
-# Padrões e Regras do Sistema SGR (Sistema de Gerenciamento de Restaurantes)
+﻿# Padrões e Regras do Sistema SGR (Sistema de Gerenciamento de Restaurantes)
 
 ## Visão Geral do Sistema
 
@@ -269,4 +269,13 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
 **Última atualização:** 2025-01-11  
 **Atualizado por:** Sistema de Documentação  
 **Mudança:** Migrado de padrão húngaro para padrão .NET moderno 2025
+
+
+### DTOs x Entidades nas APIs
+- Usar DTOs específicos para Create/Update/Response em vez de expor as entidades do EF diretamente.
+- Benefícios:
+  - Segurança: evita overposting/injeção de propriedades sensíveis (ex.: SenhaHash, campos de auditoria).
+  - Validação: anotações sob medida por operação (ex.: senha obrigatória só no create).
+  - Versionamento: evolui contratos sem acoplar à persistência.
+  - Manutenção: separa domínios (persistência vs. transporte) e facilita mapeamentos.
 

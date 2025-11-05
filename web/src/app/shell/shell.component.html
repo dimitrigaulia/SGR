@@ -1,4 +1,4 @@
-<mat-drawer-container class="app-container" [hasBackdrop]="isHandset()">
+﻿<mat-drawer-container class="app-container" [hasBackdrop]="isHandset()">
   <mat-drawer
     #sidenav
     class="app-sidenav"
@@ -33,7 +33,7 @@
 
     <div class="side-footer" *ngIf="!sideCollapsed() && !isHandset()">
       <mat-divider></mat-divider>
-      <small>v{{ brand }} • {{ currentYear }}</small>
+      <small>© {{ currentYear }} • {{ brand }}</small>
     </div>
   </mat-drawer>
 
@@ -42,15 +42,15 @@
       <button
         mat-icon-button
         (click)="toggleCollapse()"
-        class="hide-desktop"
+        
         aria-label="Abrir/fechar menu">
         <mat-icon>menu</mat-icon>
       </button>
       <span class="toolbar-title">{{ brand }}</span>
       <span class="spacer"></span>
 
-      <!-- Ações topo (exemplos) -->
-      <button mat-icon-button aria-label="Notificações">
+      <!-- AÃ§Ãµes topo (exemplos) -->
+      <button mat-icon-button aria-label="NotificaÃ§Ãµes">
         <mat-icon>notifications</mat-icon>
       </button>
       <button mat-icon-button [matMenuTriggerFor]="userMenu" aria-label="Usuário">
@@ -77,4 +77,6 @@
     </main>
   </mat-drawer-content>
 </mat-drawer-container>
+
+
 

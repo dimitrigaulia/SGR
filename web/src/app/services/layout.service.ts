@@ -1,4 +1,4 @@
-import { Injectable, signal, inject, computed } from '@angular/core';
+﻿import { Injectable, signal, inject, computed } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { MatSidenav } from '@angular/material/sidenav';
@@ -79,7 +79,7 @@ export class LayoutService {
     if (this.sidenav) {
       this.sidenav.toggle();
     } else {
-      console.warn('Sidenav não está disponível');
+      console.warn('Sidenav nÃ£o estÃ¡ disponÃ­vel');
     }
   }
 
@@ -96,3 +96,4 @@ export class LayoutService {
     this.setTheme(this._themeMode() === 'dark' ? 'light' : 'dark');
   }
 }
+

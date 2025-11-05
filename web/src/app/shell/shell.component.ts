@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal, ViewChild, AfterViewInit } from '@angular/core';
+﻿import { Component, computed, inject, signal, ViewChild, AfterViewInit } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { NgFor, NgIf } from '@angular/common';
@@ -54,17 +54,15 @@ export class ShellComponent implements AfterViewInit {
   // Itens de navegação (ajuste conforme as rotas do SGR)
   readonly navItems: NavItem[] = [
     { icon: 'dashboard', label: 'Dashboard', route: '/dashboard' },
-    { icon: 'description', label: 'Orçamentos', route: '/orcamentos' },
-    { icon: 'assignment', label: 'Propostas', route: '/propostas' },
-    { icon: 'groups', label: 'Clientes', route: '/clientes' },
-    { icon: 'settings', label: 'Configurações', route: '/config' },
+    { icon: 'people', label: 'Usuários', route: '/usuarios' },
+    { icon: 'badge', label: 'Perfis', route: '/perfis' },
   ];
 
   // Estado
   readonly isHandset = signal(false);
   readonly sideCollapsed = signal(false);
 
-  // Nome do usuário/empresa (exemplo)
+  // Nome do usuÃ¡rio/empresa (exemplo)
   readonly brand = 'SGR';
   readonly currentYear = new Date().getFullYear();
   readonly themeIcon = computed(() => (this.layout.isDarkTheme() ? 'light_mode' : 'dark_mode'));
@@ -75,7 +73,7 @@ export class ShellComponent implements AfterViewInit {
       if (res.matches) {
         this.sideCollapsed.set(true); // compacta em telas pequenas
       }
-      // Ajustar sidenav após view estar pronta
+      // Ajustar sidenav apÃ³s view estar pronta
       setTimeout(() => {
         if (this.sidenav) {
           if (res.matches) {
@@ -89,7 +87,7 @@ export class ShellComponent implements AfterViewInit {
   }
 
   ngAfterViewInit() {
-    // Garantir que sidenav está aberto no desktop após inicialização
+    // Garantir que sidenav estÃ¡ aberto no desktop apÃ³s inicializaÃ§Ã£o
     if (!this.isHandset() && this.sidenav) {
       setTimeout(() => {
         if (this.sidenav && !this.isHandset()) {
@@ -112,7 +110,7 @@ export class ShellComponent implements AfterViewInit {
   }
 
   onNavItemClick() {
-    // Fechar sidenav no mobile após clicar em um item
+    // Fechar sidenav no mobile apÃ³s clicar em um item
     if (this.isHandset() && this.sidenav) {
       this.sidenav.close();
     }
@@ -127,7 +125,7 @@ export class ShellComponent implements AfterViewInit {
     return !this.sideCollapsed(); // Desktop baseado no estado collapsed
   });
 
-  // Ações do topo
+  // AÃ§Ãµes do topo
   toggleTheme() {
     this.layout.toggleTheme();
   }
@@ -137,4 +135,7 @@ export class ShellComponent implements AfterViewInit {
     this.router.navigate(['/']);
   }
 }
+
+
+
 

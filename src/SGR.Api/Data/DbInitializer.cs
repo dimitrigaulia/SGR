@@ -36,7 +36,9 @@ public static class DbInitializer
             Email = "dimitrifgaulia@gmail.com",
             SenhaHash = senhaHash,
             PerfilId = perfilAdmin.Id,
-            IsAtivo = true
+            IsAtivo = true,
+            UsuarioCriacao = "Sistema",
+            DataCriacao = DateTime.UtcNow
         };
 
         context.Usuarios.Add(usuario);

@@ -1,50 +1,24 @@
-import { Routes } from '@angular/router';
-import { authGuard } from './guards/auth.guard';
-import { ShellComponent } from './shell/shell.component';
+﻿import { Routes } from "@angular/router";
+import { authGuard } from "./guards/auth.guard";
+import { stateGuard } from "./guards/state.guard";
+import { ShellComponent } from "./shell/shell.component";
 
 export const routes: Routes = [
+  { path: "", loadComponent: () => import("./components/login/login").then(m => m.Login) },
   {
-    path: '',
-    loadComponent: () => import('./components/login/login').then(m => m.Login)
-  },
-  {
-    path: '',
+    path: "",
     component: ShellComponent,
     canActivate: [authGuard],
     children: [
-      {
-        path: '',
-        pathMatch: 'full',
-        redirectTo: 'dashboard'
-      },
-      {
-        path: 'dashboard',
-        loadComponent: () => import('./app').then(m => m.App)
-      },
-      {
-        path: 'orcamentos',
-        loadComponent: () => import('./app').then(m => m.App)
-        // TODO: Substituir por componente real quando disponível
-      },
-      {
-        path: 'propostas',
-        loadComponent: () => import('./app').then(m => m.App)
-        // TODO: Substituir por componente real quando disponível
-      },
-      {
-        path: 'clientes',
-        loadComponent: () => import('./app').then(m => m.App)
-        // TODO: Substituir por componente real quando disponível
-      },
-      {
-        path: 'config',
-        loadComponent: () => import('./app').then(m => m.App)
-        // TODO: Substituir por componente real quando disponível
-      }
+      { path: "", pathMatch: "full", redirectTo: "dashboard" },
+      { path: "dashboard", loadComponent: () => import("./app").then(m => m.App) },
+      { path: "usuarios", loadComponent: () => import("./components/listagens/usuario/users-list.component").then(m => m.UsersListComponent) },
+      { path: "usuarios/cadastro", canActivate: [stateGuard], loadComponent: () => import("./components/cadastros/usuario/user-form.component").then(m => m.UserFormComponent) },
+      //{ path: "usuarios/:id/cadastro", loadComponent: () => import("./components/cadastros/usuario/user-form.component").then(m => m.UserFormComponent) },
+      { path: "perfis", loadComponent: () => import("./components/listagens/perfil/perfis-list.component").then(m => m.PerfisListComponent) },
+      { path: "perfis/cadastro", canActivate: [stateGuard], loadComponent: () => import("./components/cadastros/perfil/perfil-form.component").then(m => m.PerfilFormComponent) },
+      //{ path: "perfis/:id/cadastro", loadComponent: () => import("./components/cadastros/perfil/perfil-form.component").then(m => m.PerfilFormComponent) }
     ]
   },
-  {
-    path: '**',
-    redirectTo: ''
-  }
+  { path: "**", redirectTo: "" }
 ];
