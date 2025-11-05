@@ -8,10 +8,15 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
-import { UsuarioService, CreateUsuarioRequest, UpdateUsuarioRequest } from '../../../services/usuario.service';
+import { UsuarioService, CreateUsuarioRequest, UpdateUsuarioRequest, UsuarioDto } from '../../../services/usuario.service';
 import { PerfilService, PerfilDto } from '../../../services/perfil.service';
 import { ToastService } from '../../../services/toast.service';
 import { UploadService } from '../../../services/upload.service';
+
+type UsuarioFormModel = Omit<UsuarioDto, 'id'> & {
+  senha?: string;
+  novaSenha?: string;
+};
 
 @Component({
   standalone: true,
@@ -36,18 +41,10 @@ export class UserFormComponent {
   emailTaken = false;
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
 
-  model: {
-    nomeCompleto: string;
-    email: string;
-    perfilId: number | null;
-    isAtivo: boolean;
-    senha?: string;
-    novaSenha?: string;
-    pathImagem?: string;
-  } = {
+  model: UsuarioFormModel = {
     nomeCompleto: '',
     email: '',
-    perfilId: null,
+    perfilId: null as any,
     isAtivo: true,
     senha: '',
     novaSenha: '',
@@ -66,11 +63,7 @@ export class UserFormComponent {
     if (id) {
       this.id.set(id);
       this.service.get(id).subscribe(e => {
-        this.model.nomeCompleto = e.nomeCompleto;
-        this.model.email = e.email;
-        this.model.perfilId = e.perfilId;
-        this.model.isAtivo = e.isAtivo;
-        this.model.pathImagem = e.pathImagem ?? '';
+        this.model = { ...e, senha: '', novaSenha: '' };
         this.previousAvatarUrl = e.pathImagem ?? null;
       });
     }
@@ -79,20 +72,21 @@ export class UserFormComponent {
   save() {
     this.error.set('');
     if (this.isView()) return;
+    const v = this.model;
     // Validação simples
-    if (!this.model.nomeCompleto || !this.model.email || !this.model.perfilId || this.emailTaken) {
+    if (!v.nomeCompleto || !v.email || !v.perfilId || this.emailTaken) {
       this.toast.error('Preencha os campos obrigatórios corretamente');
       return;
     }
 
     if (!this.isEdit()) {
       const req: CreateUsuarioRequest = {
-        nomeCompleto: this.model.nomeCompleto!,
-        email: this.model.email!,
-        perfilId: this.model.perfilId!,
-        isAtivo: !!this.model.isAtivo,
-        senha: this.model.senha || '',
-        pathImagem: this.model.pathImagem || undefined,
+        nomeCompleto: v.nomeCompleto,
+        email: v.email,
+        perfilId: v.perfilId!,
+        isAtivo: !!v.isAtivo,
+        senha: v.senha || '',
+        pathImagem: v.pathImagem || undefined,
       };
       this.service.create(req).subscribe({
         next: () => { this.toast.success('Usuário criado'); this.router.navigate(['/usuarios']); },
@@ -100,12 +94,12 @@ export class UserFormComponent {
       });
     } else {
       const req: UpdateUsuarioRequest = {
-        nomeCompleto: this.model.nomeCompleto!,
-        email: this.model.email!,
-        perfilId: this.model.perfilId!,
-        isAtivo: !!this.model.isAtivo,
-        novaSenha: this.model.novaSenha || undefined,
-        pathImagem: this.model.pathImagem || undefined,
+        nomeCompleto: v.nomeCompleto,
+        email: v.email,
+        perfilId: v.perfilId!,
+        isAtivo: !!v.isAtivo,
+        novaSenha: v.novaSenha || undefined,
+        pathImagem: v.pathImagem || undefined,
       };
       this.service.update(this.id()!, req).subscribe({
         next: () => {

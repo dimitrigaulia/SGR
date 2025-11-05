@@ -14,10 +14,8 @@ export const routes: Routes = [
       { path: "dashboard", loadComponent: () => import("./app").then(m => m.App) },
       { path: "usuarios", loadComponent: () => import("./components/listagens/usuario/users-list.component").then(m => m.UsersListComponent) },
       { path: "usuarios/cadastro", canActivate: [stateGuard], loadComponent: () => import("./components/cadastros/usuario/user-form.component").then(m => m.UserFormComponent) },
-      //{ path: "usuarios/:id/cadastro", loadComponent: () => import("./components/cadastros/usuario/user-form.component").then(m => m.UserFormComponent) },
       { path: "perfis", loadComponent: () => import("./components/listagens/perfil/perfis-list.component").then(m => m.PerfisListComponent) },
       { path: "perfis/cadastro", canActivate: [stateGuard], loadComponent: () => import("./components/cadastros/perfil/perfil-form.component").then(m => m.PerfilFormComponent) },
-      //{ path: "perfis/:id/cadastro", loadComponent: () => import("./components/cadastros/perfil/perfil-form.component").then(m => m.PerfilFormComponent) }
     ]
   },
   { path: "**", redirectTo: "" }

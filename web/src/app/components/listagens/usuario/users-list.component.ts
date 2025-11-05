@@ -1,5 +1,6 @@
-﻿import { Component, inject, signal, ViewChild } from "@angular/core";
+﻿import { Component, inject, signal, ViewChild, OnDestroy } from "@angular/core";
 import { CommonModule } from "@angular/common";
+import { FormsModule } from "@angular/forms";
 import { Router, RouterLink } from "@angular/router";
 import { MatTableModule } from "@angular/material/table";
 import { MatButtonModule } from "@angular/material/button";
@@ -10,19 +11,17 @@ import { MatPaginator, MatPaginatorModule, PageEvent } from "@angular/material/p
 import { MatSort, MatSortModule, Sort } from "@angular/material/sort";
 import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatInputModule } from "@angular/material/input";
-import { FormControl, ReactiveFormsModule } from "@angular/forms";
-import { debounceTime, distinctUntilChanged } from "rxjs/operators";
 import { ToastService } from "../../../services/toast.service";
 import { UsuarioService, UsuarioDto } from "../../../services/usuario.service";
 
 @Component({
   standalone: true,
   selector: 'app-users-list',
-  imports: [CommonModule, RouterLink, ReactiveFormsModule, MatTableModule, MatButtonModule, MatIconModule, MatTooltipModule, MatSnackBarModule, MatPaginatorModule, MatSortModule, MatFormFieldModule, MatInputModule],
+  imports: [CommonModule, FormsModule, RouterLink, MatTableModule, MatButtonModule, MatIconModule, MatTooltipModule, MatSnackBarModule, MatPaginatorModule, MatSortModule, MatFormFieldModule, MatInputModule],
   templateUrl: './users-list.component.html',
   styleUrls: ['./users-list.component.scss']
 })
-export class UsersListComponent {
+export class UsersListComponent implements OnDestroy {
   private service = inject(UsuarioService);
   private router = inject(Router);
   private toast = inject(ToastService);
@@ -33,16 +32,23 @@ export class UsersListComponent {
   pageSize = signal(10);
   sortActive = signal<string>('nome');
   sortDirection = signal<'asc'|'desc'>('asc');
-  searchControl = new FormControl<string>('', { nonNullable: true });
+  searchTerm = '';
+  private searchTimeout: any;
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
   constructor() {
-    this.searchControl.valueChanges.pipe(debounceTime(300), distinctUntilChanged()).subscribe(() => {
+    this.load();
+  }
+
+  onSearchChange() {
+    if (this.searchTimeout) {
+      clearTimeout(this.searchTimeout);
+    }
+    this.searchTimeout = setTimeout(() => {
       this.pageIndex.set(0);
       this.load();
-    });
-    this.load();
+    }, 300);
   }
 
   load() {
@@ -50,11 +56,17 @@ export class UsersListComponent {
     const pageSize = this.pageSize();
     const sort = this.sortActive();
     const order = this.sortDirection();
-    const search = this.searchControl.value || undefined;
+    const search = this.searchTerm || undefined;
     this.service.list({ page, pageSize, sort, order, search }).subscribe({
       next: res => { this.data.set(res.items); this.total.set(res.total); },
       error: () => this.toast.error('Falha ao carregar usuários')
     });
+  }
+
+  clearSearch() {
+    this.searchTerm = '';
+    this.pageIndex.set(0);
+    this.load();
   }
 
   delete(id: number) {
@@ -80,5 +92,11 @@ export class UsersListComponent {
     this.sortActive.set(ev.active);
     this.sortDirection.set((ev.direction || 'asc') as any);
     this.load();
+  }
+
+  ngOnDestroy() {
+    if (this.searchTimeout) {
+      clearTimeout(this.searchTimeout);
+    }
   }
 }

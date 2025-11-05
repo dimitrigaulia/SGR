@@ -4,8 +4,8 @@
     <span class="spacer" style="flex:1 1 auto;"></span>
     <mat-form-field appearance="outline">
       <mat-label>Buscar</mat-label>
-      <input matInput [formControl]="searchControl" placeholder="Nome ou email" />
-      <button mat-icon-button matSuffix *ngIf="searchControl.value" (click)="searchControl.setValue('')">
+      <input matInput [(ngModel)]="searchTerm" (ngModelChange)="onSearchChange()" placeholder="Nome ou email" />
+      <button mat-icon-button matSuffix *ngIf="searchTerm" (click)="clearSearch()">
         <mat-icon>close</mat-icon>
       </button>
     </mat-form-field>
