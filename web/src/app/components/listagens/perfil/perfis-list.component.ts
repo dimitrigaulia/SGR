@@ -2,6 +2,7 @@
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { Router, RouterLink } from "@angular/router";
+import { BreakpointObserver, Breakpoints } from "@angular/cdk/layout";
 import { MatTableModule } from "@angular/material/table";
 import { MatButtonModule } from "@angular/material/button";
 import { MatIconModule } from "@angular/material/icon";
@@ -11,13 +12,14 @@ import { MatPaginator, MatPaginatorModule, PageEvent } from "@angular/material/p
 import { MatSort, MatSortModule, Sort } from "@angular/material/sort";
 import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatInputModule } from "@angular/material/input";
+import { MatCardModule } from "@angular/material/card";
 import { ToastService } from "../../../services/toast.service";
 import { PerfilService, PerfilDto } from "../../../services/perfil.service";
 
 @Component({
   standalone: true,
   selector: 'app-perfis-list',
-  imports: [CommonModule, FormsModule, RouterLink, MatTableModule, MatButtonModule, MatIconModule, MatTooltipModule, MatSnackBarModule, MatPaginatorModule, MatSortModule, MatFormFieldModule, MatInputModule],
+  imports: [CommonModule, FormsModule, RouterLink, MatTableModule, MatButtonModule, MatIconModule, MatTooltipModule, MatSnackBarModule, MatPaginatorModule, MatSortModule, MatFormFieldModule, MatInputModule, MatCardModule],
   templateUrl: './perfis-list.component.html',
   styleUrls: ['./perfis-list.component.scss']
 })
@@ -25,6 +27,8 @@ export class PerfisListComponent implements OnDestroy {
   private service = inject(PerfilService);
   private router = inject(Router);
   private toast = inject(ToastService);
+  private breakpointObserver = inject(BreakpointObserver);
+  
   displayedColumns = ['nome', 'ativo', 'acoes'];
   data = signal<PerfilDto[]>([]);
   total = signal(0);
@@ -33,11 +37,18 @@ export class PerfisListComponent implements OnDestroy {
   sortActive = signal<string>('nome');
   sortDirection = signal<'asc'|'desc'>('asc');
   searchTerm = '';
+  isMobile = signal(false);
   private searchTimeout: any;
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
   constructor() {
+    // Observar breakpoints para responsividade
+    this.breakpointObserver.observe([Breakpoints.Handset, Breakpoints.TabletPortrait])
+      .subscribe((result) => {
+        this.isMobile.set(result.matches);
+      });
+    
     this.load();
   }
 
@@ -58,7 +69,7 @@ export class PerfisListComponent implements OnDestroy {
     const order = this.sortDirection();
     const search = this.searchTerm || undefined;
     this.service.list({ page, pageSize, sort, order, search }).subscribe({
-      next: res => { this.data.set(res.items); this.total.set(res.total); },
+      next: (res) => { this.data.set(res.items); this.total.set(res.total); },
       error: () => this.toast.error('Falha ao carregar perfis')
     });
   }
@@ -71,7 +82,10 @@ export class PerfisListComponent implements OnDestroy {
 
   delete(id: number) {
     if (!confirm('Excluir perfil?')) return;
-    this.service.delete(id).subscribe({ next: () => { this.toast.success('Perfil excluído'); this.load(); }, error: (e) => this.toast.error(e.error?.message || 'Falha ao excluir perfil') });
+    this.service.delete(id).subscribe({ 
+      next: () => { this.toast.success('Perfil excluído'); this.load(); }, 
+      error: (e: any) => this.toast.error(e.error?.message || 'Falha ao excluir perfil') 
+    });
   }
 
   edit(e: PerfilDto) { this.router.navigate(['/perfis/cadastro'], { state: { id: e.id } }); }
