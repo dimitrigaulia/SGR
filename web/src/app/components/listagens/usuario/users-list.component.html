@@ -16,8 +16,11 @@
     </div>
   </div>
 
+  <!-- Loading Spinner -->
+  <app-loading *ngIf="isLoading()"></app-loading>
+
   <!-- Versão Desktop: Tabela -->
-  <div class="table-container" *ngIf="!isMobile()">
+  <div class="table-container" *ngIf="!isMobile() && !isLoading()">
     <table mat-table [dataSource]="data()" class="mat-elevation-z1 full-width" matSort (matSortChange)="onSort($event)">
       <ng-container matColumnDef="avatar">
         <th mat-header-cell *matHeaderCellDef></th>
@@ -63,7 +66,7 @@
   </div>
 
   <!-- Versão Mobile: Cards -->
-  <div class="cards-container" *ngIf="isMobile()">
+  <div class="cards-container" *ngIf="isMobile() && !isLoading()">
     <mat-card *ngFor="let e of data()" class="user-card">
       <mat-card-content>
         <div class="card-header">
@@ -96,5 +99,5 @@
     </mat-card>
   </div>
 
-  <mat-paginator [length]="total()" [pageIndex]="pageIndex()" [pageSize]="pageSize()" [pageSizeOptions]="[5,10,25,50]" (page)="pageChanged($event)"></mat-paginator>
+  <mat-paginator *ngIf="!isLoading()" [length]="total()" [pageIndex]="pageIndex()" [pageSize]="pageSize()" [pageSizeOptions]="[5,10,25,50]" (page)="pageChanged($event)"></mat-paginator>
 </div>

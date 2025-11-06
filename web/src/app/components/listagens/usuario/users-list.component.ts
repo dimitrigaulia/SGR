@@ -1,4 +1,4 @@
-﻿import { Component, inject, signal, ViewChild, OnDestroy, ChangeDetectionStrategy } from "@angular/core";
+﻿import { Component, inject, signal, ViewChild, OnDestroy, ChangeDetectionStrategy, DestroyRef, ChangeDetectorRef } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { Router, RouterLink } from "@angular/router";
@@ -13,13 +13,15 @@ import { MatSort, MatSortModule, Sort } from "@angular/material/sort";
 import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatInputModule } from "@angular/material/input";
 import { MatCardModule } from "@angular/material/card";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { ToastService } from "../../../core/services/toast.service";
 import { UsuarioService, UsuarioDto } from "../../../features/usuarios/services/usuario.service";
+import { LoadingComponent } from "../../../shared/components/loading/loading.component";
 
 @Component({
   standalone: true,
   selector: 'app-users-list',
-  imports: [CommonModule, FormsModule, RouterLink, MatTableModule, MatButtonModule, MatIconModule, MatTooltipModule, MatSnackBarModule, MatPaginatorModule, MatSortModule, MatFormFieldModule, MatInputModule, MatCardModule],
+  imports: [CommonModule, FormsModule, RouterLink, MatTableModule, MatButtonModule, MatIconModule, MatTooltipModule, MatSnackBarModule, MatPaginatorModule, MatSortModule, MatFormFieldModule, MatInputModule, MatCardModule, LoadingComponent],
   templateUrl: './users-list.component.html',
   styleUrls: ['./users-list.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -29,6 +31,8 @@ export class UsersListComponent implements OnDestroy {
   private router = inject(Router);
   private toast = inject(ToastService);
   private breakpointObserver = inject(BreakpointObserver);
+  private destroyRef = inject(DestroyRef);
+  private cdr = inject(ChangeDetectorRef);
   
   displayedColumns = ['avatar', 'nome', 'email', 'ativo', 'acoes'];
   data = signal<UsuarioDto[]>([]);
@@ -39,6 +43,7 @@ export class UsersListComponent implements OnDestroy {
   sortDirection = signal<'asc'|'desc'>('asc');
   searchTerm = '';
   isMobile = signal(false);
+  isLoading = signal(false);
   private searchTimeout: any;
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
@@ -46,8 +51,10 @@ export class UsersListComponent implements OnDestroy {
   constructor() {
     // Observar breakpoints para responsividade
     this.breakpointObserver.observe([Breakpoints.Handset, Breakpoints.TabletPortrait])
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((result) => {
         this.isMobile.set(result.matches);
+        this.cdr.markForCheck();
       });
     
     this.load();
@@ -64,15 +71,28 @@ export class UsersListComponent implements OnDestroy {
   }
 
   load() {
+    this.isLoading.set(true);
     const page = this.pageIndex() + 1;
     const pageSize = this.pageSize();
     const sort = this.sortActive();
     const order = this.sortDirection();
     const search = this.searchTerm || undefined;
-    this.service.list({ page, pageSize, sort, order, search }).subscribe({
-      next: (res) => { this.data.set(res.items); this.total.set(res.total); },
-      error: () => this.toast.error('Falha ao carregar usuários')
-    });
+    
+    this.service.list({ page, pageSize, sort, order, search })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res) => { 
+          this.data.set(res.items); 
+          this.total.set(res.total);
+          this.isLoading.set(false);
+          this.cdr.markForCheck();
+        },
+        error: () => {
+          this.toast.error('Falha ao carregar usuários');
+          this.isLoading.set(false);
+          this.cdr.markForCheck();
+        }
+      });
   }
 
   clearSearch() {
@@ -83,10 +103,20 @@ export class UsersListComponent implements OnDestroy {
 
   delete(id: number) {
     if (!confirm('Excluir usuário?')) return;
-    this.service.delete(id).subscribe({ 
-      next: () => { this.toast.success('Usuário excluído'); this.load(); }, 
-      error: (e: any) => this.toast.error(e.error?.message || 'Falha ao excluir usuário') 
-    });
+    this.isLoading.set(true);
+    this.service.delete(id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({ 
+        next: () => { 
+          this.toast.success('Usuário excluído'); 
+          this.load();
+        }, 
+        error: (e: any) => {
+          this.toast.error(e.error?.message || 'Falha ao excluir usuário');
+          this.isLoading.set(false);
+          this.cdr.markForCheck();
+        }
+      });
   }
 
   edit(e: UsuarioDto) {

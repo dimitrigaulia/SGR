@@ -1,9 +1,10 @@
-import { Component } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 /**
- * Componente de loading compartilhado
+ * Componente de loading compartilhado para uso em todo o sistema
+ * Usa o estilo global .loading-container definido em styles.scss
  */
 @Component({
   selector: 'app-loading',
@@ -11,18 +12,14 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
   imports: [CommonModule, MatProgressSpinnerModule],
   template: `
     <div class="loading-container">
-      <mat-spinner diameter="50"></mat-spinner>
+      <mat-spinner [diameter]="diameter"></mat-spinner>
     </div>
-  `,
-  styles: [`
-    .loading-container {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 32px;
-    }
-  `]
+  `
 })
 export class LoadingComponent {
+  /**
+   * Diâmetro do spinner (padrão: 50)
+   */
+  @Input() diameter: number = 50;
 }
 

@@ -1,4 +1,5 @@
-import { Component, inject, signal, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, inject, signal, ChangeDetectionStrategy, ChangeDetectorRef, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -24,6 +25,7 @@ export class PerfilFormComponent {
   private service = inject(PerfilService);
   private toast = inject(ToastService);
   private cdr = inject(ChangeDetectorRef);
+  private destroyRef = inject(DestroyRef);
 
   id = signal<number | null>(null);
   isView = signal<boolean>(false);
@@ -38,10 +40,12 @@ export class PerfilFormComponent {
     // Em template-driven, usamos [disabled] nos campos
     if (id) {
       this.id.set(id);
-      this.service.get(id).subscribe(e => { 
-        this.model = { nome: e.nome, isAtivo: e.isAtivo }; 
-        this.cdr.markForCheck();
-      });
+      this.service.get(id)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe(e => { 
+          this.model = { nome: e.nome, isAtivo: e.isAtivo }; 
+          this.cdr.markForCheck();
+        });
     }
   }
 
@@ -52,26 +56,30 @@ export class PerfilFormComponent {
     const v = this.model;
     if (this.id() === null) {
       const req: CreatePerfilRequest = { nome: v.nome, isAtivo: !!v.isAtivo };
-      this.service.create(req).subscribe({
-        next: () => { this.toast.success('Perfil criado'); this.router.navigate(['/perfis']); },
-        error: err => { 
-          const msg = err.error?.message || 'Erro ao salvar perfil'; 
-          this.toast.error(msg); 
-          this.error.set(msg);
-          this.cdr.markForCheck();
-        }
-      });
+      this.service.create(req)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: () => { this.toast.success('Perfil criado'); this.router.navigate(['/perfis']); },
+          error: err => { 
+            const msg = err.error?.message || 'Erro ao salvar perfil'; 
+            this.toast.error(msg); 
+            this.error.set(msg);
+            this.cdr.markForCheck();
+          }
+        });
     } else {
       const req: UpdatePerfilRequest = { nome: v.nome, isAtivo: !!v.isAtivo };
-      this.service.update(this.id()!, req).subscribe({
-        next: () => { this.toast.success('Perfil atualizado'); this.router.navigate(['/perfis']); },
-        error: err => { 
-          const msg = err.error?.message || 'Erro ao salvar perfil'; 
-          this.toast.error(msg); 
-          this.error.set(msg);
-          this.cdr.markForCheck();
-        }
-      });
+      this.service.update(this.id()!, req)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: () => { this.toast.success('Perfil atualizado'); this.router.navigate(['/perfis']); },
+          error: err => { 
+            const msg = err.error?.message || 'Erro ao salvar perfil'; 
+            this.toast.error(msg); 
+            this.error.set(msg);
+            this.cdr.markForCheck();
+          }
+        });
     }
   }
 }

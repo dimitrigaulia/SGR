@@ -41,6 +41,15 @@ $theme-dark: mat.define-theme((
   padding-inline: 16px; 
 }
 
+// Loading Container - Estilo global para todo o sistema
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 64px;
+  min-height: 200px;
+}
+
 // Estilos globais - O Material Design aplica automaticamente as cores do tema
 html, body { 
   height: 100%; 
