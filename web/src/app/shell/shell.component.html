@@ -1,55 +1,74 @@
-﻿<mat-drawer-container class="app-container" [hasBackdrop]="isHandset()">
-  <mat-drawer
+﻿<mat-sidenav-container class="app-container" [hasBackdrop]="isHandset()">
+  <!-- Sidebar -->
+  <mat-sidenav
     #sidenav
     class="app-sidenav"
-    [class.collapsed]="sideCollapsed() && !isHandset()"
     [mode]="sidenavMode()"
-    [opened]="sidenavOpened()">
-    <div class="side-header" [class.collapsed]="sideCollapsed() || isHandset()">
-      <span class="brand" *ngIf="!sideCollapsed() && !isHandset()">{{ brand }}</span>
+    [opened]="sidenavOpened()"
+    [class.collapsed]="isCollapsed() && !isHandset()">
+    
+    <!-- Header da Sidebar -->
+    <div class="sidenav-header" [class.collapsed]="isCollapsed() && !isHandset()">
+      <div class="brand-container">
+        <span class="brand-text" *ngIf="!isCollapsed() || isHandset()">{{ brand }}</span>
+        <mat-icon *ngIf="isCollapsed() && !isHandset()" class="brand-icon">restaurant</mat-icon>
+      </div>
     </div>
 
-    <mat-nav-list>
+    <!-- Navegação -->
+    <mat-nav-list class="sidenav-nav">
       <a
         mat-list-item
         *ngFor="let item of navItems"
         [routerLink]="item.route"
         routerLinkActive="active"
-        [matTooltip]="(sideCollapsed() || isHandset()) ? item.label : ''"
+        [routerLinkActiveOptions]="{exact: false}"
+        [matTooltip]="(isCollapsed() && !isHandset()) ? item.label : ''"
         matTooltipPosition="right"
-        aria-label="Ir para {{ item.label }}"
+        [attr.aria-label]="item.label"
         (click)="onNavItemClick()">
         <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
-        <div matListItemTitle *ngIf="!sideCollapsed() && !isHandset()">{{ item.label }}</div>
+        <span matListItemTitle *ngIf="!isCollapsed() || isHandset()">{{ item.label }}</span>
       </a>
     </mat-nav-list>
 
-    <div class="side-footer" *ngIf="!sideCollapsed() && !isHandset()">
+    <!-- Footer da Sidebar -->
+    <div class="sidenav-footer" *ngIf="!isCollapsed() || isHandset()">
       <mat-divider></mat-divider>
-      <small>© {{ currentYear }} • {{ brand }}</small>
+      <div class="footer-content">
+        <small>© {{ currentYear }} {{ brand }}</small>
+      </div>
     </div>
-  </mat-drawer>
+  </mat-sidenav>
 
-  <mat-drawer-content>
+  <!-- Conteúdo Principal -->
+  <mat-sidenav-content class="app-content">
+    <!-- Toolbar -->
     <mat-toolbar color="primary" class="app-toolbar">
       <button
         mat-icon-button
-        (click)="toggleCollapse()"
-        
-        aria-label="Abrir/fechar menu">
+        (click)="toggleSidenav()"
+        aria-label="Alternar menu">
         <mat-icon>menu</mat-icon>
       </button>
+      
       <span class="toolbar-title">{{ brand }}</span>
+      
       <span class="spacer"></span>
 
-      <!-- Ações topo (exemplos) -->
-      <button mat-icon-button aria-label="Notificações">
-        <mat-icon>notifications</mat-icon>
-      </button>
-      <button mat-icon-button [matMenuTriggerFor]="userMenu" aria-label="Usuário">
+      <!-- Ações da Toolbar -->
+      <button mat-icon-button [matMenuTriggerFor]="userMenu" aria-label="Menu do usuário">
         <mat-icon>account_circle</mat-icon>
       </button>
+      
       <mat-menu #userMenu="matMenu">
+        <div class="user-menu-header" *ngIf="usuario()">
+          <div class="user-info">
+            <strong>{{ usuario()?.nomeCompleto || 'Usuário' }}</strong>
+            <small>{{ usuario()?.email }}</small>
+          </div>
+        </div>
+        <mat-divider></mat-divider>
         <button mat-menu-item>
           <mat-icon>person</mat-icon>
           <span>Perfil</span>
@@ -58,6 +77,7 @@
           <mat-icon>{{ themeIcon() }}</mat-icon>
           <span>{{ themeIcon() === 'light_mode' ? 'Tema claro' : 'Tema escuro' }}</span>
         </button>
+        <mat-divider></mat-divider>
         <button mat-menu-item (click)="onLogout()">
           <mat-icon>logout</mat-icon>
           <span>Sair</span>
@@ -65,11 +85,12 @@
       </mat-menu>
     </mat-toolbar>
 
-    <main class="app-main container">
+    <!-- Área de Conteúdo -->
+    <main class="app-main">
       <router-outlet></router-outlet>
     </main>
-  </mat-drawer-content>
-</mat-drawer-container>
+  </mat-sidenav-content>
+</mat-sidenav-container>
 
 
 

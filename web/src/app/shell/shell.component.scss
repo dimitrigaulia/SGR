@@ -1,149 +1,234 @@
-$app-sidenav-width: 260px;
-$app-sidenav-width-collapsed: 72px;
+// Variáveis
+$sidenav-width: 280px;
+$sidenav-width-collapsed: 64px;
+$toolbar-height: 64px;
 
+// Container Principal - Previne scroll horizontal
 .app-container {
-  height: 100dvh;
-  width: 100%;
-  background: var(--mat-app-background-color);
-  color: var(--mat-app-text-color);
-}
-
-// Garantir que o drawer content também use tema escuro
-::ng-deep {
-  .mat-drawer-content {
-    background: var(--mat-app-background-color) !important;
-    color: var(--mat-app-text-color) !important;
-  }
-}
-
-.app-toolbar {
-  position: sticky;
+  position: fixed;
   top: 0;
-  z-index: 10;
-
-  .toolbar-title {
-    font-weight: 600;
-    letter-spacing: 0.2px;
-  }
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden; // Previne scroll horizontal
 }
 
+// Sidebar
 .app-sidenav {
-  width: $app-sidenav-width;
-  border-right: 0;
-  background: var(--mat-app-background-color);
-  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  z-index: 1;
+  width: $sidenav-width;
+  border-right: none;
+  background: var(--mat-sidenav-container-background-color);
+  box-shadow: 1px 0 3px rgba(0, 0, 0, 0.12);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; // Previne scroll horizontal
 
-  &.mat-drawer-side {
-    box-shadow: inset -1px 0 0 rgba(0, 0, 0, 0.06);
+  // Transição suave
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  // Estado colapsado
+  &.collapsed {
+    width: $sidenav-width-collapsed;
   }
 
-  .side-header {
+  // Header da Sidebar
+  .sidenav-header {
+    padding: 16px;
+    min-height: $toolbar-height;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 12px 8px 4px 8px;
+    border-bottom: 1px solid var(--mat-divider-color);
+    flex-shrink: 0;
 
-    .brand {
-      font-weight: 700;
-      font-size: 1.1rem;
-      white-space: nowrap;
-      overflow: hidden;
+    .brand-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      gap: 12px;
+
+      .brand-text {
+        font-size: 1.25rem;
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .brand-icon {
+        font-size: 28px;
+        width: 28px;
+        height: 28px;
+      }
     }
 
     &.collapsed {
-      padding: 12px 4px 4px 4px;
+      padding: 16px 8px;
     }
   }
 
-  .mat-mdc-list-item {
-    border-radius: 12px;
-    margin: 4px 8px;
-    min-height: 48px;
+  // Navegação
+  .sidenav-nav {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden; // Previne scroll horizontal
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 
-    &.active {
-      background-color: color-mix(in srgb, var(--mat-app-text-color) 12%, transparent);
-      color: var(--mat-app-text-color);
-    }
+    // Itens de navegação
+    a[mat-list-item] {
+      border-radius: 12px;
+      margin: 0;
+      min-height: 48px;
+      height: 48px;
+      padding: 0 12px;
+      transition: background-color 0.2s;
 
-    ::ng-deep {
-      .mdc-list-item__content {
-        display: flex;
-        align-items: center;
-        gap: 16px;
+      &:hover {
+        background-color: var(--mat-list-item-hover-state-layer-color);
       }
 
-      mat-icon[matListItemIcon] {
-        margin-right: 0;
-        margin-inline-end: 0;
-        flex-shrink: 0;
+      &.active {
+        background-color: var(--mat-primary-container);
+        color: var(--mat-on-primary-container);
+        
+        ::ng-deep mat-icon {
+          color: var(--mat-on-primary-container);
+        }
+      }
+
+      // Ícone
+      ::ng-deep {
+        mat-icon[matListItemIcon] {
+          margin: 0;
+          margin-inline-end: 16px;
+          flex-shrink: 0;
+          width: 24px;
+          height: 24px;
+          font-size: 24px;
+        }
+
+        span[matListItemTitle] {
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
       }
     }
   }
 
-  .side-footer {
-    padding: 8px 16px 16px;
-    color: color-mix(in srgb, var(--mat-app-text-color) 70%, transparent);
-    font-size: 0.75rem;
+  // Footer da Sidebar
+  .sidenav-footer {
+    flex-shrink: 0;
+    padding: 16px;
+    border-top: 1px solid var(--mat-divider-color);
+
+    .footer-content {
+      text-align: center;
+      color: var(--mat-app-text-secondary-color);
+      font-size: 0.75rem;
+    }
   }
 }
 
-// Ajuste para sidenav colapsada no desktop usando atributo
+// Conteúdo Principal
+.app-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden; // Previne scroll horizontal
+  background: var(--mat-app-background-color);
+}
+
+// Toolbar
+.app-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  height: $toolbar-height;
+  min-height: $toolbar-height;
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+  .toolbar-title {
+    font-weight: 500;
+    font-size: 1.125rem;
+    margin-left: 8px;
+  }
+
+  .spacer {
+    flex: 1 1 auto;
+  }
+}
+
+// Área de Conteúdo
+.app-main {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden; // Previne scroll horizontal
+  padding: 24px;
+  background: var(--mat-app-background-color);
+  min-height: 0; // Importante para flexbox funcionar corretamente
+}
+
+// Menu do Usuário
+::ng-deep {
+  .user-menu-header {
+    padding: 16px;
+    min-width: 200px;
+
+    .user-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+
+      strong {
+        font-size: 0.875rem;
+        font-weight: 500;
+      }
+
+      small {
+        font-size: 0.75rem;
+        color: var(--mat-app-text-secondary-color);
+      }
+    }
+  }
+}
+
+// Ajustes para sidenav colapsada no desktop
 @media (min-width: 960px) {
   ::ng-deep {
     .app-sidenav.mat-drawer-side {
-      width: $app-sidenav-width !important;
-      
       &.collapsed {
-        width: $app-sidenav-width-collapsed !important;
+        width: $sidenav-width-collapsed !important;
       }
     }
 
-    // Ajustar margin do conteúdo baseado no estado da sidebar
     .app-sidenav.mat-drawer-side.mat-drawer-opened ~ .mat-drawer-content {
-      margin-left: $app-sidenav-width !important;
+      margin-left: $sidenav-width !important;
       transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .app-sidenav.mat-drawer-side.collapsed.mat-drawer-opened ~ .mat-drawer-content {
-      margin-left: $app-sidenav-width-collapsed !important;
+      margin-left: $sidenav-width-collapsed !important;
     }
   }
 }
 
-.app-main {
-  padding-block: 16px;
-  background: var(--mat-app-background-color);
-  color: var(--mat-app-text-color);
-  min-height: calc(100dvh - 64px); // Altura total menos a toolbar
-}
-
-.spacer {
-  flex: 1;
-}
-
-// Responsividade
+// Responsividade Mobile
 @media (max-width: 959px) {
-  .hide-desktop {
-    display: inline-flex;
-  }
-
-  .hide-mobile {
-    display: none;
-  }
-
   .app-sidenav {
-    width: 260px !important;
+    width: 280px !important;
+  }
+
+  .app-main {
+    padding: 16px;
   }
 }
 
-@media (min-width: 960px) {
-  .hide-desktop {
-    display: none;
-  }
-
-  .hide-mobile {
-    display: inline-flex;
-  }
-}
 

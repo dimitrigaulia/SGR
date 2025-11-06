@@ -1,10 +1,8 @@
-﻿import { Component, computed, inject, signal, ViewChild, AfterViewInit } from '@angular/core';
+﻿import { Component, computed, inject, signal, ViewChild, AfterViewInit, ChangeDetectionStrategy, DestroyRef, ChangeDetectorRef } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
-import { NgFor, NgIf } from '@angular/common';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatSidenav, MatSidenavModule } from '@angular/material/sidenav';
-
-// Angular Material
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
@@ -12,6 +10,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDividerModule } from '@angular/material/divider';
+import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AuthService } from '../core/services/auth.service';
 import { LayoutService } from '../core/services/layout.service';
@@ -26,11 +25,10 @@ interface NavItem {
   selector: 'app-shell',
   standalone: true,
   imports: [
+    CommonModule,
     RouterOutlet,
     RouterLink,
     RouterLinkActive,
-    NgFor,
-    NgIf,
     MatSidenavModule,
     MatToolbarModule,
     MatIconModule,
@@ -41,7 +39,8 @@ interface NavItem {
     MatDividerModule,
   ],
   templateUrl: './shell.component.html',
-  styleUrls: ['./shell.component.scss']
+  styleUrls: ['./shell.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ShellComponent implements AfterViewInit {
   @ViewChild('sidenav') sidenav!: MatSidenav;
@@ -50,8 +49,10 @@ export class ShellComponent implements AfterViewInit {
   private router = inject(Router);
   private auth = inject(AuthService);
   private layout = inject(LayoutService);
+  private destroyRef = inject(DestroyRef);
+  private cdr = inject(ChangeDetectorRef);
 
-  // Itens de navegação (ajuste conforme as rotas do SGR)
+  // Itens de navegação
   readonly navItems: NavItem[] = [
     { icon: 'dashboard', label: 'Dashboard', route: '/dashboard' },
     { icon: 'people', label: 'Usuários', route: '/usuarios' },
@@ -60,69 +61,87 @@ export class ShellComponent implements AfterViewInit {
 
   // Estado
   readonly isHandset = signal(false);
-  readonly sideCollapsed = signal(false);
+  readonly isCollapsed = signal(false);
 
-  // Nome do usuário/empresa (exemplo)
+  // Dados
   readonly brand = 'SGR';
   readonly currentYear = new Date().getFullYear();
   readonly themeIcon = computed(() => (this.layout.isDarkTheme() ? 'light_mode' : 'dark_mode'));
+  readonly usuario = computed(() => this.auth.getUsuario());
 
   constructor() {
-    this.bp.observe([Breakpoints.Handset]).subscribe(res => {
-      this.isHandset.set(res.matches);
-      if (res.matches) {
-        this.sideCollapsed.set(true); // compacta em telas pequenas
-      }
-      // Ajustar sidenav após view estar pronta
-      setTimeout(() => {
-        if (this.sidenav) {
-          if (res.matches) {
-            this.sidenav.close();
-          } else {
+    // Observar breakpoints
+    this.bp.observe([Breakpoints.Handset, Breakpoints.TabletPortrait])
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(result => {
+        const isMobile = result.matches;
+        this.isHandset.set(isMobile);
+        
+        // Em mobile, sempre fechar sidenav
+        if (isMobile && this.sidenav) {
+          this.sidenav.close();
+        } else if (!isMobile && this.sidenav) {
+          // Em desktop, abrir se não estiver colapsado
+          if (!this.isCollapsed()) {
             this.sidenav.open();
           }
         }
-      }, 0);
-    });
+        this.cdr.markForCheck();
+      });
+
+    // Carregar estado do collapse do localStorage
+    const savedCollapsed = localStorage.getItem('sidebarCollapsed');
+    if (savedCollapsed !== null) {
+      this.isCollapsed.set(JSON.parse(savedCollapsed));
+    }
   }
 
   ngAfterViewInit() {
-    // Garantir que sidenav está aberto no desktop após inicialização
+    // Garantir estado inicial correto
     if (!this.isHandset() && this.sidenav) {
-      setTimeout(() => {
-        if (this.sidenav && !this.isHandset()) {
-          this.sidenav.open();
-        }
-      }, 0);
+      if (this.isCollapsed()) {
+        this.sidenav.close();
+      } else {
+        this.sidenav.open();
+      }
     }
   }
 
-  toggleCollapse() {
+  toggleSidenav() {
     if (this.isHandset()) {
-      // Mobile: toggle do drawer
-      if (this.sidenav) {
-        this.sidenav.toggle();
-      }
+      // Mobile: toggle simples
+      this.sidenav?.toggle();
     } else {
-      // Desktop: apenas colapsar/expandir
-      this.sideCollapsed.update(v => !v);
+      // Desktop: toggle collapse
+      const newState = !this.isCollapsed();
+      this.isCollapsed.set(newState);
+      localStorage.setItem('sidebarCollapsed', JSON.stringify(newState));
+      
+      if (newState) {
+        this.sidenav?.close();
+      } else {
+        this.sidenav?.open();
+      }
     }
+    this.cdr.markForCheck();
   }
 
   onNavItemClick() {
-    // Fechar sidenav no mobile após clicar em um item
+    // Fechar sidenav no mobile após clicar
     if (this.isHandset() && this.sidenav) {
       this.sidenav.close();
     }
   }
 
-  // Modo layout pro MatSidenav
-  readonly sidenavMode = computed(() => (this.isHandset() ? 'over' : 'side'));
+  // Computed para modo da sidenav
+  readonly sidenavMode = computed(() => this.isHandset() ? 'over' : 'side');
+  
+  // Computed para se está aberta
   readonly sidenavOpened = computed(() => {
     if (this.isHandset()) {
       return false; // Mobile controla via toggle
     }
-    return !this.sideCollapsed(); // Desktop baseado no estado collapsed
+    return !this.isCollapsed(); // Desktop baseado no estado
   });
 
   // Ações do topo
