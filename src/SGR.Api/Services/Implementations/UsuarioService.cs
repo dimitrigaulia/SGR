@@ -32,8 +32,52 @@ public class UsuarioService : BaseService<Usuario, UsuarioDto, CreateUsuarioRequ
             "nome" or "nomecompleto" => ascending ? query.OrderBy(u => u.NomeCompleto) : query.OrderByDescending(u => u.NomeCompleto),
             "email" => ascending ? query.OrderBy(u => u.Email) : query.OrderByDescending(u => u.Email),
             "ativo" or "isativo" => ascending ? query.OrderBy(u => u.IsAtivo) : query.OrderByDescending(u => u.IsAtivo),
+            "perfil" => ascending ? query.OrderBy(u => u.Perfil.Nome) : query.OrderByDescending(u => u.Perfil.Nome),
             _ => query.OrderBy(u => u.NomeCompleto)
         };
+    }
+
+    public override async Task<PagedResult<UsuarioDto>> GetAllAsync(string? search, int page, int pageSize, string? sort, string? order)
+    {
+        _logger.LogInformation("Buscando {EntityType} - Página: {Page}, Tamanho: {PageSize}, Busca: {Search}", 
+            typeof(Usuario).Name, page, pageSize, search ?? "N/A");
+
+        var query = _dbSet.Include(u => u.Perfil).AsQueryable();
+        
+        // Aplicar busca
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            query = ApplySearch(query, search);
+        }
+
+        // Aplicar ordenação
+        query = ApplySorting(query, sort, order);
+
+        var total = await query.CountAsync();
+        var items = await query
+            .Skip(Math.Max(0, (page - 1) * pageSize))
+            .Take(pageSize)
+            .Select(MapToDto())
+            .ToListAsync();
+
+        _logger.LogInformation("Encontrados {Total} registros de {EntityType}", total, typeof(Usuario).Name);
+
+        return new PagedResult<UsuarioDto> { Items = items, Total = total };
+    }
+
+    public override async Task<UsuarioDto?> GetByIdAsync(long id)
+    {
+        _logger.LogInformation("Buscando {EntityType} por ID: {Id}", typeof(Usuario).Name, id);
+
+        var entity = await _dbSet.Include(u => u.Perfil).FirstOrDefaultAsync(u => u.Id == id);
+        if (entity == null)
+        {
+            _logger.LogWarning("{EntityType} com ID {Id} não encontrado", typeof(Usuario).Name, id);
+            return null;
+        }
+
+        var mapper = MapToDto().Compile();
+        return mapper(entity);
     }
 
     protected override Expression<Func<Usuario, UsuarioDto>> MapToDto()
@@ -42,6 +86,7 @@ public class UsuarioService : BaseService<Usuario, UsuarioDto, CreateUsuarioRequ
         {
             Id = u.Id,
             PerfilId = u.PerfilId,
+            PerfilNome = u.Perfil.Nome,
             IsAtivo = u.IsAtivo,
             NomeCompleto = u.NomeCompleto,
             Email = u.Email,
@@ -113,6 +158,79 @@ public class UsuarioService : BaseService<Usuario, UsuarioDto, CreateUsuarioRequ
         {
             _logger.LogWarning("Tentativa de atualizar usuário {Id} com perfil inválido: {PerfilId}", entity.Id, request.PerfilId);
             throw new BusinessException("Perfil inválido");
+        }
+    }
+
+    public override async Task<UsuarioDto> CreateAsync(CreateUsuarioRequest request, string? usuarioCriacao)
+    {
+        _logger.LogInformation("Criando novo {EntityType} - Usuário: {Usuario}", typeof(Usuario).Name, usuarioCriacao ?? "Sistema");
+
+        try
+        {
+            var entity = MapToEntity(request);
+            
+            // Setar campos de auditoria se existirem
+            SetAuditFieldsOnCreate(entity, usuarioCriacao);
+            
+            await BeforeCreateAsync(entity, request, usuarioCriacao);
+            
+            _dbSet.Add(entity);
+            await _context.SaveChangesAsync();
+
+            var entityId = GetEntityId(entity);
+            _logger.LogInformation("{EntityType} criado com sucesso - ID: {Id}", typeof(Usuario).Name, entityId);
+
+            // Buscar novamente com Include para garantir que temos o Perfil
+            var savedEntity = await _dbSet.Include(u => u.Perfil).FirstOrDefaultAsync(u => u.Id == entityId);
+            if (savedEntity == null)
+                throw new InvalidOperationException("Erro ao salvar entidade");
+
+            var mapper = MapToDto().Compile();
+            return mapper(savedEntity);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao criar {EntityType}", typeof(Usuario).Name);
+            throw;
+        }
+    }
+
+    public override async Task<UsuarioDto?> UpdateAsync(long id, UpdateUsuarioRequest request, string? usuarioAtualizacao)
+    {
+        _logger.LogInformation("Atualizando {EntityType} - ID: {Id}, Usuário: {Usuario}", 
+            typeof(Usuario).Name, id, usuarioAtualizacao ?? "Sistema");
+
+        try
+        {
+            var entity = await _dbSet.FindAsync(id);
+            if (entity == null)
+            {
+                _logger.LogWarning("{EntityType} com ID {Id} não encontrado para atualização", typeof(Usuario).Name, id);
+                return null;
+            }
+
+            UpdateEntity(entity, request);
+            
+            // Setar campos de auditoria se existirem
+            SetAuditFieldsOnUpdate(entity, usuarioAtualizacao);
+            
+            await BeforeUpdateAsync(entity, request, usuarioAtualizacao);
+            
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("{EntityType} atualizado com sucesso - ID: {Id}", typeof(Usuario).Name, id);
+
+            // Buscar novamente com Include para garantir que temos o Perfil
+            var updatedEntity = await _dbSet.Include(u => u.Perfil).FirstOrDefaultAsync(u => u.Id == id);
+            if (updatedEntity == null) return null;
+
+            var mapper = MapToDto().Compile();
+            return mapper(updatedEntity);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao atualizar {EntityType} - ID: {Id}", typeof(Usuario).Name, id);
+            throw;
         }
     }
 

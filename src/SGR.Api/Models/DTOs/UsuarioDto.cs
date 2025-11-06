@@ -4,6 +4,7 @@ public class UsuarioDto
 {
     public long Id { get; set; }
     public long PerfilId { get; set; }
+    public string? PerfilNome { get; set; }
     public bool IsAtivo { get; set; }
     public string NomeCompleto { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;

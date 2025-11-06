@@ -96,6 +96,16 @@
         text-overflow: ellipsis;
         white-space: nowrap;
       }
+
+      .user-perfil {
+        margin: 4px 0 0 0;
+        font-size: 0.75rem;
+        color: var(--mat-app-text-color);
+        opacity: 0.6;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
     }
   }
 

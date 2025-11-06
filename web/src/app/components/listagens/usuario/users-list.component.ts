@@ -34,7 +34,7 @@ export class UsersListComponent implements OnDestroy {
   private destroyRef = inject(DestroyRef);
   private cdr = inject(ChangeDetectorRef);
   
-  displayedColumns = ['avatar', 'nome', 'email', 'ativo', 'acoes'];
+  displayedColumns = ['avatar', 'nome', 'email', 'perfil', 'ativo', 'acoes'];
   data = signal<UsuarioDto[]>([]);
   total = signal(0);
   pageIndex = signal(0);

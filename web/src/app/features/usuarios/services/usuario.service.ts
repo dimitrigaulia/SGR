@@ -6,6 +6,7 @@ import { environment } from '../../../../environments/environment';
 export interface UsuarioDto {
   id: number;
   perfilId: number;
+  perfilNome?: string | null;
   isAtivo: boolean;
   nomeCompleto: string;
   email: string;

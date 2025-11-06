@@ -180,7 +180,7 @@ public abstract class BaseService<TEntity, TDto, TCreateRequest, TUpdateRequest>
     }
 
     // Helpers para campos de auditoria usando reflection
-    private void SetAuditFieldsOnCreate(object entity, string? usuarioCriacao)
+    protected void SetAuditFieldsOnCreate(object entity, string? usuarioCriacao)
     {
         var type = entity.GetType();
         
@@ -191,7 +191,7 @@ public abstract class BaseService<TEntity, TDto, TCreateRequest, TUpdateRequest>
             type.GetProperty("DataCriacao")?.SetValue(entity, DateTime.UtcNow);
     }
 
-    private void SetAuditFieldsOnUpdate(object entity, string? usuarioAtualizacao)
+    protected void SetAuditFieldsOnUpdate(object entity, string? usuarioAtualizacao)
     {
         var type = entity.GetType();
         
@@ -202,7 +202,7 @@ public abstract class BaseService<TEntity, TDto, TCreateRequest, TUpdateRequest>
             type.GetProperty("DataAtualizacao")?.SetValue(entity, DateTime.UtcNow);
     }
 
-    private long GetEntityId(object entity)
+    protected long GetEntityId(object entity)
     {
         var idProperty = entity.GetType().GetProperty("Id");
         if (idProperty != null)
