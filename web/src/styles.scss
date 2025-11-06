@@ -50,6 +50,121 @@ $theme-dark: mat.define-theme((
   min-height: 200px;
 }
 
+// ============================================
+// ESTILOS GLOBAIS PARA FORMULÁRIOS
+// ============================================
+// Use estas classes em qualquer formulário do sistema para manter consistência
+
+// Espaçamento padrão entre campos de formulário
+.form-field-spacing {
+  width: 100%;
+  margin-bottom: 24px;
+  display: block;
+}
+
+// Wrapper para toggles (mat-slide-toggle) com espaçamento consistente
+.form-toggle-wrapper {
+  display: flex;
+  align-items: center;
+  margin-bottom: 24px;
+  padding: 8px 0;
+}
+
+// Seções do formulário (grupos de campos relacionados)
+.form-section {
+  margin-bottom: 32px;
+}
+
+// Container de formulário padrão
+.form-container {
+  padding: 16px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+// Título de formulário padrão
+.form-title {
+  margin: 0 0 32px 0;
+  font-size: 1.75rem;
+  font-weight: 500;
+}
+
+// Área de ações (botões) do formulário
+.form-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 32px;
+  flex-wrap: wrap;
+
+  button {
+    min-width: 120px;
+  }
+}
+
+// Mensagem de erro do formulário
+.form-error {
+  color: var(--mat-error);
+  margin: 16px 0;
+  padding: 12px 16px;
+  background-color: var(--mat-error-container);
+  border-radius: 4px;
+  font-size: 0.875rem;
+}
+
+// Responsividade para formulários
+@media (max-width: 959px) {
+  .form-container {
+    padding: 16px;
+    max-width: 100%;
+  }
+
+  .form-title {
+    font-size: 1.5rem;
+    margin-bottom: 24px;
+  }
+
+  .form-field-spacing {
+    margin-bottom: 20px;
+  }
+
+  .form-toggle-wrapper {
+    margin-bottom: 20px;
+  }
+}
+
+@media (max-width: 599px) {
+  .form-container {
+    padding: 12px;
+  }
+
+  .form-title {
+    font-size: 1.25rem;
+    margin-bottom: 20px;
+  }
+
+  .form-field-spacing {
+    margin-bottom: 16px;
+  }
+
+  .form-toggle-wrapper {
+    margin-bottom: 16px;
+    padding: 4px 0;
+  }
+
+  .form-actions {
+    flex-direction: column-reverse;
+    width: 100%;
+    margin-top: 24px;
+    gap: 8px;
+
+    button {
+      width: 100%;
+      min-width: unset;
+    }
+  }
+}
+
 // Estilos globais - O Material Design aplica automaticamente as cores do tema
 html, body { 
   height: 100%; 

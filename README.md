@@ -5,6 +5,8 @@ Sistema completo de gerenciamento desenvolvido com **Angular** (frontend) e **AS
 ## 📚 Documentação
 
 - **[Estrutura e Padrões](./docs/ESTRUTURA_E_PADROES.md)** - Guia completo sobre estrutura do projeto, padrões de código e passo a passo para criar novos componentes, controllers e services.
+- **[Guia de Formulários](./docs/GUIA_FORMULARIOS.md)** - Classes globais reutilizáveis para criar formulários consistentes e responsivos.
+- **[Padrões Angular 20](./docs/ANGULAR_20_PADROES.md)** - Sintaxe moderna de controle de fluxo (@if, @for, @switch) e padrões de nomenclatura recomendados.
 - **[Progresso do Backoffice](./docs/PROGRESSO_BACKOFFICE.md)** - Histórico de implementações e funcionalidades concluídas.
 
 ## 🏗️ Estrutura do Projeto

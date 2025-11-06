@@ -20,10 +20,16 @@
             required
             email
             #email="ngModel">
-          <mat-error *ngIf="email.invalid && email.touched">
-            <span *ngIf="email.errors?.['required']">Email é obrigatório</span>
-            <span *ngIf="email.errors?.['email']">Email inválido</span>
-          </mat-error>
+          @if (email.invalid && email.touched) {
+            <mat-error>
+              @if (email.errors?.['required']) {
+                <span>Email é obrigatório</span>
+              }
+              @if (email.errors?.['email']) {
+                <span>Email inválido</span>
+              }
+            </mat-error>
+          }
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="full-width">
@@ -36,14 +42,18 @@
             placeholder="Digite sua senha"
             required
             #senha="ngModel">
-          <mat-error *ngIf="senha.invalid && senha.touched">
-            Senha é obrigatória
-          </mat-error>
+          @if (senha.invalid && senha.touched) {
+            <mat-error>
+              Senha é obrigatória
+            </mat-error>
+          }
         </mat-form-field>
 
-        <div class="error-message" *ngIf="errorMessage">
-          {{ errorMessage }}
-        </div>
+        @if (errorMessage) {
+          <div class="error-message">
+            {{ errorMessage }}
+          </div>
+        }
 
         <button mat-raised-button color="primary" type="submit" class="full-width" [disabled]="isLoading || loginForm.invalid">
           {{ isLoading ? 'Entrando...' : 'Entrar' }}

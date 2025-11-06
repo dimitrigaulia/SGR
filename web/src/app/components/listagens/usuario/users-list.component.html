@@ -5,9 +5,11 @@
       <mat-form-field appearance="outline" class="search-field">
         <mat-label>Buscar</mat-label>
         <input matInput [(ngModel)]="searchTerm" (ngModelChange)="onSearchChange()" placeholder="Nome ou email" />
-        <button mat-icon-button matSuffix *ngIf="searchTerm" (click)="clearSearch()">
-          <mat-icon>close</mat-icon>
-        </button>
+        @if (searchTerm) {
+          <button mat-icon-button matSuffix (click)="clearSearch()">
+            <mat-icon>close</mat-icon>
+          </button>
+        }
       </mat-form-field>
       <a mat-raised-button color="primary" routerLink="/usuarios/cadastro" class="add-button">
         <mat-icon>add</mat-icon>
@@ -17,16 +19,22 @@
   </div>
 
   <!-- Loading Spinner -->
-  <app-loading *ngIf="isLoading()"></app-loading>
+  @if (isLoading()) {
+    <app-loading></app-loading>
+  }
 
   <!-- Versão Desktop: Tabela -->
-  <div class="table-container" *ngIf="!isMobile() && !isLoading()">
+  @if (!isMobile() && !isLoading()) {
+    <div class="table-container">
     <table mat-table [dataSource]="data()" class="mat-elevation-z1 full-width" matSort (matSortChange)="onSort($event)">
       <ng-container matColumnDef="avatar">
         <th mat-header-cell *matHeaderCellDef></th>
         <td mat-cell *matCellDef="let e">
-          <img *ngIf="e.pathImagem" [src]="e.pathImagem" alt="avatar" width="32" height="32" style="border-radius:50%" />
-          <mat-icon *ngIf="!e.pathImagem">account_circle</mat-icon>
+          @if (e.pathImagem) {
+            <img [src]="e.pathImagem" alt="avatar" width="32" height="32" style="border-radius:50%" />
+          } @else {
+            <mat-icon>account_circle</mat-icon>
+          }
         </td>
       </ng-container>
 
@@ -63,16 +71,22 @@
       <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
       <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
     </table>
-  </div>
+    </div>
+  }
 
   <!-- Versão Mobile: Cards -->
-  <div class="cards-container" *ngIf="isMobile() && !isLoading()">
-    <mat-card *ngFor="let e of data()" class="user-card">
+  @if (isMobile() && !isLoading()) {
+    <div class="cards-container">
+      @for (e of data(); track e.id) {
+        <mat-card class="user-card">
       <mat-card-content>
         <div class="card-header">
           <div class="avatar-section">
-            <img *ngIf="e.pathImagem" [src]="e.pathImagem" alt="avatar" width="48" height="48" style="border-radius:50%" />
-            <mat-icon *ngIf="!e.pathImagem" class="avatar-icon">account_circle</mat-icon>
+            @if (e.pathImagem) {
+              <img [src]="e.pathImagem" alt="avatar" width="48" height="48" style="border-radius:50%" />
+            } @else {
+              <mat-icon class="avatar-icon">account_circle</mat-icon>
+            }
           </div>
           <div class="user-info">
             <h3 class="user-name">{{ e.nomeCompleto }}</h3>
@@ -96,8 +110,14 @@
           </div>
         </div>
       </mat-card-content>
-    </mat-card>
-  </div>
+        </mat-card>
+      } @empty {
+        <div>Nenhum usuário encontrado</div>
+      }
+    </div>
+  }
 
-  <mat-paginator *ngIf="!isLoading()" [length]="total()" [pageIndex]="pageIndex()" [pageSize]="pageSize()" [pageSizeOptions]="[5,10,25,50]" (page)="pageChanged($event)"></mat-paginator>
+  @if (!isLoading()) {
+    <mat-paginator [length]="total()" [pageIndex]="pageIndex()" [pageSize]="pageSize()" [pageSizeOptions]="[5,10,25,50]" (page)="pageChanged($event)"></mat-paginator>
+  }
 </div>

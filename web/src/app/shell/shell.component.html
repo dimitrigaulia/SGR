@@ -10,35 +10,43 @@
     <!-- Header da Sidebar -->
     <div class="sidenav-header" [class.collapsed]="isCollapsed() && !isHandset()">
       <div class="brand-container">
-        <span class="brand-text" *ngIf="!isCollapsed() || isHandset()">{{ brand }}</span>
-        <mat-icon *ngIf="isCollapsed() && !isHandset()" class="brand-icon">restaurant</mat-icon>
+        @if (!isCollapsed() || isHandset()) {
+          <span class="brand-text">{{ brand }}</span>
+        } @else {
+          <mat-icon class="brand-icon">restaurant</mat-icon>
+        }
       </div>
     </div>
 
     <!-- Navegação -->
     <mat-nav-list class="sidenav-nav">
-      <a
-        mat-list-item
-        *ngFor="let item of navItems"
-        [routerLink]="item.route"
-        routerLinkActive="active"
-        [routerLinkActiveOptions]="{exact: false}"
-        [matTooltip]="(isCollapsed() && !isHandset()) ? item.label : ''"
-        matTooltipPosition="right"
-        [attr.aria-label]="item.label"
-        (click)="onNavItemClick()">
-        <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
-        <span matListItemTitle *ngIf="!isCollapsed() || isHandset()">{{ item.label }}</span>
-      </a>
+      @for (item of navItems; track item.route) {
+        <a
+          mat-list-item
+          [routerLink]="item.route"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{exact: false}"
+          [matTooltip]="(isCollapsed() && !isHandset()) ? item.label : ''"
+          matTooltipPosition="right"
+          [attr.aria-label]="item.label"
+          (click)="onNavItemClick()">
+          <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
+          @if (!isCollapsed() || isHandset()) {
+            <span matListItemTitle>{{ item.label }}</span>
+          }
+        </a>
+      }
     </mat-nav-list>
 
     <!-- Footer da Sidebar -->
-    <div class="sidenav-footer" *ngIf="!isCollapsed() || isHandset()">
-      <mat-divider></mat-divider>
-      <div class="footer-content">
-        <small>© {{ currentYear }} {{ brand }}</small>
+    @if (!isCollapsed() || isHandset()) {
+      <div class="sidenav-footer">
+        <mat-divider></mat-divider>
+        <div class="footer-content">
+          <small>© {{ currentYear }} {{ brand }}</small>
+        </div>
       </div>
-    </div>
+    }
   </mat-sidenav>
 
   <!-- Conteúdo Principal -->
@@ -62,12 +70,14 @@
       </button>
       
       <mat-menu #userMenu="matMenu">
-        <div class="user-menu-header" *ngIf="usuario()">
-          <div class="user-info">
-            <strong>{{ usuario()?.nomeCompleto || 'Usuário' }}</strong>
-            <small>{{ usuario()?.email }}</small>
+        @if (usuario()) {
+          <div class="user-menu-header">
+            <div class="user-info">
+              <strong>{{ usuario()?.nomeCompleto || 'Usuário' }}</strong>
+              <small>{{ usuario()?.email }}</small>
+            </div>
           </div>
-        </div>
+        }
         <mat-divider></mat-divider>
         <button mat-menu-item>
           <mat-icon>person</mat-icon>

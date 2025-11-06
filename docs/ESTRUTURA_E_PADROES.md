@@ -507,3 +507,8 @@ export class MinhaEntidadeService {
 - [ASP.NET Core Documentation](https://learn.microsoft.com/en-us/aspnet/core/)
 - [Entity Framework Core](https://learn.microsoft.com/en-us/ef/core/)
 
+## 📝 Guias Específicos
+
+- **[Guia de Formulários](./GUIA_FORMULARIOS.md)** - Classes globais reutilizáveis para criar formulários consistentes e responsivos
+- **[Padrões Angular 20](./ANGULAR_20_PADROES.md)** - Sintaxe moderna de controle de fluxo (@if, @for, @switch) e padrões de nomenclatura
+

@@ -5,9 +5,11 @@
       <mat-form-field appearance="outline" class="search-field">
         <mat-label>Buscar</mat-label>
         <input matInput [(ngModel)]="searchTerm" (ngModelChange)="onSearchChange()" placeholder="Nome" />
-        <button mat-icon-button matSuffix *ngIf="searchTerm" (click)="clearSearch()">
-          <mat-icon>close</mat-icon>
-        </button>
+        @if (searchTerm) {
+          <button mat-icon-button matSuffix (click)="clearSearch()">
+            <mat-icon>close</mat-icon>
+          </button>
+        }
       </mat-form-field>
       <a mat-raised-button color="primary" routerLink="/perfis/cadastro" class="add-button">
         <mat-icon>add</mat-icon>
@@ -17,10 +19,13 @@
   </div>
 
   <!-- Loading Spinner -->
-  <app-loading *ngIf="isLoading()"></app-loading>
+  @if (isLoading()) {
+    <app-loading></app-loading>
+  }
 
   <!-- Versão Desktop: Tabela -->
-  <div class="table-container" *ngIf="!isMobile() && !isLoading()">
+  @if (!isMobile() && !isLoading()) {
+    <div class="table-container">
     <table mat-table [dataSource]="data()" class="mat-elevation-z1 full-width" matSort (matSortChange)="onSort($event)">
       <ng-container matColumnDef="nome">
         <th mat-header-cell *matHeaderCellDef mat-sort-header="nome">Nome</th>
@@ -50,11 +55,14 @@
       <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
       <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
     </table>
-  </div>
+    </div>
+  }
 
   <!-- Versão Mobile: Cards -->
-  <div class="cards-container" *ngIf="isMobile() && !isLoading()">
-    <mat-card *ngFor="let e of data()" class="perfil-card">
+  @if (isMobile() && !isLoading()) {
+    <div class="cards-container">
+      @for (e of data(); track e.id) {
+        <mat-card class="perfil-card">
       <mat-card-content>
         <div class="card-header">
           <div class="perfil-info">
@@ -78,8 +86,14 @@
           </div>
         </div>
       </mat-card-content>
-    </mat-card>
-  </div>
+        </mat-card>
+      } @empty {
+        <div>Nenhum perfil encontrado</div>
+      }
+    </div>
+  }
 
-  <mat-paginator *ngIf="!isLoading()" [length]="total()" [pageIndex]="pageIndex()" [pageSize]="pageSize()" [pageSizeOptions]="[5,10,25,50]" (page)="pageChanged($event)"></mat-paginator>
+  @if (!isLoading()) {
+    <mat-paginator [length]="total()" [pageIndex]="pageIndex()" [pageSize]="pageSize()" [pageSizeOptions]="[5,10,25,50]" (page)="pageChanged($event)"></mat-paginator>
+  }
 </div>
