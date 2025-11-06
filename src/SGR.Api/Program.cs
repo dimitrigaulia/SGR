@@ -86,6 +86,7 @@ using (var scope = app.Services.CreateScope())
 
 // Configure the HTTP request pipeline.
 // IMPORTANTE: UseCors() deve vir ANTES de UseHttpsRedirection() para evitar problemas com preflight
+app.UseMiddleware<SGR.Api.Middleware.ExceptionHandlingMiddleware>();
 app.UseCors();
 
 if (app.Environment.IsDevelopment())

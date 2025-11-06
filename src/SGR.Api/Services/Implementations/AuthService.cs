@@ -2,6 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using SGR.Api.Data;
 using SGR.Api.Models.DTOs;
@@ -14,15 +15,19 @@ public class AuthService : IAuthService
 {
     private readonly ApplicationDbContext _context;
     private readonly IConfiguration _configuration;
+    private readonly ILogger<AuthService> _logger;
 
-    public AuthService(ApplicationDbContext context, IConfiguration configuration)
+    public AuthService(ApplicationDbContext context, IConfiguration configuration, ILogger<AuthService> logger)
     {
         _context = context;
         _configuration = configuration;
+        _logger = logger;
     }
 
     public async Task<LoginResponse?> LoginAsync(LoginRequest request)
     {
+        _logger.LogInformation("Tentativa de login para email: {Email}", request.Email);
+
         // Buscar usuário por email
         var usuario = await _context.Usuarios
             .Include(u => u.Perfil)
@@ -30,20 +35,25 @@ public class AuthService : IAuthService
 
         if (usuario == null)
         {
+            _logger.LogWarning("Tentativa de login falhou - Usuário não encontrado ou inativo: {Email}", request.Email);
             return null; // Usuário não encontrado ou inativo
         }
 
         // Verificar senha
         if (!BCrypt.Net.BCrypt.Verify(request.Senha, usuario.SenhaHash))
         {
+            _logger.LogWarning("Tentativa de login falhou - Senha inválida para: {Email}", request.Email);
             return null; // Senha inválida
         }
 
         // Verificar se o perfil está ativo
         if (!usuario.Perfil.IsAtivo)
         {
+            _logger.LogWarning("Tentativa de login falhou - Perfil inativo para: {Email}", request.Email);
             return null; // Perfil inativo
         }
+
+        _logger.LogInformation("Login bem-sucedido para: {Email} (ID: {Id})", request.Email, usuario.Id);
 
         // Gerar token JWT
         var token = GenerateJwtToken(usuario);

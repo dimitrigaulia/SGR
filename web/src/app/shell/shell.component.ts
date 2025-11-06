@@ -13,8 +13,8 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDividerModule } from '@angular/material/divider';
 import { Router } from '@angular/router';
-import { AuthService } from '../services/auth.service';
-import { LayoutService } from '../services/layout.service';
+import { AuthService } from '../core/services/auth.service';
+import { LayoutService } from '../core/services/layout.service';
 
 interface NavItem {
   icon: string;

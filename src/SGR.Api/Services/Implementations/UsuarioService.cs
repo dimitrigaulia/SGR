@@ -1,67 +1,44 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using SGR.Api.Data;
+using SGR.Api.Exceptions;
 using SGR.Api.Models.DTOs;
 using SGR.Api.Models.Entities;
 using SGR.Api.Services.Interfaces;
+using System.Linq.Expressions;
 
 namespace SGR.Api.Services.Implementations;
 
-public class UsuarioService : IUsuarioService
+public class UsuarioService : BaseService<Usuario, UsuarioDto, CreateUsuarioRequest, UpdateUsuarioRequest>, IUsuarioService
 {
-    private readonly ApplicationDbContext _context;
-
-    public UsuarioService(ApplicationDbContext context)
+    public UsuarioService(ApplicationDbContext context, ILogger<UsuarioService> logger) : base(context, logger)
     {
-        _context = context;
     }
 
-    public async Task<PagedResult<UsuarioDto>> GetAllAsync(string? search, int page, int pageSize, string? sort, string? order)
+    protected override IQueryable<Usuario> ApplySearch(IQueryable<Usuario> query, string? search)
     {
-        var query = _context.Usuarios.AsQueryable();
+        if (string.IsNullOrWhiteSpace(search)) return query;
+        search = search.ToLower();
+        return query.Where(u =>
+            EF.Functions.ILike(u.NomeCompleto, $"%{search}%") ||
+            EF.Functions.ILike(u.Email, $"%{search}%"));
+    }
 
-        if (!string.IsNullOrWhiteSpace(search))
-        {
-            search = search.ToLower();
-            query = query.Where(u =>
-                EF.Functions.ILike(u.NomeCompleto, $"%{search}%") ||
-                EF.Functions.ILike(u.Email, $"%{search}%"));
-        }
-
-        // sorting
+    protected override IQueryable<Usuario> ApplySorting(IQueryable<Usuario> query, string? sort, string? order)
+    {
         var ascending = string.Equals(order, "asc", StringComparison.OrdinalIgnoreCase);
-        query = (sort?.ToLower()) switch
+        return (sort?.ToLower()) switch
         {
             "nome" or "nomecompleto" => ascending ? query.OrderBy(u => u.NomeCompleto) : query.OrderByDescending(u => u.NomeCompleto),
             "email" => ascending ? query.OrderBy(u => u.Email) : query.OrderByDescending(u => u.Email),
             "ativo" or "isativo" => ascending ? query.OrderBy(u => u.IsAtivo) : query.OrderByDescending(u => u.IsAtivo),
             _ => query.OrderBy(u => u.NomeCompleto)
         };
-
-        var total = await query.CountAsync();
-        var items = await query
-            .Skip(Math.Max(0, (page - 1) * pageSize))
-            .Take(pageSize)
-            .Select(u => new UsuarioDto
-            {
-                Id = u.Id,
-                PerfilId = u.PerfilId,
-                IsAtivo = u.IsAtivo,
-                NomeCompleto = u.NomeCompleto,
-                Email = u.Email,
-                PathImagem = u.PathImagem,
-                UsuarioAtualizacao = u.UsuarioAtualizacao,
-                DataAtualizacao = u.DataAtualizacao
-            })
-            .ToListAsync();
-
-        return new PagedResult<UsuarioDto> { Items = items, Total = total };
     }
 
-    public async Task<UsuarioDto?> GetByIdAsync(long id)
+    protected override Expression<Func<Usuario, UsuarioDto>> MapToDto()
     {
-        var u = await _context.Usuarios.FindAsync(id);
-        if (u == null) return null;
-        return new UsuarioDto
+        return u => new UsuarioDto
         {
             Id = u.Id,
             PerfilId = u.PerfilId,
@@ -74,98 +51,77 @@ public class UsuarioService : IUsuarioService
         };
     }
 
-    public async Task<UsuarioDto> CreateAsync(CreateUsuarioRequest request, string? usuarioCriacao)
+    protected override Usuario MapToEntity(CreateUsuarioRequest request)
     {
-        // Email único
-        var exists = await _context.Usuarios.AnyAsync(x => x.Email == request.Email);
-        if (exists)
-            throw new InvalidOperationException("E-mail já cadastrado");
-
-        // Verifica perfil
-        var perfilExists = await _context.Perfis.AnyAsync(p => p.Id == request.PerfilId && p.IsAtivo);
-        if (!perfilExists)
-            throw new InvalidOperationException("Perfil inválido ou inativo");
-
-        var entity = new Usuario
+        return new Usuario
         {
             PerfilId = request.PerfilId,
             IsAtivo = request.IsAtivo,
             NomeCompleto = request.NomeCompleto,
             Email = request.Email,
             SenhaHash = BCrypt.Net.BCrypt.HashPassword(request.Senha),
-            PathImagem = request.PathImagem,
-            UsuarioCriacao = usuarioCriacao,
-            DataCriacao = DateTime.UtcNow,
-            DataAtualizacao = DateTime.UtcNow
+            PathImagem = request.PathImagem
         };
-
-        _context.Usuarios.Add(entity);
-        await _context.SaveChangesAsync();
-
-        return await GetRequiredDto(entity.Id);
     }
 
-    public async Task<UsuarioDto?> UpdateAsync(long id, UpdateUsuarioRequest request, string? usuarioAtualizacao)
+    protected override void UpdateEntity(Usuario entity, UpdateUsuarioRequest request)
     {
-        var u = await _context.Usuarios.FindAsync(id);
-        if (u == null) return null;
-
-        // Email único (exceto o próprio)
-        var emailTaken = await _context.Usuarios.AnyAsync(x => x.Email == request.Email && x.Id != id);
-        if (emailTaken)
-            throw new InvalidOperationException("E-mail já cadastrado");
-
-        // Verifica perfil
-        var perfilExists = await _context.Perfis.AnyAsync(p => p.Id == request.PerfilId);
-        if (!perfilExists)
-            throw new InvalidOperationException("Perfil inválido");
-
-        u.PerfilId = request.PerfilId;
-        u.IsAtivo = request.IsAtivo;
-        u.NomeCompleto = request.NomeCompleto;
-        u.Email = request.Email;
-        u.PathImagem = request.PathImagem;
+        entity.PerfilId = request.PerfilId;
+        entity.IsAtivo = request.IsAtivo;
+        entity.NomeCompleto = request.NomeCompleto;
+        entity.Email = request.Email;
+        entity.PathImagem = request.PathImagem;
+        
         if (!string.IsNullOrWhiteSpace(request.NovaSenha))
         {
-            u.SenhaHash = BCrypt.Net.BCrypt.HashPassword(request.NovaSenha);
+            entity.SenhaHash = BCrypt.Net.BCrypt.HashPassword(request.NovaSenha);
         }
-        u.UsuarioAtualizacao = usuarioAtualizacao;
-        u.DataAtualizacao = DateTime.UtcNow;
-
-        await _context.SaveChangesAsync();
-        return await GetRequiredDto(u.Id);
     }
 
-    public async Task<bool> DeleteAsync(long id)
+    protected override async Task BeforeCreateAsync(Usuario entity, CreateUsuarioRequest request, string? usuarioCriacao)
     {
-        var u = await _context.Usuarios.FindAsync(id);
-        if (u == null) return false;
-        _context.Usuarios.Remove(u);
-        await _context.SaveChangesAsync();
-        return true;
+        // Validação de email único
+        var exists = await _context.Usuarios.AnyAsync(x => x.Email == request.Email);
+        if (exists)
+        {
+            _logger.LogWarning("Tentativa de criar usuário com email já existente: {Email}", request.Email);
+            throw new BusinessException("E-mail já cadastrado");
+        }
+
+        // Validação de perfil
+        var perfilExists = await _context.Perfis.AnyAsync(p => p.Id == request.PerfilId && p.IsAtivo);
+        if (!perfilExists)
+        {
+            _logger.LogWarning("Tentativa de criar usuário com perfil inválido ou inativo: {PerfilId}", request.PerfilId);
+            throw new BusinessException("Perfil inválido ou inativo");
+        }
     }
 
+    protected override async Task BeforeUpdateAsync(Usuario entity, UpdateUsuarioRequest request, string? usuarioAtualizacao)
+    {
+        // Validação de email único (exceto o próprio)
+        var emailTaken = await _context.Usuarios.AnyAsync(x => x.Email == request.Email && x.Id != entity.Id);
+        if (emailTaken)
+        {
+            _logger.LogWarning("Tentativa de atualizar usuário {Id} com email já existente: {Email}", entity.Id, request.Email);
+            throw new BusinessException("E-mail já cadastrado");
+        }
+
+        // Validação de perfil
+        var perfilExists = await _context.Perfis.AnyAsync(p => p.Id == request.PerfilId);
+        if (!perfilExists)
+        {
+            _logger.LogWarning("Tentativa de atualizar usuário {Id} com perfil inválido: {PerfilId}", entity.Id, request.PerfilId);
+            throw new BusinessException("Perfil inválido");
+        }
+    }
+
+    // Método específico que não está na interface base
     public async Task<bool> EmailExistsAsync(string email, long? excludeId = null)
     {
         var q = _context.Usuarios.AsQueryable().Where(x => x.Email == email);
         if (excludeId.HasValue)
             q = q.Where(x => x.Id != excludeId.Value);
         return await q.AnyAsync();
-    }
-
-    private async Task<UsuarioDto> GetRequiredDto(long id)
-    {
-        var u = await _context.Usuarios.AsNoTracking().FirstAsync(x => x.Id == id);
-        return new UsuarioDto
-        {
-            Id = u.Id,
-            PerfilId = u.PerfilId,
-            IsAtivo = u.IsAtivo,
-            NomeCompleto = u.NomeCompleto,
-            Email = u.Email,
-            PathImagem = u.PathImagem,
-            UsuarioAtualizacao = u.UsuarioAtualizacao,
-            DataAtualizacao = u.DataAtualizacao
-        };
     }
 }

@@ -1,4 +1,4 @@
-﻿import { Component, inject, signal, ViewChild, OnDestroy } from "@angular/core";
+﻿import { Component, inject, signal, ViewChild, OnDestroy, ChangeDetectionStrategy } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { Router, RouterLink } from "@angular/router";
@@ -13,15 +13,16 @@ import { MatSort, MatSortModule, Sort } from "@angular/material/sort";
 import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatInputModule } from "@angular/material/input";
 import { MatCardModule } from "@angular/material/card";
-import { ToastService } from "../../../services/toast.service";
-import { UsuarioService, UsuarioDto } from "../../../services/usuario.service";
+import { ToastService } from "../../../core/services/toast.service";
+import { UsuarioService, UsuarioDto } from "../../../features/usuarios/services/usuario.service";
 
 @Component({
   standalone: true,
   selector: 'app-users-list',
   imports: [CommonModule, FormsModule, RouterLink, MatTableModule, MatButtonModule, MatIconModule, MatTooltipModule, MatSnackBarModule, MatPaginatorModule, MatSortModule, MatFormFieldModule, MatInputModule, MatCardModule],
   templateUrl: './users-list.component.html',
-  styleUrls: ['./users-list.component.scss']
+  styleUrls: ['./users-list.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class UsersListComponent implements OnDestroy {
   private service = inject(UsuarioService);

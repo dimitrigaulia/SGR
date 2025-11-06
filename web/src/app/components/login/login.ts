@@ -1,18 +1,21 @@
 ﻿import { Component, inject } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { CommonModule } from '@angular/common';
-import { AuthService } from '../../services/auth.service';
+import { AuthService } from '../../core/services/auth.service';
 
+/**
+ * Componente de login usando Template-Driven Forms
+ */
 @Component({
   selector: 'app-login',
   imports: [
     CommonModule,
-    ReactiveFormsModule,
+    FormsModule,
     MatCardModule,
     MatFormFieldModule,
     MatInputModule,
@@ -22,35 +25,26 @@ import { AuthService } from '../../services/auth.service';
   styleUrl: './login.scss',
 })
 export class Login {
-  private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private router = inject(Router);
 
-  loginForm: FormGroup;
+  model = {
+    email: '',
+    senha: ''
+  };
+  
   isLoading = false;
   errorMessage = '';
 
-  constructor() {
-    this.loginForm = this.fb.group({
-      email: ['', [Validators.required, Validators.email]],
-      senha: ['', [Validators.required]]
-    });
-  }
-
-  onSubmit(): void {
-    if (this.loginForm.invalid) {
+  onSubmit(form: any): void {
+    if (form.invalid) {
       return;
     }
 
     this.isLoading = true;
     this.errorMessage = '';
 
-    const loginRequest = {
-      email: this.loginForm.value.email,
-      senha: this.loginForm.value.senha
-    };
-
-    this.authService.login(loginRequest).subscribe({
+    this.authService.login(this.model).subscribe({
       next: () => {
         this.isLoading = false;
         this.router.navigate(['/dashboard']);

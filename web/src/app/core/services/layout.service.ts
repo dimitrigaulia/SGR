@@ -1,9 +1,12 @@
-﻿import { Injectable, signal, inject, computed } from '@angular/core';
+import { Injectable, signal, inject, computed } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { MatSidenav } from '@angular/material/sidenav';
 import { Observable, map, shareReplay } from 'rxjs';
 
+/**
+ * Service para gerenciamento de layout (sidebar, tema, breakpoints)
+ */
 @Injectable({
   providedIn: 'root'
 })
@@ -83,7 +86,9 @@ export class LayoutService {
     }
   }
 
-  // Tema
+  /**
+   * Define o tema da aplicação
+   */
   setTheme(mode: 'dark' | 'light') {
     this._themeMode.set(mode);
     localStorage.setItem('themeMode', mode);
@@ -92,6 +97,9 @@ export class LayoutService {
     root.classList.add(mode === 'dark' ? 'dark-theme' : 'light-theme');
   }
 
+  /**
+   * Alterna entre tema claro e escuro
+   */
   toggleTheme() {
     this.setTheme(this._themeMode() === 'dark' ? 'light' : 'dark');
   }

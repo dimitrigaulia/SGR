@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal, ViewChild, ElementRef } from '@angular/core';
+import { Component, computed, inject, signal, ViewChild, ElementRef, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -8,10 +8,10 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
-import { UsuarioService, CreateUsuarioRequest, UpdateUsuarioRequest, UsuarioDto } from '../../../services/usuario.service';
-import { PerfilService, PerfilDto } from '../../../services/perfil.service';
-import { ToastService } from '../../../services/toast.service';
-import { UploadService } from '../../../services/upload.service';
+import { UsuarioService, CreateUsuarioRequest, UpdateUsuarioRequest, UsuarioDto } from '../../../features/usuarios/services/usuario.service';
+import { PerfilService, PerfilDto } from '../../../features/perfis/services/perfil.service';
+import { ToastService } from '../../../core/services/toast.service';
+import { UploadService } from '../../../features/usuarios/services/upload.service';
 
 type UsuarioFormModel = Omit<UsuarioDto, 'id'> & {
   senha?: string;
@@ -23,7 +23,8 @@ type UsuarioFormModel = Omit<UsuarioDto, 'id'> & {
   selector: 'app-user-form',
   imports: [CommonModule, FormsModule, RouterLink, MatFormFieldModule, MatInputModule, MatButtonModule, MatSelectModule, MatSlideToggleModule, MatSnackBarModule],
   templateUrl: './user-form.component.html',
-  styleUrls: ['./user-form.component.scss']
+  styleUrls: ['./user-form.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class UserFormComponent {
   private router = inject(Router);
@@ -31,6 +32,7 @@ export class UserFormComponent {
   private perfilService = inject(PerfilService);
   private toast = inject(ToastService);
   private upload = inject(UploadService);
+  private cdr = inject(ChangeDetectorRef);
 
   id = signal<number | null>(null);
   perfis = signal<PerfilDto[]>([]);
@@ -53,7 +55,12 @@ export class UserFormComponent {
 
   constructor() {
     // Carregar perfis (lista simples)
-    this.perfilService.list({ pageSize: 1000 }).subscribe({ next: res => this.perfis.set(res.items) });
+    this.perfilService.list({ pageSize: 1000 }).subscribe({ 
+      next: res => {
+        this.perfis.set(res.items);
+        this.cdr.markForCheck();
+      }
+    });
 
     // Ler state (id/view)
     const st: any = this.router.getCurrentNavigation()?.extras.state ?? (typeof window !== 'undefined' ? (window as any).history?.state : undefined);
@@ -65,6 +72,7 @@ export class UserFormComponent {
       this.service.get(id).subscribe(e => {
         this.model = { ...e, senha: '', novaSenha: '' };
         this.previousAvatarUrl = e.pathImagem ?? null;
+        this.cdr.markForCheck();
       });
     }
   }
@@ -137,6 +145,7 @@ export class UserFormComponent {
       next: (res) => {
         this.model.pathImagem = res.url;
         this.toast.success('Foto atualizada');
+        this.cdr.markForCheck();
       },
       error: () => { this.toast.error('Falha ao enviar imagem'); }
     });

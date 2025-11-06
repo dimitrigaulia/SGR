@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../environments/environment';
+import { environment } from '../../../../environments/environment';
 
 export interface PerfilDto {
   id: number;
@@ -21,11 +21,17 @@ export interface UpdatePerfilRequest {
 
 export interface Paged<T> { items: T[]; total: number }
 
+/**
+ * Service para gerenciamento de perfis
+ */
 @Injectable({ providedIn: 'root' })
 export class PerfilService {
   private http = inject(HttpClient);
   private base = `${environment.apiUrl}/backoffice/perfis`;
 
+  /**
+   * Lista perfis com paginação, busca e ordenação
+   */
   list(opts?: { search?: string; page?: number; pageSize?: number; sort?: string; order?: 'asc'|'desc' }): Observable<Paged<PerfilDto>> {
     const { search, page = 1, pageSize = 10, sort, order } = opts ?? {};
     const params: any = { page, pageSize };
@@ -35,19 +41,32 @@ export class PerfilService {
     return this.http.get<Paged<PerfilDto>>(this.base, { params });
   }
 
+  /**
+   * Busca um perfil por ID
+   */
   get(id: number): Observable<PerfilDto> {
     return this.http.get<PerfilDto>(`${this.base}/${id}`);
   }
 
+  /**
+   * Cria um novo perfil
+   */
   create(req: CreatePerfilRequest): Observable<PerfilDto> {
     return this.http.post<PerfilDto>(this.base, req);
   }
 
+  /**
+   * Atualiza um perfil existente
+   */
   update(id: number, req: UpdatePerfilRequest): Observable<PerfilDto> {
     return this.http.put<PerfilDto>(`${this.base}/${id}`, req);
   }
 
+  /**
+   * Exclui um perfil
+   */
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.base}/${id}`);
   }
 }
+

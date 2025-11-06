@@ -1,6 +1,6 @@
 ﻿import { Routes } from "@angular/router";
-import { authGuard } from "./guards/auth.guard";
-import { stateGuard } from "./guards/state.guard";
+import { authGuard } from "./core/guards/auth.guard";
+import { stateGuard } from "./core/guards/state.guard";
 import { ShellComponent } from "./shell/shell.component";
 
 export const routes: Routes = [

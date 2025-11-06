@@ -1,4 +1,4 @@
-﻿import { Component, inject, signal, ViewChild, OnDestroy } from "@angular/core";
+﻿import { Component, inject, signal, ViewChild, OnDestroy, ChangeDetectionStrategy } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { Router, RouterLink } from "@angular/router";
@@ -13,15 +13,16 @@ import { MatSort, MatSortModule, Sort } from "@angular/material/sort";
 import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatInputModule } from "@angular/material/input";
 import { MatCardModule } from "@angular/material/card";
-import { ToastService } from "../../../services/toast.service";
-import { PerfilService, PerfilDto } from "../../../services/perfil.service";
+import { ToastService } from "../../../core/services/toast.service";
+import { PerfilService, PerfilDto } from "../../../features/perfis/services/perfil.service";
 
 @Component({
   standalone: true,
   selector: 'app-perfis-list',
   imports: [CommonModule, FormsModule, RouterLink, MatTableModule, MatButtonModule, MatIconModule, MatTooltipModule, MatSnackBarModule, MatPaginatorModule, MatSortModule, MatFormFieldModule, MatInputModule, MatCardModule],
   templateUrl: './perfis-list.component.html',
-  styleUrls: ['./perfis-list.component.scss']
+  styleUrls: ['./perfis-list.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PerfisListComponent implements OnDestroy {
   private service = inject(PerfilService);
