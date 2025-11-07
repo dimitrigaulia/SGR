@@ -179,8 +179,10 @@ export class TenantFormComponent {
     this.service.getCnpjData(cnpjLimpo)
       .pipe(
         takeUntilDestroyed(this.destroyRef),
-        catchError(() => {
+        catchError((err) => {
           this.isLoadingCnpj.set(false);
+          this.toast.error('Erro ao buscar dados do CNPJ');
+          this.cdr.markForCheck();
           return of(null);
         })
       )
@@ -188,19 +190,24 @@ export class TenantFormComponent {
         next: (dados) => {
           this.isLoadingCnpj.set(false);
           if (dados) {
+            // Criar novo objeto para garantir detecção de mudanças com OnPush
+            const modelAtualizado = { ...this.model };
+            
             if (dados.razaoSocial) {
-              this.model.razaoSocial = dados.razaoSocial;
+              modelAtualizado.razaoSocial = dados.razaoSocial;
             }
             if (dados.nomeFantasia) {
-              this.model.nomeFantasia = dados.nomeFantasia;
+              modelAtualizado.nomeFantasia = dados.nomeFantasia;
               // Gerar subdomínio automaticamente se não estiver editando
-              if (!this.isEdit() && !this.model.subdominio) {
-                this.model.subdominio = generateSubdomain(dados.nomeFantasia);
+              if (!this.isEdit() && !modelAtualizado.subdominio) {
+                modelAtualizado.subdominio = generateSubdomain(dados.nomeFantasia);
               }
-            } else if (dados.razaoSocial && !this.isEdit() && !this.model.subdominio) {
+            } else if (dados.razaoSocial && !this.isEdit() && !modelAtualizado.subdominio) {
               // Se não tiver nome fantasia, usar razão social
-              this.model.subdominio = generateSubdomain(dados.razaoSocial);
+              modelAtualizado.subdominio = generateSubdomain(dados.razaoSocial);
             }
+            
+            this.model = modelAtualizado;
             this.toast.success('Dados do CNPJ carregados com sucesso');
           }
           this.cdr.markForCheck();

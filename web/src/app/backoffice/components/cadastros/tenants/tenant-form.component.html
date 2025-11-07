@@ -41,7 +41,7 @@
           name="cpfCnpj" 
           [(ngModel)]="model.cpfCnpj" 
           (input)="onCpfCnpjInput($event)"
-          [disabled]="isView() || isLoadingCnpj()" 
+          [disabled]="isView() || isLoadingCnpj() || !model.tipoPessoaId" 
           required 
           [maxlength]="model.tipoPessoaId === 1 ? 14 : 18" />
         @if (isLoadingCnpj()) {
