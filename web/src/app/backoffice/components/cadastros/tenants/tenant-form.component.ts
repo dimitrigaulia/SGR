@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal, ChangeDetectionStrategy, ChangeDetectorRef, DestroyRef } from '@angular/core';
+import { Component, computed, inject, signal, ChangeDetectionStrategy, ChangeDetectorRef, DestroyRef, NgZone } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -62,6 +62,7 @@ export class TenantFormComponent {
   private toast = inject(ToastService);
   private cdr = inject(ChangeDetectorRef);
   private destroyRef = inject(DestroyRef);
+  private ngZone = inject(NgZone);
 
   id = signal<number | null>(null);
   isEdit = computed(() => this.id() !== null);
@@ -190,27 +191,47 @@ export class TenantFormComponent {
         next: (dados) => {
           this.isLoadingCnpj.set(false);
           if (dados) {
-            // Criar novo objeto para garantir detecção de mudanças com OnPush
-            const modelAtualizado = { ...this.model };
-            
-            if (dados.razaoSocial) {
-              modelAtualizado.razaoSocial = dados.razaoSocial;
-            }
-            if (dados.nomeFantasia) {
-              modelAtualizado.nomeFantasia = dados.nomeFantasia;
-              // Gerar subdomínio automaticamente se não estiver editando
-              if (!this.isEdit() && !modelAtualizado.subdominio) {
-                modelAtualizado.subdominio = generateSubdomain(dados.nomeFantasia);
+            // Atualizar propriedades diretamente dentro do NgZone
+            // Isso garante que as mudanças sejam detectadas pelo Angular
+            this.ngZone.run(() => {
+              // Verificar ambos os formatos (snake_case e camelCase) para compatibilidade
+              // O backend pode retornar em snake_case mesmo com configuração camelCase
+              const razaoSocial = (dados as any).razaoSocial || (dados as any).razao_social;
+              const nomeFantasia = (dados as any).nomeFantasia || (dados as any).nome_fantasia;
+              
+              // Atualizar propriedades diretamente
+              if (razaoSocial) {
+                this.model.razaoSocial = razaoSocial;
               }
-            } else if (dados.razaoSocial && !this.isEdit() && !modelAtualizado.subdominio) {
-              // Se não tiver nome fantasia, usar razão social
-              modelAtualizado.subdominio = generateSubdomain(dados.razaoSocial);
-            }
-            
-            this.model = modelAtualizado;
-            this.toast.success('Dados do CNPJ carregados com sucesso');
+              
+              // Se não houver nome fantasia, usar a razão social
+              if (nomeFantasia) {
+                this.model.nomeFantasia = nomeFantasia;
+              } else if (razaoSocial) {
+                this.model.nomeFantasia = razaoSocial;
+              }
+              
+              // Gerar subdomínio automaticamente se não estiver editando
+              if (!this.isEdit() && !this.model.subdominio) {
+                const nomeParaSubdominio = nomeFantasia || razaoSocial;
+                if (nomeParaSubdominio) {
+                  this.model.subdominio = generateSubdomain(nomeParaSubdominio);
+                }
+              }
+              
+              // Forçar detecção de mudanças múltiplas vezes para garantir
+              this.cdr.markForCheck();
+              this.cdr.detectChanges();
+              
+              // Usar setTimeout para garantir que o ngModel seja atualizado
+              setTimeout(() => {
+                this.cdr.detectChanges();
+                this.toast.success('Dados do CNPJ carregados com sucesso');
+              }, 0);
+            });
+          } else {
+            this.cdr.markForCheck();
           }
-          this.cdr.markForCheck();
         }
       });
   }

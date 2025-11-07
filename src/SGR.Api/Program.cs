@@ -9,7 +9,13 @@ using SGR.Api.Extensions;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        // Configurar serialização JSON para usar camelCase (padrão do Angular)
+        options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+        options.JsonSerializerOptions.WriteIndented = false;
+    });
 builder.Services.AddOpenApi();
 
 // Configure Entity Framework Core
