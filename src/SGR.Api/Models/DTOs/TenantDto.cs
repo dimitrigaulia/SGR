@@ -5,7 +5,7 @@ public class TenantDto
     public long Id { get; set; }
     public string RazaoSocial { get; set; } = string.Empty;
     public string NomeFantasia { get; set; } = string.Empty;
-    public long TipoPessoaId { get; set; }
+    public long TipoPessoaId { get; set; } // 1 = Pessoa Física (PF), 2 = Pessoa Jurídica (PJ)
     public string TipoPessoaNome { get; set; } = string.Empty; // "Pessoa Física" ou "Pessoa Jurídica"
     public string CpfCnpj { get; set; } = string.Empty;
     public string Subdominio { get; set; } = string.Empty;

@@ -14,7 +14,7 @@ public class UpdateTenantRequest
 
     [Required(ErrorMessage = "O tipo de pessoa é obrigatório")]
     [Range(1, 2, ErrorMessage = "O tipo de pessoa deve ser 1 (Pessoa Física) ou 2 (Pessoa Jurídica)")]
-    public long TipoPessoaId { get; set; }
+    public long TipoPessoaId { get; set; } // 1 = Pessoa Física (PF), 2 = Pessoa Jurídica (PJ)
 
     [Required(ErrorMessage = "O CPF/CNPJ é obrigatório")]
     [MaxLength(18, ErrorMessage = "O CPF/CNPJ deve ter no máximo 18 caracteres")]

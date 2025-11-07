@@ -38,7 +38,7 @@ public class TenantService : BaseService<Tenant, TenantDto, CreateTenantRequest,
             RazaoSocial = t.RazaoSocial,
             NomeFantasia = t.NomeFantasia,
             TipoPessoaId = t.TipoPessoaId,
-            TipoPessoaNome = t.TipoPessoaId == 1 ? "Pessoa Física" : "Pessoa Jurídica",
+            TipoPessoaNome = t.TipoPessoaId == 1 ? "Pessoa Física" : "Pessoa Jurídica", // 1 = PF, 2 = PJ
             CpfCnpj = t.CpfCnpj,
             Subdominio = t.Subdominio,
             NomeSchema = t.NomeSchema,
@@ -192,7 +192,7 @@ public class TenantService : BaseService<Tenant, TenantDto, CreateTenantRequest,
         // 6. Executar migrations no schema
         await RunMigrationsOnSchemaAsync(tenant.NomeSchema);
 
-        // 7. Inicializar dados do tenant (TipoPessoa, Perfil Administrador)
+        // 7. Inicializar dados do tenant (Perfil Administrador)
         await InitializeTenantDataAsync(tenant.NomeSchema, usuarioCriacao);
 
         // 8. Criar usuário administrador
@@ -257,7 +257,7 @@ public class TenantService : BaseService<Tenant, TenantDto, CreateTenantRequest,
             throw new BusinessException("CPF/CNPJ inválido");
         }
 
-        // Validar tipo de pessoa
+        // Validar tipo de pessoa (1 = Pessoa Física, 2 = Pessoa Jurídica)
         if (request.TipoPessoaId != 1 && request.TipoPessoaId != 2)
         {
             throw new BusinessException("Tipo de pessoa deve ser 1 (Pessoa Física) ou 2 (Pessoa Jurídica)");
@@ -352,12 +352,6 @@ public class TenantService : BaseService<Tenant, TenantDto, CreateTenantRequest,
     private async Task CreateTenantTablesAsync(string schemaName)
     {
         var sql = $@"
-            -- Tabela TipoPessoa
-            CREATE TABLE IF NOT EXISTS ""{schemaName}"".""TipoPessoa"" (
-                ""Id"" BIGSERIAL PRIMARY KEY,
-                ""Nome"" VARCHAR(100) NOT NULL
-            );
-
             -- Tabela Perfil
             CREATE TABLE IF NOT EXISTS ""{schemaName}"".""Perfil"" (
                 ""Id"" BIGSERIAL PRIMARY KEY,
@@ -398,16 +392,6 @@ public class TenantService : BaseService<Tenant, TenantDto, CreateTenantRequest,
         
         // Usar SQL direto para inserir os dados iniciais
         var sql = $@"
-            -- Inserir TipoPessoa ""Pessoa Física""
-            INSERT INTO ""{schemaName}"".""TipoPessoa"" (""Id"", ""Nome"")
-            VALUES (1, 'Pessoa Física')
-            ON CONFLICT (""Id"") DO NOTHING;
-
-            -- Inserir TipoPessoa ""Pessoa Jurídica""
-            INSERT INTO ""{schemaName}"".""TipoPessoa"" (""Id"", ""Nome"")
-            VALUES (2, 'Pessoa Jurídica')
-            ON CONFLICT (""Id"") DO NOTHING;
-
             -- Inserir Perfil ""Administrador""
             INSERT INTO ""{schemaName}"".""Perfil"" (""Nome"", ""IsAtivo"", ""UsuarioCriacao"", ""DataCriacao"")
             VALUES ('Administrador', true, '{usuarioCriacao ?? "Sistema"}', NOW() AT TIME ZONE 'utc')

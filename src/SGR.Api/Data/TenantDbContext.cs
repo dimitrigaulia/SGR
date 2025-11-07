@@ -17,7 +17,6 @@ public class TenantDbContext : DbContext
     {
     }
 
-    public DbSet<TipoPessoa> TipoPessoas { get; set; }
     public DbSet<Perfil> Perfis { get; set; }
     public DbSet<Usuario> Usuarios { get; set; }
 
@@ -32,15 +31,6 @@ public class TenantDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-
-        // Configuração TipoPessoa
-        modelBuilder.Entity<TipoPessoa>(entity =>
-        {
-            entity.ToTable("TipoPessoa");
-            entity.HasKey(e => e.Id);
-
-            entity.Property(e => e.Nome).HasMaxLength(100).IsRequired();
-        });
 
         // Configuração Perfil
         modelBuilder.Entity<Perfil>(entity =>

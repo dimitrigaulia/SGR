@@ -8,7 +8,7 @@ public class Tenant
     public long Id { get; set; }
     public string RazaoSocial { get; set; } = string.Empty;
     public string NomeFantasia { get; set; } = string.Empty;
-    public long TipoPessoaId { get; set; } // Referência: 1 = PF, 2 = PJ
+    public long TipoPessoaId { get; set; } // 1 = Pessoa Física (PF), 2 = Pessoa Jurídica (PJ)
     public string CpfCnpj { get; set; } = string.Empty; // CNPJ ou CPF (sem máscara)
     public string Subdominio { get; set; } = string.Empty; // Ex: "vangoghbar" (apenas letras e números)
     public string NomeSchema { get; set; } = string.Empty; // Gerado: "{subdominio}_{id}" (ex: "vangoghbar_1")

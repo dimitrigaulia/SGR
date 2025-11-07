@@ -154,7 +154,6 @@ O sistema utiliza uma arquitetura **Schema per Tenant** no PostgreSQL, onde cada
 **Schemas dinâmicos: `{subdominio}_{id}`** (ex: `vangoghbar_1`, `restaurante_2`)
 
 Cada schema contém:
-- `TipoPessoa` - Tipos de pessoa (Pessoa Física, Pessoa Jurídica)
 - `Perfil` - Perfis de acesso do tenant
 - `Usuario` - Usuários do tenant
 
@@ -176,11 +175,9 @@ Cada schema contém:
    - `CREATE SCHEMA {NomeSchema};`
 
 5. **Executar Migrations no Schema**:
-   - Criar tabelas: `TipoPessoa`, `Perfil`, `Usuario`
+   - Criar tabelas: `Perfil`, `Usuario`
 
 6. **Inicializar Dados do Tenant**:
-   - Criar TipoPessoa "Pessoa Física" (Id: 1)
-   - Criar TipoPessoa "Pessoa Jurídica" (Id: 2)
    - Criar Perfil "Administrador" (IsAtivo: true)
    - Criar Usuario admin (com perfil Administrador)
 
@@ -240,8 +237,7 @@ SGR.Api/
 │   │   ├── Usuario.cs
 │   │   ├── Perfil.cs
 │   │   ├── Tenant.cs
-│   │   ├── CategoriaTenant.cs
-│   │   └── TipoPessoa.cs
+│   │   └── CategoriaTenant.cs
 │   └── DTOs/
 │       ├── UsuarioDto.cs
 │       ├── CreateUsuarioRequest.cs
