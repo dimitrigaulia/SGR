@@ -15,19 +15,50 @@ export class AuthService {
   private apiUrl = environment.apiUrl;
 
   /**
-   * Realiza login do usuário
+   * Realiza login do backoffice
    */
-  login(request: LoginRequest): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(`${this.apiUrl}/auth/login`, request).pipe(
+  loginBackoffice(request: LoginRequest): Observable<LoginResponse> {
+    return this.http.post<LoginResponse>(`${this.apiUrl}/backoffice/auth/login`, request).pipe(
       tap(response => {
         // Salvar token no localStorage
         if (response.token) {
           localStorage.setItem('token', response.token);
           localStorage.setItem('usuario', JSON.stringify(response.usuario));
           localStorage.setItem('perfil', JSON.stringify(response.perfil));
+          localStorage.setItem('context', 'backoffice');
+          localStorage.removeItem('tenantSubdomain');
         }
       })
     );
+  }
+
+  /**
+   * Realiza login do tenant
+   */
+  loginTenant(request: LoginRequest, tenantSubdomain: string): Observable<LoginResponse> {
+    return this.http.post<LoginResponse>(`${this.apiUrl}/tenant/auth/login`, request, {
+      headers: {
+        'X-Tenant-Subdomain': tenantSubdomain
+      }
+    }).pipe(
+      tap(response => {
+        // Salvar token no localStorage
+        if (response.token) {
+          localStorage.setItem('token', response.token);
+          localStorage.setItem('usuario', JSON.stringify(response.usuario));
+          localStorage.setItem('perfil', JSON.stringify(response.perfil));
+          localStorage.setItem('context', 'tenant');
+          localStorage.setItem('tenantSubdomain', tenantSubdomain);
+        }
+      })
+    );
+  }
+
+  /**
+   * Realiza login do usuário (método genérico - mantido para compatibilidade)
+   */
+  login(request: LoginRequest): Observable<LoginResponse> {
+    return this.loginBackoffice(request);
   }
 
   /**
@@ -37,6 +68,22 @@ export class AuthService {
     localStorage.removeItem('token');
     localStorage.removeItem('usuario');
     localStorage.removeItem('perfil');
+    localStorage.removeItem('context');
+    localStorage.removeItem('tenantSubdomain');
+  }
+
+  /**
+   * Obtém o contexto atual (backoffice ou tenant)
+   */
+  getContext(): 'backoffice' | 'tenant' | null {
+    return localStorage.getItem('context') as 'backoffice' | 'tenant' | null;
+  }
+
+  /**
+   * Obtém o subdomínio do tenant atual
+   */
+  getTenantSubdomain(): string | null {
+    return localStorage.getItem('tenantSubdomain');
   }
 
   /**

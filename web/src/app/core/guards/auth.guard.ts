@@ -10,10 +10,32 @@ export const authGuard: CanActivateFn = (route, state) => {
   const router = inject(Router);
 
   if (authService.isAuthenticated()) {
+    // Verificar se o contexto da rota corresponde ao contexto do usuário
+    const url = state.url;
+    const context = authService.getContext();
+    
+    if (url.startsWith('/backoffice') && context !== 'backoffice') {
+      router.navigate(['/backoffice/login']);
+      return false;
+    }
+    
+    if (url.startsWith('/tenant') && context !== 'tenant') {
+      router.navigate(['/tenant/login']);
+      return false;
+    }
+    
     return true;
   }
 
-  router.navigate(['/']);
+  // Redirecionar para login baseado na rota
+  if (state.url.startsWith('/backoffice')) {
+    router.navigate(['/backoffice/login']);
+  } else if (state.url.startsWith('/tenant')) {
+    router.navigate(['/tenant/login']);
+  } else {
+    router.navigate(['/backoffice/login']);
+  }
+  
   return false;
 };
 

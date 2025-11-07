@@ -52,12 +52,28 @@ export class ShellComponent implements AfterViewInit {
   private destroyRef = inject(DestroyRef);
   private cdr = inject(ChangeDetectorRef);
 
-  // Itens de navegação
-  readonly navItems: NavItem[] = [
-    { icon: 'dashboard', label: 'Dashboard', route: '/dashboard' },
-    { icon: 'people', label: 'Usuários', route: '/usuarios' },
-    { icon: 'badge', label: 'Perfis', route: '/perfis' },
-  ];
+  // Itens de navegação (será calculado baseado no contexto)
+  readonly navItems = computed<NavItem[]>(() => {
+    const context = this.auth.getContext();
+    const baseUrl = context === 'backoffice' ? '/backoffice' : '/tenant';
+    
+    const items: NavItem[] = [
+      { icon: 'dashboard', label: 'Dashboard', route: `${baseUrl}/dashboard` },
+    ];
+
+    // Itens específicos do backoffice
+    if (context === 'backoffice') {
+      items.push(
+        { icon: 'people', label: 'Usuários', route: `${baseUrl}/usuarios` },
+        { icon: 'badge', label: 'Perfis', route: `${baseUrl}/perfis` },
+        { icon: 'business', label: 'Tenants', route: `${baseUrl}/tenants` }
+      );
+    }
+
+    // Itens específicos do tenant podem ser adicionados aqui no futuro
+
+    return items;
+  });
 
   // Estado
   readonly isHandset = signal(false);

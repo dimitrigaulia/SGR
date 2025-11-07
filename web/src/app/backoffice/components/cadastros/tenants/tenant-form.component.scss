@@ -1,0 +1,13 @@
+// Estilos específicos do componente
+// Os estilos globais de formulário estão em styles.scss
+
+.form-section {
+  margin-bottom: 32px;
+}
+
+// Responsividade específica
+@media (max-width: 599px) {
+  .form-section {
+    margin-bottom: 24px;
+  }
+}

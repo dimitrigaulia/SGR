@@ -9,34 +9,59 @@ Este documento descreve a estrutura do projeto, padrões de código e guias pass
 ```
 SGR.Api/
 ├── Controllers/
-│   └── Backoffice/
-│       ├── BaseController.cs          # Controller base genérico para CRUD
-│       ├── UsuariosController.cs      # Exemplo de controller específico
-│       ├── PerfisController.cs        # Exemplo de controller específico
-│       └── AuthController.cs          # Controller de autenticação
+│   ├── Backoffice/                    # Controllers do backoffice
+│   │   ├── BaseController.cs          # Controller base genérico para CRUD
+│   │   ├── UsuariosController.cs      # Controller de usuários
+│   │   ├── PerfisController.cs        # Controller de perfis
+│   │   ├── TenantsController.cs       # Controller de tenants
+│   │   ├── AuthController.cs          # Controller de autenticação do backoffice
+│   │   └── UploadsController.cs       # Controller de uploads
+│   └── Tenant/                        # Controllers do tenant
+│       └── AuthController.cs          # Controller de autenticação do tenant
 ├── Services/
 │   ├── Interfaces/
 │   │   ├── IBaseService.cs            # Interface base genérica
-│   │   ├── IUsuarioService.cs         # Interface específica
-│   │   └── IPerfilService.cs          # Interface específica
+│   │   ├── IUsuarioService.cs         # Interface de usuários
+│   │   ├── IPerfilService.cs          # Interface de perfis
+│   │   ├── ITenantService.cs          # Interface de tenants
+│   │   ├── IAuthService.cs            # Interface de autenticação (backoffice)
+│   │   ├── ITenantAuthService.cs      # Interface de autenticação (tenant)
+│   │   └── ICpfCnpjValidationService.cs # Interface de validação CPF/CNPJ
 │   └── Implementations/
 │       ├── BaseService.cs             # Service base genérico
-│       ├── UsuarioService.cs          # Service específico
-│       └── PerfilService.cs           # Service específico
+│       ├── UsuarioService.cs          # Service de usuários
+│       ├── PerfilService.cs           # Service de perfis
+│       ├── TenantService.cs           # Service de tenants
+│       ├── AuthService.cs             # Service de autenticação (backoffice)
+│       ├── TenantAuthService.cs       # Service de autenticação (tenant)
+│       └── CpfCnpjValidationService.cs # Service de validação CPF/CNPJ
 ├── Models/
 │   ├── Entities/                      # Entidades do domínio
-│   │   ├── Usuario.cs
-│   │   └── Perfil.cs
+│   │   ├── Usuario.cs                 # Usuário (backoffice e tenant)
+│   │   ├── Perfil.cs                  # Perfil (backoffice e tenant)
+│   │   ├── Tenant.cs                  # Tenant (banco sgr_config)
+│   │   └── TipoPessoa.cs              # Tipo de Pessoa (schema do tenant)
 │   └── DTOs/                          # Data Transfer Objects
 │       ├── UsuarioDto.cs
 │       ├── CreateUsuarioRequest.cs
-│       └── UpdateUsuarioRequest.cs
+│       ├── UpdateUsuarioRequest.cs
+│       ├── PerfilDto.cs
+│       ├── CreatePerfilRequest.cs
+│       ├── UpdatePerfilRequest.cs
+│       ├── TenantDto.cs
+│       ├── CreateTenantRequest.cs
+│       ├── UpdateTenantRequest.cs
+│       ├── LoginRequest.cs
+│       └── LoginResponse.cs
 ├── Data/
-│   └── ApplicationDbContext.cs        # Contexto do EF Core
+│   ├── ApplicationDbContext.cs        # Contexto do EF Core (banco sgr_config)
+│   ├── TenantDbContext.cs             # Contexto do EF Core (banco sgr_tenants)
+│   └── DbInitializer.cs               # Inicializador do banco
 ├── Extensions/
 │   └── ServiceCollectionExtensions.cs # Extension methods para DI
 ├── Middleware/
-│   └── ExceptionHandlingMiddleware.cs # Tratamento global de exceções
+│   ├── ExceptionHandlingMiddleware.cs # Tratamento global de exceções
+│   └── TenantIdentificationMiddleware.cs # Identificação do tenant
 ├── Exceptions/
 │   ├── BusinessException.cs           # Exceção de negócio
 │   └── NotFoundException.cs           # Exceção de não encontrado
@@ -47,39 +72,56 @@ SGR.Api/
 
 ```
 app/
-├── core/                              # Funcionalidades core da aplicação
+├── backoffice/                       # Backoffice
+│   ├── components/
+│   │   ├── listagens/               # Componentes de listagem
+│   │   │   ├── usuario/
+│   │   │   ├── perfil/
+│   │   │   └── tenants/
+│   │   └── cadastros/               # Componentes de formulários
+│   │       ├── usuario/
+│   │       ├── perfil/
+│   │       └── tenants/
+│   └── login/                       # Login do backoffice
+│       ├── backoffice-login.component.ts
+│       ├── backoffice-login.component.html
+│       └── backoffice-login.component.scss
+├── tenant/                           # Tenant
+│   ├── components/                  # Para futuros componentes do tenant
+│   └── login/                       # Login do tenant
+│       ├── tenant-login.component.ts
+│       ├── tenant-login.component.html
+│       └── tenant-login.component.scss
+├── core/                             # Funcionalidades core da aplicação
 │   ├── guards/
-│   │   ├── auth.guard.ts             # Guard de autenticação
-│   │   └── state.guard.ts            # Guard de estado de navegação
+│   │   ├── auth.guard.ts            # Guard de autenticação
+│   │   └── state.guard.ts           # Guard de estado de navegação
 │   ├── interceptors/
-│   │   ├── auth.interceptor.ts       # Interceptor de autenticação
-│   │   └── error.interceptor.ts      # Interceptor de erros
+│   │   ├── auth.interceptor.ts      # Interceptor de autenticação
+│   │   ├── error.interceptor.ts     # Interceptor de erros
+│   │   └── tenant.interceptor.ts    # Interceptor de tenant (header X-Tenant-Subdomain)
 │   ├── services/
-│   │   ├── auth.service.ts           # Service de autenticação
-│   │   ├── layout.service.ts         # Service de layout/tema
-│   │   └── toast.service.ts          # Service de notificações
+│   │   ├── auth.service.ts          # Service de autenticação
+│   │   ├── layout.service.ts        # Service de layout/tema
+│   │   └── toast.service.ts         # Service de notificações
 │   └── models/
-│       └── auth.model.ts             # Modelos de autenticação
-├── shared/                            # Componentes e recursos compartilhados
+│       ├── auth.model.ts            # Modelos de autenticação
+│       └── menu-item.model.ts       # Modelos de menu
+├── shared/                           # Componentes e recursos compartilhados
 │   └── components/
 │       └── loading/
-│           └── loading.component.ts  # Componente de loading global
-├── features/                          # Funcionalidades específicas
+│           └── loading.component.ts # Componente de loading global
+├── features/                         # Funcionalidades específicas (services)
 │   ├── usuarios/
 │   │   └── services/
-│   │       ├── usuario.service.ts    # Service de usuários
-│   │       └── upload.service.ts     # Service de upload
-│   └── perfis/
+│   │       ├── usuario.service.ts   # Service de usuários
+│   │       └── upload.service.ts    # Service de upload
+│   ├── perfis/
+│   │   └── services/
+│   │       └── perfil.service.ts    # Service de perfis
+│   └── tenants/
 │       └── services/
-│           └── perfil.service.ts     # Service de perfis
-├── components/                        # Componentes de UI
-│   ├── listagens/                    # Componentes de listagem
-│   │   ├── usuario/
-│   │   └── perfil/
-│   ├── cadastros/                    # Componentes de formulários
-│   │   ├── usuario/
-│   │   └── perfil/
-│   └── login/                        # Componente de login
+│           └── tenant.service.ts    # Service de tenants
 ├── shell/                            # Layout principal
 │   ├── shell.component.ts
 │   ├── shell.component.html
@@ -456,7 +498,7 @@ export class MinhaEntidadeService {
    - Usar `takeUntilDestroyed` para subscriptions
    - Usar `LoadingComponent` para loading states
 
-4. **Criar o Componente de Formulário** (`components/cadastros/minha-entidade/minha-entidade-form.component.ts`)
+4. **Criar o Componente de Formulário** (`backoffice/components/cadastros/minha-entidade/minha-entidade-form.component.ts`)
    - Usar Template-Driven Forms
    - Usar `OnPush` change detection
    - Usar Navigation State para edição
@@ -464,15 +506,23 @@ export class MinhaEntidadeService {
 5. **Adicionar Rotas** (`app.routes.ts`)
    ```typescript
    {
-     path: "minha-entidade",
-     loadComponent: () => import("./components/listagens/minha-entidade/minha-entidade-list.component")
-       .then(m => m.MinhaEntidadeListComponent)
-   },
-   {
-     path: "minha-entidade/cadastro",
-     canActivate: [stateGuard],
-     loadComponent: () => import("./components/cadastros/minha-entidade/minha-entidade-form.component")
-       .then(m => m.MinhaEntidadeFormComponent)
+     path: "backoffice",
+     component: ShellComponent,
+     canActivate: [authGuard],
+     children: [
+       // ... outras rotas
+       {
+         path: "minha-entidade",
+         loadComponent: () => import("./backoffice/components/listagens/minha-entidade/minha-entidade-list.component")
+           .then(m => m.MinhaEntidadeListComponent)
+       },
+       {
+         path: "minha-entidade/cadastro",
+         canActivate: [stateGuard],
+         loadComponent: () => import("./backoffice/components/cadastros/minha-entidade/minha-entidade-form.component")
+           .then(m => m.MinhaEntidadeFormComponent)
+       }
+     ]
    }
    ```
 

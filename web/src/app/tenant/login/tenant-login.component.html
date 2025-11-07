@@ -1,0 +1,87 @@
+<div class="login-container">
+  <mat-card class="login-card">
+    <mat-card-header>
+      <div class="header-content">
+        <h2>SGR - Tenant</h2>
+        <p>Login do Restaurante</p>
+      </div>
+    </mat-card-header>
+
+    <mat-card-content>
+      <form #loginForm="ngForm" (ngSubmit)="onSubmit(loginForm)">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Restaurante</mat-label>
+          <mat-select 
+            name="tenantSubdomain" 
+            [(ngModel)]="model.tenantSubdomain" 
+            required
+            [disabled]="isLoadingTenants()">
+            @if (isLoadingTenants()) {
+              <mat-option disabled>Carregando restaurantes...</mat-option>
+            } @else {
+              @for (tenant of tenants(); track tenant.id) {
+                <mat-option [value]="tenant.subdominio">{{ tenant.nomeFantasia }}</mat-option>
+              } @empty {
+                <mat-option disabled>Nenhum restaurante disponível</mat-option>
+              }
+            }
+          </mat-select>
+          @if (loginForm.controls['tenantSubdomain']?.errors?.['required'] && loginForm.controls['tenantSubdomain']?.touched) {
+            <mat-error>Selecione um restaurante</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Email</mat-label>
+          <input 
+            matInput 
+            name="email" 
+            [(ngModel)]="model.email" 
+            type="email" 
+            placeholder="Digite seu email"
+            required
+            email
+            #email="ngModel">
+          @if (email.invalid && email.touched) {
+            <mat-error>
+              @if (email.errors?.['required']) {
+                <span>Email é obrigatório</span>
+              }
+              @if (email.errors?.['email']) {
+                <span>Email inválido</span>
+              }
+            </mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Senha</mat-label>
+          <input 
+            matInput 
+            name="senha" 
+            [(ngModel)]="model.senha" 
+            type="password" 
+            placeholder="Digite sua senha"
+            required
+            #senha="ngModel">
+          @if (senha.invalid && senha.touched) {
+            <mat-error>
+              Senha é obrigatória
+            </mat-error>
+          }
+        </mat-form-field>
+
+        @if (errorMessage()) {
+          <div class="error-message">
+            {{ errorMessage() }}
+          </div>
+        }
+
+        <button mat-raised-button color="primary" type="submit" class="full-width" [disabled]="isLoading() || loginForm.invalid || isLoadingTenants()">
+          {{ isLoading() ? 'Entrando...' : 'Entrar' }}
+        </button>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</div>
+

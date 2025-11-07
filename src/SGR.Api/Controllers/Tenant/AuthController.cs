@@ -1,28 +1,28 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using SGR.Api.Models.DTOs;
 using SGR.Api.Services.Interfaces;
 
-namespace SGR.Api.Controllers.Backoffice;
+namespace SGR.Api.Controllers.Tenant;
 
 /// <summary>
-/// Controller para autenticação
+/// Controller para autenticação de tenants
 /// </summary>
 [ApiController]
-[Route("api/backoffice/[controller]")]
+[Route("api/tenant/[controller]")]
 public class AuthController : ControllerBase
 {
-    private readonly IAuthService _authService;
+    private readonly ITenantAuthService _authService;
     private readonly ILogger<AuthController> _logger;
 
-    public AuthController(IAuthService authService, ILogger<AuthController> logger)
+    public AuthController(ITenantAuthService authService, ILogger<AuthController> logger)
     {
         _authService = authService;
         _logger = logger;
     }
 
     /// <summary>
-    /// Realiza login do usuário
+    /// Realiza login do usuário do tenant
     /// </summary>
     /// <param name="request">Credenciais de login</param>
     /// <returns>Token JWT e dados do usuário</returns>
@@ -37,16 +37,23 @@ public class AuthController : ControllerBase
             return BadRequest(ModelState);
         }
 
+        // Verificar se o tenant foi identificado pelo middleware
+        var tenant = HttpContext.Items["Tenant"] as TenantDto;
+        if (tenant == null)
+        {
+            _logger.LogWarning("Tentativa de login do tenant sem identificação do tenant");
+            return BadRequest(new { message = "Tenant não identificado. Forneça o header X-Tenant-Subdomain." });
+        }
+
         var response = await _authService.LoginAsync(request);
 
         if (response == null)
         {
-            _logger.LogWarning("Tentativa de login falhou para: {Email}", request.Email);
+            _logger.LogWarning("Tentativa de login do tenant falhou para: {Email}", request.Email);
             return Unauthorized(new { message = "Email ou senha inválidos" });
         }
 
         return Ok(response);
     }
 }
-
 

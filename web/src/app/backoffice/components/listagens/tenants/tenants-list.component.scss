@@ -1,0 +1,121 @@
+.container {
+  padding: 16px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+
+  h2 {
+    margin: 0;
+    font-size: 1.75rem;
+    font-weight: 500;
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+
+    .search-field {
+      width: 300px;
+      min-width: 200px;
+    }
+
+    .add-button {
+      white-space: nowrap;
+
+      .button-text {
+        margin-left: 8px;
+      }
+    }
+  }
+}
+
+.table-container {
+  overflow-x: auto;
+  margin-bottom: 16px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.cards-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.tenant-card {
+  mat-card-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .tenant-info {
+    flex: 1;
+
+    .tenant-name {
+      margin: 0 0 8px 0;
+      font-size: 1.125rem;
+      font-weight: 500;
+    }
+
+    .tenant-detail {
+      margin: 4px 0;
+      font-size: 0.875rem;
+      opacity: 0.8;
+    }
+  }
+
+  .tenant-actions {
+    display: flex;
+    gap: 4px;
+  }
+}
+
+@media (max-width: 959px) {
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+
+    .header-actions {
+      flex-direction: column;
+
+      .search-field {
+        width: 100%;
+      }
+
+      .add-button {
+        width: 100%;
+      }
+    }
+  }
+}
+
+@media (max-width: 599px) {
+  .container {
+    padding: 12px;
+  }
+
+  .tenant-card {
+    mat-card-content {
+      flex-direction: column;
+    }
+
+    .tenant-actions {
+      width: 100%;
+      justify-content: flex-end;
+    }
+  }
+}
+

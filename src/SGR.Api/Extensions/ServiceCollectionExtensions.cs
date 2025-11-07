@@ -17,8 +17,16 @@ public static class ServiceCollectionExtensions
     {
         // Services
         services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<ITenantAuthService, TenantAuthService>();
         services.AddScoped<IUsuarioService, UsuarioService>();
         services.AddScoped<IPerfilService, PerfilService>();
+        services.AddScoped<ITenantService, TenantService>();
+        
+        // HTTP Client para validação de CPF/CNPJ
+        services.AddHttpClient<ICpfCnpjValidationService, CpfCnpjValidationService>();
+        
+        // HTTP Client para busca de dados do CNPJ
+        services.AddHttpClient<ICnpjDataService, CnpjDataService>();
 
         return services;
     }
@@ -28,9 +36,13 @@ public static class ServiceCollectionExtensions
     /// </summary>
     public static IServiceCollection AddApplicationDbContext(this IServiceCollection services, IConfiguration configuration)
     {
-        var connectionString = configuration.GetConnectionString("ConfigConnection");
+        var configConnectionString = configuration.GetConnectionString("ConfigConnection");
         services.AddDbContext<ApplicationDbContext>(options =>
-            options.UseNpgsql(connectionString));
+            options.UseNpgsql(configConnectionString));
+
+        var tenantsConnectionString = configuration.GetConnectionString("TenantsConnection");
+        services.AddDbContext<TenantDbContext>(options =>
+            options.UseNpgsql(tenantsConnectionString));
 
         return services;
     }

@@ -1,3 +1,4 @@
+using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using SGR.Api.Models.Entities;
 
@@ -5,16 +6,57 @@ namespace SGR.Api.Data;
 
 public static class DbInitializer
 {
+    /// <summary>
+    /// Inicializa os dados padrão do banco de dados (backoffice)
+    /// Deve ser chamado APÓS as migrations serem aplicadas
+    /// </summary>
     public static void Initialize(ApplicationDbContext context)
     {
-        // Garantir que o banco foi criado
-        context.Database.EnsureCreated();
-
-        // Verificar se já existem dados
-        if (context.Perfis.Any())
+        // Verificar se o banco está acessível e as migrations foram aplicadas
+        if (!context.Database.CanConnect())
         {
-            return; // Banco já foi inicializado
+            return; // Banco não está acessível ou migrations não foram aplicadas
         }
+
+        // Verificar se a tabela Perfil existe (migrations aplicadas)
+        try
+        {
+            if (!context.Database.GetPendingMigrations().Any())
+            {
+                // Migrations aplicadas, verificar se já existem dados
+                if (context.Perfis.Any())
+                {
+                    return; // Banco já foi inicializado
+                }
+            }
+            else
+            {
+                // Ainda há migrations pendentes, não inicializar dados
+                return;
+            }
+        }
+        catch
+        {
+            // Se houver erro ao verificar (tabela não existe), não inicializar
+            return;
+        }
+
+        // Criar categorias padrão
+        var categorias = new[]
+        {
+            new CategoriaTenant { Nome = "Alimentos", IsAtivo = true, UsuarioCriacao = "Sistema", DataCriacao = DateTime.UtcNow },
+            new CategoriaTenant { Nome = "Bebidas", IsAtivo = true, UsuarioCriacao = "Sistema", DataCriacao = DateTime.UtcNow },
+            new CategoriaTenant { Nome = "Outros", IsAtivo = true, UsuarioCriacao = "Sistema", DataCriacao = DateTime.UtcNow }
+        };
+
+        foreach (var categoria in categorias)
+        {
+            if (!context.CategoriaTenants.Any(c => c.Nome == categoria.Nome))
+            {
+                context.CategoriaTenants.Add(categoria);
+            }
+        }
+        context.SaveChanges();
 
         // Criar perfil Administrador
         var perfilAdmin = new Perfil

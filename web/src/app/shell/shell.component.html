@@ -20,7 +20,7 @@
 
     <!-- Navegação -->
     <mat-nav-list class="sidenav-nav">
-      @for (item of navItems; track item.route) {
+      @for (item of navItems(); track item.route) {
         <a
           mat-list-item
           [routerLink]="item.route"

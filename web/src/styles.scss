@@ -112,6 +112,16 @@ $theme-dark: mat.define-theme((
   font-size: 0.875rem;
 }
 
+// Título de seção do formulário
+.section-title {
+  margin: 0 0 24px 0;
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: var(--mat-app-text-color);
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--mat-divider-color);
+}
+
 // Responsividade para formulários
 @media (max-width: 959px) {
   .form-container {
@@ -125,6 +135,11 @@ $theme-dark: mat.define-theme((
   }
 
   .form-field-spacing {
+    margin-bottom: 20px;
+  }
+
+  .section-title {
+    font-size: 1.125rem;
     margin-bottom: 20px;
   }
 
@@ -162,6 +177,11 @@ $theme-dark: mat.define-theme((
       width: 100%;
       min-width: unset;
     }
+  }
+
+  .section-title {
+    font-size: 1rem;
+    margin-bottom: 16px;
   }
 }
 

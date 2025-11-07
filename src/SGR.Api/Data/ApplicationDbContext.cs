@@ -12,6 +12,8 @@ public class ApplicationDbContext : DbContext
 
     public DbSet<Perfil> Perfis { get; set; }
     public DbSet<Usuario> Usuarios { get; set; }
+    public DbSet<Tenant> Tenants { get; set; }
+    public DbSet<CategoriaTenant> CategoriaTenants { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -49,6 +51,50 @@ public class ApplicationDbContext : DbContext
             entity.HasOne(e => e.Perfil)
                   .WithMany(p => p.Usuarios)
                   .HasForeignKey(e => e.PerfilId)
+                  .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Configuração CategoriaTenant
+        modelBuilder.Entity<CategoriaTenant>(entity =>
+        {
+            entity.ToTable("CategoriaTenant");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Nome).HasMaxLength(100).IsRequired();
+            entity.Property(e => e.UsuarioCriacao).HasMaxLength(100);
+            entity.Property(e => e.UsuarioAtualizacao).HasMaxLength(100);
+            entity.Property(e => e.DataCriacao).IsRequired();
+
+            // Índice único para Nome
+            entity.HasIndex(e => e.Nome).IsUnique();
+        });
+
+        // Configuração Tenant
+        modelBuilder.Entity<Tenant>(entity =>
+        {
+            entity.ToTable("Tenant");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.RazaoSocial).HasMaxLength(200).IsRequired();
+            entity.Property(e => e.NomeFantasia).HasMaxLength(200).IsRequired();
+            entity.Property(e => e.CpfCnpj).HasMaxLength(18).IsRequired();
+            entity.Property(e => e.Subdominio).HasMaxLength(50).IsRequired();
+            entity.Property(e => e.NomeSchema).HasMaxLength(100).IsRequired();
+            entity.Property(e => e.CategoriaId).IsRequired();
+            entity.Property(e => e.FatorContabil).HasPrecision(18, 4).IsRequired();
+            entity.Property(e => e.UsuarioCriacao).HasMaxLength(100);
+            entity.Property(e => e.UsuarioAtualizacao).HasMaxLength(100);
+            entity.Property(e => e.DataCriacao).IsRequired();
+
+            // Índices únicos
+            entity.HasIndex(e => e.Subdominio).IsUnique();
+            entity.HasIndex(e => e.CpfCnpj).IsUnique();
+            entity.HasIndex(e => e.NomeSchema).IsUnique();
+
+            // Relacionamento com CategoriaTenant
+            entity.HasOne(e => e.Categoria)
+                  .WithMany()
+                  .HasForeignKey(e => e.CategoriaId)
                   .OnDelete(DeleteBehavior.Restrict);
         });
     }

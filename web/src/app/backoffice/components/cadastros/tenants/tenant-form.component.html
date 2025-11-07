@@ -1,0 +1,213 @@
+<div class="form-container">
+  <h2 class="form-title">{{ isEdit() ? (isView() ? 'Visualizar tenant' : 'Editar tenant') : 'Cadastro de tenant' }}</h2>
+
+  <form #f="ngForm" (ngSubmit)="save()">
+    <!-- Dados do Tenant -->
+    <div class="form-section">
+      <h3 class="section-title">Dados do Tenant</h3>
+
+      <mat-form-field appearance="outline" class="form-field-spacing">
+        <mat-label>Razão Social</mat-label>
+        <input matInput name="razaoSocial" [(ngModel)]="model.razaoSocial" [disabled]="isView()" required maxlength="200" />
+        @if (f.controls['razaoSocial']?.errors?.['required'] && f.controls['razaoSocial']?.touched) {
+          <mat-error>Razão social é obrigatória</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="form-field-spacing">
+        <mat-label>Nome Fantasia</mat-label>
+        <input matInput name="nomeFantasia" [(ngModel)]="model.nomeFantasia" (ngModelChange)="onNomeFantasiaChange()" [disabled]="isView()" required maxlength="200" />
+        @if (f.controls['nomeFantasia']?.errors?.['required'] && f.controls['nomeFantasia']?.touched) {
+          <mat-error>Nome fantasia é obrigatório</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="form-field-spacing">
+        <mat-label>Tipo de Pessoa</mat-label>
+        <mat-select name="tipoPessoaId" [(ngModel)]="model.tipoPessoaId" (ngModelChange)="onTipoPessoaChange()" [disabled]="isView()" required>
+          @for (tipo of tipoPessoaOptions; track tipo.id) {
+            <mat-option [value]="tipo.id">{{ tipo.nome }}</mat-option>
+          }
+        </mat-select>
+        @if (f.controls['tipoPessoaId']?.errors?.['required'] && f.controls['tipoPessoaId']?.touched) {
+          <mat-error>Tipo de pessoa é obrigatório</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="form-field-spacing">
+        <mat-label>{{ model.tipoPessoaId === 1 ? 'CPF' : model.tipoPessoaId === 2 ? 'CNPJ' : 'CPF/CNPJ' }}</mat-label>
+        <input 
+          matInput 
+          name="cpfCnpj" 
+          [(ngModel)]="model.cpfCnpj" 
+          (input)="onCpfCnpjInput($event)"
+          [disabled]="isView() || isLoadingCnpj()" 
+          required 
+          [maxlength]="model.tipoPessoaId === 1 ? 14 : 18" />
+        @if (isLoadingCnpj()) {
+          <mat-spinner matSuffix diameter="20"></mat-spinner>
+        }
+        @if (f.controls['cpfCnpj']?.errors?.['required'] && f.controls['cpfCnpj']?.touched) {
+          <mat-error>CPF/CNPJ é obrigatório</mat-error>
+        }
+        @if (model.tipoPessoaId === 2) {
+          <mat-hint>Digite o CNPJ completo para buscar os dados automaticamente</mat-hint>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="form-field-spacing">
+        <mat-label>Categoria</mat-label>
+        <mat-select name="categoriaId" [(ngModel)]="model.categoriaId" [disabled]="isView()" required>
+          @for (cat of categorias(); track cat.id) {
+            <mat-option [value]="cat.id">{{ cat.nome }}</mat-option>
+          }
+        </mat-select>
+        @if (f.controls['categoriaId']?.errors?.['required'] && f.controls['categoriaId']?.touched) {
+          <mat-error>Categoria é obrigatória</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="form-field-spacing">
+        <mat-label>Fator Contábil</mat-label>
+        <input 
+          matInput 
+          type="number" 
+          name="fatorContabil" 
+          [(ngModel)]="model.fatorContabil" 
+          [disabled]="isView()" 
+          required 
+          step="0.0001"
+          min="0.0001"
+          max="9999.9999" />
+        @if (f.controls['fatorContabil']?.errors?.['required'] && f.controls['fatorContabil']?.touched) {
+          <mat-error>Fator contábil é obrigatório</mat-error>
+        }
+        @if (f.controls['fatorContabil']?.errors?.['min'] && f.controls['fatorContabil']?.touched) {
+          <mat-error>Fator contábil deve ser maior que 0</mat-error>
+        }
+      </mat-form-field>
+
+      @if (!isEdit()) {
+        <mat-form-field appearance="outline" class="form-field-spacing">
+          <mat-label>Subdomínio</mat-label>
+          <input 
+            matInput 
+            name="subdominio" 
+            [(ngModel)]="model.subdominio" 
+            (input)="onSubdominioInput()"
+            [disabled]="isView()" 
+            required 
+            maxlength="50" 
+            pattern="[a-z0-9]+" />
+          <mat-hint>Gerado automaticamente a partir do nome fantasia. Pode ser editado manualmente.</mat-hint>
+          @if (f.controls['subdominio']?.errors?.['required'] && f.controls['subdominio']?.touched) {
+            <mat-error>Subdomínio é obrigatório</mat-error>
+          }
+          @if (f.controls['subdominio']?.errors?.['pattern'] && f.controls['subdominio']?.touched) {
+            <mat-error>Subdomínio deve conter apenas letras minúsculas e números</mat-error>
+          }
+        </mat-form-field>
+      } @else {
+        <mat-form-field appearance="outline" class="form-field-spacing">
+          <mat-label>Subdomínio</mat-label>
+          <input matInput [value]="model.subdominio" disabled />
+          <mat-hint>O subdomínio não pode ser alterado após a criação</mat-hint>
+        </mat-form-field>
+      }
+
+      <div class="form-toggle-wrapper">
+        <mat-slide-toggle name="isAtivo" [(ngModel)]="model.isAtivo" [disabled]="isView()">Ativo</mat-slide-toggle>
+      </div>
+    </div>
+
+    <!-- Dados do Administrador (apenas na criação) -->
+    @if (!isEdit()) {
+      <div class="form-section">
+        <h3 class="section-title">Dados do Administrador</h3>
+
+        <mat-form-field appearance="outline" class="form-field-spacing">
+          <mat-label>Nome Completo</mat-label>
+          <input matInput name="adminNomeCompleto" [(ngModel)]="model.admin.nomeCompleto" [disabled]="isView()" required maxlength="200" />
+          @if (f.controls['adminNomeCompleto']?.errors?.['required'] && f.controls['adminNomeCompleto']?.touched) {
+            <mat-error>Nome completo é obrigatório</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="form-field-spacing">
+          <mat-label>Email</mat-label>
+          <input matInput type="email" name="adminEmail" [(ngModel)]="model.admin.email" [disabled]="isView()" required maxlength="200" />
+          @if (f.controls['adminEmail']?.errors?.['required'] && f.controls['adminEmail']?.touched) {
+            <mat-error>Email é obrigatório</mat-error>
+          }
+          @if (f.controls['adminEmail']?.errors?.['email'] && f.controls['adminEmail']?.touched) {
+            <mat-error>Email inválido</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="form-field-spacing">
+          <mat-label>Senha</mat-label>
+          <input 
+            matInput 
+            [type]="showPassword() ? 'text' : 'password'" 
+            name="adminSenha" 
+            [(ngModel)]="model.admin.senha" 
+            [disabled]="isView()" 
+            required 
+            minlength="6" />
+          <button 
+            mat-icon-button 
+            matSuffix 
+            type="button"
+            (click)="togglePasswordVisibility()"
+            [attr.aria-label]="'Mostrar senha'"
+            [attr.aria-pressed]="showPassword()">
+            <mat-icon>{{ showPassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
+          </button>
+          @if (f.controls['adminSenha']?.errors?.['required'] && f.controls['adminSenha']?.touched) {
+            <mat-error>Senha é obrigatória</mat-error>
+          }
+          @if (f.controls['adminSenha']?.errors?.['minlength'] && f.controls['adminSenha']?.touched) {
+            <mat-error>A senha deve ter no mínimo 6 caracteres</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="form-field-spacing">
+          <mat-label>Confirmar Senha</mat-label>
+          <input 
+            matInput 
+            [type]="showConfirmPassword() ? 'text' : 'password'" 
+            name="adminConfirmarSenha" 
+            [(ngModel)]="model.admin.confirmarSenha" 
+            [disabled]="isView()" 
+            required />
+          <button 
+            mat-icon-button 
+            matSuffix 
+            type="button"
+            (click)="toggleConfirmPasswordVisibility()"
+            [attr.aria-label]="'Mostrar senha'"
+            [attr.aria-pressed]="showConfirmPassword()">
+            <mat-icon>{{ showConfirmPassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
+          </button>
+          @if (f.controls['adminConfirmarSenha']?.errors?.['required'] && f.controls['adminConfirmarSenha']?.touched) {
+            <mat-error>Confirmação de senha é obrigatória</mat-error>
+          }
+          @if (model.admin.senha && model.admin.confirmarSenha && model.admin.senha !== model.admin.confirmarSenha && f.controls['adminConfirmarSenha']?.touched) {
+            <mat-error>As senhas não coincidem</mat-error>
+          }
+        </mat-form-field>
+      </div>
+    }
+
+    @if (error()) {
+      <div class="form-error">{{ error() }}</div>
+    }
+
+    <div class="form-actions">
+      <button mat-stroked-button type="button" routerLink="/backoffice/tenants">Voltar</button>
+      @if (!isView()) {
+        <button mat-raised-button color="primary" type="submit">Salvar</button>
+      }
+    </div>
+  </form>
+</div>

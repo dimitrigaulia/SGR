@@ -1,0 +1,77 @@
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  min-height: 100dvh; // Suporte para mobile
+  padding: 20px;
+  background-color: inherit;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 400px;
+  box-shadow: var(--mat-elevation-2);
+}
+
+.full-width {
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+.error-message {
+  color: var(--mat-error);
+  margin-bottom: 16px;
+  padding: 12px;
+  text-align: center;
+  background-color: var(--mat-error-container);
+  border-radius: 4px;
+  font-size: 0.875rem;
+}
+
+mat-card-header {
+  text-align: center;
+  margin-bottom: 24px;
+
+  .header-content {
+    width: 100%;
+
+    h2 {
+      margin: 0 0 8px 0;
+      font-size: 1.5rem;
+      font-weight: 500;
+    }
+
+    p {
+      margin: 0;
+      font-size: 1rem;
+      opacity: 0.7;
+    }
+  }
+}
+
+// Responsividade
+@media (max-width: 599px) {
+  .login-container {
+    padding: 16px;
+    align-items: flex-start;
+    padding-top: 32px;
+  }
+
+  .login-card {
+    max-width: 100%;
+  }
+
+  mat-card-header {
+    .header-content {
+      h2 {
+        font-size: 1.25rem;
+      }
+
+      p {
+        font-size: 0.875rem;
+      }
+    }
+  }
+}
+

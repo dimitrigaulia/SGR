@@ -1,0 +1,117 @@
+<div class="container">
+  <div class="header">
+    <h2>Tenants</h2>
+    <div class="header-actions">
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-label>Buscar</mat-label>
+        <input matInput [(ngModel)]="searchTerm" (ngModelChange)="onSearchChange()" placeholder="Nome fantasia, razão social ou subdomínio" />
+        @if (searchTerm) {
+          <button mat-icon-button matSuffix (click)="clearSearch()">
+            <mat-icon>close</mat-icon>
+          </button>
+        }
+      </mat-form-field>
+      <a mat-raised-button color="primary" routerLink="/backoffice/tenants/cadastro" class="add-button">
+        <mat-icon>add</mat-icon>
+        <span class="button-text">Novo Tenant</span>
+      </a>
+    </div>
+  </div>
+
+  @if (isLoading()) {
+    <app-loading></app-loading>
+  }
+
+  @if (!isMobile() && !isLoading()) {
+    <div class="table-container">
+      <table mat-table [dataSource]="data()" class="mat-elevation-z1 full-width" matSort (matSortChange)="onSort($event)">
+        <ng-container matColumnDef="nomeFantasia">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="nomeFantasia">Nome Fantasia</th>
+          <td mat-cell *matCellDef="let e">{{ e.nomeFantasia }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="razaoSocial">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="razaoSocial">Razão Social</th>
+          <td mat-cell *matCellDef="let e">{{ e.razaoSocial }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="subdominio">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="subdominio">Subdomínio</th>
+          <td mat-cell *matCellDef="let e">{{ e.subdominio }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="tipoPessoa">
+          <th mat-header-cell *matHeaderCellDef>Tipo</th>
+          <td mat-cell *matCellDef="let e">
+            <mat-chip>{{ e.tipoPessoaNome }}</mat-chip>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="ativo">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="ativo">Ativo</th>
+          <td mat-cell *matCellDef="let e">{{ e.isAtivo ? 'Sim' : 'Não' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="acoes">
+          <th mat-header-cell *matHeaderCellDef>Ações</th>
+          <td mat-cell *matCellDef="let e">
+            <button mat-icon-button matTooltip="Visualizar" (click)="view(e.id)">
+              <mat-icon>visibility</mat-icon>
+            </button>
+            <button mat-icon-button matTooltip="Editar" (click)="edit(e.id)">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button matTooltip="Excluir" color="warn" (click)="delete(e.id)">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+    </div>
+  }
+
+  @if (isMobile() && !isLoading()) {
+    <div class="cards-container">
+      @for (e of data(); track e.id) {
+        <mat-card class="tenant-card">
+          <mat-card-content>
+            <div class="tenant-info">
+              <h3 class="tenant-name">{{ e.nomeFantasia }}</h3>
+              <p class="tenant-detail"><strong>Razão Social:</strong> {{ e.razaoSocial }}</p>
+              <p class="tenant-detail"><strong>Subdomínio:</strong> {{ e.subdominio }}</p>
+              <p class="tenant-detail"><strong>Tipo:</strong> {{ e.tipoPessoaNome }}</p>
+              <p class="tenant-detail"><strong>Ativo:</strong> {{ e.isAtivo ? 'Sim' : 'Não' }}</p>
+            </div>
+            <div class="tenant-actions">
+              <button mat-icon-button matTooltip="Visualizar" (click)="view(e.id)">
+                <mat-icon>visibility</mat-icon>
+              </button>
+              <button mat-icon-button matTooltip="Editar" (click)="edit(e.id)">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button mat-icon-button matTooltip="Excluir" color="warn" (click)="delete(e.id)">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      } @empty {
+        <div>Nenhum tenant encontrado</div>
+      }
+    </div>
+  }
+
+  @if (!isLoading()) {
+    <mat-paginator 
+      [length]="total()" 
+      [pageIndex]="pageIndex()" 
+      [pageSize]="pageSize()" 
+      [pageSizeOptions]="[5,10,25,50]" 
+      (page)="pageChanged($event)">
+    </mat-paginator>
+  }
+</div>
+

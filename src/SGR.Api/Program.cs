@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Linq;
+using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -48,7 +49,7 @@ builder.Services.AddApplicationHealthChecks(builder.Configuration);
 
 var app = builder.Build();
 
-// Initialize Database
+// Apply Migrations and Initialize Database
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -58,21 +59,16 @@ using (var scope = app.Services.CreateScope())
     {
         var context = services.GetRequiredService<ApplicationDbContext>();
         
-        // Verificar se as colunas de auditoria já existem (migração temporária)
-        // Em produção, isso deve ser feito via migration
-        try
+        // Aplicar migrations pendentes
+        var pendingMigrations = context.Database.GetPendingMigrations().ToList();
+        if (pendingMigrations.Any())
         {
-            // Tentar adicionar colunas se não existirem (compatibilidade com banco existente)
-            context.Database.ExecuteSqlRaw(
-                "ALTER TABLE \"Usuario\" ADD COLUMN IF NOT EXISTS \"UsuarioCriacao\" character varying(100);");
-            context.Database.ExecuteSqlRaw(
-                "ALTER TABLE \"Usuario\" ADD COLUMN IF NOT EXISTS \"DataCriacao\" timestamp with time zone NOT NULL DEFAULT (now() at time zone 'utc');");
+            logger.LogInformation("Aplicando {Count} migration(s) pendente(s)...", pendingMigrations.Count);
+            context.Database.Migrate();
+            logger.LogInformation("Migrations aplicadas com sucesso.");
         }
-        catch (Exception ex)
-        {
-            logger.LogWarning(ex, "Aviso ao verificar/adicionar colunas de auditoria. Isso é normal se as colunas já existem. Erro: {Message}", ex.Message);
-        }
-
+        
+        // Inicializar dados padrão (após migrations)
         DbInitializer.Initialize(context);
         logger.LogInformation("Banco de dados inicializado com sucesso.");
     }
@@ -88,6 +84,9 @@ using (var scope = app.Services.CreateScope())
 // IMPORTANTE: UseCors() deve vir ANTES de UseHttpsRedirection() para evitar problemas com preflight
 app.UseMiddleware<SGR.Api.Middleware.ExceptionHandlingMiddleware>();
 app.UseCors();
+
+// Middleware de identificação do tenant (deve vir antes de UseAuthentication)
+app.UseMiddleware<SGR.Api.Middleware.TenantIdentificationMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {
