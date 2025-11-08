@@ -4,7 +4,8 @@ using SGR.Api.Services.Interfaces;
 namespace SGR.Api.Services.Implementations;
 
 /// <summary>
-/// Implementação do serviço de validação de CPF/CNPJ usando BrasilApi
+/// Implementação do serviço de validação de CPF/CNPJ
+/// CPF: validação local (dígitos verificadores). CNPJ: validação local + BrasilAPI
 /// </summary>
 public class CpfCnpjValidationService : ICpfCnpjValidationService
 {
@@ -35,24 +36,30 @@ public class CpfCnpjValidationService : ICpfCnpjValidationService
         if (!ValidarDigitosVerificadores(documento))
             return false;
 
-        // Validação via BrasilApi
+        // CPF: validar apenas dígitos verificadores (BrasilAPI não tem endpoint para CPF)
+        if (documento.Length == 11)
+        {
+            _logger.LogInformation("CPF {Documento} validado com sucesso (validação local)", documento);
+            return true;
+        }
+
+        // CNPJ: validar dígitos verificadores E consultar BrasilAPI
         try
         {
-            var tipo = documento.Length == 11 ? "cpf" : "cnpj";
-            var response = await _httpClient.GetAsync($"{tipo}/v1/{documento}");
+            var response = await _httpClient.GetAsync($"cnpj/v1/{documento}");
 
             if (response.IsSuccessStatusCode)
             {
-                _logger.LogInformation("CPF/CNPJ {Documento} validado com sucesso via BrasilApi", documento);
+                _logger.LogInformation("CNPJ {Documento} validado com sucesso via BrasilApi", documento);
                 return true;
             }
 
-            _logger.LogWarning("CPF/CNPJ {Documento} inválido segundo BrasilApi", documento);
+            _logger.LogWarning("CNPJ {Documento} inválido segundo BrasilApi", documento);
             return false;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erro ao validar CPF/CNPJ {Documento} via BrasilApi. Usando validação local apenas.", documento);
+            _logger.LogError(ex, "Erro ao validar CNPJ {Documento} via BrasilApi. Usando validação local apenas.", documento);
             // Em caso de erro na API, confiar apenas na validação de dígitos verificadores
             return ValidarDigitosVerificadores(documento);
         }
