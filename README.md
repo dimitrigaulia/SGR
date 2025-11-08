@@ -79,14 +79,24 @@ npm install
 
 ## ⚙️ Configuração
 
+### Configurações Automáticas
+
+O sistema possui algumas configurações que são aplicadas automaticamente:
+
+- **Migrations**: As migrations do Entity Framework são aplicadas automaticamente na inicialização da aplicação
+- **Inicialização de Dados**: O `DbInitializer` cria automaticamente:
+  - Categorias padrão de tenants (Alimentos, Bebidas, Outros)
+  - Perfil "Administrador" no backoffice
+  - Usuário padrão do backoffice (verificar `DbInitializer.cs` para credenciais)
+
 ### Backend
 
 1. **Configure a connection string** em `src/SGR.Api/appsettings.json`:
 ```json
 {
   "ConnectionStrings": {
-    "DefaultConnection": "Host=localhost;Database=sgr_config;Username=postgres;Password=sua_senha",
-    "TenantConnection": "Host=localhost;Database=sgr_tenants;Username=postgres;Password=sua_senha"
+    "ConfigConnection": "Host=localhost;Port=5432;Database=sgr_config;Username=postgres;Password=sua_senha",
+    "TenantsConnection": "Host=localhost;Port=5432;Database=sgr_tenants;Username=postgres;Password=sua_senha"
   }
 }
 ```
@@ -96,16 +106,23 @@ npm install
 {
   "Jwt": {
     "SecretKey": "sua_chave_secreta_super_segura_aqui",
-    "Issuer": "SGR",
-    "Audience": "SGR"
+    "Issuer": "SGR.Api",
+    "Audience": "SGR.Frontend",
+    "ExpirationMinutes": 60
   }
 }
 ```
 
-3. **Execute as migrations**:
-```bash
-cd src/SGR.Api
-dotnet ef database update --context ApplicationDbContext
+3. **Configure o CORS** em `appsettings.json`:
+```json
+{
+  "Cors": {
+    "AllowedOrigins": [
+      "http://localhost:4200",
+      "https://localhost:4200"
+    ]
+  }
+}
 ```
 
 4. **Execute a API**:
@@ -113,7 +130,14 @@ dotnet ef database update --context ApplicationDbContext
 dotnet run
 ```
 
-A API estará disponível em `http://localhost:5000`.
+A API estará disponível em `http://localhost:5281`.
+
+**Nota**: As migrations são aplicadas automaticamente na inicialização da aplicação. O sistema também inicializa automaticamente os dados padrão (categorias, perfil administrador e usuário padrão) através do `DbInitializer`.
+
+**Importante**: 
+- A porta padrão da API é `5281` (configurada em `launchSettings.json`)
+- Em desenvolvimento, o HTTPS redirection é desabilitado para evitar problemas com CORS
+- O OpenAPI está disponível apenas em ambiente de desenvolvimento
 
 ### Frontend
 
@@ -121,7 +145,7 @@ A API estará disponível em `http://localhost:5000`.
 ```typescript
 export const environment = {
   production: false,
-  apiUrl: 'http://localhost:5000/api'
+  apiUrl: 'http://localhost:5281/api'
 };
 ```
 
@@ -265,6 +289,8 @@ SGR.Api/
 │   ├── BusinessException.cs           # Exceção de negócio
 │   └── NotFoundException.cs           # Exceção de não encontrado
 ├── Migrations/                        # Migrations do EF Core
+├── wwwroot/                          # Arquivos estáticos
+│   └── avatars/                      # Avatares dos usuários
 └── Program.cs                         # Configuração da aplicação
 ```
 
@@ -708,14 +734,34 @@ export class MinhaEntidadeService {
 - Validação de subdomínio (único, apenas letras e números)
 
 #### 5. Upload de Arquivos
-- Endpoint `/api/uploads/avatar` para upload de avatares
-- Suporte a PNG e JPG
-- Limpeza automática de arquivos antigos
+- **Upload**: `POST /api/uploads/avatar` para upload de avatares
+  - Limite de tamanho: 10 MB
+  - Formatos suportados: PNG e JPG
+  - Arquivos salvos em `wwwroot/avatars/` com nome único (GUID)
+  - Retorna URL completa do arquivo: `{baseUrl}/avatars/{nome}`
+- **Delete**: `DELETE /api/uploads/avatar?url=...` ou `?name=...` para remover avatares
+- Arquivos servidos estaticamente via `UseStaticFiles()` em `/avatars/{nome}`
 
 #### 6. Health Checks
 - Endpoint `/health` para verificação de saúde do banco de dados
+- Verifica especificamente a conexão com o `ApplicationDbContext`
 
-#### 7. Logging
+#### 7. OpenAPI/Swagger
+- Em desenvolvimento, OpenAPI disponível em `/openapi/v1.json`
+- Configurado via `app.MapOpenApi()` no `Program.cs`
+
+#### 8. Serialização JSON
+- API configurada para usar `camelCase` na serialização JSON (padrão do Angular)
+- Configurado via `AddJsonOptions` no `Program.cs`
+
+#### 9. Inicialização Automática
+- **Migrations**: Aplicadas automaticamente na inicialização da aplicação
+- **DbInitializer**: Inicializa dados padrão automaticamente:
+  - Categorias de tenant: "Alimentos", "Bebidas", "Outros"
+  - Perfil "Administrador" no backoffice
+  - Usuário padrão do backoffice (verificar `DbInitializer.cs` para credenciais)
+
+#### 10. Logging
 - Logging estruturado em todos os services e controllers
 - Uso de `ILogger<T>` para logs contextuais
 
@@ -875,4 +921,4 @@ O sistema está preparado para escalar horizontalmente, com isolamento completo 
 
 ---
 
-**Última atualização**: 2025-11-07
+**Última atualização**: 2025-01-27

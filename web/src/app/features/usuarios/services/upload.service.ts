@@ -23,7 +23,7 @@ export class UploadService {
   uploadAvatar(file: File): Observable<UploadResponse> {
     const formData = new FormData();
     formData.append('file', file);
-    return this.http.post<UploadResponse>(`${this.apiUrl}/backoffice/uploads/avatar`, formData);
+    return this.http.post<UploadResponse>(`${this.apiUrl}/uploads/avatar`, formData);
   }
 
   /**
@@ -31,7 +31,9 @@ export class UploadService {
    */
   deleteAvatar(url: string): Observable<void> {
     const fileName = url.split('/').pop();
-    return this.http.delete<void>(`${this.apiUrl}/backoffice/uploads/avatar/${fileName}`);
+    return this.http.delete<void>(`${this.apiUrl}/uploads/avatar`, {
+      params: { name: fileName || '' }
+    });
   }
 }
 
