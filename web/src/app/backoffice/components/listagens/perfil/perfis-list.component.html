@@ -13,7 +13,7 @@
       </mat-form-field>
       <a mat-raised-button color="primary" routerLink="/backoffice/perfis/cadastro" class="add-button">
         <mat-icon>add</mat-icon>
-        <span class="button-text">Cadastro de perfil</span>
+        <span class="button-text">Novo Perfil</span>
       </a>
     </div>
   </div>
@@ -40,11 +40,11 @@
       <ng-container matColumnDef="acoes">
         <th mat-header-cell *matHeaderCellDef>Ações</th>
         <td mat-cell *matCellDef="let e">
-          <button mat-icon-button (click)="edit(e)" matTooltip="Editar">
-            <mat-icon>edit</mat-icon>
-          </button>
           <button mat-icon-button (click)="view(e)" matTooltip="Visualizar">
             <mat-icon>visibility</mat-icon>
+          </button>
+          <button mat-icon-button (click)="edit(e)" matTooltip="Editar">
+            <mat-icon>edit</mat-icon>
           </button>
           <button mat-icon-button (click)="delete(e.id)" color="warn" matTooltip="Excluir">
             <mat-icon>delete</mat-icon>

@@ -13,15 +13,17 @@ import { MatSort, MatSortModule, Sort } from "@angular/material/sort";
 import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatInputModule } from "@angular/material/input";
 import { MatCardModule } from "@angular/material/card";
+import { MatDialogModule } from "@angular/material/dialog";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { ToastService } from "../../../../core/services/toast.service";
+import { ConfirmationService } from "../../../../core/services/confirmation.service";
 import { UsuarioService, UsuarioDto } from "../../../../features/usuarios/services/usuario.service";
 import { LoadingComponent } from "../../../../shared/components/loading/loading.component";
 
 @Component({
   standalone: true,
   selector: 'app-users-list',
-  imports: [CommonModule, FormsModule, RouterLink, MatTableModule, MatButtonModule, MatIconModule, MatTooltipModule, MatSnackBarModule, MatPaginatorModule, MatSortModule, MatFormFieldModule, MatInputModule, MatCardModule, LoadingComponent],
+  imports: [CommonModule, FormsModule, RouterLink, MatTableModule, MatButtonModule, MatIconModule, MatTooltipModule, MatSnackBarModule, MatPaginatorModule, MatSortModule, MatFormFieldModule, MatInputModule, MatCardModule, MatDialogModule, LoadingComponent],
   templateUrl: './users-list.component.html',
   styleUrls: ['./users-list.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -30,6 +32,7 @@ export class UsersListComponent implements OnDestroy {
   private service = inject(UsuarioService);
   private router = inject(Router);
   private toast = inject(ToastService);
+  private confirmationService = inject(ConfirmationService);
   private breakpointObserver = inject(BreakpointObserver);
   private destroyRef = inject(DestroyRef);
   private cdr = inject(ChangeDetectorRef);
@@ -102,20 +105,25 @@ export class UsersListComponent implements OnDestroy {
   }
 
   delete(id: number) {
-    if (!confirm('Excluir usuário?')) return;
-    this.isLoading.set(true);
-    this.service.delete(id)
+    this.confirmationService.confirmDelete('este usuário')
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({ 
-        next: () => { 
-          this.toast.success('Usuário excluído'); 
-          this.load();
-        }, 
-        error: (e: any) => {
-          this.toast.error(e.error?.message || 'Falha ao excluir usuário');
-          this.isLoading.set(false);
-          this.cdr.markForCheck();
-        }
+      .subscribe(confirmed => {
+        if (!confirmed) return;
+
+        this.isLoading.set(true);
+        this.service.delete(id)
+          .pipe(takeUntilDestroyed(this.destroyRef))
+          .subscribe({ 
+            next: () => { 
+              this.toast.success('Usuário excluído'); 
+              this.load();
+            }, 
+            error: (e: any) => {
+              this.toast.error(e.error?.message || 'Falha ao excluir usuário');
+              this.isLoading.set(false);
+              this.cdr.markForCheck();
+            }
+          });
       });
   }
 

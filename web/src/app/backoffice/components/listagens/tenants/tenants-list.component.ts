@@ -14,8 +14,10 @@ import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatInputModule } from "@angular/material/input";
 import { MatCardModule } from "@angular/material/card";
 import { MatChipsModule } from "@angular/material/chips";
+import { MatDialogModule } from "@angular/material/dialog";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { ToastService } from "../../../../core/services/toast.service";
+import { ConfirmationService } from "../../../../core/services/confirmation.service";
 import { TenantService, TenantDto } from "../../../../features/tenants/services/tenant.service";
 import { LoadingComponent } from "../../../../shared/components/loading/loading.component";
 
@@ -37,6 +39,7 @@ import { LoadingComponent } from "../../../../shared/components/loading/loading.
     MatInputModule, 
     MatCardModule,
     MatChipsModule,
+    MatDialogModule,
     LoadingComponent
   ],
   templateUrl: './tenants-list.component.html',
@@ -47,11 +50,12 @@ export class TenantsListComponent {
   private service = inject(TenantService);
   private router = inject(Router);
   private toast = inject(ToastService);
+  private confirmationService = inject(ConfirmationService);
   private breakpointObserver = inject(BreakpointObserver);
   private destroyRef = inject(DestroyRef);
   private cdr = inject(ChangeDetectorRef);
   
-  displayedColumns = ['nomeFantasia', 'razaoSocial', 'subdominio', 'tipoPessoa', 'ativo', 'acoes'];
+  displayedColumns = ['nomeFantasia', 'razaoSocial', 'categoria', 'tipoPessoa', 'ativo', 'acoes'];
   data = signal<TenantDto[]>([]);
   total = signal(0);
   pageIndex = signal(0);
@@ -140,24 +144,26 @@ export class TenantsListComponent {
 
   toggleActive(id: number, currentStatus: boolean) {
     const action = currentStatus ? 'inativar' : 'ativar';
-    const message = currentStatus 
-      ? 'Tem certeza que deseja inativar este tenant? O tenant não poderá mais acessar o sistema.'
-      : 'Tem certeza que deseja ativar este tenant?';
-      
-    if (!confirm(message)) {
-      return;
-    }
+    const warningMessage = currentStatus 
+      ? 'O tenant não poderá mais acessar o sistema.'
+      : undefined;
 
-    this.service.toggleActive(id)
+    this.confirmationService.confirmToggleActive(action, 'este tenant', warningMessage)
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: () => {
-          this.toast.success(`Tenant ${action === 'inativar' ? 'inativado' : 'ativado'} com sucesso`);
-          this.load();
-        },
-        error: (err) => {
-          this.toast.error(err.error?.message || `Erro ao ${action} tenant`);
-        }
+      .subscribe(confirmed => {
+        if (!confirmed) return;
+
+        this.service.toggleActive(id)
+          .pipe(takeUntilDestroyed(this.destroyRef))
+          .subscribe({
+            next: () => {
+              this.toast.success(`Tenant ${action === 'inativar' ? 'inativado' : 'ativado'} com sucesso`);
+              this.load();
+            },
+            error: (err) => {
+              this.toast.error(err.error?.message || `Erro ao ${action} tenant`);
+            }
+          });
       });
   }
 }

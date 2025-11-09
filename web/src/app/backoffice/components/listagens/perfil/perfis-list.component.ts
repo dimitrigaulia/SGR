@@ -13,15 +13,17 @@ import { MatSort, MatSortModule, Sort } from "@angular/material/sort";
 import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatInputModule } from "@angular/material/input";
 import { MatCardModule } from "@angular/material/card";
+import { MatDialogModule } from "@angular/material/dialog";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { ToastService } from "../../../../core/services/toast.service";
+import { ConfirmationService } from "../../../../core/services/confirmation.service";
 import { PerfilService, PerfilDto } from "../../../../features/perfis/services/perfil.service";
 import { LoadingComponent } from "../../../../shared/components/loading/loading.component";
 
 @Component({
   standalone: true,
   selector: 'app-perfis-list',
-  imports: [CommonModule, FormsModule, RouterLink, MatTableModule, MatButtonModule, MatIconModule, MatTooltipModule, MatSnackBarModule, MatPaginatorModule, MatSortModule, MatFormFieldModule, MatInputModule, MatCardModule, LoadingComponent],
+  imports: [CommonModule, FormsModule, RouterLink, MatTableModule, MatButtonModule, MatIconModule, MatTooltipModule, MatSnackBarModule, MatPaginatorModule, MatSortModule, MatFormFieldModule, MatInputModule, MatCardModule, MatDialogModule, LoadingComponent],
   templateUrl: './perfis-list.component.html',
   styleUrls: ['./perfis-list.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -30,6 +32,7 @@ export class PerfisListComponent implements OnDestroy {
   private service = inject(PerfilService);
   private router = inject(Router);
   private toast = inject(ToastService);
+  private confirmationService = inject(ConfirmationService);
   private breakpointObserver = inject(BreakpointObserver);
   private destroyRef = inject(DestroyRef);
   private cdr = inject(ChangeDetectorRef);
@@ -102,20 +105,25 @@ export class PerfisListComponent implements OnDestroy {
   }
 
   delete(id: number) {
-    if (!confirm('Excluir perfil?')) return;
-    this.isLoading.set(true);
-    this.service.delete(id)
+    this.confirmationService.confirmDelete('este perfil')
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({ 
-        next: () => { 
-          this.toast.success('Perfil excluído'); 
-          this.load();
-        }, 
-        error: (e: any) => {
-          this.toast.error(e.error?.message || 'Falha ao excluir perfil');
-          this.isLoading.set(false);
-          this.cdr.markForCheck();
-        }
+      .subscribe(confirmed => {
+        if (!confirmed) return;
+
+        this.isLoading.set(true);
+        this.service.delete(id)
+          .pipe(takeUntilDestroyed(this.destroyRef))
+          .subscribe({ 
+            next: () => { 
+              this.toast.success('Perfil excluído'); 
+              this.load();
+            }, 
+            error: (e: any) => {
+              this.toast.error(e.error?.message || 'Falha ao excluir perfil');
+              this.isLoading.set(false);
+              this.cdr.markForCheck();
+            }
+          });
       });
   }
 

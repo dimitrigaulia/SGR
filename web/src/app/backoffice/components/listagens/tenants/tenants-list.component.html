@@ -4,7 +4,7 @@
     <div class="header-actions">
       <mat-form-field appearance="outline" class="search-field">
         <mat-label>Buscar</mat-label>
-        <input matInput [(ngModel)]="searchTerm" (ngModelChange)="onSearchChange()" placeholder="Nome fantasia, razão social ou subdomínio" />
+        <input matInput [(ngModel)]="searchTerm" (ngModelChange)="onSearchChange()" placeholder="Nome fantasia, razão social ou categoria" />
         @if (searchTerm) {
           <button mat-icon-button matSuffix (click)="clearSearch()">
             <mat-icon>close</mat-icon>
@@ -35,9 +35,9 @@
           <td mat-cell *matCellDef="let e">{{ e.razaoSocial }}</td>
         </ng-container>
 
-        <ng-container matColumnDef="subdominio">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header="subdominio">Subdomínio</th>
-          <td mat-cell *matCellDef="let e">{{ e.subdominio }}</td>
+        <ng-container matColumnDef="categoria">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="categoriaNome">Categoria</th>
+          <td mat-cell *matCellDef="let e">{{ e.categoriaNome || '-' }}</td>
         </ng-container>
 
         <ng-container matColumnDef="tipoPessoa">
@@ -89,7 +89,7 @@
             <div class="tenant-info">
               <h3 class="tenant-name">{{ e.nomeFantasia }}</h3>
               <p class="tenant-detail"><strong>Razão Social:</strong> {{ e.razaoSocial }}</p>
-              <p class="tenant-detail"><strong>Subdomínio:</strong> {{ e.subdominio }}</p>
+              <p class="tenant-detail"><strong>Categoria:</strong> {{ e.categoriaNome || '-' }}</p>
               <p class="tenant-detail"><strong>Tipo:</strong> {{ e.tipoPessoaNome }}</p>
               <p class="tenant-detail">
                 <strong>Status:</strong> 
