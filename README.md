@@ -324,6 +324,7 @@ app/
 │   ├── services/
 │   │   ├── auth.service.ts          # Service de autenticação
 │   │   ├── toast.service.ts         # Service de notificações
+│   │   ├── confirmation.service.ts  # Service de confirmações
 │   │   ├── api.service.ts           # Service base da API
 │   │   └── layout.service.ts        # Service de layout
 │   ├── utils/
@@ -334,8 +335,10 @@ app/
 │       └── menu-item.model.ts
 ├── shared/                            # Componentes compartilhados
 │   └── components/
-│       └── loading/
-│           └── loading.component.*
+│       ├── loading/
+│       │   └── loading.component.*
+│       └── confirmation-dialog/       # Diálogo de confirmação
+│           └── confirmation-dialog.component.*
 ├── features/                          # Services por feature
 │   ├── usuarios/
 │   │   └── services/
@@ -681,6 +684,124 @@ export class MinhaEntidadeService {
 - **Métodos**: camelCase (ex: `loadData()`, `onSubmit()`)
 - **Constantes**: UPPER_SNAKE_CASE (ex: `MAX_FILE_SIZE`)
 
+#### 7. Padrões de Botões e UI
+
+**⚠️ IMPORTANTE**: Nunca use `alert()`, `confirm()` ou `prompt()` do navegador. Use sempre o `ConfirmationService`.
+
+##### Botões de Ação em Listagens
+
+**Ordem Padrão** (sempre nesta ordem):
+1. **Visualizar** - `mat-icon-button` (sem cor), ícone `visibility`
+2. **Editar** - `mat-icon-button` (sem cor), ícone `edit`
+3. **Ações Específicas** - `mat-icon-button` com cor quando aplicável
+   - Ativar: `color="primary"`, ícone `check_circle`
+   - Inativar: `color="warn"`, ícone `block`
+4. **Excluir** - `mat-icon-button` com `color="warn"`, ícone `delete` (sempre último)
+
+**Exemplo**:
+```html
+<ng-container matColumnDef="acoes">
+  <th mat-header-cell *matHeaderCellDef>Ações</th>
+  <td mat-cell *matCellDef="let e">
+    <button mat-icon-button (click)="view(e.id)" matTooltip="Visualizar">
+      <mat-icon>visibility</mat-icon>
+    </button>
+    <button mat-icon-button (click)="edit(e.id)" matTooltip="Editar">
+      <mat-icon>edit</mat-icon>
+    </button>
+    <button mat-icon-button (click)="delete(e.id)" color="warn" matTooltip="Excluir">
+      <mat-icon>delete</mat-icon>
+    </button>
+  </td>
+</ng-container>
+```
+
+##### Botão "Adicionar" em Listagens
+
+**Padrão**: Sempre usar o formato "Novo [Entidade]"
+- Texto: "Novo Tenant", "Novo Usuário", "Novo Perfil", etc.
+- Estilo: `mat-raised-button color="primary"` com ícone `add`
+
+**Exemplo**:
+```html
+<a mat-raised-button color="primary" routerLink="/backoffice/entidades/cadastro" class="add-button">
+  <mat-icon>add</mat-icon>
+  <span class="button-text">Novo [Entidade]</span>
+</a>
+```
+
+##### Botões em Formulários
+
+**Padrão**:
+- **Voltar**: `mat-stroked-button` (sem cor)
+- **Salvar**: `mat-raised-button color="primary"`
+- **Ações Destrutivas Secundárias**: `mat-button color="warn"`
+- **Ações Neutras Secundárias**: `mat-stroked-button`
+
+**Exemplo**:
+```html
+<div class="form-actions">
+  <button mat-stroked-button type="button" routerLink="/backoffice/entidades">Voltar</button>
+  <button mat-raised-button color="primary" type="submit">Salvar</button>
+</div>
+```
+
+##### Uso do ConfirmationService
+
+**Exemplo de Exclusão**:
+```typescript
+import { ConfirmationService } from '../../../../core/services/confirmation.service';
+
+export class MinhaListaComponent {
+  private confirmationService = inject(ConfirmationService);
+
+  delete(id: number) {
+    this.confirmationService.confirmDelete('este item')
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(confirmed => {
+        if (!confirmed) return;
+        
+        // Executar exclusão
+        this.service.delete(id).subscribe(/* ... */);
+      });
+  }
+}
+```
+
+**Exemplo de Ativar/Inativar**:
+```typescript
+toggleActive(id: number, currentStatus: boolean) {
+  const action = currentStatus ? 'inativar' : 'ativar';
+  const warningMessage = currentStatus 
+    ? 'Este item não poderá mais ser usado.'
+    : undefined;
+
+  this.confirmationService.confirmToggleActive(action, 'este item', warningMessage)
+    .pipe(takeUntilDestroyed(this.destroyRef))
+    .subscribe(confirmed => {
+      if (!confirmed) return;
+      
+      // Executar ação
+      this.service.toggleActive(id).subscribe(/* ... */);
+    });
+}
+```
+
+**Exemplo de Confirmação Customizada**:
+```typescript
+this.confirmationService.confirm({
+  title: 'Confirmar ação',
+  message: 'Tem certeza que deseja executar esta ação?',
+  confirmText: 'Executar',
+  cancelText: 'Cancelar',
+  confirmColor: 'warn'
+}).subscribe(confirmed => {
+  if (confirmed) {
+    // Executar ação
+  }
+});
+```
+
 ---
 
 ## ✨ Funcionalidades Implementadas
@@ -779,6 +900,9 @@ export class MinhaEntidadeService {
 - ✅ Listagem de Usuários (backoffice)
 - ✅ Listagem de Perfis (backoffice)
 - ✅ Listagem de Tenants (backoffice)
+  - Coluna Categoria (substituiu Subdomínio)
+  - Ordenação por categoria
+  - Padrão de botões padronizado
 - Paginação server-side
 - Ordenação por colunas
 - Busca com debounce
@@ -811,8 +935,20 @@ export class MinhaEntidadeService {
 - Geração de subdomínio a partir de nome fantasia
 - Toast notifications padronizadas
 - Loading global
+- **ConfirmationService** - Diálogos de confirmação padronizados
 
-#### 5. Padrões Modernos
+#### 5. Diálogos de Confirmação
+- ✅ **ConfirmationService** - Service centralizado para confirmações
+  - Substitui `confirm()` e `alert()` do navegador
+  - Diálogos do Angular Material para melhor UX
+  - Métodos helpers para casos comuns:
+    - `confirmDelete(itemName?)` - Confirmação de exclusão
+    - `confirmToggleActive(action, itemName?, warningMessage?)` - Confirmação de ativar/inativar
+    - `confirmSimple(message, title?)` - Confirmação simples
+    - `confirm(data)` - Confirmação customizada completa
+  - Retorna `Observable<boolean>` para integração reativa
+
+#### 6. Padrões Modernos
 - Standalone Components
 - OnPush Change Detection
 - Signals para estado reativo
@@ -922,3 +1058,9 @@ O sistema está preparado para escalar horizontalmente, com isolamento completo 
 ---
 
 **Última atualização**: 2025-01-27
+
+**Changelog**:
+- ✅ Implementado ConfirmationService para substituir alertas do navegador
+- ✅ Padronização de botões em todas as listagens
+- ✅ Adicionada coluna Categoria na listagem de Tenants
+- ✅ Removida coluna Subdomínio da listagem de Tenants
