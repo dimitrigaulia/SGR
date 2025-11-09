@@ -138,20 +138,25 @@ export class TenantsListComponent {
     this.router.navigate(['/backoffice/tenants/cadastro'], { state: { id, view: true } });
   }
 
-  delete(id: number) {
-    if (!confirm('Tem certeza que deseja excluir este tenant?')) {
+  toggleActive(id: number, currentStatus: boolean) {
+    const action = currentStatus ? 'inativar' : 'ativar';
+    const message = currentStatus 
+      ? 'Tem certeza que deseja inativar este tenant? O tenant não poderá mais acessar o sistema.'
+      : 'Tem certeza que deseja ativar este tenant?';
+      
+    if (!confirm(message)) {
       return;
     }
 
-    this.service.delete(id)
+    this.service.toggleActive(id)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
-          this.toast.success('Tenant excluído com sucesso');
+          this.toast.success(`Tenant ${action === 'inativar' ? 'inativado' : 'ativado'} com sucesso`);
           this.load();
         },
         error: (err) => {
-          this.toast.error(err.error?.message || 'Erro ao excluir tenant');
+          this.toast.error(err.error?.message || `Erro ao ${action} tenant`);
         }
       });
   }

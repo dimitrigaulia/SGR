@@ -144,5 +144,12 @@ export class TenantService {
   getCnpjData(cnpj: string): Observable<CnpjDataResponse> {
     return this.http.get<CnpjDataResponse>(`${this.apiUrl}/backoffice/tenants/cnpj/${cnpj}`);
   }
+
+  /**
+   * Alterna o status ativo/inativo do tenant
+   */
+  toggleActive(id: number): Observable<boolean> {
+    return this.http.patch<boolean>(`${this.apiUrl}/backoffice/tenants/${id}/toggle-active`, {});
+  }
 }
 

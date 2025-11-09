@@ -20,5 +20,10 @@ public interface ITenantService : IBaseService<Tenant, TenantDto, CreateTenantRe
     /// Busca todos os tenants ativos (para combobox no login)
     /// </summary>
     Task<List<TenantDto>> GetActiveTenantsAsync();
+
+    /// <summary>
+    /// Alterna o status ativo/inativo do tenant
+    /// </summary>
+    Task<bool> ToggleActiveAsync(long id, string? usuarioAtualizacao = null);
 }
 

@@ -48,8 +48,12 @@
         </ng-container>
 
         <ng-container matColumnDef="ativo">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header="ativo">Ativo</th>
-          <td mat-cell *matCellDef="let e">{{ e.isAtivo ? 'Sim' : 'Não' }}</td>
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="ativo">Status</th>
+          <td mat-cell *matCellDef="let e">
+            <mat-chip [color]="e.isAtivo ? 'primary' : 'warn'">
+              {{ e.isAtivo ? 'Ativo' : 'Inativo' }}
+            </mat-chip>
+          </td>
         </ng-container>
 
         <ng-container matColumnDef="acoes">
@@ -61,8 +65,12 @@
             <button mat-icon-button matTooltip="Editar" (click)="edit(e.id)">
               <mat-icon>edit</mat-icon>
             </button>
-            <button mat-icon-button matTooltip="Excluir" color="warn" (click)="delete(e.id)">
-              <mat-icon>delete</mat-icon>
+            <button 
+              mat-icon-button 
+              [matTooltip]="e.isAtivo ? 'Inativar' : 'Ativar'" 
+              [color]="e.isAtivo ? 'warn' : 'primary'" 
+              (click)="toggleActive(e.id, e.isAtivo)">
+              <mat-icon>{{ e.isAtivo ? 'block' : 'check_circle' }}</mat-icon>
             </button>
           </td>
         </ng-container>
@@ -83,7 +91,12 @@
               <p class="tenant-detail"><strong>Razão Social:</strong> {{ e.razaoSocial }}</p>
               <p class="tenant-detail"><strong>Subdomínio:</strong> {{ e.subdominio }}</p>
               <p class="tenant-detail"><strong>Tipo:</strong> {{ e.tipoPessoaNome }}</p>
-              <p class="tenant-detail"><strong>Ativo:</strong> {{ e.isAtivo ? 'Sim' : 'Não' }}</p>
+              <p class="tenant-detail">
+                <strong>Status:</strong> 
+                <mat-chip [color]="e.isAtivo ? 'primary' : 'warn'">
+                  {{ e.isAtivo ? 'Ativo' : 'Inativo' }}
+                </mat-chip>
+              </p>
             </div>
             <div class="tenant-actions">
               <button mat-icon-button matTooltip="Visualizar" (click)="view(e.id)">
@@ -92,8 +105,12 @@
               <button mat-icon-button matTooltip="Editar" (click)="edit(e.id)">
                 <mat-icon>edit</mat-icon>
               </button>
-              <button mat-icon-button matTooltip="Excluir" color="warn" (click)="delete(e.id)">
-                <mat-icon>delete</mat-icon>
+              <button 
+                mat-icon-button 
+                [matTooltip]="e.isAtivo ? 'Inativar' : 'Ativar'" 
+                [color]="e.isAtivo ? 'warn' : 'primary'" 
+                (click)="toggleActive(e.id, e.isAtivo)">
+                <mat-icon>{{ e.isAtivo ? 'block' : 'check_circle' }}</mat-icon>
               </button>
             </div>
           </mat-card-content>

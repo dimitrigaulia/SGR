@@ -63,5 +63,18 @@ public class TenantsController : BaseController<ITenantService, TenantDto, Creat
         if (dados == null) return NotFound(new { message = "CNPJ não encontrado" });
         return Ok(dados);
     }
+
+    /// <summary>
+    /// Alterna o status ativo/inativo do tenant
+    /// </summary>
+    [HttpPatch("{id:long}/toggle-active")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> ToggleActive(long id)
+    {
+        var ok = await _tenantService.ToggleActiveAsync(id, User?.Identity?.Name);
+        if (!ok) return NotFound();
+        return Ok(new { message = "Status do tenant alterado com sucesso" });
+    }
 }
 

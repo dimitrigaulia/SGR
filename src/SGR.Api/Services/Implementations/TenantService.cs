@@ -227,6 +227,77 @@ public class TenantService : BaseService<Tenant, TenantDto, CreateTenantRequest,
         return tenants.Select(mapper).ToList();
     }
 
+    /// <summary>
+    /// Inativa um tenant (soft delete)
+    /// </summary>
+    public override async Task<bool> DeleteAsync(long id)
+    {
+        _logger.LogInformation("Inativando tenant - ID: {Id}", id);
+
+        try
+        {
+            var tenant = await _dbSet.FindAsync(id);
+            if (tenant == null)
+            {
+                _logger.LogWarning("Tenant com ID {Id} não encontrado para inativação", id);
+                return false;
+            }
+
+            // Verificar se já está inativo
+            if (!tenant.IsAtivo)
+            {
+                _logger.LogWarning("Tenant com ID {Id} já está inativo", id);
+                return false;
+            }
+
+            // Inativar o tenant (soft delete)
+            tenant.IsAtivo = false;
+            SetAuditFieldsOnUpdate(tenant, null);
+            
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Tenant inativado com sucesso - ID: {Id}", id);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao inativar tenant - ID: {Id}", id);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Alterna o status ativo/inativo do tenant
+    /// </summary>
+    public async Task<bool> ToggleActiveAsync(long id, string? usuarioAtualizacao = null)
+    {
+        _logger.LogInformation("Alternando status do tenant - ID: {Id}", id);
+
+        try
+        {
+            var tenant = await _dbSet.FindAsync(id);
+            if (tenant == null)
+            {
+                _logger.LogWarning("Tenant com ID {Id} não encontrado", id);
+                return false;
+            }
+
+            tenant.IsAtivo = !tenant.IsAtivo;
+            SetAuditFieldsOnUpdate(tenant, usuarioAtualizacao);
+            
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Status do tenant alterado com sucesso - ID: {Id}, Novo status: {Status}", 
+                id, tenant.IsAtivo ? "Ativo" : "Inativo");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao alternar status do tenant - ID: {Id}", id);
+            throw;
+        }
+    }
+
     private async Task ValidateTenantRequestAsync(CreateTenantRequest request)
     {
         // Validar subdomínio único
