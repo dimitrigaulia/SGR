@@ -41,8 +41,22 @@ public static class ServiceCollectionExtensions
             options.UseNpgsql(configConnectionString));
 
         var tenantsConnectionString = configuration.GetConnectionString("TenantsConnection");
-        services.AddDbContext<TenantDbContext>(options =>
-            options.UseNpgsql(tenantsConnectionString));
+        
+        // Adicionar HttpContextAccessor se ainda não estiver registrado
+        services.AddHttpContextAccessor();
+        
+        // Registrar o interceptor como singleton (não precisa de estado, apenas do HttpContextAccessor)
+        services.AddSingleton<TenantSchemaInterceptor>();
+        
+        // Registrar o DbContext com o interceptor
+        services.AddDbContext<TenantDbContext>((serviceProvider, options) =>
+        {
+            options.UseNpgsql(tenantsConnectionString);
+            
+            // Obter o interceptor do service provider
+            var interceptor = serviceProvider.GetRequiredService<TenantSchemaInterceptor>();
+            options.AddInterceptors(interceptor);
+        });
 
         return services;
     }

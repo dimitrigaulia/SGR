@@ -28,6 +28,11 @@ public class TenantDbContext : DbContext
         _schema = schema;
     }
 
+    /// <summary>
+    /// Obtém o schema atual configurado
+    /// </summary>
+    public string? GetSchema() => _schema;
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -68,36 +73,5 @@ public class TenantDbContext : DbContext
         });
     }
 
-    public override int SaveChanges()
-    {
-        ApplySchemaToEntities();
-        return base.SaveChanges();
-    }
-
-    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
-    {
-        ApplySchemaToEntities();
-        return await base.SaveChangesAsync(cancellationToken);
-    }
-
-    private void ApplySchemaToEntities()
-    {
-        if (string.IsNullOrEmpty(_schema))
-            return;
-
-        // Aplicar schema a todas as entidades antes de salvar
-        foreach (var entry in ChangeTracker.Entries())
-        {
-            if (entry.Entity is not null)
-            {
-                var entityType = entry.Entity.GetType();
-                var tableName = Model.FindEntityType(entityType)?.GetTableName();
-                if (!string.IsNullOrEmpty(tableName))
-                {
-                    // O schema será aplicado via SQL direto nas queries
-                }
-            }
-        }
-    }
 }
 
