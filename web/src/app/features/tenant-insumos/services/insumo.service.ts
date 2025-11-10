@@ -8,10 +8,15 @@ export interface InsumoDto {
   nome: string;
   categoriaId: number;
   categoriaNome?: string | null;
-  unidadeMedidaId: number;
-  unidadeMedidaNome?: string | null;
-  unidadeMedidaSigla?: string | null;
+  unidadeCompraId: number;
+  unidadeCompraNome?: string | null;
+  unidadeCompraSigla?: string | null;
+  unidadeUsoId: number;
+  unidadeUsoNome?: string | null;
+  unidadeUsoSigla?: string | null;
+  quantidadePorEmbalagem: number;
   custoUnitario: number;
+  fatorCorrecao: number;
   estoqueMinimo?: number | null;
   descricao?: string | null;
   codigoBarras?: string | null;
@@ -22,8 +27,11 @@ export interface InsumoDto {
 export interface CreateInsumoRequest {
   nome: string;
   categoriaId: number;
-  unidadeMedidaId: number;
+  unidadeCompraId: number;
+  unidadeUsoId: number;
+  quantidadePorEmbalagem: number;
   custoUnitario: number;
+  fatorCorrecao: number;
   estoqueMinimo?: number | null;
   descricao?: string | null;
   codigoBarras?: string | null;
@@ -34,8 +42,11 @@ export interface CreateInsumoRequest {
 export interface UpdateInsumoRequest {
   nome: string;
   categoriaId: number;
-  unidadeMedidaId: number;
+  unidadeCompraId: number;
+  unidadeUsoId: number;
+  quantidadePorEmbalagem: number;
   custoUnitario: number;
+  fatorCorrecao: number;
   estoqueMinimo?: number | null;
   descricao?: string | null;
   codigoBarras?: string | null;

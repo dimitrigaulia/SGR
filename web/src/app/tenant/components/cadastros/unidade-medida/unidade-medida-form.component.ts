@@ -31,7 +31,8 @@ export class TenantUnidadeMedidaFormComponent {
   id = signal<number | null>(null);
   isView = signal<boolean>(false);
   error = signal<string>('');
-  model = { nome: '', sigla: '', tipo: '', isAtivo: true };
+  model = { nome: '', sigla: '', tipo: '', unidadeBaseId: null as number | null, fatorConversaoBase: null as number | null, isAtivo: true };
+  unidadesBase = signal<Array<{ id: number; nome: string; sigla: string }>>([]);
   
   tiposUnidade = [
     { value: 'Peso', label: 'Peso' },
@@ -44,12 +45,27 @@ export class TenantUnidadeMedidaFormComponent {
     const id = st?.id as number | undefined;
     const view = !!st?.view;
     this.isView.set(view);
+    // Carregar unidades base para o select (sempre, para criação e edição)
+    this.service.list({ pageSize: 1000 })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(result => {
+        this.unidadesBase.set(result.items.map(u => ({ id: u.id, nome: u.nome, sigla: u.sigla })));
+        this.cdr.markForCheck();
+      });
+
     if (id) {
       this.id.set(id);
       this.service.get(id)
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe(e => { 
-          this.model = { nome: e.nome, sigla: e.sigla, tipo: e.tipo || '', isAtivo: e.isAtivo }; 
+          this.model = { 
+            nome: e.nome, 
+            sigla: e.sigla, 
+            tipo: e.tipo || '', 
+            unidadeBaseId: e.unidadeBaseId || null,
+            fatorConversaoBase: e.fatorConversaoBase || null,
+            isAtivo: e.isAtivo 
+          }; 
           this.cdr.markForCheck();
         });
     }
@@ -67,7 +83,9 @@ export class TenantUnidadeMedidaFormComponent {
       const req: CreateUnidadeMedidaRequest = { 
         nome: v.nome, 
         sigla: v.sigla, 
-        tipo: v.tipo || undefined, 
+        tipo: v.tipo || undefined,
+        unidadeBaseId: v.unidadeBaseId || undefined,
+        fatorConversaoBase: v.fatorConversaoBase || undefined,
         isAtivo: !!v.isAtivo 
       };
       this.service.create(req)
@@ -85,7 +103,9 @@ export class TenantUnidadeMedidaFormComponent {
       const req: UpdateUnidadeMedidaRequest = { 
         nome: v.nome, 
         sigla: v.sigla, 
-        tipo: v.tipo || undefined, 
+        tipo: v.tipo || undefined,
+        unidadeBaseId: v.unidadeBaseId || undefined,
+        fatorConversaoBase: v.fatorConversaoBase || undefined,
         isAtivo: !!v.isAtivo 
       };
       this.service.update(this.id()!, req)

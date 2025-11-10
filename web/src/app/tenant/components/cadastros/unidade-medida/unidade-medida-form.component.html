@@ -28,6 +28,23 @@
       </mat-select>
     </mat-form-field>
 
+    <mat-form-field appearance="outline" class="form-field-spacing">
+      <mat-label>Unidade Base (opcional)</mat-label>
+      <mat-select name="unidadeBaseId" [(ngModel)]="model.unidadeBaseId" [disabled]="isView()">
+        <mat-option [value]="null">Nenhuma</mat-option>
+        @for (unidade of unidadesBase(); track unidade.id) {
+          <mat-option [value]="unidade.id">{{ unidade.nome }} ({{ unidade.sigla }})</mat-option>
+        }
+      </mat-select>
+      <mat-hint>Unidade base para conversão automática</mat-hint>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="form-field-spacing">
+      <mat-label>Fator de Conversão Base</mat-label>
+      <input matInput type="number" step="0.000001" name="fatorConversaoBase" [(ngModel)]="model.fatorConversaoBase" [disabled]="isView()" />
+      <mat-hint>Ex: 0.001 para grama -> quilograma</mat-hint>
+    </mat-form-field>
+
     <!-- Wrapper para o toggle com espaçamento consistente -->
     <div class="form-toggle-wrapper">
       <mat-slide-toggle name="isAtivo" [(ngModel)]="model.isAtivo" [disabled]="isView()">Ativo</mat-slide-toggle>

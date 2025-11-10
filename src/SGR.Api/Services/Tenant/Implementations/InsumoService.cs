@@ -26,7 +26,9 @@ public class InsumoService : BaseService<TenantDbContext, Insumo, InsumoDto, Cre
             EF.Functions.ILike(i.Nome, $"%{search}%") ||
             (i.Descricao != null && EF.Functions.ILike(i.Descricao, $"%{search}%")) ||
             (i.CodigoBarras != null && EF.Functions.ILike(i.CodigoBarras, $"%{search}%")) ||
-            (i.Categoria != null && EF.Functions.ILike(i.Categoria.Nome, $"%{search}%")));
+            (i.Categoria != null && EF.Functions.ILike(i.Categoria.Nome, $"%{search}%")) ||
+            (i.UnidadeCompra != null && EF.Functions.ILike(i.UnidadeCompra.Nome, $"%{search}%")) ||
+            (i.UnidadeUso != null && EF.Functions.ILike(i.UnidadeUso.Nome, $"%{search}%")));
     }
 
     protected override IQueryable<Insumo> ApplySorting(IQueryable<Insumo> query, string? sort, string? order)
@@ -36,6 +38,8 @@ public class InsumoService : BaseService<TenantDbContext, Insumo, InsumoDto, Cre
         {
             "nome" => ascending ? query.OrderBy(i => i.Nome) : query.OrderByDescending(i => i.Nome),
             "categoria" => ascending ? query.OrderBy(i => i.Categoria.Nome) : query.OrderByDescending(i => i.Categoria.Nome),
+            "unidadecompra" or "unidade_compra" => ascending ? query.OrderBy(i => i.UnidadeCompra.Nome) : query.OrderByDescending(i => i.UnidadeCompra.Nome),
+            "unidadeuso" or "unidade_uso" => ascending ? query.OrderBy(i => i.UnidadeUso.Nome) : query.OrderByDescending(i => i.UnidadeUso.Nome),
             "custo" or "custounitario" => ascending ? query.OrderBy(i => i.CustoUnitario) : query.OrderByDescending(i => i.CustoUnitario),
             "ativo" or "isativo" => ascending ? query.OrderBy(i => i.IsAtivo) : query.OrderByDescending(i => i.IsAtivo),
             _ => query.OrderBy(i => i.Nome)
@@ -50,7 +54,8 @@ public class InsumoService : BaseService<TenantDbContext, Insumo, InsumoDto, Cre
 
         var query = _dbSet
             .Include(i => i.Categoria)
-            .Include(i => i.UnidadeMedida)
+            .Include(i => i.UnidadeCompra)
+            .Include(i => i.UnidadeUso)
             .AsQueryable();
 
         query = ApplySearch(query, search);
@@ -74,7 +79,8 @@ public class InsumoService : BaseService<TenantDbContext, Insumo, InsumoDto, Cre
 
         var entity = await _dbSet
             .Include(i => i.Categoria)
-            .Include(i => i.UnidadeMedida)
+            .Include(i => i.UnidadeCompra)
+            .Include(i => i.UnidadeUso)
             .FirstOrDefaultAsync(e => e.Id == id);
 
         if (entity == null)
@@ -95,10 +101,15 @@ public class InsumoService : BaseService<TenantDbContext, Insumo, InsumoDto, Cre
             Nome = i.Nome,
             CategoriaId = i.CategoriaId,
             CategoriaNome = i.Categoria != null ? i.Categoria.Nome : null,
-            UnidadeMedidaId = i.UnidadeMedidaId,
-            UnidadeMedidaNome = i.UnidadeMedida != null ? i.UnidadeMedida.Nome : null,
-            UnidadeMedidaSigla = i.UnidadeMedida != null ? i.UnidadeMedida.Sigla : null,
+            UnidadeCompraId = i.UnidadeCompraId,
+            UnidadeCompraNome = i.UnidadeCompra != null ? i.UnidadeCompra.Nome : null,
+            UnidadeCompraSigla = i.UnidadeCompra != null ? i.UnidadeCompra.Sigla : null,
+            UnidadeUsoId = i.UnidadeUsoId,
+            UnidadeUsoNome = i.UnidadeUso != null ? i.UnidadeUso.Nome : null,
+            UnidadeUsoSigla = i.UnidadeUso != null ? i.UnidadeUso.Sigla : null,
+            QuantidadePorEmbalagem = i.QuantidadePorEmbalagem,
             CustoUnitario = i.CustoUnitario,
+            FatorCorrecao = i.FatorCorrecao,
             EstoqueMinimo = i.EstoqueMinimo,
             Descricao = i.Descricao,
             CodigoBarras = i.CodigoBarras,
@@ -115,8 +126,11 @@ public class InsumoService : BaseService<TenantDbContext, Insumo, InsumoDto, Cre
         {
             Nome = request.Nome,
             CategoriaId = request.CategoriaId,
-            UnidadeMedidaId = request.UnidadeMedidaId,
+            UnidadeCompraId = request.UnidadeCompraId,
+            UnidadeUsoId = request.UnidadeUsoId,
+            QuantidadePorEmbalagem = request.QuantidadePorEmbalagem,
             CustoUnitario = request.CustoUnitario,
+            FatorCorrecao = request.FatorCorrecao,
             EstoqueMinimo = request.EstoqueMinimo,
             Descricao = request.Descricao,
             CodigoBarras = request.CodigoBarras,
@@ -129,8 +143,11 @@ public class InsumoService : BaseService<TenantDbContext, Insumo, InsumoDto, Cre
     {
         entity.Nome = request.Nome;
         entity.CategoriaId = request.CategoriaId;
-        entity.UnidadeMedidaId = request.UnidadeMedidaId;
+        entity.UnidadeCompraId = request.UnidadeCompraId;
+        entity.UnidadeUsoId = request.UnidadeUsoId;
+        entity.QuantidadePorEmbalagem = request.QuantidadePorEmbalagem;
         entity.CustoUnitario = request.CustoUnitario;
+        entity.FatorCorrecao = request.FatorCorrecao;
         entity.EstoqueMinimo = request.EstoqueMinimo;
         entity.Descricao = request.Descricao;
         entity.CodigoBarras = request.CodigoBarras;
@@ -147,11 +164,17 @@ public class InsumoService : BaseService<TenantDbContext, Insumo, InsumoDto, Cre
             throw new BusinessException("Categoria inválida ou inativa");
         }
 
-        // Validar unidade de medida existe
-        var unidadeExists = await _context.Set<UnidadeMedida>().AnyAsync(u => u.Id == request.UnidadeMedidaId && u.IsAtivo);
-        if (!unidadeExists)
+        // Validar unidades de medida existem
+        var unidadeCompraExists = await _context.Set<UnidadeMedida>().AnyAsync(u => u.Id == request.UnidadeCompraId && u.IsAtivo);
+        if (!unidadeCompraExists)
         {
-            throw new BusinessException("Unidade de medida inválida ou inativa");
+            throw new BusinessException("Unidade de compra inválida ou inativa");
+        }
+
+        var unidadeUsoExists = await _context.Set<UnidadeMedida>().AnyAsync(u => u.Id == request.UnidadeUsoId && u.IsAtivo);
+        if (!unidadeUsoExists)
+        {
+            throw new BusinessException("Unidade de uso inválida ou inativa");
         }
 
         // Validar código de barras único (se informado)
@@ -174,11 +197,17 @@ public class InsumoService : BaseService<TenantDbContext, Insumo, InsumoDto, Cre
             throw new BusinessException("Categoria inválida ou inativa");
         }
 
-        // Validar unidade de medida existe
-        var unidadeExists = await _context.Set<UnidadeMedida>().AnyAsync(u => u.Id == request.UnidadeMedidaId && u.IsAtivo);
-        if (!unidadeExists)
+        // Validar unidades de medida existem
+        var unidadeCompraExists = await _context.Set<UnidadeMedida>().AnyAsync(u => u.Id == request.UnidadeCompraId && u.IsAtivo);
+        if (!unidadeCompraExists)
         {
-            throw new BusinessException("Unidade de medida inválida ou inativa");
+            throw new BusinessException("Unidade de compra inválida ou inativa");
+        }
+
+        var unidadeUsoExists = await _context.Set<UnidadeMedida>().AnyAsync(u => u.Id == request.UnidadeUsoId && u.IsAtivo);
+        if (!unidadeUsoExists)
+        {
+            throw new BusinessException("Unidade de uso inválida ou inativa");
         }
 
         // Validar código de barras único (se informado)

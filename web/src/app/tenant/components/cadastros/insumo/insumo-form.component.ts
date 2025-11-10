@@ -15,7 +15,7 @@ import { UnidadeMedidaService, UnidadeMedidaDto } from '../../../../features/ten
 import { ToastService } from '../../../../core/services/toast.service';
 import { UploadService } from '../../../../features/usuarios/services/upload.service';
 
-type InsumoFormModel = Omit<InsumoDto, 'id' | 'categoriaNome' | 'unidadeMedidaNome' | 'unidadeMedidaSigla'>;
+type InsumoFormModel = Omit<InsumoDto, 'id' | 'categoriaNome' | 'unidadeCompraNome' | 'unidadeCompraSigla' | 'unidadeUsoNome' | 'unidadeUsoSigla'>;
 
 @Component({
   standalone: true,
@@ -48,8 +48,11 @@ export class TenantInsumoFormComponent {
   model: InsumoFormModel = {
     nome: '',
     categoriaId: null as any,
-    unidadeMedidaId: null as any,
+    unidadeCompraId: null as any,
+    unidadeUsoId: null as any,
+    quantidadePorEmbalagem: 1,
     custoUnitario: 0,
+    fatorCorrecao: 1.0,
     estoqueMinimo: null,
     descricao: '',
     codigoBarras: '',
@@ -90,8 +93,11 @@ export class TenantInsumoFormComponent {
           this.model = { 
             nome: e.nome,
             categoriaId: e.categoriaId,
-            unidadeMedidaId: e.unidadeMedidaId,
+            unidadeCompraId: e.unidadeCompraId,
+            unidadeUsoId: e.unidadeUsoId,
+            quantidadePorEmbalagem: e.quantidadePorEmbalagem,
             custoUnitario: e.custoUnitario,
+            fatorCorrecao: e.fatorCorrecao,
             estoqueMinimo: e.estoqueMinimo,
             descricao: e.descricao || '',
             codigoBarras: e.codigoBarras || '',
@@ -109,7 +115,7 @@ export class TenantInsumoFormComponent {
     if (this.isView()) return;
     const v = this.model;
     // Validação simples
-    if (!v.nome || !v.categoriaId || !v.unidadeMedidaId || this.codigoBarrasTaken) {
+    if (!v.nome || !v.categoriaId || !v.unidadeCompraId || !v.unidadeUsoId || !v.quantidadePorEmbalagem || this.codigoBarrasTaken) {
       this.toast.error('Preencha os campos obrigatórios corretamente');
       return;
     }
@@ -118,8 +124,11 @@ export class TenantInsumoFormComponent {
       const req: CreateInsumoRequest = {
         nome: v.nome,
         categoriaId: v.categoriaId!,
-        unidadeMedidaId: v.unidadeMedidaId!,
+        unidadeCompraId: v.unidadeCompraId!,
+        unidadeUsoId: v.unidadeUsoId!,
+        quantidadePorEmbalagem: v.quantidadePorEmbalagem,
         custoUnitario: v.custoUnitario || 0,
+        fatorCorrecao: v.fatorCorrecao || 1.0,
         estoqueMinimo: v.estoqueMinimo || undefined,
         descricao: v.descricao || undefined,
         codigoBarras: v.codigoBarras || undefined,
@@ -141,8 +150,11 @@ export class TenantInsumoFormComponent {
       const req: UpdateInsumoRequest = {
         nome: v.nome,
         categoriaId: v.categoriaId!,
-        unidadeMedidaId: v.unidadeMedidaId!,
+        unidadeCompraId: v.unidadeCompraId!,
+        unidadeUsoId: v.unidadeUsoId!,
+        quantidadePorEmbalagem: v.quantidadePorEmbalagem,
         custoUnitario: v.custoUnitario || 0,
+        fatorCorrecao: v.fatorCorrecao || 1.0,
         estoqueMinimo: v.estoqueMinimo || undefined,
         descricao: v.descricao || undefined,
         codigoBarras: v.codigoBarras || undefined,

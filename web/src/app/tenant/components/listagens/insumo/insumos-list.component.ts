@@ -37,7 +37,7 @@ export class TenantInsumosListComponent implements OnDestroy {
   private destroyRef = inject(DestroyRef);
   private cdr = inject(ChangeDetectorRef);
   
-  displayedColumns = ['imagem', 'nome', 'categoria', 'unidade', 'custo', 'estoqueMinimo', 'ativo', 'acoes'];
+  displayedColumns = ['imagem', 'nome', 'categoria', 'unidadeCompra', 'unidadeUso', 'quantidadeEmbalagem', 'custo', 'estoqueMinimo', 'ativo', 'acoes'];
   data = signal<InsumoDto[]>([]);
   total = signal(0);
   pageIndex = signal(0);

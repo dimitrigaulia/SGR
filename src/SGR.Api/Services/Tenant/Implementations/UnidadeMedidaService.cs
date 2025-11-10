@@ -46,6 +46,8 @@ public class UnidadeMedidaService : BaseService<TenantDbContext, UnidadeMedida, 
             Nome = u.Nome,
             Sigla = u.Sigla,
             Tipo = u.Tipo,
+            UnidadeBaseId = u.UnidadeBaseId,
+            FatorConversaoBase = u.FatorConversaoBase,
             IsAtivo = u.IsAtivo,
             UsuarioCriacao = u.UsuarioCriacao,
             UsuarioAtualizacao = u.UsuarioAtualizacao,
@@ -61,6 +63,8 @@ public class UnidadeMedidaService : BaseService<TenantDbContext, UnidadeMedida, 
             Nome = request.Nome,
             Sigla = request.Sigla,
             Tipo = request.Tipo,
+            UnidadeBaseId = request.UnidadeBaseId,
+            FatorConversaoBase = request.FatorConversaoBase,
             IsAtivo = request.IsAtivo
         };
     }
@@ -70,15 +74,20 @@ public class UnidadeMedidaService : BaseService<TenantDbContext, UnidadeMedida, 
         entity.Nome = request.Nome;
         entity.Sigla = request.Sigla;
         entity.Tipo = request.Tipo;
+        entity.UnidadeBaseId = request.UnidadeBaseId;
+        entity.FatorConversaoBase = request.FatorConversaoBase;
         entity.IsAtivo = request.IsAtivo;
     }
 
     protected override async Task BeforeDeleteAsync(UnidadeMedida entity)
     {
-        var hasInsumos = await _context.Set<Insumo>().AnyAsync(i => i.UnidadeMedidaId == entity.Id);
-        if (hasInsumos)
+        var hasInsumosCompra = await _context.Set<Insumo>().AnyAsync(i => i.UnidadeCompraId == entity.Id);
+        var hasInsumosUso = await _context.Set<Insumo>().AnyAsync(i => i.UnidadeUsoId == entity.Id);
+        var hasUnidadesBase = await _context.Set<UnidadeMedida>().AnyAsync(u => u.UnidadeBaseId == entity.Id);
+        
+        if (hasInsumosCompra || hasInsumosUso || hasUnidadesBase)
         {
-            throw new BusinessException("Não é possível excluir uma unidade de medida que possui insumos cadastrados");
+            throw new BusinessException("Não é possível excluir uma unidade de medida que possui insumos cadastrados ou outras unidades relacionadas");
         }
     }
 }

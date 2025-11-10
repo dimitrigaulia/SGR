@@ -475,11 +475,14 @@ public class TenantService : BaseService<ApplicationDbContext, TenantEntity, Ten
                 ""Nome"" VARCHAR(50) NOT NULL,
                 ""Sigla"" VARCHAR(10) NOT NULL,
                 ""Tipo"" VARCHAR(20),
+                ""UnidadeBaseId"" BIGINT,
+                ""FatorConversaoBase"" DECIMAL(18, 6),
                 ""IsAtivo"" BOOLEAN NOT NULL DEFAULT true,
                 ""UsuarioCriacao"" VARCHAR(100),
                 ""UsuarioAtualizacao"" VARCHAR(100),
                 ""DataCriacao"" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT (NOW() AT TIME ZONE 'utc'),
-                ""DataAtualizacao"" TIMESTAMP WITH TIME ZONE
+                ""DataAtualizacao"" TIMESTAMP WITH TIME ZONE,
+                CONSTRAINT ""FK_UnidadeMedida_UnidadeBase_{schemaName}"" FOREIGN KEY (""UnidadeBaseId"") REFERENCES ""{schemaName}"".""UnidadeMedida""(""Id"") ON DELETE RESTRICT
             );
 
             -- Índices únicos para Nome e Sigla da Unidade
@@ -491,8 +494,11 @@ public class TenantService : BaseService<ApplicationDbContext, TenantEntity, Ten
                 ""Id"" BIGSERIAL PRIMARY KEY,
                 ""Nome"" VARCHAR(200) NOT NULL,
                 ""CategoriaId"" BIGINT NOT NULL,
-                ""UnidadeMedidaId"" BIGINT NOT NULL,
+                ""UnidadeCompraId"" BIGINT NOT NULL,
+                ""UnidadeUsoId"" BIGINT NOT NULL,
+                ""QuantidadePorEmbalagem"" DECIMAL(18, 4) NOT NULL,
                 ""CustoUnitario"" DECIMAL(18, 4) NOT NULL DEFAULT 0,
+                ""FatorCorrecao"" DECIMAL(18, 4) NOT NULL DEFAULT 1.0,
                 ""EstoqueMinimo"" DECIMAL(18, 4),
                 ""Descricao"" TEXT,
                 ""CodigoBarras"" VARCHAR(50),
@@ -503,7 +509,8 @@ public class TenantService : BaseService<ApplicationDbContext, TenantEntity, Ten
                 ""DataCriacao"" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT (NOW() AT TIME ZONE 'utc'),
                 ""DataAtualizacao"" TIMESTAMP WITH TIME ZONE,
                 CONSTRAINT ""FK_Insumo_CategoriaInsumo_{schemaName}"" FOREIGN KEY (""CategoriaId"") REFERENCES ""{schemaName}"".""CategoriaInsumo""(""Id"") ON DELETE RESTRICT,
-                CONSTRAINT ""FK_Insumo_UnidadeMedida_{schemaName}"" FOREIGN KEY (""UnidadeMedidaId"") REFERENCES ""{schemaName}"".""UnidadeMedida""(""Id"") ON DELETE RESTRICT
+                CONSTRAINT ""FK_Insumo_UnidadeCompra_{schemaName}"" FOREIGN KEY (""UnidadeCompraId"") REFERENCES ""{schemaName}"".""UnidadeMedida""(""Id"") ON DELETE RESTRICT,
+                CONSTRAINT ""FK_Insumo_UnidadeUso_{schemaName}"" FOREIGN KEY (""UnidadeUsoId"") REFERENCES ""{schemaName}"".""UnidadeMedida""(""Id"") ON DELETE RESTRICT
             );
 
             -- Índice único para Código de Barras (apenas quando não nulo)
@@ -527,17 +534,59 @@ public class TenantService : BaseService<ApplicationDbContext, TenantEntity, Ten
             VALUES ('Administrador', true, '{usuarioCriacaoValue}', {dataCriacao})
             ON CONFLICT DO NOTHING;
 
-            -- Inserir Unidades de Medida padrão
-            INSERT INTO ""{schemaName}"".""UnidadeMedida"" (""Nome"", ""Sigla"", ""Tipo"", ""IsAtivo"", ""UsuarioCriacao"", ""DataCriacao"")
+            -- Inserir Categorias de Insumo padrão
+            INSERT INTO ""{schemaName}"".""CategoriaInsumo"" (""Nome"", ""IsAtivo"", ""UsuarioCriacao"", ""DataCriacao"")
             VALUES 
-                ('Quilograma', 'kg', 'Peso', true, '{usuarioCriacaoValue}', {dataCriacao}),
-                ('Grama', 'g', 'Peso', true, '{usuarioCriacaoValue}', {dataCriacao}),
-                ('Litro', 'L', 'Volume', true, '{usuarioCriacaoValue}', {dataCriacao}),
-                ('Mililitro', 'mL', 'Volume', true, '{usuarioCriacaoValue}', {dataCriacao}),
-                ('Unidade', 'un', 'Quantidade', true, '{usuarioCriacaoValue}', {dataCriacao}),
-                ('Dúzia', 'dz', 'Quantidade', true, '{usuarioCriacaoValue}', {dataCriacao}),
-                ('Pacote', 'pct', 'Quantidade', true, '{usuarioCriacaoValue}', {dataCriacao}),
-                ('Caixa', 'cx', 'Quantidade', true, '{usuarioCriacaoValue}', {dataCriacao})
+                ('Hortifruti', true, '{usuarioCriacaoValue}', {dataCriacao}),
+                ('Carnes e Aves', true, '{usuarioCriacaoValue}', {dataCriacao}),
+                ('Peixes e Frutos do Mar', true, '{usuarioCriacaoValue}', {dataCriacao}),
+                ('Laticínios', true, '{usuarioCriacaoValue}', {dataCriacao}),
+                ('Grãos e Cereais', true, '{usuarioCriacaoValue}', {dataCriacao}),
+                ('Massas e Farinhas', true, '{usuarioCriacaoValue}', {dataCriacao}),
+                ('Bebidas', true, '{usuarioCriacaoValue}', {dataCriacao}),
+                ('Condimentos e Temperos', true, '{usuarioCriacaoValue}', {dataCriacao}),
+                ('Óleos e Gorduras', true, '{usuarioCriacaoValue}', {dataCriacao}),
+                ('Limpeza e Higiene', true, '{usuarioCriacaoValue}', {dataCriacao}),
+                ('Embalagens', true, '{usuarioCriacaoValue}', {dataCriacao}),
+                ('Outros', true, '{usuarioCriacaoValue}', {dataCriacao})
+            ON CONFLICT DO NOTHING;
+
+            -- Inserir Unidades de Medida padrão (primeiro as bases, depois as derivadas)
+            -- Unidades base (sem UnidadeBaseId)
+            INSERT INTO ""{schemaName}"".""UnidadeMedida"" (""Nome"", ""Sigla"", ""Tipo"", ""UnidadeBaseId"", ""FatorConversaoBase"", ""IsAtivo"", ""UsuarioCriacao"", ""DataCriacao"")
+            VALUES 
+                ('Quilograma', 'kg', 'Peso', NULL, 1.0, true, '{usuarioCriacaoValue}', {dataCriacao}),
+                ('Litro', 'L', 'Volume', NULL, 1.0, true, '{usuarioCriacaoValue}', {dataCriacao}),
+                ('Unidade', 'un', 'Quantidade', NULL, 1.0, true, '{usuarioCriacaoValue}', {dataCriacao})
+            ON CONFLICT DO NOTHING;
+
+            -- Unidades derivadas (com referência à base)
+            -- Peso: g -> kg (1g = 0.001kg)
+            INSERT INTO ""{schemaName}"".""UnidadeMedida"" (""Nome"", ""Sigla"", ""Tipo"", ""UnidadeBaseId"", ""FatorConversaoBase"", ""IsAtivo"", ""UsuarioCriacao"", ""DataCriacao"")
+            SELECT 'Grama', 'g', 'Peso', um_base.""Id"", 0.001, true, '{usuarioCriacaoValue}', {dataCriacao}
+            FROM ""{schemaName}"".""UnidadeMedida"" um_base
+            WHERE um_base.""Sigla"" = 'kg' AND um_base.""Tipo"" = 'Peso'
+            ON CONFLICT DO NOTHING;
+
+            -- Volume: mL -> L (1mL = 0.001L)
+            INSERT INTO ""{schemaName}"".""UnidadeMedida"" (""Nome"", ""Sigla"", ""Tipo"", ""UnidadeBaseId"", ""FatorConversaoBase"", ""IsAtivo"", ""UsuarioCriacao"", ""DataCriacao"")
+            SELECT 'Mililitro', 'mL', 'Volume', um_base.""Id"", 0.001, true, '{usuarioCriacaoValue}', {dataCriacao}
+            FROM ""{schemaName}"".""UnidadeMedida"" um_base
+            WHERE um_base.""Sigla"" = 'L' AND um_base.""Tipo"" = 'Volume'
+            ON CONFLICT DO NOTHING;
+
+            -- Quantidade: dz -> un (1dz = 12un)
+            INSERT INTO ""{schemaName}"".""UnidadeMedida"" (""Nome"", ""Sigla"", ""Tipo"", ""UnidadeBaseId"", ""FatorConversaoBase"", ""IsAtivo"", ""UsuarioCriacao"", ""DataCriacao"")
+            SELECT 'Dúzia', 'dz', 'Quantidade', um_base.""Id"", 12.0, true, '{usuarioCriacaoValue}', {dataCriacao}
+            FROM ""{schemaName}"".""UnidadeMedida"" um_base
+            WHERE um_base.""Sigla"" = 'un' AND um_base.""Tipo"" = 'Quantidade'
+            ON CONFLICT DO NOTHING;
+
+            -- Quantidade: pct, cx (sem conversão automática, serão usadas como unidades de compra)
+            INSERT INTO ""{schemaName}"".""UnidadeMedida"" (""Nome"", ""Sigla"", ""Tipo"", ""UnidadeBaseId"", ""FatorConversaoBase"", ""IsAtivo"", ""UsuarioCriacao"", ""DataCriacao"")
+            VALUES 
+                ('Pacote', 'pct', 'Quantidade', NULL, NULL, true, '{usuarioCriacaoValue}', {dataCriacao}),
+                ('Caixa', 'cx', 'Quantidade', NULL, NULL, true, '{usuarioCriacaoValue}', {dataCriacao})
             ON CONFLICT DO NOTHING;
         ";
 

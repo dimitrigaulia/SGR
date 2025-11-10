@@ -22,16 +22,52 @@
           <mat-error>Categoria é obrigatória</mat-error>
         }
       </mat-form-field>
+    </div>
 
+    <div class="form-row">
       <mat-form-field appearance="outline" class="form-field-spacing">
-        <mat-label>Unidade de Medida</mat-label>
-        <mat-select name="unidadeMedidaId" [(ngModel)]="model.unidadeMedidaId" [disabled]="isView()" required>
+        <mat-label>Unidade de Compra</mat-label>
+        <mat-select name="unidadeCompraId" [(ngModel)]="model.unidadeCompraId" [disabled]="isView()" required>
           @for (u of unidades(); track u.id) {
             <mat-option [value]="u.id">{{ u.nome }} ({{ u.sigla }})</mat-option>
           }
         </mat-select>
-        @if (f.controls['unidadeMedidaId']?.errors?.['required']) {
-          <mat-error>Unidade de medida é obrigatória</mat-error>
+        @if (f.controls['unidadeCompraId']?.errors?.['required']) {
+          <mat-error>Unidade de compra é obrigatória</mat-error>
+        }
+        <mat-hint>Unidade em que o insumo é comprado</mat-hint>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="form-field-spacing">
+        <mat-label>Unidade de Uso</mat-label>
+        <mat-select name="unidadeUsoId" [(ngModel)]="model.unidadeUsoId" [disabled]="isView()" required>
+          @for (u of unidades(); track u.id) {
+            <mat-option [value]="u.id">{{ u.nome }} ({{ u.sigla }})</mat-option>
+          }
+        </mat-select>
+        @if (f.controls['unidadeUsoId']?.errors?.['required']) {
+          <mat-error>Unidade de uso é obrigatória</mat-error>
+        }
+        <mat-hint>Unidade usada nas receitas</mat-hint>
+      </mat-form-field>
+    </div>
+
+    <div class="form-row">
+      <mat-form-field appearance="outline" class="form-field-spacing">
+        <mat-label>Quantidade por Embalagem</mat-label>
+        <input matInput type="number" name="quantidadePorEmbalagem" [(ngModel)]="model.quantidadePorEmbalagem" [disabled]="isView()" required min="0.0001" step="0.0001" />
+        <mat-hint>Ex: 12 unidades, 5 kg</mat-hint>
+        @if (f.controls['quantidadePorEmbalagem']?.errors?.['required']) {
+          <mat-error>Quantidade por embalagem é obrigatória</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="form-field-spacing">
+        <mat-label>Fator de Correção</mat-label>
+        <input matInput type="number" name="fatorCorrecao" [(ngModel)]="model.fatorCorrecao" [disabled]="isView()" required min="1.0" step="0.01" />
+        <mat-hint>Ex: 1.10 = 10% de perda</mat-hint>
+        @if (f.controls['fatorCorrecao']?.errors?.['min']) {
+          <mat-error>Fator de correção deve ser maior ou igual a 1.0</mat-error>
         }
       </mat-form-field>
     </div>
@@ -41,6 +77,7 @@
         <mat-label>Custo Unitário</mat-label>
         <input matInput type="number" name="custoUnitario" [(ngModel)]="model.custoUnitario" [disabled]="isView()" required min="0" step="0.01" />
         <span matTextPrefix>R$&nbsp;</span>
+        <mat-hint>Custo por unidade de compra</mat-hint>
         @if (f.controls['custoUnitario']?.errors?.['required']) {
           <mat-error>Custo unitário é obrigatório</mat-error>
         }

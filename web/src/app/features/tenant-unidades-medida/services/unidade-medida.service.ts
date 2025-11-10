@@ -8,6 +8,8 @@ export interface UnidadeMedidaDto {
   nome: string;
   sigla: string;
   tipo?: string | null;
+  unidadeBaseId?: number | null;
+  fatorConversaoBase?: number | null;
   isAtivo: boolean;
 }
 
@@ -15,6 +17,8 @@ export interface CreateUnidadeMedidaRequest {
   nome: string;
   sigla: string;
   tipo?: string | null;
+  unidadeBaseId?: number | null;
+  fatorConversaoBase?: number | null;
   isAtivo: boolean;
 }
 
@@ -22,6 +26,8 @@ export interface UpdateUnidadeMedidaRequest {
   nome: string;
   sigla: string;
   tipo?: string | null;
+  unidadeBaseId?: number | null;
+  fatorConversaoBase?: number | null;
   isAtivo: boolean;
 }
 

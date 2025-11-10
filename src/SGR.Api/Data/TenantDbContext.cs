@@ -100,6 +100,7 @@ public class TenantDbContext : DbContext
             entity.Property(e => e.Nome).HasMaxLength(50).IsRequired();
             entity.Property(e => e.Sigla).HasMaxLength(10).IsRequired();
             entity.Property(e => e.Tipo).HasMaxLength(20);
+            entity.Property(e => e.FatorConversaoBase).HasPrecision(18, 6);
             entity.Property(e => e.UsuarioCriacao).HasMaxLength(100);
             entity.Property(e => e.UsuarioAtualizacao).HasMaxLength(100);
             entity.Property(e => e.DataCriacao).IsRequired();
@@ -107,6 +108,12 @@ public class TenantDbContext : DbContext
             // Índices únicos (dentro do schema do tenant)
             entity.HasIndex(e => e.Nome).IsUnique();
             entity.HasIndex(e => e.Sigla).IsUnique();
+
+            // Relacionamento com unidade base (self-referencing)
+            entity.HasOne(e => e.UnidadeBase)
+                  .WithMany()
+                  .HasForeignKey(e => e.UnidadeBaseId)
+                  .OnDelete(DeleteBehavior.Restrict);
         });
 
         // Configuração Insumo
@@ -116,7 +123,9 @@ public class TenantDbContext : DbContext
             entity.HasKey(e => e.Id);
 
             entity.Property(e => e.Nome).HasMaxLength(200).IsRequired();
+            entity.Property(e => e.QuantidadePorEmbalagem).HasPrecision(18, 4).IsRequired();
             entity.Property(e => e.CustoUnitario).HasPrecision(18, 4).IsRequired();
+            entity.Property(e => e.FatorCorrecao).HasPrecision(18, 4).IsRequired().HasDefaultValue(1.0m);
             entity.Property(e => e.EstoqueMinimo).HasPrecision(18, 4);
             entity.Property(e => e.Descricao);
             entity.Property(e => e.CodigoBarras).HasMaxLength(50);
@@ -134,9 +143,14 @@ public class TenantDbContext : DbContext
                   .HasForeignKey(e => e.CategoriaId)
                   .OnDelete(DeleteBehavior.Restrict);
 
-            entity.HasOne(e => e.UnidadeMedida)
+            entity.HasOne(e => e.UnidadeCompra)
+                  .WithMany()
+                  .HasForeignKey(e => e.UnidadeCompraId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.UnidadeUso)
                   .WithMany(u => u.Insumos)
-                  .HasForeignKey(e => e.UnidadeMedidaId)
+                  .HasForeignKey(e => e.UnidadeUsoId)
                   .OnDelete(DeleteBehavior.Restrict);
         });
     }
