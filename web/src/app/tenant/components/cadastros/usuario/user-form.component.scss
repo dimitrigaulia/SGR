@@ -1,0 +1,37 @@
+// Estilos específicos do componente
+// Os estilos globais de formulário estão em styles.scss
+
+.avatar-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+
+  img {
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+
+  button {
+    white-space: nowrap;
+  }
+}
+
+// Responsividade específica para avatar-row
+@media (max-width: 599px) {
+  .avatar-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+
+    img {
+      align-self: center;
+    }
+
+    button {
+      width: 100%;
+    }
+  }
+}
+

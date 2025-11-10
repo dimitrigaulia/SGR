@@ -70,7 +70,13 @@ export class ShellComponent implements AfterViewInit {
       );
     }
 
-    // Itens específicos do tenant podem ser adicionados aqui no futuro
+    // Itens específicos do tenant
+    if (context === 'tenant') {
+      items.push(
+        { icon: 'people', label: 'Usuários', route: `${baseUrl}/usuarios` },
+        { icon: 'badge', label: 'Perfis', route: `${baseUrl}/perfis` }
+      );
+    }
 
     return items;
   });

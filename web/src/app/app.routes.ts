@@ -39,7 +39,10 @@ export const routes: Routes = [
     children: [
       { path: "", pathMatch: "full", redirectTo: "dashboard" },
       { path: "dashboard", loadComponent: () => import("./app").then(m => m.App) },
-      // TODO: Adicionar rotas específicas do tenant aqui
+      { path: "usuarios", loadComponent: () => import("./tenant/components/listagens/usuario/users-list.component").then(m => m.TenantUsersListComponent) },
+      { path: "usuarios/cadastro", canActivate: [stateGuard], loadComponent: () => import("./tenant/components/cadastros/usuario/user-form.component").then(m => m.TenantUserFormComponent) },
+      { path: "perfis", loadComponent: () => import("./tenant/components/listagens/perfil/perfis-list.component").then(m => m.TenantPerfisListComponent) },
+      { path: "perfis/cadastro", canActivate: [stateGuard], loadComponent: () => import("./tenant/components/cadastros/perfil/perfil-form.component").then(m => m.TenantPerfilFormComponent) },
     ]
   },
   
