@@ -1,7 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using SGR.Api.Data;
-using SGR.Api.Services.Interfaces;
+using SGR.Api.Services.Backoffice.Implementations;
+using SGR.Api.Services.Backoffice.Interfaces;
 using SGR.Api.Services.Implementations;
+using SGR.Api.Services.Interfaces;
+using SGR.Api.Services.Tenant.Implementations;
+using SGR.Api.Services.Tenant.Interfaces;
 
 namespace SGR.Api.Extensions;
 
@@ -15,11 +19,19 @@ public static class ServiceCollectionExtensions
     /// </summary>
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
-        // Services
+        // Auth Services
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<ITenantAuthService, TenantAuthService>();
-        services.AddScoped<IUsuarioService, UsuarioService>();
-        services.AddScoped<IPerfilService, PerfilService>();
+        
+        // Backoffice Services
+        services.AddScoped<IBackofficeUsuarioService, BackofficeUsuarioService>();
+        services.AddScoped<IBackofficePerfilService, BackofficePerfilService>();
+        
+        // Tenant Services
+        services.AddScoped<ITenantUsuarioService, TenantUsuarioService>();
+        services.AddScoped<ITenantPerfilService, TenantPerfilService>();
+        
+        // Common Services
         services.AddScoped<ITenantService, TenantService>();
         
         // HTTP Client para validação de CPF/CNPJ

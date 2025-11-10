@@ -1,24 +1,27 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using SGR.Api.Data;
 using SGR.Api.Models.DTOs;
 using SGR.Api.Services.Interfaces;
 using System.Linq.Expressions;
 
-namespace SGR.Api.Services.Implementations;
+namespace SGR.Api.Services.Common;
 
-public abstract class BaseService<TEntity, TDto, TCreateRequest, TUpdateRequest> 
+/// <summary>
+/// Service base genérico que funciona com qualquer DbContext
+/// </summary>
+public abstract class BaseService<TDbContext, TEntity, TDto, TCreateRequest, TUpdateRequest> 
     : IBaseService<TEntity, TDto, TCreateRequest, TUpdateRequest>
+    where TDbContext : DbContext
     where TEntity : class
     where TDto : class
     where TCreateRequest : class
     where TUpdateRequest : class
 {
-    protected readonly ApplicationDbContext _context;
+    protected readonly TDbContext _context;
     protected readonly DbSet<TEntity> _dbSet;
-    protected readonly ILogger<BaseService<TEntity, TDto, TCreateRequest, TUpdateRequest>> _logger;
+    protected readonly ILogger _logger;
 
-    protected BaseService(ApplicationDbContext context, ILogger<BaseService<TEntity, TDto, TCreateRequest, TUpdateRequest>> logger)
+    protected BaseService(TDbContext context, ILogger logger)
     {
         _context = context;
         _dbSet = context.Set<TEntity>();

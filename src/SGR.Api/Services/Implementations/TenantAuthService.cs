@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using SGR.Api.Data;
 using SGR.Api.Models.DTOs;
-using SGR.Api.Models.Entities;
+using SGR.Api.Models.Tenant.Entities;
 using SGR.Api.Services.Interfaces;
 
 namespace SGR.Api.Services.Implementations;
@@ -33,7 +33,7 @@ public class TenantAuthService : ITenantAuthService
         _logger.LogInformation("Tentativa de login do tenant para email: {Email}", request.Email);
 
         // Buscar usuário por email no schema do tenant
-        var usuario = await _context.Usuarios
+        var usuario = await _context.TenantUsuarios
             .Include(u => u.Perfil)
             .FirstOrDefaultAsync(u => u.Email == request.Email && u.IsAtivo);
 
@@ -94,7 +94,7 @@ public class TenantAuthService : ITenantAuthService
         };
     }
 
-    private string GenerateJwtToken(Usuario usuario)
+    private string GenerateJwtToken(TenantUsuario usuario)
     {
         var secretKey = _configuration["Jwt:SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey não configurada");
         var issuer = _configuration["Jwt:Issuer"] ?? "SGR.Api";

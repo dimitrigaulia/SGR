@@ -5,8 +5,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using SGR.Api.Data;
+using SGR.Api.Models.Backoffice.Entities;
 using SGR.Api.Models.DTOs;
-using SGR.Api.Models.Entities;
 using SGR.Api.Services.Interfaces;
 
 namespace SGR.Api.Services.Implementations;
@@ -29,7 +29,7 @@ public class AuthService : IAuthService
         _logger.LogInformation("Tentativa de login para email: {Email}", request.Email);
 
         // Buscar usuário por email
-        var usuario = await _context.Usuarios
+        var usuario = await _context.BackofficeUsuarios
             .Include(u => u.Perfil)
             .FirstOrDefaultAsync(u => u.Email == request.Email && u.IsAtivo);
 
@@ -58,7 +58,7 @@ public class AuthService : IAuthService
         // Gerar token JWT
         var token = GenerateJwtToken(usuario);
 
-        // Mapear para DTOs
+        // Mapear para DTOs (usando DTOs genéricos para LoginResponse)
         var usuarioDto = new UsuarioDto
         {
             Id = usuario.Id,
@@ -90,7 +90,7 @@ public class AuthService : IAuthService
         };
     }
 
-    private string GenerateJwtToken(Usuario usuario)
+    private string GenerateJwtToken(BackofficeUsuario usuario)
     {
         var secretKey = _configuration["Jwt:SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey não configurada");
         var issuer = _configuration["Jwt:Issuer"] ?? "SGR.Api";

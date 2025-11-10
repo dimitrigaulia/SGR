@@ -1,15 +1,15 @@
 using Microsoft.Extensions.Logging;
-using SGR.Api.Models.DTOs;
-using SGR.Api.Services.Interfaces;
+using SGR.Api.Models.Backoffice.DTOs;
+using SGR.Api.Services.Backoffice.Interfaces;
 
 namespace SGR.Api.Controllers.Backoffice;
 
 /// <summary>
-/// Controller para gerenciamento de perfis
+/// Controller para gerenciamento de perfis do backoffice
 /// </summary>
-public class PerfisController : BaseController<IPerfilService, PerfilDto, CreatePerfilRequest, UpdatePerfilRequest>
+public class PerfisController : BaseController<IBackofficePerfilService, BackofficePerfilDto, CreateBackofficePerfilRequest, UpdateBackofficePerfilRequest>
 {
-    public PerfisController(IPerfilService service, ILogger<PerfisController> logger) : base(service, logger)
+    public PerfisController(IBackofficePerfilService service, ILogger<PerfisController> logger) : base(service, logger)
     {
     }
 }

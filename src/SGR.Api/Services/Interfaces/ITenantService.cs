@@ -1,9 +1,10 @@
 using SGR.Api.Models.DTOs;
 using SGR.Api.Models.Entities;
+using TenantEntity = SGR.Api.Models.Entities.Tenant;
 
 namespace SGR.Api.Services.Interfaces;
 
-public interface ITenantService : IBaseService<Tenant, TenantDto, CreateTenantRequest, UpdateTenantRequest>,
+public interface ITenantService : IBaseService<TenantEntity, TenantDto, CreateTenantRequest, UpdateTenantRequest>,
     IBaseServiceController<TenantDto, CreateTenantRequest, UpdateTenantRequest>
 {
     /// <summary>

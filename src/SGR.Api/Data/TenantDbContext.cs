@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using SGR.Api.Models.Entities;
+using SGR.Api.Models.Tenant.Entities;
 
 namespace SGR.Api.Data;
 
@@ -17,8 +17,8 @@ public class TenantDbContext : DbContext
     {
     }
 
-    public DbSet<Perfil> Perfis { get; set; }
-    public DbSet<Usuario> Usuarios { get; set; }
+    public DbSet<TenantPerfil> TenantPerfis { get; set; }
+    public DbSet<TenantUsuario> TenantUsuarios { get; set; }
 
     /// <summary>
     /// Define o schema a ser usado para este contexto
@@ -37,8 +37,8 @@ public class TenantDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        // Configuração Perfil
-        modelBuilder.Entity<Perfil>(entity =>
+        // Configuração TenantPerfil
+        modelBuilder.Entity<TenantPerfil>(entity =>
         {
             entity.ToTable("Perfil");
             entity.HasKey(e => e.Id);
@@ -46,10 +46,11 @@ public class TenantDbContext : DbContext
             entity.Property(e => e.Nome).HasMaxLength(100).IsRequired();
             entity.Property(e => e.UsuarioCriacao).HasMaxLength(100);
             entity.Property(e => e.UsuarioAtualizacao).HasMaxLength(100);
+            entity.Property(e => e.DataCriacao).IsRequired();
         });
 
-        // Configuração Usuario
-        modelBuilder.Entity<Usuario>(entity =>
+        // Configuração TenantUsuario
+        modelBuilder.Entity<TenantUsuario>(entity =>
         {
             entity.ToTable("Usuario");
             entity.HasKey(e => e.Id);

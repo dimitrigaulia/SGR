@@ -1,16 +1,16 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using SGR.Api.Models.Backoffice.DTOs;
-using SGR.Api.Services.Backoffice.Interfaces;
+using SGR.Api.Models.Tenant.DTOs;
+using SGR.Api.Services.Tenant.Interfaces;
 
-namespace SGR.Api.Controllers.Backoffice;
+namespace SGR.Api.Controllers.Tenant;
 
 /// <summary>
-/// Controller para gerenciamento de usuários do backoffice
+/// Controller para gerenciamento de usuários do tenant
 /// </summary>
-public class UsuariosController : BaseController<IBackofficeUsuarioService, BackofficeUsuarioDto, CreateBackofficeUsuarioRequest, UpdateBackofficeUsuarioRequest>
+public class UsuariosController : BaseController<ITenantUsuarioService, TenantUsuarioDto, CreateTenantUsuarioRequest, UpdateTenantUsuarioRequest>
 {
-    public UsuariosController(IBackofficeUsuarioService service, ILogger<UsuariosController> logger) : base(service, logger)
+    public UsuariosController(ITenantUsuarioService service, ILogger<UsuariosController> logger) : base(service, logger)
     {
     }
 
@@ -32,3 +32,4 @@ public class UsuariosController : BaseController<IBackofficeUsuarioService, Back
         return Ok(new { exists });
     }
 }
+

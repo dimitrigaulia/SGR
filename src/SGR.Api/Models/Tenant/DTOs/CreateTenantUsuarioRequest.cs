@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace SGR.Api.Models.DTOs;
+namespace SGR.Api.Models.Tenant.DTOs;
 
-public class CreateUsuarioRequest
+public class CreateTenantUsuarioRequest
 {
     [Required]
     public long PerfilId { get; set; }

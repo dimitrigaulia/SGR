@@ -1,6 +1,9 @@
-namespace SGR.Api.Models.Entities;
+namespace SGR.Api.Models.Backoffice.Entities;
 
-public class Usuario
+/// <summary>
+/// Usuário do backoffice (administradores do sistema)
+/// </summary>
+public class BackofficeUsuario
 {
     public long Id { get; set; }
     public long PerfilId { get; set; }
@@ -15,6 +18,6 @@ public class Usuario
     public DateTime? DataAtualizacao { get; set; }
 
     // Navegação
-    public Perfil Perfil { get; set; } = null!;
+    public BackofficePerfil Perfil { get; set; } = null!;
 }
 

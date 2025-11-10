@@ -4,14 +4,16 @@ using SGR.Api.Data;
 using SGR.Api.Exceptions;
 using SGR.Api.Models.DTOs;
 using SGR.Api.Models.Entities;
+using SGR.Api.Services.Common;
 using SGR.Api.Services.Interfaces;
 using System.Linq.Expressions;
 using System.Text.RegularExpressions;
 using Npgsql;
+using TenantEntity = SGR.Api.Models.Entities.Tenant;
 
 namespace SGR.Api.Services.Implementations;
 
-public class TenantService : BaseService<Tenant, TenantDto, CreateTenantRequest, UpdateTenantRequest>, ITenantService
+public class TenantService : BaseService<ApplicationDbContext, TenantEntity, TenantDto, CreateTenantRequest, UpdateTenantRequest>, ITenantService
 {
     private readonly TenantDbContext _tenantContext;
     private readonly ICpfCnpjValidationService _cpfCnpjValidationService;
@@ -30,7 +32,7 @@ public class TenantService : BaseService<Tenant, TenantDto, CreateTenantRequest,
         _configuration = configuration;
     }
 
-    protected override Expression<Func<Tenant, TenantDto>> MapToDto()
+    protected override Expression<Func<TenantEntity, TenantDto>> MapToDto()
     {
         return t => new TenantDto
         {
@@ -51,11 +53,11 @@ public class TenantService : BaseService<Tenant, TenantDto, CreateTenantRequest,
         };
     }
 
-    protected override Tenant MapToEntity(CreateTenantRequest request)
+    protected override TenantEntity MapToEntity(CreateTenantRequest request)
     {
         // Este método não deve ser usado diretamente - use CreateTenantAsync
         // Implementado apenas para satisfazer a classe abstrata
-        return new Tenant
+        return new TenantEntity
         {
             RazaoSocial = request.RazaoSocial,
             NomeFantasia = request.NomeFantasia,
@@ -74,7 +76,7 @@ public class TenantService : BaseService<Tenant, TenantDto, CreateTenantRequest,
         return await CreateTenantAsync(request, usuarioCriacao);
     }
 
-    protected override void UpdateEntity(Tenant entity, UpdateTenantRequest request)
+    protected override void UpdateEntity(TenantEntity entity, UpdateTenantRequest request)
     {
         entity.RazaoSocial = request.RazaoSocial;
         entity.NomeFantasia = request.NomeFantasia;
@@ -85,7 +87,7 @@ public class TenantService : BaseService<Tenant, TenantDto, CreateTenantRequest,
         entity.IsAtivo = request.IsAtivo;
     }
 
-    protected override IQueryable<Tenant> ApplySearch(IQueryable<Tenant> query, string? search)
+    protected override IQueryable<TenantEntity> ApplySearch(IQueryable<TenantEntity> query, string? search)
     {
         if (string.IsNullOrWhiteSpace(search)) return query;
         search = search.ToLower();
@@ -100,7 +102,7 @@ public class TenantService : BaseService<Tenant, TenantDto, CreateTenantRequest,
     public override async Task<PagedResult<TenantDto>> GetAllAsync(string? search, int page, int pageSize, string? sort, string? order)
     {
         _logger.LogInformation("Buscando {EntityType} - Página: {Page}, Tamanho: {PageSize}, Busca: {Search}", 
-            typeof(Tenant).Name, page, pageSize, search ?? "N/A");
+            typeof(TenantEntity).Name, page, pageSize, search ?? "N/A");
 
         var query = _dbSet.Include(t => t.Categoria).AsQueryable();
         
@@ -120,19 +122,19 @@ public class TenantService : BaseService<Tenant, TenantDto, CreateTenantRequest,
             .Select(MapToDto())
             .ToListAsync();
 
-        _logger.LogInformation("Encontrados {Total} registros de {EntityType}", total, typeof(Tenant).Name);
+        _logger.LogInformation("Encontrados {Total} registros de {EntityType}", total, typeof(TenantEntity).Name);
 
         return new PagedResult<TenantDto> { Items = items, Total = total };
     }
 
     public override async Task<TenantDto?> GetByIdAsync(long id)
     {
-        _logger.LogInformation("Buscando {EntityType} por ID: {Id}", typeof(Tenant).Name, id);
+        _logger.LogInformation("Buscando {EntityType} por ID: {Id}", typeof(TenantEntity).Name, id);
 
         var entity = await _dbSet.Include(t => t.Categoria).FirstOrDefaultAsync(t => t.Id == id);
         if (entity == null)
         {
-            _logger.LogWarning("{EntityType} com ID {Id} não encontrado", typeof(Tenant).Name, id);
+            _logger.LogWarning("{EntityType} com ID {Id} não encontrado", typeof(TenantEntity).Name, id);
             return null;
         }
 
@@ -140,7 +142,7 @@ public class TenantService : BaseService<Tenant, TenantDto, CreateTenantRequest,
         return mapper(entity);
     }
 
-    protected override IQueryable<Tenant> ApplySorting(IQueryable<Tenant> query, string? sort, string? order)
+    protected override IQueryable<TenantEntity> ApplySorting(IQueryable<TenantEntity> query, string? sort, string? order)
     {
         var ascending = string.Equals(order, "asc", StringComparison.OrdinalIgnoreCase);
         return (sort?.ToLower()) switch
@@ -164,7 +166,7 @@ public class TenantService : BaseService<Tenant, TenantDto, CreateTenantRequest,
         await EnsureTenantsDatabaseExistsAsync();
 
         // 3. Criar registro do Tenant no banco sgr_config
-        var tenant = new Tenant
+        var tenant = new TenantEntity
         {
             RazaoSocial = request.RazaoSocial,
             NomeFantasia = request.NomeFantasia,

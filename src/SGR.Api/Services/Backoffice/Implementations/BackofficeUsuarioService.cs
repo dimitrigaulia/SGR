@@ -2,20 +2,23 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using SGR.Api.Data;
 using SGR.Api.Exceptions;
+using SGR.Api.Models.Backoffice.DTOs;
+using SGR.Api.Models.Backoffice.Entities;
 using SGR.Api.Models.DTOs;
-using SGR.Api.Models.Entities;
+using SGR.Api.Services.Backoffice.Interfaces;
+using SGR.Api.Services.Common;
 using SGR.Api.Services.Interfaces;
 using System.Linq.Expressions;
 
-namespace SGR.Api.Services.Implementations;
+namespace SGR.Api.Services.Backoffice.Implementations;
 
-public class UsuarioService : BaseService<Usuario, UsuarioDto, CreateUsuarioRequest, UpdateUsuarioRequest>, IUsuarioService
+public class BackofficeUsuarioService : BaseService<ApplicationDbContext, BackofficeUsuario, BackofficeUsuarioDto, CreateBackofficeUsuarioRequest, UpdateBackofficeUsuarioRequest>, IBackofficeUsuarioService
 {
-    public UsuarioService(ApplicationDbContext context, ILogger<UsuarioService> logger) : base(context, logger)
+    public BackofficeUsuarioService(ApplicationDbContext context, ILogger<BackofficeUsuarioService> logger) : base(context, logger)
     {
     }
 
-    protected override IQueryable<Usuario> ApplySearch(IQueryable<Usuario> query, string? search)
+    protected override IQueryable<BackofficeUsuario> ApplySearch(IQueryable<BackofficeUsuario> query, string? search)
     {
         if (string.IsNullOrWhiteSpace(search)) return query;
         search = search.ToLower();
@@ -24,7 +27,7 @@ public class UsuarioService : BaseService<Usuario, UsuarioDto, CreateUsuarioRequ
             EF.Functions.ILike(u.Email, $"%{search}%"));
     }
 
-    protected override IQueryable<Usuario> ApplySorting(IQueryable<Usuario> query, string? sort, string? order)
+    protected override IQueryable<BackofficeUsuario> ApplySorting(IQueryable<BackofficeUsuario> query, string? sort, string? order)
     {
         var ascending = string.Equals(order, "asc", StringComparison.OrdinalIgnoreCase);
         return (sort?.ToLower()) switch
@@ -37,10 +40,10 @@ public class UsuarioService : BaseService<Usuario, UsuarioDto, CreateUsuarioRequ
         };
     }
 
-    public override async Task<PagedResult<UsuarioDto>> GetAllAsync(string? search, int page, int pageSize, string? sort, string? order)
+    public override async Task<PagedResult<BackofficeUsuarioDto>> GetAllAsync(string? search, int page, int pageSize, string? sort, string? order)
     {
         _logger.LogInformation("Buscando {EntityType} - Página: {Page}, Tamanho: {PageSize}, Busca: {Search}", 
-            typeof(Usuario).Name, page, pageSize, search ?? "N/A");
+            typeof(BackofficeUsuario).Name, page, pageSize, search ?? "N/A");
 
         var query = _dbSet.Include(u => u.Perfil).AsQueryable();
         
@@ -60,19 +63,19 @@ public class UsuarioService : BaseService<Usuario, UsuarioDto, CreateUsuarioRequ
             .Select(MapToDto())
             .ToListAsync();
 
-        _logger.LogInformation("Encontrados {Total} registros de {EntityType}", total, typeof(Usuario).Name);
+        _logger.LogInformation("Encontrados {Total} registros de {EntityType}", total, typeof(BackofficeUsuario).Name);
 
-        return new PagedResult<UsuarioDto> { Items = items, Total = total };
+        return new PagedResult<BackofficeUsuarioDto> { Items = items, Total = total };
     }
 
-    public override async Task<UsuarioDto?> GetByIdAsync(long id)
+    public override async Task<BackofficeUsuarioDto?> GetByIdAsync(long id)
     {
-        _logger.LogInformation("Buscando {EntityType} por ID: {Id}", typeof(Usuario).Name, id);
+        _logger.LogInformation("Buscando {EntityType} por ID: {Id}", typeof(BackofficeUsuario).Name, id);
 
         var entity = await _dbSet.Include(u => u.Perfil).FirstOrDefaultAsync(u => u.Id == id);
         if (entity == null)
         {
-            _logger.LogWarning("{EntityType} com ID {Id} não encontrado", typeof(Usuario).Name, id);
+            _logger.LogWarning("{EntityType} com ID {Id} não encontrado", typeof(BackofficeUsuario).Name, id);
             return null;
         }
 
@@ -80,9 +83,9 @@ public class UsuarioService : BaseService<Usuario, UsuarioDto, CreateUsuarioRequ
         return mapper(entity);
     }
 
-    protected override Expression<Func<Usuario, UsuarioDto>> MapToDto()
+    protected override Expression<Func<BackofficeUsuario, BackofficeUsuarioDto>> MapToDto()
     {
-        return u => new UsuarioDto
+        return u => new BackofficeUsuarioDto
         {
             Id = u.Id,
             PerfilId = u.PerfilId,
@@ -96,9 +99,9 @@ public class UsuarioService : BaseService<Usuario, UsuarioDto, CreateUsuarioRequ
         };
     }
 
-    protected override Usuario MapToEntity(CreateUsuarioRequest request)
+    protected override BackofficeUsuario MapToEntity(CreateBackofficeUsuarioRequest request)
     {
-        return new Usuario
+        return new BackofficeUsuario
         {
             PerfilId = request.PerfilId,
             IsAtivo = request.IsAtivo,
@@ -109,7 +112,7 @@ public class UsuarioService : BaseService<Usuario, UsuarioDto, CreateUsuarioRequ
         };
     }
 
-    protected override void UpdateEntity(Usuario entity, UpdateUsuarioRequest request)
+    protected override void UpdateEntity(BackofficeUsuario entity, UpdateBackofficeUsuarioRequest request)
     {
         entity.PerfilId = request.PerfilId;
         entity.IsAtivo = request.IsAtivo;
@@ -123,10 +126,10 @@ public class UsuarioService : BaseService<Usuario, UsuarioDto, CreateUsuarioRequ
         }
     }
 
-    protected override async Task BeforeCreateAsync(Usuario entity, CreateUsuarioRequest request, string? usuarioCriacao)
+    protected override async Task BeforeCreateAsync(BackofficeUsuario entity, CreateBackofficeUsuarioRequest request, string? usuarioCriacao)
     {
         // Validação de email único
-        var exists = await _context.Usuarios.AnyAsync(x => x.Email == request.Email);
+        var exists = await _context.Set<BackofficeUsuario>().AnyAsync(x => x.Email == request.Email);
         if (exists)
         {
             _logger.LogWarning("Tentativa de criar usuário com email já existente: {Email}", request.Email);
@@ -134,7 +137,7 @@ public class UsuarioService : BaseService<Usuario, UsuarioDto, CreateUsuarioRequ
         }
 
         // Validação de perfil
-        var perfilExists = await _context.Perfis.AnyAsync(p => p.Id == request.PerfilId && p.IsAtivo);
+        var perfilExists = await _context.Set<BackofficePerfil>().AnyAsync(p => p.Id == request.PerfilId && p.IsAtivo);
         if (!perfilExists)
         {
             _logger.LogWarning("Tentativa de criar usuário com perfil inválido ou inativo: {PerfilId}", request.PerfilId);
@@ -142,10 +145,10 @@ public class UsuarioService : BaseService<Usuario, UsuarioDto, CreateUsuarioRequ
         }
     }
 
-    protected override async Task BeforeUpdateAsync(Usuario entity, UpdateUsuarioRequest request, string? usuarioAtualizacao)
+    protected override async Task BeforeUpdateAsync(BackofficeUsuario entity, UpdateBackofficeUsuarioRequest request, string? usuarioAtualizacao)
     {
         // Validação de email único (exceto o próprio)
-        var emailTaken = await _context.Usuarios.AnyAsync(x => x.Email == request.Email && x.Id != entity.Id);
+        var emailTaken = await _context.Set<BackofficeUsuario>().AnyAsync(x => x.Email == request.Email && x.Id != entity.Id);
         if (emailTaken)
         {
             _logger.LogWarning("Tentativa de atualizar usuário {Id} com email já existente: {Email}", entity.Id, request.Email);
@@ -153,7 +156,7 @@ public class UsuarioService : BaseService<Usuario, UsuarioDto, CreateUsuarioRequ
         }
 
         // Validação de perfil
-        var perfilExists = await _context.Perfis.AnyAsync(p => p.Id == request.PerfilId);
+        var perfilExists = await _context.Set<BackofficePerfil>().AnyAsync(p => p.Id == request.PerfilId);
         if (!perfilExists)
         {
             _logger.LogWarning("Tentativa de atualizar usuário {Id} com perfil inválido: {PerfilId}", entity.Id, request.PerfilId);
@@ -161,9 +164,9 @@ public class UsuarioService : BaseService<Usuario, UsuarioDto, CreateUsuarioRequ
         }
     }
 
-    public override async Task<UsuarioDto> CreateAsync(CreateUsuarioRequest request, string? usuarioCriacao)
+    public override async Task<BackofficeUsuarioDto> CreateAsync(CreateBackofficeUsuarioRequest request, string? usuarioCriacao)
     {
-        _logger.LogInformation("Criando novo {EntityType} - Usuário: {Usuario}", typeof(Usuario).Name, usuarioCriacao ?? "Sistema");
+        _logger.LogInformation("Criando novo {EntityType} - Usuário: {Usuario}", typeof(BackofficeUsuario).Name, usuarioCriacao ?? "Sistema");
 
         try
         {
@@ -178,7 +181,7 @@ public class UsuarioService : BaseService<Usuario, UsuarioDto, CreateUsuarioRequ
             await _context.SaveChangesAsync();
 
             var entityId = GetEntityId(entity);
-            _logger.LogInformation("{EntityType} criado com sucesso - ID: {Id}", typeof(Usuario).Name, entityId);
+            _logger.LogInformation("{EntityType} criado com sucesso - ID: {Id}", typeof(BackofficeUsuario).Name, entityId);
 
             // Buscar novamente com Include para garantir que temos o Perfil
             var savedEntity = await _dbSet.Include(u => u.Perfil).FirstOrDefaultAsync(u => u.Id == entityId);
@@ -190,22 +193,22 @@ public class UsuarioService : BaseService<Usuario, UsuarioDto, CreateUsuarioRequ
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erro ao criar {EntityType}", typeof(Usuario).Name);
+            _logger.LogError(ex, "Erro ao criar {EntityType}", typeof(BackofficeUsuario).Name);
             throw;
         }
     }
 
-    public override async Task<UsuarioDto?> UpdateAsync(long id, UpdateUsuarioRequest request, string? usuarioAtualizacao)
+    public override async Task<BackofficeUsuarioDto?> UpdateAsync(long id, UpdateBackofficeUsuarioRequest request, string? usuarioAtualizacao)
     {
         _logger.LogInformation("Atualizando {EntityType} - ID: {Id}, Usuário: {Usuario}", 
-            typeof(Usuario).Name, id, usuarioAtualizacao ?? "Sistema");
+            typeof(BackofficeUsuario).Name, id, usuarioAtualizacao ?? "Sistema");
 
         try
         {
             var entity = await _dbSet.FindAsync(id);
             if (entity == null)
             {
-                _logger.LogWarning("{EntityType} com ID {Id} não encontrado para atualização", typeof(Usuario).Name, id);
+                _logger.LogWarning("{EntityType} com ID {Id} não encontrado para atualização", typeof(BackofficeUsuario).Name, id);
                 return null;
             }
 
@@ -218,7 +221,7 @@ public class UsuarioService : BaseService<Usuario, UsuarioDto, CreateUsuarioRequ
             
             await _context.SaveChangesAsync();
 
-            _logger.LogInformation("{EntityType} atualizado com sucesso - ID: {Id}", typeof(Usuario).Name, id);
+            _logger.LogInformation("{EntityType} atualizado com sucesso - ID: {Id}", typeof(BackofficeUsuario).Name, id);
 
             // Buscar novamente com Include para garantir que temos o Perfil
             var updatedEntity = await _dbSet.Include(u => u.Perfil).FirstOrDefaultAsync(u => u.Id == id);
@@ -229,7 +232,7 @@ public class UsuarioService : BaseService<Usuario, UsuarioDto, CreateUsuarioRequ
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erro ao atualizar {EntityType} - ID: {Id}", typeof(Usuario).Name, id);
+            _logger.LogError(ex, "Erro ao atualizar {EntityType} - ID: {Id}", typeof(BackofficeUsuario).Name, id);
             throw;
         }
     }
@@ -237,9 +240,10 @@ public class UsuarioService : BaseService<Usuario, UsuarioDto, CreateUsuarioRequ
     // Método específico que não está na interface base
     public async Task<bool> EmailExistsAsync(string email, long? excludeId = null)
     {
-        var q = _context.Usuarios.AsQueryable().Where(x => x.Email == email);
+        var q = _context.Set<BackofficeUsuario>().AsQueryable().Where(x => x.Email == email);
         if (excludeId.HasValue)
             q = q.Where(x => x.Id != excludeId.Value);
         return await q.AnyAsync();
     }
 }
+

@@ -171,15 +171,27 @@ O sistema utiliza uma arquitetura **Schema per Tenant** no PostgreSQL, onde cada
 **Schema: `public`**
 - `CategoriaTenant` - Categorias de tenants (Alimentos, Bebidas, Outros)
 - `Tenant` - Lista de todos os tenants cadastrados
-- `Usuario` - Usuários administrativos do backoffice
-- `Perfil` - Perfis de acesso do backoffice
+- `BackofficeUsuario` - Usuários administrativos do backoffice
+- `BackofficePerfil` - Perfis de acesso do backoffice (ex: Administrador, Digitador)
 
 #### 2. Banco `sgr_tenants` (Dados dos Tenants)
 **Schemas dinâmicos: `{subdominio}_{id}`** (ex: `vangoghbar_1`, `restaurante_2`)
 
 Cada schema contém:
-- `Perfil` - Perfis de acesso do tenant
-- `Usuario` - Usuários do tenant
+- `TenantPerfil` - Perfis de acesso do tenant (específicos de cada tenant, ex: Garçom, Cozinheiro, Gerente)
+- `TenantUsuario` - Usuários do tenant (específicos de cada tenant)
+
+### Separação de Contextos
+
+**Importante**: O sistema mantém uma separação clara entre:
+- **Backoffice**: Usuários e perfis administrativos do sistema (gerenciam tenants)
+- **Tenants**: Usuários e perfis específicos de cada tenant (clientes do sistema)
+
+Esta separação permite que:
+- Cada tenant tenha perfis personalizados conforme sua necessidade
+- O backoffice tenha perfis administrativos padronizados
+- Ambos os contextos evoluam independentemente
+- Maior segurança e isolamento entre contextos
 
 ### Fluxo de Criação do Tenant
 
@@ -199,11 +211,11 @@ Cada schema contém:
    - `CREATE SCHEMA {NomeSchema};`
 
 5. **Executar Migrations no Schema**:
-   - Criar tabelas: `Perfil`, `Usuario`
+   - Criar tabelas: `TenantPerfil`, `TenantUsuario`
 
 6. **Inicializar Dados do Tenant**:
-   - Criar Perfil "Administrador" (IsAtivo: true)
-   - Criar Usuario admin (com perfil Administrador)
+   - Criar Perfil "Administrador" (IsAtivo: true) na tabela `TenantPerfil`
+   - Criar Usuario admin (com perfil Administrador) na tabela `TenantUsuario`
 
 ### Identificação do Tenant
 
@@ -230,52 +242,81 @@ SGR.Api/
 │   ├── Backoffice/
 │   │   ├── BaseController.cs          # Controller base genérico
 │   │   ├── AuthController.cs          # Autenticação backoffice
-│   │   ├── UsuariosController.cs      # CRUD usuários
-│   │   ├── PerfisController.cs        # CRUD perfis
+│   │   ├── UsuariosController.cs      # CRUD usuários backoffice
+│   │   ├── PerfisController.cs        # CRUD perfis backoffice
 │   │   ├── TenantsController.cs       # CRUD tenants
 │   │   ├── CategoriaTenantsController.cs # CRUD categorias
 │   │   └── UploadsController.cs       # Upload de arquivos
 │   └── Tenant/
-│       └── AuthController.cs          # Autenticação tenant
+│       ├── BaseController.cs          # Controller base para tenants
+│       ├── AuthController.cs          # Autenticação tenant
+│       ├── UsuariosController.cs      # CRUD usuários tenant
+│       └── PerfisController.cs        # CRUD perfis tenant
 ├── Services/
+│   ├── Backoffice/
+│   │   ├── Interfaces/
+│   │   │   ├── IBackofficeUsuarioService.cs
+│   │   │   └── IBackofficePerfilService.cs
+│   │   └── Implementations/
+│   │       ├── BackofficeUsuarioService.cs
+│   │       └── BackofficePerfilService.cs
+│   ├── Tenant/
+│   │   ├── Interfaces/
+│   │   │   ├── ITenantUsuarioService.cs
+│   │   │   └── ITenantPerfilService.cs
+│   │   └── Implementations/
+│   │       ├── TenantUsuarioService.cs
+│   │       └── TenantPerfilService.cs
+│   ├── Common/
+│   │   └── BaseService.cs             # Service base genérico
 │   ├── Interfaces/
 │   │   ├── IBaseService.cs            # Interface base genérica
-│   │   ├── IUsuarioService.cs
-│   │   ├── IPerfilService.cs
 │   │   ├── ITenantService.cs
 │   │   ├── IAuthService.cs
 │   │   ├── ITenantAuthService.cs
 │   │   ├── ICpfCnpjValidationService.cs
 │   │   └── ICnpjDataService.cs
 │   └── Implementations/
-│       ├── BaseService.cs             # Service base genérico
-│       ├── UsuarioService.cs
-│       ├── PerfilService.cs
 │       ├── TenantService.cs
 │       ├── AuthService.cs
 │       ├── TenantAuthService.cs
 │       ├── CpfCnpjValidationService.cs
 │       └── CnpjDataService.cs
 ├── Models/
+│   ├── Backoffice/
+│   │   ├── Entities/
+│   │   │   ├── BackofficeUsuario.cs
+│   │   │   └── BackofficePerfil.cs
+│   │   └── DTOs/
+│   │       ├── BackofficeUsuarioDto.cs
+│   │       ├── BackofficePerfilDto.cs
+│   │       ├── CreateBackofficeUsuarioRequest.cs
+│   │       ├── UpdateBackofficeUsuarioRequest.cs
+│   │       ├── CreateBackofficePerfilRequest.cs
+│   │       └── UpdateBackofficePerfilRequest.cs
+│   ├── Tenant/
+│   │   ├── Entities/
+│   │   │   ├── TenantUsuario.cs
+│   │   │   └── TenantPerfil.cs
+│   │   └── DTOs/
+│   │       ├── TenantUsuarioDto.cs
+│   │       ├── TenantPerfilDto.cs
+│   │       ├── CreateTenantUsuarioRequest.cs
+│   │       ├── UpdateTenantUsuarioRequest.cs
+│   │       ├── CreateTenantPerfilRequest.cs
+│   │       └── UpdateTenantPerfilRequest.cs
 │   ├── Entities/
-│   │   ├── Usuario.cs
-│   │   ├── Perfil.cs
 │   │   ├── Tenant.cs
 │   │   └── CategoriaTenant.cs
 │   └── DTOs/
-│       ├── UsuarioDto.cs
-│       ├── CreateUsuarioRequest.cs
-│       ├── UpdateUsuarioRequest.cs
-│       ├── PerfilDto.cs
-│       ├── CreatePerfilRequest.cs
-│       ├── UpdatePerfilRequest.cs
 │       ├── TenantDto.cs
 │       ├── CreateTenantRequest.cs
 │       ├── UpdateTenantRequest.cs
 │       ├── CategoriaTenantDto.cs
 │       ├── CnpjDataResponse.cs
 │       ├── LoginRequest.cs
-│       └── LoginResponse.cs
+│       ├── LoginResponse.cs
+│       └── PagedResult.cs
 ├── Data/
 │   ├── ApplicationDbContext.cs        # Contexto sgr_config
 │   ├── TenantDbContext.cs             # Contexto sgr_tenants (schema dinâmico)
@@ -391,28 +432,29 @@ public class MinhaEntidadeController
 
 #### 2. Services
 
-**Padrão**: Herdar de `BaseService` e implementar métodos abstratos.
+**Padrão**: Herdar de `BaseService` (em `Services/Common/`) e implementar métodos abstratos.
 
+**Para Backoffice** (usa `ApplicationDbContext`):
 ```csharp
-public interface IMinhaEntidadeService 
-    : IBaseService<MinhaEntidade, MinhaEntidadeDto, CreateMinhaEntidadeRequest, UpdateMinhaEntidadeRequest>
+public interface IBackofficeMinhaEntidadeService 
+    : IBaseService<BackofficeMinhaEntidade, BackofficeMinhaEntidadeDto, CreateBackofficeMinhaEntidadeRequest, UpdateBackofficeMinhaEntidadeRequest>
 {
 }
 
-public class MinhaEntidadeService 
-    : BaseService<MinhaEntidade, MinhaEntidadeDto, CreateMinhaEntidadeRequest, UpdateMinhaEntidadeRequest>,
-      IMinhaEntidadeService
+public class BackofficeMinhaEntidadeService 
+    : BaseService<ApplicationDbContext, BackofficeMinhaEntidade, BackofficeMinhaEntidadeDto, CreateBackofficeMinhaEntidadeRequest, UpdateBackofficeMinhaEntidadeRequest>,
+      IBackofficeMinhaEntidadeService
 {
-    public MinhaEntidadeService(
+    public BackofficeMinhaEntidadeService(
         ApplicationDbContext context, 
-        ILogger<MinhaEntidadeService> logger) 
+        ILogger<BackofficeMinhaEntidadeService> logger) 
         : base(context, logger)
     {
     }
 
-    protected override Expression<Func<MinhaEntidade, MinhaEntidadeDto>> MapToDto()
+    protected override Expression<Func<BackofficeMinhaEntidade, BackofficeMinhaEntidadeDto>> MapToDto()
     {
-        return e => new MinhaEntidadeDto
+        return e => new BackofficeMinhaEntidadeDto
         {
             Id = e.Id,
             Nome = e.Nome,
@@ -420,23 +462,75 @@ public class MinhaEntidadeService
         };
     }
 
-    protected override MinhaEntidade MapToEntity(CreateMinhaEntidadeRequest request)
+    protected override BackofficeMinhaEntidade MapToEntity(CreateBackofficeMinhaEntidadeRequest request)
     {
-        return new MinhaEntidade
+        return new BackofficeMinhaEntidade
         {
             Nome = request.Nome,
             // ... outros campos
         };
     }
 
-    protected override void UpdateEntity(MinhaEntidade entity, UpdateMinhaEntidadeRequest request)
+    protected override void UpdateEntity(BackofficeMinhaEntidade entity, UpdateBackofficeMinhaEntidadeRequest request)
     {
         entity.Nome = request.Nome;
         // ... outros campos
     }
 
     // Opcional: Customizar busca
-    protected override IQueryable<MinhaEntidade> ApplySearch(IQueryable<MinhaEntidade> query, string? search)
+    protected override IQueryable<BackofficeMinhaEntidade> ApplySearch(IQueryable<BackofficeMinhaEntidade> query, string? search)
+    {
+        if (string.IsNullOrWhiteSpace(search)) return query;
+        return query.Where(e => e.Nome.Contains(search));
+    }
+}
+```
+
+**Para Tenant** (usa `TenantDbContext`):
+```csharp
+public interface ITenantMinhaEntidadeService 
+    : IBaseService<TenantMinhaEntidade, TenantMinhaEntidadeDto, CreateTenantMinhaEntidadeRequest, UpdateTenantMinhaEntidadeRequest>
+{
+}
+
+public class TenantMinhaEntidadeService 
+    : BaseService<TenantDbContext, TenantMinhaEntidade, TenantMinhaEntidadeDto, CreateTenantMinhaEntidadeRequest, UpdateTenantMinhaEntidadeRequest>,
+      ITenantMinhaEntidadeService
+{
+    public TenantMinhaEntidadeService(
+        TenantDbContext context, 
+        ILogger<TenantMinhaEntidadeService> logger) 
+        : base(context, logger)
+    {
+    }
+
+    protected override Expression<Func<TenantMinhaEntidade, TenantMinhaEntidadeDto>> MapToDto()
+    {
+        return e => new TenantMinhaEntidadeDto
+        {
+            Id = e.Id,
+            Nome = e.Nome,
+            // ... outros campos
+        };
+    }
+
+    protected override TenantMinhaEntidade MapToEntity(CreateTenantMinhaEntidadeRequest request)
+    {
+        return new TenantMinhaEntidade
+        {
+            Nome = request.Nome,
+            // ... outros campos
+        };
+    }
+
+    protected override void UpdateEntity(TenantMinhaEntidade entity, UpdateTenantMinhaEntidadeRequest request)
+    {
+        entity.Nome = request.Nome;
+        // ... outros campos
+    }
+
+    // Opcional: Customizar busca
+    protected override IQueryable<TenantMinhaEntidade> ApplySearch(IQueryable<TenantMinhaEntidade> query, string? search)
     {
         if (string.IsNullOrWhiteSpace(search)) return query;
         return query.Where(e => e.Nome.Contains(search));
@@ -478,7 +572,12 @@ public class MinhaEntidadeDto
 ```csharp
 public static IServiceCollection AddApplicationServices(this IServiceCollection services)
 {
-    services.AddScoped<IMinhaEntidadeService, MinhaEntidadeService>();
+    // Backoffice Services
+    services.AddScoped<IBackofficeMinhaEntidadeService, BackofficeMinhaEntidadeService>();
+    
+    // Tenant Services
+    services.AddScoped<ITenantMinhaEntidadeService, TenantMinhaEntidadeService>();
+    
     return services;
 }
 ```
@@ -829,23 +928,38 @@ this.confirmationService.confirm({
   - Upload de avatar
   - Troca de senha opcional na atualização
   - Validação de email único
+  - Usa entidade `BackofficeUsuario` e `BackofficePerfil`
 
 - ✅ **Perfis** (`/api/backoffice/perfis`)
   - CRUD completo
   - Bloqueio de exclusão se houver usuários vinculados
+  - Usa entidade `BackofficePerfil`
 
 - ✅ **Tenants** (`/api/backoffice/tenants`)
   - CRUD completo
   - Criação automática de schema e dados iniciais
   - Validação de CNPJ/CPF via BrasilApi
   - Busca automática de dados do CNPJ
-  - Criação automática de perfil "Administrador" e usuário admin
+  - Criação automática de perfil "Administrador" e usuário admin no tenant
 
 - ✅ **Categorias de Tenant** (`/api/backoffice/categoriatenants`)
   - CRUD completo
   - Endpoint público para listar categorias ativas
 
 **Tenant:**
+- ✅ **Usuários** (`/api/tenant/usuarios`)
+  - CRUD completo
+  - Upload de avatar
+  - Troca de senha opcional na atualização
+  - Validação de email único (dentro do schema do tenant)
+  - Usa entidade `TenantUsuario` e `TenantPerfil`
+
+- ✅ **Perfis** (`/api/tenant/perfis`)
+  - CRUD completo
+  - Bloqueio de exclusão se houver usuários vinculados
+  - Perfis específicos de cada tenant
+  - Usa entidade `TenantPerfil`
+
 - ✅ Autenticação de usuários do tenant
 - ✅ Identificação automática via middleware
 
@@ -964,9 +1078,20 @@ this.confirmationService.confirm({
 
 #### Backend
 
-1. **Criar Entidade** em `Models/Entities/`:
+1. **Criar Entidade**:
+   - **Backoffice**: em `Models/Backoffice/Entities/BackofficeMinhaEntidade.cs`
+   - **Tenant**: em `Models/Tenant/Entities/TenantMinhaEntidade.cs`
 ```csharp
-public class MinhaEntidade
+// Backoffice
+public class BackofficeMinhaEntidade
+{
+    public long Id { get; set; }
+    public string Nome { get; set; } = string.Empty;
+    // ... outros campos
+}
+
+// Tenant
+public class TenantMinhaEntidade
 {
     public long Id { get; set; }
     public string Nome { get; set; } = string.Empty;
@@ -974,25 +1099,45 @@ public class MinhaEntidade
 }
 ```
 
-2. **Adicionar ao DbContext** (`Data/ApplicationDbContext.cs`):
-```csharp
-public DbSet<MinhaEntidade> MinhasEntidades { get; set; }
-```
+2. **Adicionar ao DbContext**:
+   - **Backoffice**: `Data/ApplicationDbContext.cs`
+   ```csharp
+   public DbSet<BackofficeMinhaEntidade> BackofficeMinhasEntidades { get; set; }
+   ```
+   - **Tenant**: `Data/TenantDbContext.cs`
+   ```csharp
+   public DbSet<TenantMinhaEntidade> TenantMinhasEntidades { get; set; }
+   ```
 
-3. **Criar DTOs** em `Models/DTOs/`:
-   - `MinhaEntidadeDto.cs`
-   - `CreateMinhaEntidadeRequest.cs`
-   - `UpdateMinhaEntidadeRequest.cs`
+3. **Criar DTOs**:
+   - **Backoffice**: em `Models/Backoffice/DTOs/`
+     - `BackofficeMinhaEntidadeDto.cs`
+     - `CreateBackofficeMinhaEntidadeRequest.cs`
+     - `UpdateBackofficeMinhaEntidadeRequest.cs`
+   - **Tenant**: em `Models/Tenant/DTOs/`
+     - `TenantMinhaEntidadeDto.cs`
+     - `CreateTenantMinhaEntidadeRequest.cs`
+     - `UpdateTenantMinhaEntidadeRequest.cs`
 
 4. **Criar Interface e Service**:
-   - Interface em `Services/Interfaces/IMinhaEntidadeService.cs`
-   - Service em `Services/Implementations/MinhaEntidadeService.cs` (herdar de `BaseService`)
+   - **Backoffice**:
+     - Interface em `Services/Backoffice/Interfaces/IBackofficeMinhaEntidadeService.cs`
+     - Service em `Services/Backoffice/Implementations/BackofficeMinhaEntidadeService.cs` (herdar de `BaseService<ApplicationDbContext, ...>`)
+   - **Tenant**:
+     - Interface em `Services/Tenant/Interfaces/ITenantMinhaEntidadeService.cs`
+     - Service em `Services/Tenant/Implementations/TenantMinhaEntidadeService.cs` (herdar de `BaseService<TenantDbContext, ...>`)
 
-5. **Criar Controller** em `Controllers/Backoffice/MinhaEntidadeController.cs` (herdar de `BaseController`)
+5. **Criar Controller**:
+   - **Backoffice**: em `Controllers/Backoffice/MinhaEntidadeController.cs` (herdar de `BaseController`)
+   - **Tenant**: em `Controllers/Tenant/MinhaEntidadeController.cs` (herdar de `BaseController`)
 
 6. **Registrar Service** em `Extensions/ServiceCollectionExtensions.cs`:
 ```csharp
-services.AddScoped<IMinhaEntidadeService, MinhaEntidadeService>();
+// Backoffice
+services.AddScoped<IBackofficeMinhaEntidadeService, BackofficeMinhaEntidadeService>();
+
+// Tenant
+services.AddScoped<ITenantMinhaEntidadeService, TenantMinhaEntidadeService>();
 ```
 
 7. **Criar Migration**:
@@ -1046,12 +1191,15 @@ ng build --configuration production
 O **SGR** é um sistema completo de gerenciamento multi-tenant que permite:
 
 1. **Gerenciar múltiplos tenants** (restaurantes/empresas) de forma isolada
-2. **Criar e gerenciar usuários e perfis** tanto no backoffice quanto em cada tenant
+2. **Criar e gerenciar usuários e perfis** separadamente no backoffice e em cada tenant
+   - Backoffice: perfis administrativos (Administrador, Digitador, etc.)
+   - Tenants: perfis personalizados por tenant (Garçom, Cozinheiro, Gerente, etc.)
 3. **Validar e buscar dados** de CNPJ automaticamente via BrasilApi
 4. **Autenticar usuários** separadamente no backoffice e nos tenants
 5. **Fazer upload de arquivos** (avatares, imagens)
 6. **Operar com CRUD genérico** que facilita a criação de novos módulos
 7. **Interface responsiva e moderna** com Angular Material 3
+8. **Arquitetura escalável** com separação clara de contextos e isolamento de dados
 
 O sistema está preparado para escalar horizontalmente, com isolamento completo de dados por tenant e arquitetura modular que facilita a manutenção e evolução.
 
@@ -1064,3 +1212,8 @@ O sistema está preparado para escalar horizontalmente, com isolamento completo 
 - ✅ Padronização de botões em todas as listagens
 - ✅ Adicionada coluna Categoria na listagem de Tenants
 - ✅ Removida coluna Subdomínio da listagem de Tenants
+- ✅ **Refatoração**: Separação completa entre usuários/perfis do backoffice e dos tenants
+  - Criadas entidades separadas: `BackofficeUsuario`, `BackofficePerfil`, `TenantUsuario`, `TenantPerfil`
+  - Services e controllers reorganizados por contexto (Backoffice/Tenant)
+  - DTOs separados para cada contexto
+  - Melhor isolamento e escalabilidade do sistema

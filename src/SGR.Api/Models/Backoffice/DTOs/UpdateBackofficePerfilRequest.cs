@@ -1,13 +1,14 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace SGR.Api.Models.DTOs;
+namespace SGR.Api.Models.Backoffice.DTOs;
 
-public class CreatePerfilRequest
+public class UpdateBackofficePerfilRequest
 {
     [Required]
     [MaxLength(100)]
     public string Nome { get; set; } = string.Empty;
 
-    public bool IsAtivo { get; set; } = true;
+    [Required]
+    public bool IsAtivo { get; set; }
 }
 

@@ -1,5 +1,6 @@
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
+using SGR.Api.Models.Backoffice.Entities;
 using SGR.Api.Models.Entities;
 
 namespace SGR.Api.Data;
@@ -18,13 +19,13 @@ public static class DbInitializer
             return; // Banco não está acessível ou migrations não foram aplicadas
         }
 
-        // Verificar se a tabela Perfil existe (migrations aplicadas)
+        // Verificar se a tabela BackofficePerfil existe (migrations aplicadas)
         try
         {
             if (!context.Database.GetPendingMigrations().Any())
             {
                 // Migrations aplicadas, verificar se já existem dados
-                if (context.Perfis.Any())
+                if (context.BackofficePerfis.Any())
                 {
                     return; // Banco já foi inicializado
                 }
@@ -58,8 +59,8 @@ public static class DbInitializer
         }
         context.SaveChanges();
 
-        // Criar perfil Administrador
-        var perfilAdmin = new Perfil
+        // Criar perfil Administrador do backoffice
+        var perfilAdmin = new BackofficePerfil
         {
             Nome = "Administrador",
             IsAtivo = true,
@@ -67,12 +68,12 @@ public static class DbInitializer
             DataCriacao = DateTime.UtcNow
         };
 
-        context.Perfis.Add(perfilAdmin);
+        context.BackofficePerfis.Add(perfilAdmin);
         context.SaveChanges();
 
-        // Criar usuário padrão
+        // Criar usuário padrão do backoffice
         var senhaHash = BCrypt.Net.BCrypt.HashPassword("Dimi@1997");
-        var usuario = new Usuario
+        var usuario = new BackofficeUsuario
         {
             NomeCompleto = "Dimitri Gaulia",
             Email = "dimitrifgaulia@gmail.com",
@@ -83,7 +84,7 @@ public static class DbInitializer
             DataCriacao = DateTime.UtcNow
         };
 
-        context.Usuarios.Add(usuario);
+        context.BackofficeUsuarios.Add(usuario);
         context.SaveChanges();
     }
 }

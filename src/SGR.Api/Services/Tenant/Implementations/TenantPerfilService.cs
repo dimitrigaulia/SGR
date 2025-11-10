@@ -2,26 +2,28 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using SGR.Api.Data;
 using SGR.Api.Exceptions;
-using SGR.Api.Models.DTOs;
-using SGR.Api.Models.Entities;
+using SGR.Api.Models.Tenant.DTOs;
+using SGR.Api.Models.Tenant.Entities;
+using SGR.Api.Services.Common;
 using SGR.Api.Services.Interfaces;
+using SGR.Api.Services.Tenant.Interfaces;
 using System.Linq.Expressions;
 
-namespace SGR.Api.Services.Implementations;
+namespace SGR.Api.Services.Tenant.Implementations;
 
-public class PerfilService : BaseService<Perfil, PerfilDto, CreatePerfilRequest, UpdatePerfilRequest>, IPerfilService
+public class TenantPerfilService : BaseService<TenantDbContext, TenantPerfil, TenantPerfilDto, CreateTenantPerfilRequest, UpdateTenantPerfilRequest>, ITenantPerfilService
 {
-    public PerfilService(ApplicationDbContext context, ILogger<PerfilService> logger) : base(context, logger)
+    public TenantPerfilService(TenantDbContext context, ILogger<TenantPerfilService> logger) : base(context, logger)
     {
     }
 
-    protected override IQueryable<Perfil> ApplySearch(IQueryable<Perfil> query, string? search)
+    protected override IQueryable<TenantPerfil> ApplySearch(IQueryable<TenantPerfil> query, string? search)
     {
         if (string.IsNullOrWhiteSpace(search)) return query;
         return query.Where(p => EF.Functions.ILike(p.Nome, $"%{search}%"));
     }
 
-    protected override IQueryable<Perfil> ApplySorting(IQueryable<Perfil> query, string? sort, string? order)
+    protected override IQueryable<TenantPerfil> ApplySorting(IQueryable<TenantPerfil> query, string? sort, string? order)
     {
         var ascending = string.Equals(order, "asc", StringComparison.OrdinalIgnoreCase);
         return (sort?.ToLower()) switch
@@ -32,9 +34,9 @@ public class PerfilService : BaseService<Perfil, PerfilDto, CreatePerfilRequest,
         };
     }
 
-    protected override Expression<Func<Perfil, PerfilDto>> MapToDto()
+    protected override Expression<Func<TenantPerfil, TenantPerfilDto>> MapToDto()
     {
-        return p => new PerfilDto
+        return p => new TenantPerfilDto
         {
             Id = p.Id,
             Nome = p.Nome,
@@ -46,24 +48,24 @@ public class PerfilService : BaseService<Perfil, PerfilDto, CreatePerfilRequest,
         };
     }
 
-    protected override Perfil MapToEntity(CreatePerfilRequest request)
+    protected override TenantPerfil MapToEntity(CreateTenantPerfilRequest request)
     {
-        return new Perfil
+        return new TenantPerfil
         {
             Nome = request.Nome,
             IsAtivo = request.IsAtivo
         };
     }
 
-    protected override void UpdateEntity(Perfil entity, UpdatePerfilRequest request)
+    protected override void UpdateEntity(TenantPerfil entity, UpdateTenantPerfilRequest request)
     {
         entity.Nome = request.Nome;
         entity.IsAtivo = request.IsAtivo;
     }
 
-    protected override async Task BeforeDeleteAsync(Perfil entity)
+    protected override async Task BeforeDeleteAsync(TenantPerfil entity)
     {
-        var hasUsers = await _context.Usuarios.AnyAsync(u => u.PerfilId == entity.Id);
+        var hasUsers = await _context.Set<TenantUsuario>().AnyAsync(u => u.PerfilId == entity.Id);
         if (hasUsers)
         {
             _logger.LogWarning("Tentativa de excluir perfil {Id} que possui usuários vinculados", entity.Id);
@@ -71,3 +73,4 @@ public class PerfilService : BaseService<Perfil, PerfilDto, CreatePerfilRequest,
         }
     }
 }
+
