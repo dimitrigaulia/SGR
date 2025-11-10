@@ -14,6 +14,7 @@ export interface InsumoDto {
   unidadeUsoId: number;
   unidadeUsoNome?: string | null;
   unidadeUsoSigla?: string | null;
+  unidadeUsoTipo?: string | null; // Tipo da unidade de uso (Peso, Volume, Quantidade)
   quantidadePorEmbalagem: number;
   custoUnitario: number;
   fatorCorrecao: number;

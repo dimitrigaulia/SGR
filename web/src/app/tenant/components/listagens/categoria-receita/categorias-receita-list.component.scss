@@ -1,0 +1,143 @@
+.container { 
+  padding: 16px; 
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 16px;
+
+  h2 {
+    margin: 0;
+    font-size: 1.5rem;
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+
+    .search-field {
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .add-button {
+      white-space: nowrap;
+
+      .button-text {
+        margin-left: 4px;
+      }
+    }
+  }
+}
+
+.full-width { 
+  width: 100%; 
+}
+
+.table-container {
+  overflow-x: auto;
+  margin-bottom: 16px;
+}
+
+// Versão Mobile: Cards
+.cards-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.categoria-card {
+  mat-card-content {
+    padding: 16px !important;
+  }
+
+  .card-header {
+    margin-bottom: 12px;
+
+    .categoria-info {
+      .categoria-name {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 500;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+    }
+  }
+
+  .card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 12px;
+    border-top: 1px solid var(--mat-divider-color);
+
+    .status-chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 12px;
+      border-radius: 16px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      
+      &.active {
+        background-color: var(--mat-primary-container);
+        color: var(--mat-on-primary-container);
+      }
+
+      &.inactive {
+        background-color: var(--mat-surface-variant);
+        color: var(--mat-on-surface-variant);
+      }
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 4px;
+    }
+  }
+}
+
+// Responsividade
+@media (min-width: 600px) {
+  .header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+
+    .header-actions {
+      flex: 0 0 auto;
+    }
+  }
+
+  .add-button .button-text {
+    display: inline;
+  }
+}
+
+@media (max-width: 599px) {
+  .header {
+    .header-actions {
+      width: 100%;
+
+      .search-field {
+        width: 100%;
+      }
+
+      .add-button {
+        width: 100%;
+
+        .button-text {
+          display: none;
+        }
+      }
+    }
+  }
+}
+

@@ -1,0 +1,100 @@
+<div class="container">
+  <div class="header">
+    <h2>Categorias de Receita</h2>
+    <div class="header-actions">
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-label>Buscar</mat-label>
+        <input matInput [(ngModel)]="searchTerm" (ngModelChange)="onSearchChange()" placeholder="Nome" />
+        @if (searchTerm) {
+          <button mat-icon-button matSuffix (click)="clearSearch()">
+            <mat-icon>close</mat-icon>
+          </button>
+        }
+      </mat-form-field>
+      <a mat-raised-button color="primary" routerLink="/tenant/categorias-receita/cadastro" class="add-button">
+        <mat-icon>add</mat-icon>
+        <span class="button-text">Nova Categoria</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Loading Spinner -->
+  @if (isLoading()) {
+    <app-loading></app-loading>
+  }
+
+  <!-- Versão Desktop: Tabela -->
+  @if (!isMobile() && !isLoading()) {
+    <div class="table-container">
+    <table mat-table [dataSource]="data()" class="mat-elevation-z1 full-width" matSort (matSortChange)="onSort($event)">
+      <ng-container matColumnDef="nome">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header="nome">Nome</th>
+        <td mat-cell *matCellDef="let e">{{ e.nome }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="ativo">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header="ativo">Ativo</th>
+        <td mat-cell *matCellDef="let e">{{ e.isAtivo ? 'Sim' : 'Não' }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="acoes">
+        <th mat-header-cell *matHeaderCellDef>Ações</th>
+        <td mat-cell *matCellDef="let e">
+          <button mat-icon-button (click)="view(e)" matTooltip="Visualizar">
+            <mat-icon>visibility</mat-icon>
+          </button>
+          <button mat-icon-button (click)="edit(e)" matTooltip="Editar">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button mat-icon-button (click)="delete(e.id)" color="warn" matTooltip="Excluir">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+    </table>
+    </div>
+  }
+
+  <!-- Versão Mobile: Cards -->
+  @if (isMobile() && !isLoading()) {
+    <div class="cards-container">
+      @for (e of data(); track e.id) {
+        <mat-card class="categoria-card">
+      <mat-card-content>
+        <div class="card-header">
+          <div class="categoria-info">
+            <h3 class="categoria-name">{{ e.nome }}</h3>
+          </div>
+        </div>
+        <div class="card-footer">
+          <span class="status-chip" [class.active]="e.isAtivo" [class.inactive]="!e.isAtivo">
+            {{ e.isAtivo ? 'Ativo' : 'Inativo' }}
+          </span>
+          <div class="card-actions">
+            <button mat-icon-button (click)="view(e)" matTooltip="Visualizar">
+              <mat-icon>visibility</mat-icon>
+            </button>
+            <button mat-icon-button (click)="edit(e)" matTooltip="Editar">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button (click)="delete(e.id)" color="warn" matTooltip="Excluir">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+        </div>
+      </mat-card-content>
+        </mat-card>
+      } @empty {
+        <div>Nenhuma categoria encontrada</div>
+      }
+    </div>
+  }
+
+  @if (!isLoading()) {
+    <mat-paginator [length]="total()" [pageIndex]="pageIndex()" [pageSize]="pageSize()" [pageSizeOptions]="[5,10,25,50]" (page)="pageChanged($event)"></mat-paginator>
+  }
+</div>
+

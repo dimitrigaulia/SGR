@@ -183,6 +183,9 @@ Cada schema contém:
 - `CategoriaInsumo` - Categorias de insumos (ex: Hortifruti, Carne, Bebidas)
 - `UnidadeMedida` - Unidades de medida (ex: kg, g, L, mL, unidade)
 - `Insumo` - Insumos do restaurante (ingredientes e materiais)
+- `CategoriaReceita` - Categorias de receitas (ex: Entrada, Prato Principal, Sobremesa)
+- `Receita` - Receitas do restaurante
+- `ReceitaItem` - Itens de uma receita (insumos utilizados)
 
 ### Separação de Contextos
 
@@ -214,8 +217,9 @@ Esta separação permite que:
    - `CREATE SCHEMA {NomeSchema};`
 
 5. **Executar Migrations no Schema**:
-   - Criar tabelas: `Perfil`, `Usuario`, `CategoriaInsumo`, `UnidadeMedida`, `Insumo`
+   - Criar tabelas: `Perfil`, `Usuario`, `CategoriaInsumo`, `UnidadeMedida`, `Insumo`, `CategoriaReceita`, `Receita`, `ReceitaItem`
    - Inserir unidades de medida padrão (kg, g, L, mL, un, dz, pct, cx)
+   - Inserir categorias de receita padrão (Entrada, Prato Principal, Sobremesa, Bebida, Acompanhamento, Salada, Sopa, Outros)
 
 6. **Inicializar Dados do Tenant**:
    - Criar Perfil "Administrador" (IsAtivo: true) na tabela `Perfil`
@@ -258,7 +262,9 @@ SGR.Api/
 │       ├── PerfisController.cs        # CRUD perfis tenant
 │       ├── CategoriasInsumoController.cs  # CRUD categorias de insumo
 │       ├── UnidadesMedidaController.cs    # CRUD unidades de medida
-│       └── InsumosController.cs           # CRUD insumos
+│       ├── InsumosController.cs           # CRUD insumos
+│       ├── CategoriasReceitaController.cs # CRUD categorias de receita
+│       └── ReceitasController.cs          # CRUD receitas
 ├── Services/
 │   ├── Backoffice/
 │   │   ├── Interfaces/
@@ -273,7 +279,9 @@ SGR.Api/
 │   │   │   ├── ITenantPerfilService.cs
 │   │   │   ├── ICategoriaInsumoService.cs
 │   │   │   ├── IUnidadeMedidaService.cs
-│   │   │   └── IInsumoService.cs
+│   │   │   ├── IInsumoService.cs
+│   │   │   ├── ICategoriaReceitaService.cs
+│   │   │   └── IReceitaService.cs
 │   │   └── Implementations/
 │   │       ├── TenantUsuarioService.cs
 │   │       ├── TenantPerfilService.cs
@@ -1028,8 +1036,27 @@ this.confirmationService.confirm({
   - CRUD completo
   - Relacionamento com CategoriaInsumo e UnidadeMedida
   - Validação de código de barras único (opcional, dentro do schema do tenant)
-  - Campos: Nome, Categoria, Unidade de Medida, Custo Unitário, Estoque Mínimo, Descrição, Código de Barras, Imagem
+  - Campos: Nome, Categoria, Unidade de Compra, Unidade de Uso, Quantidade por Embalagem, Custo Unitário, Fator de Correção, Estoque Mínimo, Descrição, Código de Barras, Imagem
   - Usa entidade `Insumo`
+
+- ✅ **Categorias de Receita** (`/api/tenant/categorias-receita`)
+  - CRUD completo
+  - Validação de nome único (dentro do schema do tenant)
+  - Categorias padrão criadas automaticamente ao criar tenant (Entrada, Prato Principal, Sobremesa, Bebida, Acompanhamento, Salada, Sopa, Outros)
+  - Usa entidade `CategoriaReceita`
+
+- ✅ **Receitas** (`/api/tenant/receitas`)
+  - CRUD completo
+  - Relacionamento com CategoriaReceita e Insumo (via ReceitaItem)
+  - Cálculo automático de custos (CustoTotal e CustoPorPorcao)
+  - Campos: Nome, Categoria, Descrição, Rendimento, Fator de Rendimento, Tempo de Preparo, Imagem
+  - Itens da receita: Insumo, Quantidade, Ordem, Observações
+  - Funcionalidade de duplicar receita
+  - Cálculo automático considera:
+    - FatorCorrecao dos insumos (perdas no preparo/limpeza de cada insumo)
+    - QuantidadePorEmbalagem dos insumos
+    - FatorRendimento da receita (perdas no preparo da receita completa, ex: evaporação, queima)
+  - Usa entidades `Receita` e `ReceitaItem`
 
 - ✅ Autenticação de usuários do tenant
 - ✅ Identificação automática via middleware
@@ -1088,6 +1115,16 @@ this.confirmationService.confirm({
   - Coluna Categoria (substituiu Subdomínio)
   - Ordenação por categoria
   - Padrão de botões padronizado
+- ✅ Listagem de Usuários (tenant)
+- ✅ Listagem de Perfis (tenant)
+- ✅ Listagem de Categorias de Insumo (tenant)
+- ✅ Listagem de Unidades de Medida (tenant)
+- ✅ Listagem de Insumos (tenant)
+- ✅ Listagem de Categorias de Receita (tenant)
+- ✅ Listagem de Receitas (tenant)
+  - Exibição de custo por porção
+  - Formatação de tempo de preparo
+  - Funcionalidade de duplicar receita
 - Paginação server-side
 - Ordenação por colunas
 - Busca com debounce
@@ -1108,6 +1145,16 @@ this.confirmationService.confirm({
   - Geração automática de subdomínio
   - Seleção de categoria
   - Criação de administrador
+- ✅ Formulário de Usuário (tenant)
+- ✅ Formulário de Perfil (tenant)
+- ✅ Formulário de Categoria de Insumo (tenant)
+- ✅ Formulário de Unidade de Medida (tenant)
+- ✅ Formulário de Insumo (tenant)
+- ✅ Formulário de Categoria de Receita (tenant)
+- ✅ Formulário de Receita (tenant)
+  - Tabela editável de itens
+  - Adicionar/remover/reordenar itens
+  - Validação de itens obrigatórios
 
 #### 3. Autenticação
 - Login separado para backoffice e tenant
@@ -1288,3 +1335,7 @@ O sistema está preparado para escalar horizontalmente, com isolamento completo 
   - Services e controllers reorganizados por contexto (Backoffice/Tenant)
   - DTOs separados para cada contexto
   - Melhor isolamento e escalabilidade do sistema
+- ✅ **Receitas**: Implementado FatorRendimento para cálculo de perdas no preparo da receita
+  - Campo FatorRendimento adicionado à entidade Receita
+  - Cálculo automático de custos considera perdas no preparo (evaporação, queima, etc.)
+  - Complementa o FatorCorrecao dos insumos (perdas no preparo individual)

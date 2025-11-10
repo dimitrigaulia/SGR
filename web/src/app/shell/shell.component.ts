@@ -77,7 +77,9 @@ export class ShellComponent implements AfterViewInit {
         { icon: 'badge', label: 'Perfis', route: `${baseUrl}/perfis` },
         { icon: 'inventory_2', label: 'Insumos', route: `${baseUrl}/insumos` },
         { icon: 'category', label: 'Categorias', route: `${baseUrl}/categorias-insumo` },
-        { icon: 'straighten', label: 'Unidades', route: `${baseUrl}/unidades-medida` }
+        { icon: 'straighten', label: 'Unidades', route: `${baseUrl}/unidades-medida` },
+        { icon: 'restaurant', label: 'Receitas', route: `${baseUrl}/receitas` },
+        { icon: 'category', label: 'Categorias Receita', route: `${baseUrl}/categorias-receita` }
       );
     }
 

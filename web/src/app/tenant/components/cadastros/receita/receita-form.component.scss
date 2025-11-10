@@ -1,0 +1,36 @@
+.form-section {
+  margin: 24px 0;
+
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+
+    h3 {
+      margin: 0;
+      font-size: 1.25rem;
+    }
+  }
+
+  .empty-message {
+    padding: 16px;
+    text-align: center;
+    color: var(--mat-app-text-color);
+    opacity: 0.6;
+    background-color: var(--mat-surface-variant);
+    border-radius: 4px;
+  }
+
+  .table-container {
+    overflow-x: auto;
+  }
+}
+
+.image-preview {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+

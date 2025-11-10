@@ -1,0 +1,30 @@
+<div class="form-container">
+  <h2 class="form-title">{{ id() === null ? 'Cadastro de categoria de receita' : (isView() ? 'Visualizar categoria' : 'Editar categoria') }}</h2>
+
+  <form #f="ngForm" (ngSubmit)="save()">
+    <mat-form-field appearance="outline" class="form-field-spacing">
+      <mat-label>Nome</mat-label>
+      <input matInput name="nome" [(ngModel)]="model.nome" [disabled]="isView()" required maxlength="100" />
+      @if (f.controls['nome']?.errors?.['required']) {
+        <mat-error>Nome é obrigatório</mat-error>
+      }
+    </mat-form-field>
+
+    <!-- Wrapper para o toggle com espaçamento consistente -->
+    <div class="form-toggle-wrapper">
+      <mat-slide-toggle name="isAtivo" [(ngModel)]="model.isAtivo" [disabled]="isView()">Ativo</mat-slide-toggle>
+    </div>
+
+    @if (error()) {
+      <div class="form-error">{{ error() }}</div>
+    }
+    
+    <div class="form-actions">
+      <button mat-stroked-button type="button" routerLink="/tenant/categorias-receita">Voltar</button>
+      @if (!isView()) {
+        <button mat-raised-button color="primary" type="submit">Salvar</button>
+      }
+    </div>
+  </form>
+</div>
+

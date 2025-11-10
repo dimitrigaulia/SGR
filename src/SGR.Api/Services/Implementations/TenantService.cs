@@ -515,6 +515,51 @@ public class TenantService : BaseService<ApplicationDbContext, TenantEntity, Ten
 
             -- Índice único para Código de Barras (apenas quando não nulo)
             CREATE UNIQUE INDEX IF NOT EXISTS ""IX_Insumo_CodigoBarras_{schemaName}"" ON ""{schemaName}"".""Insumo""(""CodigoBarras"") WHERE ""CodigoBarras"" IS NOT NULL;
+
+            -- Tabela CategoriaReceita
+            CREATE TABLE IF NOT EXISTS ""{schemaName}"".""CategoriaReceita"" (
+                ""Id"" BIGSERIAL PRIMARY KEY,
+                ""Nome"" VARCHAR(100) NOT NULL,
+                ""IsAtivo"" BOOLEAN NOT NULL DEFAULT true,
+                ""UsuarioCriacao"" VARCHAR(100),
+                ""UsuarioAtualizacao"" VARCHAR(100),
+                ""DataCriacao"" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT (NOW() AT TIME ZONE 'utc'),
+                ""DataAtualizacao"" TIMESTAMP WITH TIME ZONE
+            );
+            CREATE UNIQUE INDEX IF NOT EXISTS ""IX_CategoriaReceita_Nome_{schemaName}"" ON ""{schemaName}"".""CategoriaReceita""(""Nome"");
+
+            -- Tabela Receita
+            CREATE TABLE IF NOT EXISTS ""{schemaName}"".""Receita"" (
+                ""Id"" BIGSERIAL PRIMARY KEY,
+                ""Nome"" VARCHAR(200) NOT NULL,
+                ""CategoriaId"" BIGINT NOT NULL,
+                ""Descricao"" TEXT,
+                ""Rendimento"" DECIMAL(18, 4) NOT NULL,
+                ""FatorRendimento"" DECIMAL(18, 4) NOT NULL DEFAULT 1.0,
+                ""TempoPreparo"" INTEGER,
+                ""CustoTotal"" DECIMAL(18, 4) NOT NULL DEFAULT 0,
+                ""CustoPorPorcao"" DECIMAL(18, 4) NOT NULL DEFAULT 0,
+                ""PathImagem"" VARCHAR(500),
+                ""IsAtivo"" BOOLEAN NOT NULL DEFAULT true,
+                ""UsuarioCriacao"" VARCHAR(100),
+                ""UsuarioAtualizacao"" VARCHAR(100),
+                ""DataCriacao"" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT (NOW() AT TIME ZONE 'utc'),
+                ""DataAtualizacao"" TIMESTAMP WITH TIME ZONE,
+                CONSTRAINT ""FK_Receita_CategoriaReceita_{schemaName}"" FOREIGN KEY (""CategoriaId"") REFERENCES ""{schemaName}"".""CategoriaReceita""(""Id"") ON DELETE RESTRICT
+            );
+
+            -- Tabela ReceitaItem
+            CREATE TABLE IF NOT EXISTS ""{schemaName}"".""ReceitaItem"" (
+                ""Id"" BIGSERIAL PRIMARY KEY,
+                ""ReceitaId"" BIGINT NOT NULL,
+                ""InsumoId"" BIGINT NOT NULL,
+                ""Quantidade"" DECIMAL(18, 4) NOT NULL,
+                ""Ordem"" INTEGER NOT NULL,
+                ""Observacoes"" VARCHAR(500),
+                CONSTRAINT ""FK_ReceitaItem_Receita_{schemaName}"" FOREIGN KEY (""ReceitaId"") REFERENCES ""{schemaName}"".""Receita""(""Id"") ON DELETE CASCADE,
+                CONSTRAINT ""FK_ReceitaItem_Insumo_{schemaName}"" FOREIGN KEY (""InsumoId"") REFERENCES ""{schemaName}"".""Insumo""(""Id"") ON DELETE RESTRICT
+            );
+            CREATE INDEX IF NOT EXISTS ""IX_ReceitaItem_ReceitaId_Ordem_{schemaName}"" ON ""{schemaName}"".""ReceitaItem""(""ReceitaId"", ""Ordem"");
         ";
 
         await _tenantContext.Database.ExecuteSqlRawAsync(sql);
@@ -587,6 +632,19 @@ public class TenantService : BaseService<ApplicationDbContext, TenantEntity, Ten
             VALUES 
                 ('Pacote', 'pct', 'Quantidade', NULL, NULL, true, '{usuarioCriacaoValue}', {dataCriacao}),
                 ('Caixa', 'cx', 'Quantidade', NULL, NULL, true, '{usuarioCriacaoValue}', {dataCriacao})
+            ON CONFLICT DO NOTHING;
+
+            -- Inserir Categorias de Receita padrão
+            INSERT INTO ""{schemaName}"".""CategoriaReceita"" (""Nome"", ""IsAtivo"", ""UsuarioCriacao"", ""DataCriacao"")
+            VALUES 
+                ('Entrada', true, '{usuarioCriacaoValue}', {dataCriacao}),
+                ('Prato Principal', true, '{usuarioCriacaoValue}', {dataCriacao}),
+                ('Sobremesa', true, '{usuarioCriacaoValue}', {dataCriacao}),
+                ('Bebida', true, '{usuarioCriacaoValue}', {dataCriacao}),
+                ('Acompanhamento', true, '{usuarioCriacaoValue}', {dataCriacao}),
+                ('Salada', true, '{usuarioCriacaoValue}', {dataCriacao}),
+                ('Sopa', true, '{usuarioCriacaoValue}', {dataCriacao}),
+                ('Outros', true, '{usuarioCriacaoValue}', {dataCriacao})
             ON CONFLICT DO NOTHING;
         ";
 

@@ -22,6 +22,9 @@ public class TenantDbContext : DbContext
     public DbSet<CategoriaInsumo> CategoriaInsumos { get; set; }
     public DbSet<UnidadeMedida> UnidadesMedida { get; set; }
     public DbSet<Insumo> Insumos { get; set; }
+    public DbSet<CategoriaReceita> CategoriasReceita { get; set; }
+    public DbSet<Receita> Receitas { get; set; }
+    public DbSet<ReceitaItem> ReceitaItens { get; set; }
 
     /// <summary>
     /// Define o schema a ser usado para este contexto
@@ -152,6 +155,70 @@ public class TenantDbContext : DbContext
                   .WithMany(u => u.Insumos)
                   .HasForeignKey(e => e.UnidadeUsoId)
                   .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Configuração CategoriaReceita
+        modelBuilder.Entity<CategoriaReceita>(entity =>
+        {
+            entity.ToTable("CategoriaReceita");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Nome).HasMaxLength(100).IsRequired();
+            entity.Property(e => e.UsuarioCriacao).HasMaxLength(100);
+            entity.Property(e => e.UsuarioAtualizacao).HasMaxLength(100);
+            entity.Property(e => e.DataCriacao).IsRequired();
+
+            // Índice único para Nome (dentro do schema do tenant)
+            entity.HasIndex(e => e.Nome).IsUnique();
+        });
+
+        // Configuração Receita
+        modelBuilder.Entity<Receita>(entity =>
+        {
+            entity.ToTable("Receita");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Nome).HasMaxLength(200).IsRequired();
+            entity.Property(e => e.Descricao).HasMaxLength(5000);
+            entity.Property(e => e.Rendimento).HasPrecision(18, 4).IsRequired();
+            entity.Property(e => e.FatorRendimento).HasPrecision(18, 4).IsRequired().HasDefaultValue(1.0m);
+            entity.Property(e => e.CustoTotal).HasPrecision(18, 4).IsRequired().HasDefaultValue(0m);
+            entity.Property(e => e.CustoPorPorcao).HasPrecision(18, 4).IsRequired().HasDefaultValue(0m);
+            entity.Property(e => e.PathImagem).HasMaxLength(500);
+            entity.Property(e => e.UsuarioCriacao).HasMaxLength(100);
+            entity.Property(e => e.UsuarioAtualizacao).HasMaxLength(100);
+            entity.Property(e => e.DataCriacao).IsRequired();
+
+            // Relacionamento
+            entity.HasOne(e => e.Categoria)
+                  .WithMany(c => c.Receitas)
+                  .HasForeignKey(e => e.CategoriaId)
+                  .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Configuração ReceitaItem
+        modelBuilder.Entity<ReceitaItem>(entity =>
+        {
+            entity.ToTable("ReceitaItem");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Quantidade).HasPrecision(18, 4).IsRequired();
+            entity.Property(e => e.Ordem).IsRequired();
+            entity.Property(e => e.Observacoes).HasMaxLength(500);
+
+            // Relacionamentos
+            entity.HasOne(e => e.Receita)
+                  .WithMany(r => r.Itens)
+                  .HasForeignKey(e => e.ReceitaId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Insumo)
+                  .WithMany()
+                  .HasForeignKey(e => e.InsumoId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            // Índice composto para garantir ordem única por receita
+            entity.HasIndex(e => new { e.ReceitaId, e.Ordem });
         });
     }
 

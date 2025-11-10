@@ -49,6 +49,10 @@ export const routes: Routes = [
       { path: "unidades-medida/cadastro", canActivate: [stateGuard], loadComponent: () => import("./tenant/components/cadastros/unidade-medida/unidade-medida-form.component").then(m => m.TenantUnidadeMedidaFormComponent) },
       { path: "insumos", loadComponent: () => import("./tenant/components/listagens/insumo/insumos-list.component").then(m => m.TenantInsumosListComponent) },
       { path: "insumos/cadastro", canActivate: [stateGuard], loadComponent: () => import("./tenant/components/cadastros/insumo/insumo-form.component").then(m => m.TenantInsumoFormComponent) },
+      { path: "categorias-receita", loadComponent: () => import("./tenant/components/listagens/categoria-receita/categorias-receita-list.component").then(m => m.TenantCategoriasReceitaListComponent) },
+      { path: "categorias-receita/cadastro", canActivate: [stateGuard], loadComponent: () => import("./tenant/components/cadastros/categoria-receita/categoria-receita-form.component").then(m => m.TenantCategoriaReceitaFormComponent) },
+      { path: "receitas", loadComponent: () => import("./tenant/components/listagens/receita/receitas-list.component").then(m => m.TenantReceitasListComponent) },
+      { path: "receitas/cadastro", canActivate: [stateGuard], loadComponent: () => import("./tenant/components/cadastros/receita/receita-form.component").then(m => m.TenantReceitaFormComponent) },
     ]
   },
   

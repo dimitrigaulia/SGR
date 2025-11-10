@@ -12,6 +12,7 @@ public class InsumoDto
     public long UnidadeUsoId { get; set; }
     public string? UnidadeUsoNome { get; set; }
     public string? UnidadeUsoSigla { get; set; }
+    public string? UnidadeUsoTipo { get; set; } // Tipo da unidade de uso (Peso, Volume, Quantidade)
     public decimal QuantidadePorEmbalagem { get; set; }
     public decimal CustoUnitario { get; set; }
     public decimal FatorCorrecao { get; set; }
