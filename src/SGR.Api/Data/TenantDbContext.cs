@@ -180,8 +180,12 @@ public class TenantDbContext : DbContext
 
             entity.Property(e => e.Nome).HasMaxLength(200).IsRequired();
             entity.Property(e => e.Descricao).HasMaxLength(5000);
+            entity.Property(e => e.InstrucoesEmpratamento).HasMaxLength(2000);
             entity.Property(e => e.Rendimento).HasPrecision(18, 4).IsRequired();
+            entity.Property(e => e.PesoPorPorcao).HasPrecision(18, 4);
+            entity.Property(e => e.ToleranciaPeso).HasPrecision(18, 4);
             entity.Property(e => e.FatorRendimento).HasPrecision(18, 4).IsRequired().HasDefaultValue(1.0m);
+            entity.Property(e => e.Versao).HasMaxLength(20).HasDefaultValue("1.0");
             entity.Property(e => e.CustoTotal).HasPrecision(18, 4).IsRequired().HasDefaultValue(0m);
             entity.Property(e => e.CustoPorPorcao).HasPrecision(18, 4).IsRequired().HasDefaultValue(0m);
             entity.Property(e => e.PathImagem).HasMaxLength(500);

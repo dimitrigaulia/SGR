@@ -7,9 +7,13 @@ public class ReceitaDto
     public long CategoriaId { get; set; }
     public string? CategoriaNome { get; set; }
     public string? Descricao { get; set; }
+    public string? InstrucoesEmpratamento { get; set; }
     public decimal Rendimento { get; set; }
+    public decimal? PesoPorPorcao { get; set; }
+    public decimal? ToleranciaPeso { get; set; }
     public decimal FatorRendimento { get; set; }
     public int? TempoPreparo { get; set; }
+    public string? Versao { get; set; }
     public decimal CustoTotal { get; set; }
     public decimal CustoPorPorcao { get; set; }
     public string? PathImagem { get; set; }

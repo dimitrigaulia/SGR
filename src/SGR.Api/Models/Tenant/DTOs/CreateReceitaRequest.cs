@@ -14,9 +14,18 @@ public class CreateReceitaRequest
     [MaxLength(5000, ErrorMessage = "Descrição deve ter no máximo 5000 caracteres")]
     public string? Descricao { get; set; }
 
+    [MaxLength(2000, ErrorMessage = "Instruções de empratamento devem ter no máximo 2000 caracteres")]
+    public string? InstrucoesEmpratamento { get; set; }
+
     [Required(ErrorMessage = "Rendimento é obrigatório")]
     [Range(0.01, double.MaxValue, ErrorMessage = "Rendimento deve ser maior que zero")]
     public decimal Rendimento { get; set; }
+
+    [Range(0.01, double.MaxValue, ErrorMessage = "Peso por porção deve ser maior que zero")]
+    public decimal? PesoPorPorcao { get; set; }
+
+    [Range(0, 100, ErrorMessage = "Tolerância de peso deve estar entre 0 e 100%")]
+    public decimal? ToleranciaPeso { get; set; }
 
     [Required(ErrorMessage = "Fator de rendimento é obrigatório")]
     [Range(0.01, 10.0, ErrorMessage = "Fator de rendimento deve estar entre 0.01 e 10.0")]
@@ -24,6 +33,9 @@ public class CreateReceitaRequest
 
     [Range(1, int.MaxValue, ErrorMessage = "Tempo de preparo deve ser maior que zero")]
     public int? TempoPreparo { get; set; }
+
+    [MaxLength(20, ErrorMessage = "Versão deve ter no máximo 20 caracteres")]
+    public string? Versao { get; set; } = "1.0";
 
     [MaxLength(500, ErrorMessage = "Path da imagem deve ter no máximo 500 caracteres")]
     public string? PathImagem { get; set; }

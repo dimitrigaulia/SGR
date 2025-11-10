@@ -32,6 +32,24 @@
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="form-field-spacing">
+        <mat-label>Peso por Porção (gramas)</mat-label>
+        <input matInput type="number" name="pesoPorPorcao" [(ngModel)]="model.pesoPorPorcao" [disabled]="isView()" min="0.01" step="0.01" />
+        <mat-hint>Ex: 180g por porção</mat-hint>
+        @if (f.controls['pesoPorPorcao']?.errors?.['min']) {
+          <mat-error>Peso por porção deve ser maior que zero</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="form-field-spacing">
+        <mat-label>Tolerância de Peso (%)</mat-label>
+        <input matInput type="number" name="toleranciaPeso" [(ngModel)]="model.toleranciaPeso" [disabled]="isView()" min="0" max="100" step="0.1" />
+        <mat-hint>Ex: 5 = ±5% de tolerância</mat-hint>
+        @if (f.controls['toleranciaPeso']?.errors?.['min'] || f.controls['toleranciaPeso']?.errors?.['max']) {
+          <mat-error>Tolerância deve estar entre 0 e 100%</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="form-field-spacing">
         <mat-label>Fator de Rendimento</mat-label>
         <input matInput type="number" name="fatorRendimento" [(ngModel)]="model.fatorRendimento" [disabled]="isView()" required min="0.01" max="10.0" step="0.01" />
         <mat-hint>Ex: 0.95 = 5% de perda no preparo, 1.0 = sem perdas</mat-hint>
@@ -44,12 +62,30 @@
         <mat-label>Tempo de Preparo (minutos)</mat-label>
         <input matInput type="number" name="tempoPreparo" [(ngModel)]="model.tempoPreparo" [disabled]="isView()" min="1" />
       </mat-form-field>
+
+      <mat-form-field appearance="outline" class="form-field-spacing">
+        <mat-label>Versão</mat-label>
+        <input matInput name="versao" [(ngModel)]="model.versao" [disabled]="isView()" maxlength="20" />
+        <mat-hint>Ex: 1.0, 2.1, 3.0</mat-hint>
+      </mat-form-field>
     </div>
 
-    <mat-form-field appearance="outline" class="form-field-spacing">
-      <mat-label>Descrição / Instruções de Preparo</mat-label>
-      <textarea matInput name="descricao" [(ngModel)]="model.descricao" [disabled]="isView()" rows="4" maxlength="5000"></textarea>
-    </mat-form-field>
+    <div class="form-section">
+      <h3>Modo de Preparo</h3>
+      <mat-form-field appearance="outline" class="form-field-spacing">
+        <mat-label>Descrição / Instruções de Preparo</mat-label>
+        <textarea matInput name="descricao" [(ngModel)]="model.descricao" [disabled]="isView()" rows="4" maxlength="5000"></textarea>
+      </mat-form-field>
+    </div>
+
+    <div class="form-section">
+      <h3>Serviço</h3>
+      <mat-form-field appearance="outline" class="form-field-spacing">
+        <mat-label>Instruções de Empratamento</mat-label>
+        <textarea matInput name="instrucoesEmpratamento" [(ngModel)]="model.instrucoesEmpratamento" [disabled]="isView()" rows="3" maxlength="2000"></textarea>
+        <mat-hint>Como servir/empratar o prato</mat-hint>
+      </mat-form-field>
+    </div>
 
     <!-- Upload de Imagem -->
     <div class="form-field-spacing">

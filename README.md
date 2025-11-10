@@ -1049,13 +1049,15 @@ this.confirmationService.confirm({
   - CRUD completo
   - Relacionamento com CategoriaReceita e Insumo (via ReceitaItem)
   - Cálculo automático de custos (CustoTotal e CustoPorPorcao)
-  - Campos: Nome, Categoria, Descrição, Rendimento, Fator de Rendimento, Tempo de Preparo, Imagem
+  - Campos: Nome, Categoria, Descrição, Instruções de Empratamento, Rendimento, Peso por Porção, Tolerância de Peso, Fator de Rendimento, Tempo de Preparo, Versão, Imagem
   - Itens da receita: Insumo, Quantidade, Ordem, Observações
   - Funcionalidade de duplicar receita
   - Cálculo automático considera:
     - FatorCorrecao dos insumos (perdas no preparo/limpeza de cada insumo)
     - QuantidadePorEmbalagem dos insumos
     - FatorRendimento da receita (perdas no preparo da receita completa, ex: evaporação, queima)
+  - Controle de versão para rastreabilidade
+  - Controle de peso por porção e tolerância para padronização
   - Usa entidades `Receita` e `ReceitaItem`
 
 - ✅ Autenticação de usuários do tenant
@@ -1339,3 +1341,8 @@ O sistema está preparado para escalar horizontalmente, com isolamento completo 
   - Campo FatorRendimento adicionado à entidade Receita
   - Cálculo automático de custos considera perdas no preparo (evaporação, queima, etc.)
   - Complementa o FatorCorrecao dos insumos (perdas no preparo individual)
+- ✅ **Receitas**: Melhorias na padronização e controle de qualidade
+  - Campo Versao para rastreabilidade de mudanças na receita
+  - Campo PesoPorPorcao para controle de gramagem por porção
+  - Campo ToleranciaPeso para controle de qualidade (tolerância em %)
+  - Campo InstrucoesEmpratamento separado das instruções de preparo
