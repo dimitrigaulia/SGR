@@ -178,8 +178,11 @@ O sistema utiliza uma arquitetura **Schema per Tenant** no PostgreSQL, onde cada
 **Schemas dinâmicos: `{subdominio}_{id}`** (ex: `vangoghbar_1`, `restaurante_2`)
 
 Cada schema contém:
-- `TenantPerfil` - Perfis de acesso do tenant (específicos de cada tenant, ex: Garçom, Cozinheiro, Gerente)
-- `TenantUsuario` - Usuários do tenant (específicos de cada tenant)
+- `Perfil` - Perfis de acesso do tenant (específicos de cada tenant, ex: Garçom, Cozinheiro, Gerente)
+- `Usuario` - Usuários do tenant (específicos de cada tenant)
+- `CategoriaInsumo` - Categorias de insumos (ex: Hortifruti, Carne, Bebidas)
+- `UnidadeMedida` - Unidades de medida (ex: kg, g, L, mL, unidade)
+- `Insumo` - Insumos do restaurante (ingredientes e materiais)
 
 ### Separação de Contextos
 
@@ -211,11 +214,12 @@ Esta separação permite que:
    - `CREATE SCHEMA {NomeSchema};`
 
 5. **Executar Migrations no Schema**:
-   - Criar tabelas: `TenantPerfil`, `TenantUsuario`
+   - Criar tabelas: `Perfil`, `Usuario`, `CategoriaInsumo`, `UnidadeMedida`, `Insumo`
+   - Inserir unidades de medida padrão (kg, g, L, mL, un, dz, pct, cx)
 
 6. **Inicializar Dados do Tenant**:
-   - Criar Perfil "Administrador" (IsAtivo: true) na tabela `TenantPerfil`
-   - Criar Usuario admin (com perfil Administrador) na tabela `TenantUsuario`
+   - Criar Perfil "Administrador" (IsAtivo: true) na tabela `Perfil`
+   - Criar Usuario admin (com perfil Administrador) na tabela `Usuario`
 
 ### Identificação do Tenant
 
@@ -251,7 +255,10 @@ SGR.Api/
 │       ├── BaseController.cs          # Controller base para tenants
 │       ├── AuthController.cs          # Autenticação tenant
 │       ├── UsuariosController.cs      # CRUD usuários tenant
-│       └── PerfisController.cs        # CRUD perfis tenant
+│       ├── PerfisController.cs        # CRUD perfis tenant
+│       ├── CategoriasInsumoController.cs  # CRUD categorias de insumo
+│       ├── UnidadesMedidaController.cs    # CRUD unidades de medida
+│       └── InsumosController.cs           # CRUD insumos
 ├── Services/
 │   ├── Backoffice/
 │   │   ├── Interfaces/
@@ -263,10 +270,16 @@ SGR.Api/
 │   ├── Tenant/
 │   │   ├── Interfaces/
 │   │   │   ├── ITenantUsuarioService.cs
-│   │   │   └── ITenantPerfilService.cs
+│   │   │   ├── ITenantPerfilService.cs
+│   │   │   ├── ICategoriaInsumoService.cs
+│   │   │   ├── IUnidadeMedidaService.cs
+│   │   │   └── IInsumoService.cs
 │   │   └── Implementations/
 │   │       ├── TenantUsuarioService.cs
-│   │       └── TenantPerfilService.cs
+│   │       ├── TenantPerfilService.cs
+│   │       ├── CategoriaInsumoService.cs
+│   │       ├── UnidadeMedidaService.cs
+│   │       └── InsumoService.cs
 │   ├── Common/
 │   │   └── BaseService.cs             # Service base genérico
 │   ├── Interfaces/
@@ -297,14 +310,26 @@ SGR.Api/
 │   ├── Tenant/
 │   │   ├── Entities/
 │   │   │   ├── TenantUsuario.cs
-│   │   │   └── TenantPerfil.cs
+│   │   │   ├── TenantPerfil.cs
+│   │   │   ├── CategoriaInsumo.cs
+│   │   │   ├── UnidadeMedida.cs
+│   │   │   └── Insumo.cs
 │   │   └── DTOs/
 │   │       ├── TenantUsuarioDto.cs
 │   │       ├── TenantPerfilDto.cs
+│   │       ├── CategoriaInsumoDto.cs
+│   │       ├── UnidadeMedidaDto.cs
+│   │       ├── InsumoDto.cs
 │   │       ├── CreateTenantUsuarioRequest.cs
 │   │       ├── UpdateTenantUsuarioRequest.cs
 │   │       ├── CreateTenantPerfilRequest.cs
-│   │       └── UpdateTenantPerfilRequest.cs
+│   │       ├── UpdateTenantPerfilRequest.cs
+│   │       ├── CreateCategoriaInsumoRequest.cs
+│   │       ├── UpdateCategoriaInsumoRequest.cs
+│   │       ├── CreateUnidadeMedidaRequest.cs
+│   │       ├── UpdateUnidadeMedidaRequest.cs
+│   │       ├── CreateInsumoRequest.cs
+│   │       └── UpdateInsumoRequest.cs
 │   ├── Entities/
 │   │   ├── Tenant.cs
 │   │   └── CategoriaTenant.cs
@@ -352,6 +377,19 @@ app/
 │   └── login/                        # Login do backoffice
 │       └── backoffice-login.component.*
 ├── tenant/                            # Tenant
+│   ├── components/
+│   │   ├── listagens/                # Componentes de listagem
+│   │   │   ├── usuario/
+│   │   │   ├── perfil/
+│   │   │   ├── categoria-insumo/
+│   │   │   ├── unidade-medida/
+│   │   │   └── insumo/
+│   │   └── cadastros/                # Componentes de formulários
+│   │       ├── usuario/
+│   │       ├── perfil/
+│   │       ├── categoria-insumo/
+│   │       ├── unidade-medida/
+│   │       └── insumo/
 │   └── login/                        # Login do tenant
 │       └── tenant-login.component.*
 ├── core/                              # Funcionalidades core
@@ -388,10 +426,25 @@ app/
 │   ├── perfis/
 │   │   └── services/
 │   │       └── perfil.service.ts
-│   └── tenants/
+│   ├── tenants/
+│   │   └── services/
+│   │       ├── tenant.service.ts
+│   │       └── categoria-tenant.service.ts
+│   ├── tenant-usuarios/
+│   │   └── services/
+│   │       └── tenant-usuario.service.ts
+│   ├── tenant-perfis/
+│   │   └── services/
+│   │       └── tenant-perfil.service.ts
+│   ├── tenant-categorias-insumo/
+│   │   └── services/
+│   │       └── categoria-insumo.service.ts
+│   ├── tenant-unidades-medida/
+│   │   └── services/
+│   │       └── unidade-medida.service.ts
+│   └── tenant-insumos/
 │       └── services/
-│           ├── tenant.service.ts
-│           └── categoria-tenant.service.ts
+│           └── insumo.service.ts
 ├── shell/                             # Layout principal
 │   ├── shell.component.ts
 │   ├── shell.component.html
@@ -959,6 +1012,24 @@ this.confirmationService.confirm({
   - Bloqueio de exclusão se houver usuários vinculados
   - Perfis específicos de cada tenant
   - Usa entidade `TenantPerfil`
+
+- ✅ **Categorias de Insumo** (`/api/tenant/categorias-insumo`)
+  - CRUD completo
+  - Validação de nome único (dentro do schema do tenant)
+  - Usa entidade `CategoriaInsumo`
+
+- ✅ **Unidades de Medida** (`/api/tenant/unidades-medida`)
+  - CRUD completo
+  - Validação de nome e sigla únicos (dentro do schema do tenant)
+  - Unidades padrão criadas automaticamente ao criar tenant (kg, g, L, mL, un, dz, pct, cx)
+  - Usa entidade `UnidadeMedida`
+
+- ✅ **Insumos** (`/api/tenant/insumos`)
+  - CRUD completo
+  - Relacionamento com CategoriaInsumo e UnidadeMedida
+  - Validação de código de barras único (opcional, dentro do schema do tenant)
+  - Campos: Nome, Categoria, Unidade de Medida, Custo Unitário, Estoque Mínimo, Descrição, Código de Barras, Imagem
+  - Usa entidade `Insumo`
 
 - ✅ Autenticação de usuários do tenant
 - ✅ Identificação automática via middleware

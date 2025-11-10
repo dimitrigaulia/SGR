@@ -74,7 +74,10 @@ export class ShellComponent implements AfterViewInit {
     if (context === 'tenant') {
       items.push(
         { icon: 'people', label: 'Usuários', route: `${baseUrl}/usuarios` },
-        { icon: 'badge', label: 'Perfis', route: `${baseUrl}/perfis` }
+        { icon: 'badge', label: 'Perfis', route: `${baseUrl}/perfis` },
+        { icon: 'inventory_2', label: 'Insumos', route: `${baseUrl}/insumos` },
+        { icon: 'category', label: 'Categorias', route: `${baseUrl}/categorias-insumo` },
+        { icon: 'straighten', label: 'Unidades', route: `${baseUrl}/unidades-medida` }
       );
     }
 

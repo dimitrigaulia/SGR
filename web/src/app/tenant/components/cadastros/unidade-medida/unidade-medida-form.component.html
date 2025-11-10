@@ -1,0 +1,48 @@
+<div class="form-container">
+  <h2 class="form-title">{{ id() === null ? 'Cadastro de unidade de medida' : (isView() ? 'Visualizar unidade' : 'Editar unidade') }}</h2>
+
+  <form #f="ngForm" (ngSubmit)="save()">
+    <mat-form-field appearance="outline" class="form-field-spacing">
+      <mat-label>Nome</mat-label>
+      <input matInput name="nome" [(ngModel)]="model.nome" [disabled]="isView()" required maxlength="50" />
+      @if (f.controls['nome']?.errors?.['required']) {
+        <mat-error>Nome é obrigatório</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="form-field-spacing">
+      <mat-label>Sigla</mat-label>
+      <input matInput name="sigla" [(ngModel)]="model.sigla" [disabled]="isView()" required maxlength="10" />
+      @if (f.controls['sigla']?.errors?.['required']) {
+        <mat-error>Sigla é obrigatória</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="form-field-spacing">
+      <mat-label>Tipo</mat-label>
+      <mat-select name="tipo" [(ngModel)]="model.tipo" [disabled]="isView()">
+        <mat-option value="">Nenhum</mat-option>
+        @for (tipo of tiposUnidade; track tipo.value) {
+          <mat-option [value]="tipo.value">{{ tipo.label }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <!-- Wrapper para o toggle com espaçamento consistente -->
+    <div class="form-toggle-wrapper">
+      <mat-slide-toggle name="isAtivo" [(ngModel)]="model.isAtivo" [disabled]="isView()">Ativo</mat-slide-toggle>
+    </div>
+
+    @if (error()) {
+      <div class="form-error">{{ error() }}</div>
+    }
+    
+    <div class="form-actions">
+      <button mat-stroked-button type="button" routerLink="/tenant/unidades-medida">Voltar</button>
+      @if (!isView()) {
+        <button mat-raised-button color="primary" type="submit">Salvar</button>
+      }
+    </div>
+  </form>
+</div>
+

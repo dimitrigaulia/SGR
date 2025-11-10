@@ -454,6 +454,60 @@ public class TenantService : BaseService<ApplicationDbContext, TenantEntity, Ten
 
             -- Índice único para Email
             CREATE UNIQUE INDEX IF NOT EXISTS ""IX_Usuario_Email_{schemaName}"" ON ""{schemaName}"".""Usuario""(""Email"");
+
+            -- Tabela CategoriaInsumo
+            CREATE TABLE IF NOT EXISTS ""{schemaName}"".""CategoriaInsumo"" (
+                ""Id"" BIGSERIAL PRIMARY KEY,
+                ""Nome"" VARCHAR(100) NOT NULL,
+                ""IsAtivo"" BOOLEAN NOT NULL DEFAULT true,
+                ""UsuarioCriacao"" VARCHAR(100),
+                ""UsuarioAtualizacao"" VARCHAR(100),
+                ""DataCriacao"" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT (NOW() AT TIME ZONE 'utc'),
+                ""DataAtualizacao"" TIMESTAMP WITH TIME ZONE
+            );
+
+            -- Índice único para Nome da Categoria
+            CREATE UNIQUE INDEX IF NOT EXISTS ""IX_CategoriaInsumo_Nome_{schemaName}"" ON ""{schemaName}"".""CategoriaInsumo""(""Nome"");
+
+            -- Tabela UnidadeMedida
+            CREATE TABLE IF NOT EXISTS ""{schemaName}"".""UnidadeMedida"" (
+                ""Id"" BIGSERIAL PRIMARY KEY,
+                ""Nome"" VARCHAR(50) NOT NULL,
+                ""Sigla"" VARCHAR(10) NOT NULL,
+                ""Tipo"" VARCHAR(20),
+                ""IsAtivo"" BOOLEAN NOT NULL DEFAULT true,
+                ""UsuarioCriacao"" VARCHAR(100),
+                ""UsuarioAtualizacao"" VARCHAR(100),
+                ""DataCriacao"" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT (NOW() AT TIME ZONE 'utc'),
+                ""DataAtualizacao"" TIMESTAMP WITH TIME ZONE
+            );
+
+            -- Índices únicos para Nome e Sigla da Unidade
+            CREATE UNIQUE INDEX IF NOT EXISTS ""IX_UnidadeMedida_Nome_{schemaName}"" ON ""{schemaName}"".""UnidadeMedida""(""Nome"");
+            CREATE UNIQUE INDEX IF NOT EXISTS ""IX_UnidadeMedida_Sigla_{schemaName}"" ON ""{schemaName}"".""UnidadeMedida""(""Sigla"");
+
+            -- Tabela Insumo
+            CREATE TABLE IF NOT EXISTS ""{schemaName}"".""Insumo"" (
+                ""Id"" BIGSERIAL PRIMARY KEY,
+                ""Nome"" VARCHAR(200) NOT NULL,
+                ""CategoriaId"" BIGINT NOT NULL,
+                ""UnidadeMedidaId"" BIGINT NOT NULL,
+                ""CustoUnitario"" DECIMAL(18, 4) NOT NULL DEFAULT 0,
+                ""EstoqueMinimo"" DECIMAL(18, 4),
+                ""Descricao"" TEXT,
+                ""CodigoBarras"" VARCHAR(50),
+                ""PathImagem"" VARCHAR(500),
+                ""IsAtivo"" BOOLEAN NOT NULL DEFAULT true,
+                ""UsuarioCriacao"" VARCHAR(100),
+                ""UsuarioAtualizacao"" VARCHAR(100),
+                ""DataCriacao"" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT (NOW() AT TIME ZONE 'utc'),
+                ""DataAtualizacao"" TIMESTAMP WITH TIME ZONE,
+                CONSTRAINT ""FK_Insumo_CategoriaInsumo_{schemaName}"" FOREIGN KEY (""CategoriaId"") REFERENCES ""{schemaName}"".""CategoriaInsumo""(""Id"") ON DELETE RESTRICT,
+                CONSTRAINT ""FK_Insumo_UnidadeMedida_{schemaName}"" FOREIGN KEY (""UnidadeMedidaId"") REFERENCES ""{schemaName}"".""UnidadeMedida""(""Id"") ON DELETE RESTRICT
+            );
+
+            -- Índice único para Código de Barras (apenas quando não nulo)
+            CREATE UNIQUE INDEX IF NOT EXISTS ""IX_Insumo_CodigoBarras_{schemaName}"" ON ""{schemaName}"".""Insumo""(""CodigoBarras"") WHERE ""CodigoBarras"" IS NOT NULL;
         ";
 
         await _tenantContext.Database.ExecuteSqlRawAsync(sql);
@@ -463,11 +517,27 @@ public class TenantService : BaseService<ApplicationDbContext, TenantEntity, Ten
     {
         _logger.LogInformation("Inicializando dados do tenant no schema {Schema}", schemaName);
         
+        var usuarioCriacaoValue = usuarioCriacao ?? "Sistema";
+        var dataCriacao = "NOW() AT TIME ZONE 'utc'";
+        
         // Usar SQL direto para inserir os dados iniciais
         var sql = $@"
             -- Inserir Perfil ""Administrador""
             INSERT INTO ""{schemaName}"".""Perfil"" (""Nome"", ""IsAtivo"", ""UsuarioCriacao"", ""DataCriacao"")
-            VALUES ('Administrador', true, '{usuarioCriacao ?? "Sistema"}', NOW() AT TIME ZONE 'utc')
+            VALUES ('Administrador', true, '{usuarioCriacaoValue}', {dataCriacao})
+            ON CONFLICT DO NOTHING;
+
+            -- Inserir Unidades de Medida padrão
+            INSERT INTO ""{schemaName}"".""UnidadeMedida"" (""Nome"", ""Sigla"", ""Tipo"", ""IsAtivo"", ""UsuarioCriacao"", ""DataCriacao"")
+            VALUES 
+                ('Quilograma', 'kg', 'Peso', true, '{usuarioCriacaoValue}', {dataCriacao}),
+                ('Grama', 'g', 'Peso', true, '{usuarioCriacaoValue}', {dataCriacao}),
+                ('Litro', 'L', 'Volume', true, '{usuarioCriacaoValue}', {dataCriacao}),
+                ('Mililitro', 'mL', 'Volume', true, '{usuarioCriacaoValue}', {dataCriacao}),
+                ('Unidade', 'un', 'Quantidade', true, '{usuarioCriacaoValue}', {dataCriacao}),
+                ('Dúzia', 'dz', 'Quantidade', true, '{usuarioCriacaoValue}', {dataCriacao}),
+                ('Pacote', 'pct', 'Quantidade', true, '{usuarioCriacaoValue}', {dataCriacao}),
+                ('Caixa', 'cx', 'Quantidade', true, '{usuarioCriacaoValue}', {dataCriacao})
             ON CONFLICT DO NOTHING;
         ";
 

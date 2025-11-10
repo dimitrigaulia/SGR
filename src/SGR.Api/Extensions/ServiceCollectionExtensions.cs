@@ -30,6 +30,9 @@ public static class ServiceCollectionExtensions
         // Tenant Services
         services.AddScoped<ITenantUsuarioService, TenantUsuarioService>();
         services.AddScoped<ITenantPerfilService, TenantPerfilService>();
+        services.AddScoped<ICategoriaInsumoService, CategoriaInsumoService>();
+        services.AddScoped<IUnidadeMedidaService, UnidadeMedidaService>();
+        services.AddScoped<IInsumoService, InsumoService>();
         
         // Common Services
         services.AddScoped<ITenantService, TenantService>();

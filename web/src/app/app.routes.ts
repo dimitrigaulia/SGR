@@ -43,6 +43,12 @@ export const routes: Routes = [
       { path: "usuarios/cadastro", canActivate: [stateGuard], loadComponent: () => import("./tenant/components/cadastros/usuario/user-form.component").then(m => m.TenantUserFormComponent) },
       { path: "perfis", loadComponent: () => import("./tenant/components/listagens/perfil/perfis-list.component").then(m => m.TenantPerfisListComponent) },
       { path: "perfis/cadastro", canActivate: [stateGuard], loadComponent: () => import("./tenant/components/cadastros/perfil/perfil-form.component").then(m => m.TenantPerfilFormComponent) },
+      { path: "categorias-insumo", loadComponent: () => import("./tenant/components/listagens/categoria-insumo/categorias-insumo-list.component").then(m => m.TenantCategoriasInsumoListComponent) },
+      { path: "categorias-insumo/cadastro", canActivate: [stateGuard], loadComponent: () => import("./tenant/components/cadastros/categoria-insumo/categoria-insumo-form.component").then(m => m.TenantCategoriaInsumoFormComponent) },
+      { path: "unidades-medida", loadComponent: () => import("./tenant/components/listagens/unidade-medida/unidades-medida-list.component").then(m => m.TenantUnidadesMedidaListComponent) },
+      { path: "unidades-medida/cadastro", canActivate: [stateGuard], loadComponent: () => import("./tenant/components/cadastros/unidade-medida/unidade-medida-form.component").then(m => m.TenantUnidadeMedidaFormComponent) },
+      { path: "insumos", loadComponent: () => import("./tenant/components/listagens/insumo/insumos-list.component").then(m => m.TenantInsumosListComponent) },
+      { path: "insumos/cadastro", canActivate: [stateGuard], loadComponent: () => import("./tenant/components/cadastros/insumo/insumo-form.component").then(m => m.TenantInsumoFormComponent) },
     ]
   },
   
