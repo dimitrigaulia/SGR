@@ -14,6 +14,8 @@ export interface ReceitaItemDto {
   quantidade: number;
   quantidadeBruta: number;
   custoItem: number;
+  custoPorUnidadeUso?: number | null;
+  custoPor100UnidadesUso?: number | null;
   ordem: number;
   observacoes?: string | null;
 }

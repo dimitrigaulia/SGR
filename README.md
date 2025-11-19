@@ -1107,6 +1107,7 @@ this.confirmationService.confirm({
 - Tema escuro/claro configurável
 - Sidebar colapsável com estado persistente
 - Prevenção de scroll horizontal
+- **Navegação hierárquica com submenus** - Organização lógica de funcionalidades
 
 #### 2. Componentes
 
@@ -1325,9 +1326,60 @@ O sistema está preparado para escalar horizontalmente, com isolamento completo 
 
 ---
 
+## 🧭 Estrutura de Navegação
+
+O sistema utiliza uma estrutura de navegação hierárquica com submenus, organizada de forma lógica baseada em sistemas de referência como TOTVS, iFood Gestão e Kitchen Display.
+
+### Princípios de Organização
+
+1. **Agrupamento Lógico**: Funcionalidades relacionadas são agrupadas em submenus
+2. **Hierarquia Clara**: Submenus dividem categorias amplas em seções específicas
+3. **Ordem de Uso**: Funcionalidades mais utilizadas aparecem primeiro
+4. **Nomenclatura Clara**: Evita termos genéricos e confusos
+
+### Estrutura do Menu - Tenant
+
+```
+📊 Dashboard
+📦 Cadastros
+   ├── Insumos
+   ├── Receitas
+   ├── Categorias de Insumo
+   ├── Categorias de Receita
+   └── Unidades de Medida
+⚙️ Configurações
+   ├── Usuários
+   └── Perfis
+```
+
+### Estrutura do Menu - Backoffice
+
+```
+📊 Dashboard
+🏢 Gestão
+   ├── Tenants
+   ├── Usuários
+   └── Perfis
+```
+
+### Funcionalidades da Navegação
+
+- **Submenus Expansíveis**: Usa `mat-expansion-panel` do Angular Material
+- **Expansão Automática**: Submenus com rotas ativas são expandidos automaticamente
+- **Destaque Visual**: Itens ativos e submenus com rotas ativas são destacados
+- **Responsivo**: Em modo colapsado, mostra apenas ícones com tooltips
+- **Estado Persistente**: Estado de expansão dos submenus é mantido durante a navegação
+
+---
+
 **Última atualização**: 2025-01-27
 
 **Changelog**:
+- ✅ **Navegação Hierárquica**: Reorganização da sidebar com submenus expansíveis
+  - Agrupamento lógico: Cadastros e Configurações (Tenant), Gestão (Backoffice)
+  - Nomenclatura melhorada: "Categorias de Insumo" e "Categorias de Receita" (antes apenas "Categorias")
+  - Expansão automática de submenus com rotas ativas
+  - Destaque visual para itens e submenus ativos
 - ✅ Implementado ConfirmationService para substituir alertas do navegador
 - ✅ Padronização de botões em todas as listagens
 - ✅ Adicionada coluna Categoria na listagem de Tenants

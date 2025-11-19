@@ -34,3 +34,21 @@
   margin-top: 8px;
 }
 
+.item-cost-line {
+  margin-top: 2px;
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.7);
+
+  .label {
+    font-weight: 500;
+  }
+
+  .value {
+    margin-left: 2px;
+  }
+
+  .separator {
+    margin: 0 4px;
+  }
+}
+

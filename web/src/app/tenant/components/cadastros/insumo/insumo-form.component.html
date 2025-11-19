@@ -56,7 +56,7 @@
       <mat-form-field appearance="outline" class="form-field-spacing">
         <mat-label>Quantidade por Embalagem</mat-label>
         <input matInput type="number" name="quantidadePorEmbalagem" [(ngModel)]="model.quantidadePorEmbalagem" [disabled]="isView()" required min="0.0001" step="0.0001" />
-        <mat-hint>Ex: 12 unidades, 5 kg</mat-hint>
+        <mat-hint>Ex: 12 unidades, 5 kg (na unidade de compra)</mat-hint>
         @if (f.controls['quantidadePorEmbalagem']?.errors?.['required']) {
           <mat-error>Quantidade por embalagem é obrigatória</mat-error>
         }
@@ -85,11 +85,23 @@
           <mat-error>Custo unitário deve ser maior ou igual a zero</mat-error>
         }
       </mat-form-field>
+    </div>
 
-      <mat-form-field appearance="outline" class="form-field-spacing">
-        <mat-label>Estoque Mínimo</mat-label>
-        <input matInput type="number" name="estoqueMinimo" [(ngModel)]="model.estoqueMinimo" [disabled]="isView()" min="0" step="0.01" />
-      </mat-form-field>
+    <div class="form-row form-summary-row">
+      <div class="form-summary-box">
+        <div class="form-summary-title">Resumo de custos</div>
+        <div class="form-summary-item">
+          <span class="label">Custo por unidade de compra:</span>
+          <span class="value">{{ resumoCustoPorUnidadeCompra }}</span>
+        </div>
+        <div class="form-summary-item">
+          <span class="label">Custo por unidade de uso:</span>
+          <span class="value">{{ resumoCustoPorUnidadeUso }}</span>
+        </div>
+        <div class="form-summary-hint">
+          Valores calculados automaticamente com base nas unidades e na quantidade por embalagem.
+        </div>
+      </div>
     </div>
 
     <mat-form-field appearance="outline" class="form-field-spacing">
@@ -133,4 +145,3 @@
     </div>
   </form>
 </div>
-

@@ -111,7 +111,6 @@ public class InsumoService : BaseService<TenantDbContext, Insumo, InsumoDto, Cre
             QuantidadePorEmbalagem = i.QuantidadePorEmbalagem,
             CustoUnitario = i.CustoUnitario,
             FatorCorrecao = i.FatorCorrecao,
-            EstoqueMinimo = i.EstoqueMinimo,
             Descricao = i.Descricao,
             CodigoBarras = i.CodigoBarras,
             PathImagem = i.PathImagem,
@@ -132,7 +131,6 @@ public class InsumoService : BaseService<TenantDbContext, Insumo, InsumoDto, Cre
             QuantidadePorEmbalagem = request.QuantidadePorEmbalagem,
             CustoUnitario = request.CustoUnitario,
             FatorCorrecao = request.FatorCorrecao,
-            EstoqueMinimo = request.EstoqueMinimo,
             Descricao = request.Descricao,
             CodigoBarras = request.CodigoBarras,
             PathImagem = request.PathImagem,
@@ -149,7 +147,6 @@ public class InsumoService : BaseService<TenantDbContext, Insumo, InsumoDto, Cre
         entity.QuantidadePorEmbalagem = request.QuantidadePorEmbalagem;
         entity.CustoUnitario = request.CustoUnitario;
         entity.FatorCorrecao = request.FatorCorrecao;
-        entity.EstoqueMinimo = request.EstoqueMinimo;
         entity.Descricao = request.Descricao;
         entity.CodigoBarras = request.CodigoBarras;
         entity.PathImagem = request.PathImagem;

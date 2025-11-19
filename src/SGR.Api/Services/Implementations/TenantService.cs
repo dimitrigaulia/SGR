@@ -499,7 +499,6 @@ public class TenantService : BaseService<ApplicationDbContext, TenantEntity, Ten
                 ""QuantidadePorEmbalagem"" DECIMAL(18, 4) NOT NULL,
                 ""CustoUnitario"" DECIMAL(18, 4) NOT NULL DEFAULT 0,
                 ""FatorCorrecao"" DECIMAL(18, 4) NOT NULL DEFAULT 1.0,
-                ""EstoqueMinimo"" DECIMAL(18, 4),
                 ""Descricao"" TEXT,
                 ""CodigoBarras"" VARCHAR(50),
                 ""PathImagem"" VARCHAR(500),

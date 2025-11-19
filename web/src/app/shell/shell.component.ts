@@ -10,15 +10,18 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatExpansionModule } from '@angular/material/expansion';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs';
 import { AuthService } from '../core/services/auth.service';
 import { LayoutService } from '../core/services/layout.service';
 
 interface NavItem {
   icon: string;
   label: string;
-  route: string;
+  route?: string; // Opcional se tiver children
+  children?: NavItem[]; // Subitens
 }
 
 @Component({
@@ -37,6 +40,7 @@ interface NavItem {
     MatMenuModule,
     MatTooltipModule,
     MatDividerModule,
+    MatExpansionModule,
   ],
   templateUrl: './shell.component.html',
   styleUrls: ['./shell.component.scss'],
@@ -52,6 +56,9 @@ export class ShellComponent implements AfterViewInit {
   private destroyRef = inject(DestroyRef);
   private cdr = inject(ChangeDetectorRef);
 
+  // Estado de expansão dos submenus (apenas para controle inicial)
+  private _expandedMenus = new Set<string>();
+
   // Itens de navegação (será calculado baseado no contexto)
   readonly navItems = computed<NavItem[]>(() => {
     const context = this.auth.getContext();
@@ -63,28 +70,78 @@ export class ShellComponent implements AfterViewInit {
 
     // Itens específicos do backoffice
     if (context === 'backoffice') {
-      items.push(
-        { icon: 'people', label: 'Usuários', route: `${baseUrl}/usuarios` },
-        { icon: 'badge', label: 'Perfis', route: `${baseUrl}/perfis` },
-        { icon: 'business', label: 'Tenants', route: `${baseUrl}/tenants` }
-      );
+      items.push({
+        icon: 'business',
+        label: 'Gestão',
+        children: [
+          { icon: 'business', label: 'Tenants', route: `${baseUrl}/tenants` },
+          { icon: 'people', label: 'Usuários', route: `${baseUrl}/usuarios` },
+          { icon: 'badge', label: 'Perfis', route: `${baseUrl}/perfis` }
+        ]
+      });
     }
 
     // Itens específicos do tenant
     if (context === 'tenant') {
       items.push(
-        { icon: 'people', label: 'Usuários', route: `${baseUrl}/usuarios` },
-        { icon: 'badge', label: 'Perfis', route: `${baseUrl}/perfis` },
-        { icon: 'inventory_2', label: 'Insumos', route: `${baseUrl}/insumos` },
-        { icon: 'category', label: 'Categorias', route: `${baseUrl}/categorias-insumo` },
-        { icon: 'straighten', label: 'Unidades', route: `${baseUrl}/unidades-medida` },
-        { icon: 'restaurant', label: 'Receitas', route: `${baseUrl}/receitas` },
-        { icon: 'category', label: 'Categorias Receita', route: `${baseUrl}/categorias-receita` }
+        {
+          icon: 'inventory_2',
+          label: 'Cadastros',
+          children: [
+            { icon: 'inventory_2', label: 'Insumos', route: `${baseUrl}/insumos` },
+            { icon: 'restaurant', label: 'Receitas', route: `${baseUrl}/receitas` },
+            { icon: 'category', label: 'Categorias de Insumo', route: `${baseUrl}/categorias-insumo` },
+            { icon: 'category', label: 'Categorias de Receita', route: `${baseUrl}/categorias-receita` },
+            { icon: 'straighten', label: 'Unidades de Medida', route: `${baseUrl}/unidades-medida` }
+          ]
+        },
+        {
+          icon: 'settings',
+          label: 'Configurações',
+          children: [
+            { icon: 'people', label: 'Usuários', route: `${baseUrl}/usuarios` },
+            { icon: 'badge', label: 'Perfis', route: `${baseUrl}/perfis` }
+          ]
+        }
       );
     }
 
     return items;
   });
+
+  // Verifica se um item tem rota ativa
+  isRouteActive(route: string): boolean {
+    return this.router.url.startsWith(route);
+  }
+
+  // Verifica se algum child está ativo
+  hasActiveChild(children?: NavItem[]): boolean {
+    if (!children) return false;
+    return children.some(child => child.route && this.isRouteActive(child.route));
+  }
+
+  // Verifica se menu deve estar expandido (apenas para inicialização)
+  isMenuExpanded(menuLabel: string): boolean {
+    return this._expandedMenus.has(menuLabel);
+  }
+
+  // Atualiza menus expandidos baseado nas rotas ativas
+  private updateExpandedMenus() {
+    const items = this.navItems();
+    
+    items.forEach(item => {
+      if (item.children) {
+        const shouldBeExpanded = this.hasActiveChild(item.children);
+        const isExpanded = this._expandedMenus.has(item.label);
+        
+        if (shouldBeExpanded && !isExpanded) {
+          this._expandedMenus.add(item.label);
+        }
+      }
+    });
+    
+    this.cdr.markForCheck();
+  }
 
   // Estado
   readonly isHandset = signal(false);
@@ -121,6 +178,19 @@ export class ShellComponent implements AfterViewInit {
     if (savedCollapsed !== null) {
       this.isCollapsed.set(JSON.parse(savedCollapsed));
     }
+
+    // Expandir menus que têm rotas ativas (apenas quando necessário)
+    this.router.events
+      .pipe(
+        filter(event => event instanceof NavigationEnd),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe(() => {
+        // Aguardar próximo ciclo para garantir que os panels estejam disponíveis
+        setTimeout(() => {
+          this.updateExpandedMenus();
+        }, 0);
+      });
   }
 
   ngAfterViewInit() {
@@ -132,6 +202,11 @@ export class ShellComponent implements AfterViewInit {
         this.sidenav.open();
       }
     }
+
+    // Expandir menus que têm rotas ativas na inicialização
+    setTimeout(() => {
+      this.updateExpandedMenus();
+    }, 0);
   }
 
   toggleSidenav() {

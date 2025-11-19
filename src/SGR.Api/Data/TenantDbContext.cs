@@ -50,9 +50,11 @@ public class TenantDbContext : DbContext
             entity.HasKey(e => e.Id);
 
             entity.Property(e => e.Nome).HasMaxLength(100).IsRequired();
+            entity.Property(e => e.IsAtivo).IsRequired();
             entity.Property(e => e.UsuarioCriacao).HasMaxLength(100);
             entity.Property(e => e.UsuarioAtualizacao).HasMaxLength(100);
             entity.Property(e => e.DataCriacao).IsRequired();
+            entity.Property(e => e.DataAtualizacao);
         });
 
         // Configuração TenantUsuario
@@ -65,9 +67,11 @@ public class TenantDbContext : DbContext
             entity.Property(e => e.Email).HasMaxLength(200).IsRequired();
             entity.Property(e => e.SenhaHash).HasMaxLength(500).IsRequired();
             entity.Property(e => e.PathImagem).HasMaxLength(500);
+            entity.Property(e => e.IsAtivo).IsRequired();
             entity.Property(e => e.UsuarioCriacao).HasMaxLength(100);
             entity.Property(e => e.DataCriacao).IsRequired();
             entity.Property(e => e.UsuarioAtualizacao).HasMaxLength(100);
+            entity.Property(e => e.DataAtualizacao);
 
             // Índice único para Email (dentro do schema do tenant)
             entity.HasIndex(e => e.Email).IsUnique();
@@ -86,9 +90,11 @@ public class TenantDbContext : DbContext
             entity.HasKey(e => e.Id);
 
             entity.Property(e => e.Nome).HasMaxLength(100).IsRequired();
+            entity.Property(e => e.IsAtivo).IsRequired();
             entity.Property(e => e.UsuarioCriacao).HasMaxLength(100);
             entity.Property(e => e.UsuarioAtualizacao).HasMaxLength(100);
             entity.Property(e => e.DataCriacao).IsRequired();
+            entity.Property(e => e.DataAtualizacao);
 
             // Índice único para Nome (dentro do schema do tenant)
             entity.HasIndex(e => e.Nome).IsUnique();
@@ -104,9 +110,11 @@ public class TenantDbContext : DbContext
             entity.Property(e => e.Sigla).HasMaxLength(10).IsRequired();
             entity.Property(e => e.Tipo).HasMaxLength(20);
             entity.Property(e => e.FatorConversaoBase).HasPrecision(18, 6);
+            entity.Property(e => e.IsAtivo).IsRequired();
             entity.Property(e => e.UsuarioCriacao).HasMaxLength(100);
             entity.Property(e => e.UsuarioAtualizacao).HasMaxLength(100);
             entity.Property(e => e.DataCriacao).IsRequired();
+            entity.Property(e => e.DataAtualizacao);
 
             // Índices únicos (dentro do schema do tenant)
             entity.HasIndex(e => e.Nome).IsUnique();
@@ -129,13 +137,14 @@ public class TenantDbContext : DbContext
             entity.Property(e => e.QuantidadePorEmbalagem).HasPrecision(18, 4).IsRequired();
             entity.Property(e => e.CustoUnitario).HasPrecision(18, 4).IsRequired();
             entity.Property(e => e.FatorCorrecao).HasPrecision(18, 4).IsRequired().HasDefaultValue(1.0m);
-            entity.Property(e => e.EstoqueMinimo).HasPrecision(18, 4);
             entity.Property(e => e.Descricao);
             entity.Property(e => e.CodigoBarras).HasMaxLength(50);
             entity.Property(e => e.PathImagem).HasMaxLength(500);
+            entity.Property(e => e.IsAtivo).IsRequired();
             entity.Property(e => e.UsuarioCriacao).HasMaxLength(100);
             entity.Property(e => e.UsuarioAtualizacao).HasMaxLength(100);
             entity.Property(e => e.DataCriacao).IsRequired();
+            entity.Property(e => e.DataAtualizacao);
 
             // Índice único para Código de Barras (dentro do schema do tenant, se informado)
             entity.HasIndex(e => e.CodigoBarras).IsUnique().HasFilter("\"CodigoBarras\" IS NOT NULL");
@@ -164,9 +173,11 @@ public class TenantDbContext : DbContext
             entity.HasKey(e => e.Id);
 
             entity.Property(e => e.Nome).HasMaxLength(100).IsRequired();
+            entity.Property(e => e.IsAtivo).IsRequired();
             entity.Property(e => e.UsuarioCriacao).HasMaxLength(100);
             entity.Property(e => e.UsuarioAtualizacao).HasMaxLength(100);
             entity.Property(e => e.DataCriacao).IsRequired();
+            entity.Property(e => e.DataAtualizacao);
 
             // Índice único para Nome (dentro do schema do tenant)
             entity.HasIndex(e => e.Nome).IsUnique();
@@ -185,13 +196,16 @@ public class TenantDbContext : DbContext
             entity.Property(e => e.PesoPorPorcao).HasPrecision(18, 4);
             entity.Property(e => e.ToleranciaPeso).HasPrecision(18, 4);
             entity.Property(e => e.FatorRendimento).HasPrecision(18, 4).IsRequired().HasDefaultValue(1.0m);
+            entity.Property(e => e.TempoPreparo);
             entity.Property(e => e.Versao).HasMaxLength(20).HasDefaultValue("1.0");
             entity.Property(e => e.CustoTotal).HasPrecision(18, 4).IsRequired().HasDefaultValue(0m);
             entity.Property(e => e.CustoPorPorcao).HasPrecision(18, 4).IsRequired().HasDefaultValue(0m);
             entity.Property(e => e.PathImagem).HasMaxLength(500);
+            entity.Property(e => e.IsAtivo).IsRequired();
             entity.Property(e => e.UsuarioCriacao).HasMaxLength(100);
             entity.Property(e => e.UsuarioAtualizacao).HasMaxLength(100);
             entity.Property(e => e.DataCriacao).IsRequired();
+            entity.Property(e => e.DataAtualizacao);
 
             // Relacionamento
             entity.HasOne(e => e.Categoria)

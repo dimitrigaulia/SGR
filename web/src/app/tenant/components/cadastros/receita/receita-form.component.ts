@@ -22,6 +22,9 @@ type ReceitaItemFormModel = {
   quantidade: number;
   ordem: number;
   observacoes: string;
+  custoItem?: number;
+  custoPorUnidadeUso?: number | null;
+  custoPor100UnidadesUso?: number | null;
 };
 
 @Component({
@@ -117,7 +120,10 @@ export class TenantReceitaFormComponent {
             insumoId: item.insumoId,
             quantidade: item.quantidade,
             ordem: item.ordem,
-            observacoes: item.observacoes || ''
+            observacoes: item.observacoes || '',
+            custoItem: item.custoItem,
+            custoPorUnidadeUso: item.custoPorUnidadeUso ?? null,
+            custoPor100UnidadesUso: item.custoPor100UnidadesUso ?? null
           })));
           this.cdr.markForCheck();
         });
@@ -221,6 +227,13 @@ export class TenantReceitaFormComponent {
       }
       this.cdr.markForCheck();
     }
+  }
+
+  formatCurrency(value: number | null | undefined): string {
+    if (value === null || value === undefined) {
+      return '-';
+    }
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
   }
 
   onQuantidadeChange(item: ReceitaItemFormModel, index: number) {

@@ -18,7 +18,6 @@ export interface InsumoDto {
   quantidadePorEmbalagem: number;
   custoUnitario: number;
   fatorCorrecao: number;
-  estoqueMinimo?: number | null;
   descricao?: string | null;
   codigoBarras?: string | null;
   pathImagem?: string | null;
@@ -33,7 +32,6 @@ export interface CreateInsumoRequest {
   quantidadePorEmbalagem: number;
   custoUnitario: number;
   fatorCorrecao: number;
-  estoqueMinimo?: number | null;
   descricao?: string | null;
   codigoBarras?: string | null;
   pathImagem?: string | null;
@@ -48,7 +46,6 @@ export interface UpdateInsumoRequest {
   quantidadePorEmbalagem: number;
   custoUnitario: number;
   fatorCorrecao: number;
-  estoqueMinimo?: number | null;
   descricao?: string | null;
   codigoBarras?: string | null;
   pathImagem?: string | null;

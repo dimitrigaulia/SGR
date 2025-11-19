@@ -60,23 +60,12 @@
 
       <ng-container matColumnDef="quantidadeEmbalagem">
         <th mat-header-cell *matHeaderCellDef>Qtd/Embalagem</th>
-        <td mat-cell *matCellDef="let e">{{ e.quantidadePorEmbalagem }} {{ e.unidadeUsoSigla || '' }}</td>
+        <td mat-cell *matCellDef="let e">{{ e.quantidadePorEmbalagem }} {{ e.unidadeCompraSigla || e.unidadeCompraNome || '' }}</td>
       </ng-container>
 
       <ng-container matColumnDef="custo">
         <th mat-header-cell *matHeaderCellDef mat-sort-header="custo">Custo Unitário</th>
         <td mat-cell *matCellDef="let e">{{ formatCurrency(e.custoUnitario) }}</td>
-      </ng-container>
-
-      <ng-container matColumnDef="estoqueMinimo">
-        <th mat-header-cell *matHeaderCellDef>Estoque Mínimo</th>
-        <td mat-cell *matCellDef="let e">
-          @if (e.estoqueMinimo !== null && e.estoqueMinimo !== undefined) {
-            {{ e.estoqueMinimo }} {{ e.unidadeMedidaSigla || '' }}
-          } @else {
-            -
-          }
-        </td>
       </ng-container>
 
       <ng-container matColumnDef="ativo">
@@ -127,10 +116,7 @@
             <p class="insumo-detalhes">
               {{ formatCurrency(e.custoUnitario) }} / {{ e.unidadeCompraSigla || e.unidadeCompraNome || '' }}
               • Uso: {{ e.unidadeUsoSigla || e.unidadeUsoNome || '' }}
-              • Qtd/Embalagem: {{ e.quantidadePorEmbalagem }} {{ e.unidadeUsoSigla || '' }}
-              @if (e.estoqueMinimo !== null && e.estoqueMinimo !== undefined) {
-                • Mín: {{ e.estoqueMinimo }} {{ e.unidadeUsoSigla || '' }}
-              }
+              • Qtd/Embalagem: {{ e.quantidadePorEmbalagem }} {{ e.unidadeCompraSigla || e.unidadeCompraNome || '' }}
             </p>
           </div>
         </div>
@@ -162,4 +148,3 @@
     <mat-paginator [length]="total()" [pageIndex]="pageIndex()" [pageSize]="pageSize()" [pageSizeOptions]="[5,10,25,50]" (page)="pageChanged($event)"></mat-paginator>
   }
 </div>
-

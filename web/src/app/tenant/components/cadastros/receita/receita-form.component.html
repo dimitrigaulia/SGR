@@ -153,7 +153,23 @@
               <th mat-header-cell *matHeaderCellDef>Quantidade</th>
               <td mat-cell *matCellDef="let item; let i = index">
                 @if (isView()) {
-                  {{ formatQuantidade(item.quantidade, item.insumoId) }} {{ getInsumoUnidade(item.insumoId) }}
+                  <div>
+                    {{ formatQuantidade(item.quantidade, item.insumoId) }} {{ getInsumoUnidade(item.insumoId) }}
+                  </div>
+                  <div class="item-cost-line">
+                    <span class="label">Custo do item:</span>
+                    <span class="value">{{ formatCurrency(item.custoItem ?? null) }}</span>
+                    @if (item.custoPorUnidadeUso) {
+                      <span class="separator">•</span>
+                      <span class="label">por {{ getInsumoUnidade(item.insumoId) }}:</span>
+                      <span class="value">{{ formatCurrency(item.custoPorUnidadeUso) }}</span>
+                    }
+                    @if (item.custoPor100UnidadesUso) {
+                      <span class="separator">•</span>
+                      <span class="label">por 100 {{ getInsumoUnidade(item.insumoId) }}:</span>
+                      <span class="value">{{ formatCurrency(item.custoPor100UnidadesUso) }}</span>
+                    }
+                  </div>
                 } @else {
                   <mat-form-field appearance="outline" style="width: 100%;">
                     <input 

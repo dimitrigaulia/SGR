@@ -30,9 +30,11 @@ public class ApplicationDbContext : DbContext
             entity.HasKey(e => e.Id);
 
             entity.Property(e => e.Nome).HasMaxLength(100).IsRequired();
+            entity.Property(e => e.IsAtivo).IsRequired();
             entity.Property(e => e.UsuarioCriacao).HasMaxLength(100);
             entity.Property(e => e.UsuarioAtualizacao).HasMaxLength(100);
             entity.Property(e => e.DataCriacao).IsRequired();
+            entity.Property(e => e.DataAtualizacao);
         });
 
         // Configuração BackofficeUsuario
@@ -45,9 +47,11 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.Email).HasMaxLength(200).IsRequired();
             entity.Property(e => e.SenhaHash).HasMaxLength(500).IsRequired();
             entity.Property(e => e.PathImagem).HasMaxLength(500);
+            entity.Property(e => e.IsAtivo).IsRequired();
             entity.Property(e => e.UsuarioCriacao).HasMaxLength(100);
             entity.Property(e => e.DataCriacao).IsRequired();
             entity.Property(e => e.UsuarioAtualizacao).HasMaxLength(100);
+            entity.Property(e => e.DataAtualizacao);
 
             // Índice único para Email
             entity.HasIndex(e => e.Email).IsUnique();
@@ -66,9 +70,11 @@ public class ApplicationDbContext : DbContext
             entity.HasKey(e => e.Id);
 
             entity.Property(e => e.Nome).HasMaxLength(100).IsRequired();
+            entity.Property(e => e.IsAtivo).IsRequired();
             entity.Property(e => e.UsuarioCriacao).HasMaxLength(100);
             entity.Property(e => e.UsuarioAtualizacao).HasMaxLength(100);
             entity.Property(e => e.DataCriacao).IsRequired();
+            entity.Property(e => e.DataAtualizacao);
 
             // Índice único para Nome
             entity.HasIndex(e => e.Nome).IsUnique();
@@ -82,14 +88,17 @@ public class ApplicationDbContext : DbContext
 
             entity.Property(e => e.RazaoSocial).HasMaxLength(200).IsRequired();
             entity.Property(e => e.NomeFantasia).HasMaxLength(200).IsRequired();
+            entity.Property(e => e.TipoPessoaId).IsRequired();
             entity.Property(e => e.CpfCnpj).HasMaxLength(18).IsRequired();
             entity.Property(e => e.Subdominio).HasMaxLength(50).IsRequired();
             entity.Property(e => e.NomeSchema).HasMaxLength(100).IsRequired();
             entity.Property(e => e.CategoriaId).IsRequired();
             entity.Property(e => e.FatorContabil).HasPrecision(18, 4).IsRequired();
+            entity.Property(e => e.IsAtivo).IsRequired();
             entity.Property(e => e.UsuarioCriacao).HasMaxLength(100);
             entity.Property(e => e.UsuarioAtualizacao).HasMaxLength(100);
             entity.Property(e => e.DataCriacao).IsRequired();
+            entity.Property(e => e.DataAtualizacao);
 
             // Índices únicos
             entity.HasIndex(e => e.Subdominio).IsUnique();

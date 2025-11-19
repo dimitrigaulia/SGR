@@ -20,21 +20,71 @@
 
     <!-- Navegação -->
     <mat-nav-list class="sidenav-nav">
-      @for (item of navItems(); track item.route) {
-        <a
-          mat-list-item
-          [routerLink]="item.route"
-          routerLinkActive="active"
-          [routerLinkActiveOptions]="{exact: false}"
-          [matTooltip]="(isCollapsed() && !isHandset()) ? item.label : ''"
-          matTooltipPosition="right"
-          [attr.aria-label]="item.label"
-          (click)="onNavItemClick()">
-          <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
-          @if (!isCollapsed() || isHandset()) {
-            <span matListItemTitle>{{ item.label }}</span>
+      @if (!isCollapsed() || isHandset()) {
+        <div class="nav-items-container">
+          @for (item of navItems(); track item.label) {
+            @if (item.children && item.children.length > 0) {
+              <!-- Item com submenu - usar expansion panel standalone -->
+              <mat-expansion-panel 
+                [expanded]="isMenuExpanded(item.label)"
+                class="nav-expansion-panel"
+                [class.has-active-child]="hasActiveChild(item.children)"
+                [hideToggle]="false">
+                <mat-expansion-panel-header class="nav-expansion-header">
+                  <mat-panel-title>
+                    <div class="nav-panel-title">
+                      <mat-icon>{{ item.icon }}</mat-icon>
+                      <span>{{ item.label }}</span>
+                    </div>
+                  </mat-panel-title>
+                </mat-expansion-panel-header>
+                
+                <div class="nav-submenu">
+                  @for (child of item.children; track child.route || child.label) {
+                    <a
+                      mat-list-item
+                      [routerLink]="child.route!"
+                      routerLinkActive="active"
+                      [routerLinkActiveOptions]="{exact: false}"
+                      [attr.aria-label]="child.label"
+                      (click)="onNavItemClick()"
+                      class="nav-submenu-item">
+                      <mat-icon matListItemIcon>{{ child.icon }}</mat-icon>
+                      <span matListItemTitle>{{ child.label }}</span>
+                    </a>
+                  }
+                </div>
+              </mat-expansion-panel>
+            } @else {
+              <!-- Item sem submenu -->
+              <a
+                mat-list-item
+                [routerLink]="item.route!"
+                routerLinkActive="active"
+                [routerLinkActiveOptions]="{exact: false}"
+                [matTooltip]="(isCollapsed() && !isHandset()) ? item.label : ''"
+                matTooltipPosition="right"
+                [attr.aria-label]="item.label"
+                (click)="onNavItemClick()"
+                class="nav-item-single">
+                <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
+                <span matListItemTitle>{{ item.label }}</span>
+              </a>
+            }
           }
-        </a>
+        </div>
+      } @else {
+        <!-- Modo colapsado - apenas ícones -->
+        @for (item of navItems(); track item.label) {
+          <a
+            mat-list-item
+            [matTooltip]="item.label"
+            matTooltipPosition="right"
+            [attr.aria-label]="item.label"
+            class="nav-menu-header">
+            <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
+          </a>
+        }
       }
     </mat-nav-list>
 

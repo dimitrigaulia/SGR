@@ -53,7 +53,6 @@ export class TenantInsumoFormComponent {
     quantidadePorEmbalagem: 1,
     custoUnitario: 0,
     fatorCorrecao: 1.0,
-    estoqueMinimo: null,
     descricao: '',
     codigoBarras: '',
     pathImagem: '',
@@ -98,7 +97,6 @@ export class TenantInsumoFormComponent {
             quantidadePorEmbalagem: e.quantidadePorEmbalagem,
             custoUnitario: e.custoUnitario,
             fatorCorrecao: e.fatorCorrecao,
-            estoqueMinimo: e.estoqueMinimo,
             descricao: e.descricao || '',
             codigoBarras: e.codigoBarras || '',
             pathImagem: e.pathImagem || '',
@@ -108,6 +106,44 @@ export class TenantInsumoFormComponent {
           this.cdr.markForCheck();
         });
     }
+  }
+
+  private findUnidade(id: number | null | undefined): UnidadeMedidaDto | undefined {
+    if (!id) return undefined;
+    return this.unidades().find(u => u.id === id);
+  }
+
+  get resumoCustoPorUnidadeCompra(): string {
+    const unidadeCompra = this.findUnidade(this.model.unidadeCompraId);
+    const custo = this.model.custoUnitario || 0;
+    if (!unidadeCompra || custo <= 0) {
+      return '-';
+    }
+    const valor = custo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    return `${valor} / ${unidadeCompra.sigla}`;
+  }
+
+  get resumoCustoPorUnidadeUso(): string {
+    const unidadeCompra = this.findUnidade(this.model.unidadeCompraId);
+    const unidadeUso = this.findUnidade(this.model.unidadeUsoId);
+    const quantidadePorEmbalagem = this.model.quantidadePorEmbalagem;
+    const custo = this.model.custoUnitario || 0;
+
+    if (!unidadeCompra || !unidadeUso || !unidadeCompra.tipo || unidadeCompra.tipo !== unidadeUso.tipo) {
+      return '-';
+    }
+
+    const fatorCompraBase = unidadeCompra.fatorConversaoBase ?? 1;
+    const fatorUsoBase = unidadeUso.fatorConversaoBase ?? 1;
+
+    if (quantidadePorEmbalagem <= 0 || fatorCompraBase <= 0 || fatorUsoBase <= 0 || custo <= 0) {
+      return '-';
+    }
+
+    // custo por unidade de uso (sem considerar fator de correção, que é aplicado na receita)
+    const custoPorUnidadeUso = custo * fatorUsoBase / (quantidadePorEmbalagem * fatorCompraBase);
+    const valor = custoPorUnidadeUso.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    return `${valor} / ${unidadeUso.sigla}`;
   }
 
   save() {
@@ -129,7 +165,6 @@ export class TenantInsumoFormComponent {
         quantidadePorEmbalagem: v.quantidadePorEmbalagem,
         custoUnitario: v.custoUnitario || 0,
         fatorCorrecao: v.fatorCorrecao || 1.0,
-        estoqueMinimo: v.estoqueMinimo || undefined,
         descricao: v.descricao || undefined,
         codigoBarras: v.codigoBarras || undefined,
         pathImagem: v.pathImagem || undefined,
@@ -155,7 +190,6 @@ export class TenantInsumoFormComponent {
         quantidadePorEmbalagem: v.quantidadePorEmbalagem,
         custoUnitario: v.custoUnitario || 0,
         fatorCorrecao: v.fatorCorrecao || 1.0,
-        estoqueMinimo: v.estoqueMinimo || undefined,
         descricao: v.descricao || undefined,
         codigoBarras: v.codigoBarras || undefined,
         pathImagem: v.pathImagem || undefined,

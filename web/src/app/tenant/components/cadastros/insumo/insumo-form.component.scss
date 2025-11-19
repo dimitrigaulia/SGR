@@ -45,3 +45,41 @@
   }
 }
 
+.form-summary-row {
+  margin-top: 8px;
+}
+
+.form-summary-box {
+  border: 1px solid rgba(0,0,0,0.12);
+  border-radius: 4px;
+  padding: 12px 16px;
+  background: #fafafa;
+  font-size: 13px;
+}
+
+.form-summary-title {
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.form-summary-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+
+  .label {
+    color: rgba(0,0,0,0.6);
+  }
+
+  .value {
+    font-weight: 500;
+  }
+}
+
+.form-summary-hint {
+  margin-top: 4px;
+  font-size: 12px;
+  color: rgba(0,0,0,0.54);
+}
+

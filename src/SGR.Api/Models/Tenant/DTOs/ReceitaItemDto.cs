@@ -12,6 +12,8 @@ public class ReceitaItemDto
     public decimal Quantidade { get; set; }
     public decimal QuantidadeBruta { get; set; } // Quantidade × FatorCorrecao (calculado)
     public decimal CustoItem { get; set; } // Custo calculado do item
+    public decimal? CustoPorUnidadeUso { get; set; } // Custo por 1 unidade de uso
+    public decimal? CustoPor100UnidadesUso { get; set; } // Custo por 100 unidades de uso (peso/volume)
     public int Ordem { get; set; }
     public string? Observacoes { get; set; }
 }
