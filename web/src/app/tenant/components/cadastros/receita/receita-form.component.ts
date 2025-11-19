@@ -16,6 +16,7 @@ import { CategoriaReceitaService, CategoriaReceitaDto } from '../../../../featur
 import { InsumoService, InsumoDto } from '../../../../features/tenant-insumos/services/insumo.service';
 import { ToastService } from '../../../../core/services/toast.service';
 import { UploadService, UploadResponse } from '../../../../features/usuarios/services/upload.service';
+import { MatCardModule } from '@angular/material/card';
 
 type ReceitaItemFormModel = {
   insumoId: number | null;
@@ -30,7 +31,7 @@ type ReceitaItemFormModel = {
 @Component({
   standalone: true,
   selector: 'app-tenant-receita-form',
-  imports: [CommonModule, FormsModule, RouterLink, MatFormFieldModule, MatInputModule, MatButtonModule, MatSelectModule, MatSlideToggleModule, MatSnackBarModule, MatTableModule, MatIconModule],
+  imports: [CommonModule, FormsModule, MatCardModule, RouterLink, MatFormFieldModule, MatInputModule, MatButtonModule, MatSelectModule, MatSlideToggleModule, MatSnackBarModule, MatTableModule, MatIconModule],
   templateUrl: './receita-form.component.html',
   styleUrls: ['./receita-form.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -227,6 +228,15 @@ export class TenantReceitaFormComponent {
       }
       this.cdr.markForCheck();
     }
+  }
+
+  get pesoTotalTeorico(): number | null {
+    const pesoPorPorcao = this.model.pesoPorPorcao;
+    const rendimento = this.model.rendimento;
+    if (pesoPorPorcao && rendimento > 0) {
+      return pesoPorPorcao * rendimento;
+    }
+    return null;
   }
 
   formatCurrency(value: number | null | undefined): string {

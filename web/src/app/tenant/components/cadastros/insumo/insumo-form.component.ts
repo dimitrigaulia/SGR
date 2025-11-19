@@ -9,6 +9,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatCardModule } from '@angular/material/card';
 import { InsumoService, CreateInsumoRequest, UpdateInsumoRequest, InsumoDto } from '../../../../features/tenant-insumos/services/insumo.service';
 import { CategoriaInsumoService, CategoriaInsumoDto } from '../../../../features/tenant-categorias-insumo/services/categoria-insumo.service';
 import { UnidadeMedidaService, UnidadeMedidaDto } from '../../../../features/tenant-unidades-medida/services/unidade-medida.service';
@@ -20,7 +21,7 @@ type InsumoFormModel = Omit<InsumoDto, 'id' | 'categoriaNome' | 'unidadeCompraNo
 @Component({
   standalone: true,
   selector: 'app-tenant-insumo-form',
-  imports: [CommonModule, FormsModule, RouterLink, MatFormFieldModule, MatInputModule, MatButtonModule, MatSelectModule, MatSlideToggleModule, MatSnackBarModule],
+  imports: [CommonModule, FormsModule, RouterLink, MatFormFieldModule, MatInputModule, MatButtonModule, MatSelectModule, MatSlideToggleModule, MatSnackBarModule, MatCardModule],
   templateUrl: './insumo-form.component.html',
   styleUrls: ['./insumo-form.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -111,6 +112,29 @@ export class TenantInsumoFormComponent {
   private findUnidade(id: number | null | undefined): UnidadeMedidaDto | undefined {
     if (!id) return undefined;
     return this.unidades().find(u => u.id === id);
+  }
+
+  get unidadeCompraSelecionada(): UnidadeMedidaDto | undefined {
+    return this.findUnidade(this.model.unidadeCompraId);
+  }
+
+  get unidadeUsoSelecionada(): UnidadeMedidaDto | undefined {
+    return this.findUnidade(this.model.unidadeUsoId);
+  }
+
+  get tiposUnidadeMensagem(): string {
+    const compra = this.unidadeCompraSelecionada;
+    const uso = this.unidadeUsoSelecionada;
+
+    if (!compra || !uso) {
+      return 'Escolha primeiro as unidades de compra e de uso para ver como o sistema fará a conversão automática.';
+    }
+
+    if (compra.tipo && uso.tipo && compra.tipo === uso.tipo) {
+      return `Perfeito: o sistema converte automaticamente de ${compra.sigla} para ${uso.sigla} usando o tipo "${compra.tipo}".`;
+    }
+
+    return `Atenção: como as unidades têm tipos diferentes, a Quantidade por Embalagem deve estar na mesma unidade de uso (${uso.sigla}) para que o custo fique correto.`;
   }
 
   get resumoCustoPorUnidadeCompra(): string {

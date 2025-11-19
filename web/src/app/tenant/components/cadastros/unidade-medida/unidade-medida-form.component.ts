@@ -45,6 +45,7 @@ export class TenantUnidadeMedidaFormComponent {
     const id = st?.id as number | undefined;
     const view = !!st?.view;
     this.isView.set(view);
+
     // Carregar unidades base para o select (sempre, para criação e edição)
     this.service.list({ pageSize: 1000 })
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -74,11 +75,25 @@ export class TenantUnidadeMedidaFormComponent {
   save() {
     this.error.set('');
     if (this.isView()) return;
+
     if (!this.model.nome || !this.model.sigla) { 
       this.toast.error('Nome e sigla são obrigatórios'); 
       return; 
     }
+
+    // Validações entre UnidadeBase e FatorConversaoBase para evitar cadastros ambíguos
+    if (this.model.unidadeBaseId && (!this.model.fatorConversaoBase || this.model.fatorConversaoBase <= 0)) {
+      this.toast.error('Informe o fator de conversão base quando selecionar uma unidade base (ex.: 0,001 para g → kg).');
+      return;
+    }
+
+    if (!this.model.unidadeBaseId && this.model.fatorConversaoBase != null) {
+      this.toast.error('Para usar fator de conversão base, selecione também uma unidade base ou remova o fator.');
+      return;
+    }
+
     const v = this.model;
+
     if (this.id() === null) {
       const req: CreateUnidadeMedidaRequest = { 
         nome: v.nome, 
