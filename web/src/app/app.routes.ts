@@ -53,6 +53,8 @@ export const routes: Routes = [
       { path: "categorias-receita/cadastro", canActivate: [stateGuard], loadComponent: () => import("./tenant/components/cadastros/categoria-receita/categoria-receita-form.component").then(m => m.TenantCategoriaReceitaFormComponent) },
       { path: "receitas", loadComponent: () => import("./tenant/components/listagens/receita/receitas-list.component").then(m => m.TenantReceitasListComponent) },
       { path: "receitas/cadastro", canActivate: [stateGuard], loadComponent: () => import("./tenant/components/cadastros/receita/receita-form.component").then(m => m.TenantReceitaFormComponent) },
+      { path: "fichas-tecnicas", loadComponent: () => import("./tenant/components/listagens/ficha-tecnica/fichas-tecnicas-list.component").then(m => m.TenantFichasTecnicasListComponent) },
+      { path: "fichas-tecnicas/cadastro", canActivate: [stateGuard], loadComponent: () => import("./tenant/components/cadastros/ficha-tecnica/ficha-tecnica-form.component").then(m => m.TenantFichaTecnicaFormComponent) },
     ]
   },
   

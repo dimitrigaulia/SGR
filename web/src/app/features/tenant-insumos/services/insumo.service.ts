@@ -18,8 +18,8 @@ export interface InsumoDto {
   quantidadePorEmbalagem: number;
   custoUnitario: number;
   fatorCorrecao: number;
+  ipcValor?: number | null;
   descricao?: string | null;
-  codigoBarras?: string | null;
   pathImagem?: string | null;
   isAtivo: boolean;
 }
@@ -32,8 +32,8 @@ export interface CreateInsumoRequest {
   quantidadePorEmbalagem: number;
   custoUnitario: number;
   fatorCorrecao: number;
+  ipcValor?: number | null;
   descricao?: string | null;
-  codigoBarras?: string | null;
   pathImagem?: string | null;
   isAtivo: boolean;
 }
@@ -46,8 +46,8 @@ export interface UpdateInsumoRequest {
   quantidadePorEmbalagem: number;
   custoUnitario: number;
   fatorCorrecao: number;
+  ipcValor?: number | null;
   descricao?: string | null;
-  codigoBarras?: string | null;
   pathImagem?: string | null;
   isAtivo: boolean;
 }
@@ -100,15 +100,6 @@ export class InsumoService {
    */
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.base}/${id}`);
-  }
-
-  /**
-   * Verifica se um código de barras já está em uso
-   */
-  checkCodigoBarras(codigoBarras: string, excludeId?: number): Observable<{ exists: boolean }> {
-    const params: any = { codigoBarras };
-    if (excludeId) params.excludeId = excludeId;
-    return this.http.get<{ exists: boolean }>(`${this.base}/check-codigo-barras`, { params });
   }
 }
 

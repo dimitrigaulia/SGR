@@ -43,7 +43,6 @@ export class TenantInsumoFormComponent {
   isView = signal<boolean>(false);
   error = signal<string>('');
   previousImageUrl: string | null = null;
-  codigoBarrasTaken = false;
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
 
   model: InsumoFormModel = {
@@ -54,8 +53,8 @@ export class TenantInsumoFormComponent {
     quantidadePorEmbalagem: 1,
     custoUnitario: 0,
     fatorCorrecao: 1.0,
+    ipcValor: 0,
     descricao: '',
-    codigoBarras: '',
     pathImagem: '',
     isAtivo: true
   };
@@ -98,8 +97,8 @@ export class TenantInsumoFormComponent {
             quantidadePorEmbalagem: e.quantidadePorEmbalagem,
             custoUnitario: e.custoUnitario,
             fatorCorrecao: e.fatorCorrecao,
+            ipcValor: e.ipcValor ?? 0,
             descricao: e.descricao || '',
-            codigoBarras: e.codigoBarras || '',
             pathImagem: e.pathImagem || '',
             isAtivo: e.isAtivo
           };
@@ -175,7 +174,7 @@ export class TenantInsumoFormComponent {
     if (this.isView()) return;
     const v = this.model;
     // Validação simples
-    if (!v.nome || !v.categoriaId || !v.unidadeCompraId || !v.unidadeUsoId || !v.quantidadePorEmbalagem || this.codigoBarrasTaken) {
+    if (!v.nome || !v.categoriaId || !v.unidadeCompraId || !v.unidadeUsoId || !v.quantidadePorEmbalagem) {
       this.toast.error('Preencha os campos obrigatórios corretamente');
       return;
     }
@@ -190,7 +189,6 @@ export class TenantInsumoFormComponent {
         custoUnitario: v.custoUnitario || 0,
         fatorCorrecao: v.fatorCorrecao || 1.0,
         descricao: v.descricao || undefined,
-        codigoBarras: v.codigoBarras || undefined,
         pathImagem: v.pathImagem || undefined,
         isAtivo: !!v.isAtivo
       };
@@ -215,7 +213,6 @@ export class TenantInsumoFormComponent {
         custoUnitario: v.custoUnitario || 0,
         fatorCorrecao: v.fatorCorrecao || 1.0,
         descricao: v.descricao || undefined,
-        codigoBarras: v.codigoBarras || undefined,
         pathImagem: v.pathImagem || undefined,
         isAtivo: !!v.isAtivo
       };
@@ -278,25 +275,5 @@ export class TenantInsumoFormComponent {
       });
   }
 
-  onCodigoBarrasBlur(value: string) {
-    if (!value) { 
-      this.codigoBarrasTaken = false; 
-      this.cdr.markForCheck();
-      return; 
-    }
-    const excludeId = this.id() ?? undefined;
-    this.service.checkCodigoBarras(value, excludeId)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({ 
-        next: res => {
-          this.codigoBarrasTaken = res.exists;
-          this.cdr.markForCheck();
-        }, 
-        error: () => {
-          this.codigoBarrasTaken = false;
-          this.cdr.markForCheck();
-        }
-      });
-  }
 }
 

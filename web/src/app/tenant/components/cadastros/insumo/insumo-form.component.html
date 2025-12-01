@@ -9,8 +9,8 @@
       <ol style="margin: 0 0 0 16px; padding: 0; font-size: 13px;">
         <li>Escolha a categoria do insumo.</li>
         <li>Informe como ele é comprado (Unidade de Compra, Quantidade por Embalagem e Custo Unitário).</li>
-        <li>Informe como ele é usado nas receitas (Unidade de Uso — recomendado: g, mL ou un).</li>
-        <li>Defina o Fator de Correção para considerar perdas de limpeza/preparo (ex.: 1,10 = 10% de perda).</li>
+        <li>Informe como ele é usado nas receitas (Unidade de Uso – recomendado: g, mL ou un).</li>
+        <li>Defina o IPC (%) para considerar perdas de limpeza/preparo (ex.: 10% de perda).</li>
       </ol>
     </mat-card-content>
   </mat-card>
@@ -77,12 +77,9 @@
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="form-field-spacing">
-        <mat-label>Fator de Correção</mat-label>
-        <input matInput type="number" name="fatorCorrecao" [(ngModel)]="model.fatorCorrecao" [disabled]="isView()" required min="1.0" step="0.01" />
-        <mat-hint>Ex: 1.10 = 10% de perda</mat-hint>
-        @if (f.controls['fatorCorrecao']?.errors?.['min']) {
-          <mat-error>Fator de correção deve ser maior ou igual a 1.0</mat-error>
-        }
+        <mat-label>IPC (%) - Índice de Partes Comestíveis</mat-label>
+        <input matInput type="number" name="ipcValor" [(ngModel)]="model.ipcValor" [disabled]="isView()" min="0" max="999" step="1" />
+        <mat-hint>Ex: 0 = sem perda, 10 = 10% de perda.</mat-hint>
       </mat-form-field>
     </div>
 
@@ -134,14 +131,6 @@
       <textarea matInput name="descricao" [(ngModel)]="model.descricao" [disabled]="isView()" rows="3"></textarea>
     </mat-form-field>
 
-    <mat-form-field appearance="outline" class="form-field-spacing">
-      <mat-label>Código de Barras</mat-label>
-      <input matInput name="codigoBarras" [(ngModel)]="model.codigoBarras" (blur)="onCodigoBarrasBlur(model.codigoBarras || '')" [disabled]="isView()" maxlength="50" />
-      @if (codigoBarrasTaken) {
-        <mat-error>Este código de barras já está em uso</mat-error>
-      }
-    </mat-form-field>
-
     <div class="form-toggle-wrapper">
       <mat-slide-toggle name="isAtivo" [(ngModel)]="model.isAtivo" [disabled]="isView()">Ativo</mat-slide-toggle>
     </div>
@@ -169,3 +158,4 @@
     </div>
   </form>
 </div>
+

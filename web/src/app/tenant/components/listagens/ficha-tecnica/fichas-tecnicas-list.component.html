@@ -1,0 +1,83 @@
+<div class="list-container">
+  <mat-card>
+    <mat-card-title>Fichas Técnicas</mat-card-title>
+    <mat-card-content>
+      <div class="toolbar">
+        <mat-form-field appearance="outline" class="search-field">
+          <mat-label>Buscar</mat-label>
+          <input matInput [(ngModel)]="searchTerm" (ngModelChange)="onSearchChange()" placeholder="Nome, código ou receita" />
+          @if (searchTerm) {
+            <button mat-icon-button matSuffix type="button" (click)="clearSearch()">
+              <mat-icon>clear</mat-icon>
+            </button>
+          }
+        </mat-form-field>
+        <button mat-raised-button color="primary" type="button" routerLink="/tenant/fichas-tecnicas/cadastro">
+          <mat-icon>add</mat-icon>
+          Nova ficha técnica
+        </button>
+      </div>
+
+      <div class="table-wrapper">
+        <table mat-table [dataSource]="data()" matSort (matSortChange)="onSort($event)">
+          <ng-container matColumnDef="nome">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header="nome">Nome</th>
+            <td mat-cell *matCellDef="let row">{{ row.nome }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="receita">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header="receita">Receita</th>
+            <td mat-cell *matCellDef="let row">{{ row.receitaNome }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="codigo">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header="codigo">Código</th>
+            <td mat-cell *matCellDef="let row">{{ row.codigo || '-' }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="custoTecnicoPorPorcao">
+            <th mat-header-cell *matHeaderCellDef>Custo técnico/porção</th>
+            <td mat-cell *matCellDef="let row">{{ formatCurrency(row.custoTecnicoPorPorcao) }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="canais">
+            <th mat-header-cell *matHeaderCellDef>Canais</th>
+            <td mat-cell *matCellDef="let row">{{ row.canais.length }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="ativo">
+            <th mat-header-cell *matHeaderCellDef>Ativo</th>
+            <td mat-cell *matCellDef="let row">
+              <mat-icon [ngClass]="row.isAtivo ? 'ativo' : 'inativo'">
+                {{ row.isAtivo ? 'check_circle' : 'cancel' }}
+              </mat-icon>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="acoes">
+            <th mat-header-cell *matHeaderCellDef>Ações</th>
+            <td mat-cell *matCellDef="let row">
+              <button mat-icon-button matTooltip="Visualizar" type="button" (click)="view(row)">
+                <mat-icon>visibility</mat-icon>
+              </button>
+              <button mat-icon-button matTooltip="Editar" type="button" (click)="edit(row)">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button mat-icon-button matTooltip="Excluir" type="button" color="warn" (click)="delete(row.id)">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+        </table>
+      </div>
+
+      <mat-paginator [length]="total()" [pageIndex]="pageIndex()" [pageSize]="pageSize()" [pageSizeOptions]="[5,10,25]"
+                     (page)="pageChanged($event)">
+      </mat-paginator>
+    </mat-card-content>
+  </mat-card>
+</div>
+

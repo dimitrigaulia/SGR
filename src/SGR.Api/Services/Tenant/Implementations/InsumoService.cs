@@ -18,6 +18,17 @@ public class InsumoService : BaseService<TenantDbContext, Insumo, InsumoDto, Cre
     {
     }
 
+    private static decimal CalcularFatorCorrecao(decimal fatorCorrecaoRequest, int? ipcValor)
+    {
+        if (ipcValor.HasValue)
+        {
+            var v = Math.Clamp(ipcValor.Value, 0, 999);
+            return 1m + (v / 100m);
+        }
+
+        return fatorCorrecaoRequest <= 0 ? 1.0m : fatorCorrecaoRequest;
+    }
+
     protected override IQueryable<Insumo> ApplySearch(IQueryable<Insumo> query, string? search)
     {
         if (string.IsNullOrWhiteSpace(search)) return query;
@@ -25,7 +36,6 @@ public class InsumoService : BaseService<TenantDbContext, Insumo, InsumoDto, Cre
         return query.Where(i =>
             EF.Functions.ILike(i.Nome, $"%{search}%") ||
             (i.Descricao != null && EF.Functions.ILike(i.Descricao, $"%{search}%")) ||
-            (i.CodigoBarras != null && EF.Functions.ILike(i.CodigoBarras, $"%{search}%")) ||
             (i.Categoria != null && EF.Functions.ILike(i.Categoria.Nome, $"%{search}%")) ||
             (i.UnidadeCompra != null && EF.Functions.ILike(i.UnidadeCompra.Nome, $"%{search}%")) ||
             (i.UnidadeUso != null && EF.Functions.ILike(i.UnidadeUso.Nome, $"%{search}%")));
@@ -49,7 +59,7 @@ public class InsumoService : BaseService<TenantDbContext, Insumo, InsumoDto, Cre
     public override async Task<PagedResult<InsumoDto>> GetAllAsync(string? search, int page, int pageSize, string? sort, string? order)
     {
         _logger.LogInformation(
-            "Buscando {EntityType} - Página: {Page}, Tamanho: {PageSize}, Busca: {Search}",
+            "Buscando {EntityType} - Págaina: {Page}, Tamanho: {PageSize}, Busca: {Search}",
             typeof(Insumo).Name, page, pageSize, search ?? "N/A");
 
         var query = _dbSet
@@ -111,8 +121,8 @@ public class InsumoService : BaseService<TenantDbContext, Insumo, InsumoDto, Cre
             QuantidadePorEmbalagem = i.QuantidadePorEmbalagem,
             CustoUnitario = i.CustoUnitario,
             FatorCorrecao = i.FatorCorrecao,
+            IpcValor = i.FatorCorrecao >= 1m ? (int?)Math.Round((i.FatorCorrecao - 1m) * 100m) : null,
             Descricao = i.Descricao,
-            CodigoBarras = i.CodigoBarras,
             PathImagem = i.PathImagem,
             IsAtivo = i.IsAtivo,
             UsuarioAtualizacao = i.UsuarioAtualizacao,
@@ -122,6 +132,8 @@ public class InsumoService : BaseService<TenantDbContext, Insumo, InsumoDto, Cre
 
     protected override Insumo MapToEntity(CreateInsumoRequest request)
     {
+        var fatorCorrecao = CalcularFatorCorrecao(request.FatorCorrecao, request.IpcValor);
+
         return new Insumo
         {
             Nome = request.Nome,
@@ -130,9 +142,8 @@ public class InsumoService : BaseService<TenantDbContext, Insumo, InsumoDto, Cre
             UnidadeUsoId = request.UnidadeUsoId,
             QuantidadePorEmbalagem = request.QuantidadePorEmbalagem,
             CustoUnitario = request.CustoUnitario,
-            FatorCorrecao = request.FatorCorrecao,
+            FatorCorrecao = fatorCorrecao,
             Descricao = request.Descricao,
-            CodigoBarras = request.CodigoBarras,
             PathImagem = request.PathImagem,
             IsAtivo = request.IsAtivo
         };
@@ -140,15 +151,16 @@ public class InsumoService : BaseService<TenantDbContext, Insumo, InsumoDto, Cre
 
     protected override void UpdateEntity(Insumo entity, UpdateInsumoRequest request)
     {
+        var fatorCorrecao = CalcularFatorCorrecao(request.FatorCorrecao, request.IpcValor);
+
         entity.Nome = request.Nome;
         entity.CategoriaId = request.CategoriaId;
         entity.UnidadeCompraId = request.UnidadeCompraId;
         entity.UnidadeUsoId = request.UnidadeUsoId;
         entity.QuantidadePorEmbalagem = request.QuantidadePorEmbalagem;
         entity.CustoUnitario = request.CustoUnitario;
-        entity.FatorCorrecao = request.FatorCorrecao;
+        entity.FatorCorrecao = fatorCorrecao;
         entity.Descricao = request.Descricao;
-        entity.CodigoBarras = request.CodigoBarras;
         entity.PathImagem = request.PathImagem;
         entity.IsAtivo = request.IsAtivo;
     }
@@ -174,16 +186,6 @@ public class InsumoService : BaseService<TenantDbContext, Insumo, InsumoDto, Cre
         {
             throw new BusinessException("Unidade de uso inválida ou inativa");
         }
-
-        // Validar código de barras único (se informado)
-        if (!string.IsNullOrWhiteSpace(request.CodigoBarras))
-        {
-            var codigoExists = await _context.Set<Insumo>().AnyAsync(i => i.CodigoBarras == request.CodigoBarras);
-            if (codigoExists)
-            {
-                throw new BusinessException("Código de barras já está em uso");
-            }
-        }
     }
 
     protected override async Task BeforeUpdateAsync(Insumo entity, UpdateInsumoRequest request, string? usuarioAtualizacao)
@@ -207,29 +209,5 @@ public class InsumoService : BaseService<TenantDbContext, Insumo, InsumoDto, Cre
         {
             throw new BusinessException("Unidade de uso inválida ou inativa");
         }
-
-        // Validar código de barras único (se informado)
-        if (!string.IsNullOrWhiteSpace(request.CodigoBarras))
-        {
-            var codigoTaken = await _context.Set<Insumo>().AnyAsync(i => i.CodigoBarras == request.CodigoBarras && i.Id != entity.Id);
-            if (codigoTaken)
-            {
-                throw new BusinessException("Código de barras já está em uso");
-            }
-        }
-    }
-
-    public async Task<bool> CodigoBarrasExistsAsync(string codigoBarras, long? excludeId = null)
-    {
-        if (string.IsNullOrWhiteSpace(codigoBarras))
-            return false;
-
-        var query = _context.Set<Insumo>().Where(i => i.CodigoBarras == codigoBarras);
-        if (excludeId.HasValue)
-        {
-            query = query.Where(i => i.Id != excludeId.Value);
-        }
-        return await query.AnyAsync();
     }
 }
-

@@ -16,8 +16,8 @@ public class InsumoDto
     public decimal QuantidadePorEmbalagem { get; set; }
     public decimal CustoUnitario { get; set; }
     public decimal FatorCorrecao { get; set; }
+    public int? IpcValor { get; set; }
     public string? Descricao { get; set; }
-    public string? CodigoBarras { get; set; }
     public string? PathImagem { get; set; }
     public bool IsAtivo { get; set; }
     public string? UsuarioAtualizacao { get; set; }

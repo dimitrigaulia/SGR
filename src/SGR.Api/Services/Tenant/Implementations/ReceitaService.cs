@@ -26,6 +26,23 @@ public class ReceitaService : IReceitaService
         return item.Quantidade * insumo.FatorCorrecao;
     }
 
+    private static decimal CalcularFatorRendimentoFromIc(decimal fatorRendimentoRequest, string? icSinal, int? icValor)
+    {
+        if (!string.IsNullOrWhiteSpace(icSinal) && icValor.HasValue)
+        {
+            var sinal = icSinal.Trim();
+            var v = Math.Clamp(icValor.Value, 0, 999);
+            var delta = v / 100m;
+
+            decimal fator = sinal == "-" ? 1m - delta : 1m + delta;
+            if (fator < 0.01m) fator = 0.01m;
+            if (fator > 10m) fator = 10m;
+            return fator;
+        }
+
+        return fatorRendimentoRequest <= 0 ? 1.0m : fatorRendimentoRequest;
+    }
+
     private decimal CalcularCustoItem(ReceitaItem item, Insumo insumo)
     {
         var quantidadeBruta = CalcularQuantidadeBruta(item, insumo);
@@ -191,6 +208,8 @@ public class ReceitaService : IReceitaService
         }
 
         // Criar receita
+        var fatorRendimento = CalcularFatorRendimentoFromIc(request.FatorRendimento, request.IcSinal, request.IcValor);
+
         var receita = new Receita
         {
             Nome = request.Nome,
@@ -200,7 +219,7 @@ public class ReceitaService : IReceitaService
             Rendimento = request.Rendimento,
             PesoPorPorcao = request.PesoPorPorcao,
             ToleranciaPeso = request.ToleranciaPeso,
-            FatorRendimento = request.FatorRendimento,
+            FatorRendimento = fatorRendimento,
             TempoPreparo = request.TempoPreparo,
             Versao = request.Versao ?? "1.0",
             PathImagem = request.PathImagem,
@@ -283,7 +302,7 @@ public class ReceitaService : IReceitaService
         receita.Rendimento = request.Rendimento;
         receita.PesoPorPorcao = request.PesoPorPorcao;
         receita.ToleranciaPeso = request.ToleranciaPeso;
-        receita.FatorRendimento = request.FatorRendimento;
+        receita.FatorRendimento = CalcularFatorRendimentoFromIc(request.FatorRendimento, request.IcSinal, request.IcValor);
         receita.TempoPreparo = request.TempoPreparo;
         receita.Versao = request.Versao ?? "1.0";
         receita.PathImagem = request.PathImagem;
@@ -462,6 +481,23 @@ public class ReceitaService : IReceitaService
 
     private ReceitaDto MapToDto(Receita receita)
     {
+        string? icSinal = null;
+        int? icValor = null;
+
+        if (receita.FatorRendimento > 0)
+        {
+            if (receita.FatorRendimento >= 1m)
+            {
+                icSinal = "+";
+                icValor = (int)Math.Round((receita.FatorRendimento - 1m) * 100m);
+            }
+            else
+            {
+                icSinal = "-";
+                icValor = (int)Math.Round((1m - receita.FatorRendimento) * 100m);
+            }
+        }
+
         return new ReceitaDto
         {
             Id = receita.Id,
@@ -474,6 +510,8 @@ public class ReceitaService : IReceitaService
             PesoPorPorcao = receita.PesoPorPorcao,
             ToleranciaPeso = receita.ToleranciaPeso,
             FatorRendimento = receita.FatorRendimento,
+            IcSinal = icSinal,
+            IcValor = icValor,
             TempoPreparo = receita.TempoPreparo,
             Versao = receita.Versao,
             CustoTotal = receita.CustoTotal,

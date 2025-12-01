@@ -63,6 +63,8 @@ export class TenantReceitaFormComponent {
     pesoPorPorcao: null as number | null,
     toleranciaPeso: null as number | null,
     fatorRendimento: 1.0,
+    icSinal: '-' as string | null,
+    icValor: 0 as number | null,
     tempoPreparo: null as number | null,
     versao: '1.0',
     pathImagem: '',
@@ -71,6 +73,14 @@ export class TenantReceitaFormComponent {
 
   itens = signal<ReceitaItemFormModel[]>([]);
   displayedColumns = ['ordem', 'insumo', 'quantidade', 'observacoes', 'acoes'];
+
+  get fatorRendimentoCalculado(): number {
+    const sinal = this.model.icSinal || '-';
+    const v = this.model.icValor ?? 0;
+    const delta = Math.max(0, Math.min(999, v)) / 100;
+    if (delta === 0) return 1.0;
+    return sinal === '-' ? 1 - delta : 1 + delta;
+  }
 
   constructor() {
     // Carregar categorias e insumos
@@ -111,6 +121,8 @@ export class TenantReceitaFormComponent {
             pesoPorPorcao: e.pesoPorPorcao ?? null,
             toleranciaPeso: e.toleranciaPeso ?? null,
             fatorRendimento: e.fatorRendimento,
+            icSinal: e.icSinal ?? '-',
+            icValor: e.icValor ?? 0,
             tempoPreparo: e.tempoPreparo ?? null,
             versao: e.versao || '1.0',
             pathImagem: e.pathImagem || '',
@@ -334,7 +346,9 @@ export class TenantReceitaFormComponent {
         rendimento: v.rendimento,
         pesoPorPorcao: v.pesoPorPorcao || undefined,
         toleranciaPeso: v.toleranciaPeso || undefined,
-        fatorRendimento: v.fatorRendimento || 1.0,
+        fatorRendimento: this.fatorRendimentoCalculado || 1.0,
+        icSinal: v.icSinal || undefined,
+        icValor: v.icValor ?? undefined,
         tempoPreparo: v.tempoPreparo || undefined,
         versao: v.versao || '1.0',
         pathImagem: v.pathImagem || undefined,
@@ -364,7 +378,9 @@ export class TenantReceitaFormComponent {
         rendimento: v.rendimento,
         pesoPorPorcao: v.pesoPorPorcao || undefined,
         toleranciaPeso: v.toleranciaPeso || undefined,
-        fatorRendimento: v.fatorRendimento || 1.0,
+        fatorRendimento: this.fatorRendimentoCalculado || 1.0,
+        icSinal: v.icSinal || undefined,
+        icValor: v.icValor ?? undefined,
         tempoPreparo: v.tempoPreparo || undefined,
         versao: v.versao || '1.0',
         pathImagem: v.pathImagem || undefined,

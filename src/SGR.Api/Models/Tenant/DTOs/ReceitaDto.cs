@@ -12,6 +12,8 @@ public class ReceitaDto
     public decimal? PesoPorPorcao { get; set; }
     public decimal? ToleranciaPeso { get; set; }
     public decimal FatorRendimento { get; set; }
+    public string? IcSinal { get; set; }
+    public int? IcValor { get; set; }
     public int? TempoPreparo { get; set; }
     public string? Versao { get; set; }
     public decimal CustoTotal { get; set; }

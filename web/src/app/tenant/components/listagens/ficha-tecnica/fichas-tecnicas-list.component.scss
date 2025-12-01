@@ -1,0 +1,28 @@
+.list-container {
+  padding: 16px;
+}
+
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  gap: 16px;
+}
+
+.search-field {
+  flex: 1;
+}
+
+.table-wrapper {
+  overflow: auto;
+}
+
+.ativo {
+  color: #2e7d32;
+}
+
+.inativo {
+  color: #c62828;
+}
+

@@ -14,7 +14,6 @@ public class Insumo
 	public decimal CustoUnitario { get; set; } // Custo por unidade de compra
 	public decimal FatorCorrecao { get; set; } = 1.0m; // Fator de perda/preparo (1.0 = sem perda, 1.10 = 10% de perda)
     public string? Descricao { get; set; }
-    public string? CodigoBarras { get; set; }
     public string? PathImagem { get; set; }
     public bool IsAtivo { get; set; }
     public string? UsuarioCriacao { get; set; }

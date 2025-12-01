@@ -577,9 +577,17 @@ public class TenantService : BaseService<ApplicationDbContext, TenantEntity, Ten
         
         // Usar SQL direto para inserir os dados iniciais
         var sql = $@"
-            -- Inserir Perfil ""Administrador""
+            -- Inserir Perfil ""Administrador"" e perfis padr��o
             INSERT INTO ""{schemaName}"".""Perfil"" (""Nome"", ""IsAtivo"", ""UsuarioCriacao"", ""DataCriacao"")
             VALUES ('Administrador', true, '{usuarioCriacaoValue}', {dataCriacao})
+            ON CONFLICT DO NOTHING;
+
+            INSERT INTO ""{schemaName}"".""Perfil"" (""Nome"", ""IsAtivo"", ""UsuarioCriacao"", ""DataCriacao"")
+            VALUES 
+                ('Diretor', true, '{usuarioCriacaoValue}', {dataCriacao}),
+                ('Ger��ncia', true, '{usuarioCriacaoValue}', {dataCriacao}),
+                ('Coordenador de Equipe', true, '{usuarioCriacaoValue}', {dataCriacao}),
+                ('Chef on Line', true, '{usuarioCriacaoValue}', {dataCriacao})
             ON CONFLICT DO NOTHING;
 
             -- Inserir Categorias de Insumo padrão

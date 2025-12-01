@@ -1,0 +1,84 @@
+.form-container {
+  padding: 16px;
+}
+
+.form-title {
+  margin-bottom: 16px;
+}
+
+.form-field-spacing {
+  width: 100%;
+  margin-bottom: 12px;
+}
+
+.form-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.form-row .form-field-spacing {
+  flex: 1;
+}
+
+.form-section {
+  margin-top: 16px;
+  margin-bottom: 16px;
+}
+
+.custo-grid {
+  display: flex;
+  gap: 24px;
+}
+
+.custo-grid .label {
+  font-size: 12px;
+  color: #666;
+}
+
+.custo-grid .value {
+  font-weight: 600;
+}
+
+.table-wrapper {
+  overflow: auto;
+  margin-bottom: 8px;
+}
+
+.full-width-table {
+  width: 100%;
+}
+
+.presets-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.presets-label {
+  font-size: 13px;
+  color: #666;
+}
+
+.taxas-row {
+  display: flex;
+  gap: 8px;
+}
+
+.form-toggle-wrapper {
+  margin-top: 12px;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.form-error {
+  color: #c62828;
+  margin-top: 8px;
+}

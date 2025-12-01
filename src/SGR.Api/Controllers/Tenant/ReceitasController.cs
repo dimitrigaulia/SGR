@@ -52,6 +52,63 @@ public class ReceitasController : ControllerBase
     }
 
     /// <summary>
+    /// Visualiza a receita em HTML para impress��o/PDF
+    /// </summary>
+    [HttpGet("{id:long}/print")]
+    [AllowAnonymous]
+    public async Task<IActionResult> Print(long id)
+    {
+        var receita = await _service.GetByIdAsync(id);
+        if (receita == null) return NotFound();
+
+        var html = $@"
+<!DOCTYPE html>
+<html lang=""pt-BR"">
+<head>
+  <meta charset=""utf-8"" />
+  <title>Receita - {System.Net.WebUtility.HtmlEncode(receita.Nome)}</title>
+  <style>
+    body {{ font-family: Arial, sans-serif; font-size: 12px; margin: 16px; }}
+    h1 {{ font-size: 20px; margin-bottom: 4px; }}
+    h2 {{ font-size: 16px; margin-top: 16px; margin-bottom: 4px; }}
+    table {{ width: 100%; border-collapse: collapse; margin-top: 8px; }}
+    th, td {{ border: 1px solid #ccc; padding: 4px; text-align: left; }}
+    th {{ background: #f2f2f2; }}
+  </style>
+</head>
+<body>
+  <h1>Receita: {System.Net.WebUtility.HtmlEncode(receita.Nome)}</h1>
+  <p><strong>Categoria:</strong> {System.Net.WebUtility.HtmlEncode(receita.CategoriaNome ?? string.Empty)}</p>
+  <p><strong>Rendimento:</strong> {receita.Rendimento} por��es</p>
+  <p><strong>Peso por por��ǜo:</strong> {(receita.PesoPorPorcao?.ToString("0.##") ?? "-")} g</p>
+  <p><strong>Custo total:</strong> {receita.CustoTotal:C}</p>
+  <p><strong>Custo por por��ǜo:</strong> {receita.CustoPorPorcao:C}</p>
+
+  <h2>Itens</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Insumo</th>
+        <th>Quantidade</th>
+        <th>Custo do item</th>
+      </tr>
+    </thead>
+    <tbody>
+      {string.Join("", receita.Itens.Select((i, idx) =>
+        $"<tr><td>{idx + 1}</td><td>{System.Net.WebUtility.HtmlEncode(i.InsumoNome ?? \"\")}</td><td>{i.Quantidade} {System.Net.WebUtility.HtmlEncode(i.UnidadeUsoSigla ?? \"\")}</td><td>{i.CustoItem:C}</td></tr>"))}
+    </tbody>
+  </table>
+
+  <h2>Modo de preparo</h2>
+  <p>{System.Net.WebUtility.HtmlEncode(receita.Descricao ?? string.Empty)}</p>
+</body>
+</html>";
+
+        return Content(html, "text/html; charset=utf-8");
+    }
+
+    /// <summary>
     /// Cria uma nova receita
     /// </summary>
     [HttpPost]

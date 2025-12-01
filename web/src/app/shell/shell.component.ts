@@ -82,7 +82,7 @@ export class ShellComponent implements AfterViewInit {
     }
 
     // Itens específicos do tenant
-    if (context === 'tenant') {
+        if (context === 'tenant') {
       items.push(
         {
           icon: 'inventory_2',
@@ -90,6 +90,7 @@ export class ShellComponent implements AfterViewInit {
           children: [
             { icon: 'inventory_2', label: 'Insumos', route: `${baseUrl}/insumos` },
             { icon: 'restaurant', label: 'Receitas', route: `${baseUrl}/receitas` },
+            { icon: 'description', label: 'Fichas T��cnicas', route: `${baseUrl}/fichas-tecnicas` },
             { icon: 'category', label: 'Categorias de Insumo', route: `${baseUrl}/categorias-insumo` },
             { icon: 'category', label: 'Categorias de Receita', route: `${baseUrl}/categorias-receita` },
             { icon: 'straighten', label: 'Unidades de Medida', route: `${baseUrl}/unidades-medida` }
