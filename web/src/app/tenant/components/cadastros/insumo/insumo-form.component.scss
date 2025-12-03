@@ -24,3 +24,28 @@
   }
 }
 
+.hint-responsive {
+  font-size: 12px;
+  line-height: 1.4;
+  
+  .hint-full {
+    display: block;
+  }
+  
+  .hint-mobile {
+    display: none;
+  }
+  
+  @media (max-width: 599px) {
+    font-size: 11px;
+    
+    .hint-full {
+      display: none;
+    }
+    
+    .hint-mobile {
+      display: block;
+    }
+  }
+}
+

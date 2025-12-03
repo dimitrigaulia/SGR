@@ -2,3 +2,28 @@
 // Os estilos globais de formulário estão em styles.scss
 // Este arquivo pode ser usado para estilos específicos deste componente se necessário
 
+.hint-responsive {
+  font-size: 12px;
+  line-height: 1.4;
+  
+  .hint-full {
+    display: block;
+  }
+  
+  .hint-mobile {
+    display: none;
+  }
+  
+  @media (max-width: 599px) {
+    font-size: 11px;
+    
+    .hint-full {
+      display: none;
+    }
+    
+    .hint-mobile {
+      display: block;
+    }
+  }
+}
+
