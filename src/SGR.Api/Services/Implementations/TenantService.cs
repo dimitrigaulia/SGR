@@ -410,6 +410,9 @@ public class TenantService : BaseService<ApplicationDbContext, TenantEntity, Ten
             // Configurar o schema no contexto
             _tenantContext.SetSchema(schemaName);
             
+            // Executar migrações de estrutura antiga (se necessário)
+            await MigrateOldSchemaAsync(schemaName);
+            
             // Criar as tabelas diretamente via SQL (já que não temos migrations específicas ainda)
             await CreateTenantTablesAsync(schemaName);
             
@@ -419,6 +422,81 @@ public class TenantService : BaseService<ApplicationDbContext, TenantEntity, Ten
         {
             _logger.LogError(ex, "Erro ao executar migrations no schema {Schema}", schemaName);
             throw;
+        }
+    }
+
+    /// <summary>
+    /// Migra todos os schemas de tenant existentes para corrigir estruturas antigas
+    /// </summary>
+    public async Task MigrateAllTenantSchemasAsync()
+    {
+        try
+        {
+            _logger.LogInformation("Iniciando migração de todos os schemas de tenant...");
+            
+            // Buscar todos os tenants ativos
+            var tenants = await _dbSet
+                .Where(t => t.IsAtivo && !string.IsNullOrEmpty(t.NomeSchema))
+                .ToListAsync();
+            
+            _logger.LogInformation("Encontrados {Count} tenant(s) para migração", tenants.Count);
+            
+            foreach (var tenant in tenants)
+            {
+                try
+                {
+                    _logger.LogInformation("Migrando schema {Schema} do tenant {Subdominio}", tenant.NomeSchema, tenant.Subdominio);
+                    await MigrateOldSchemaAsync(tenant.NomeSchema);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Erro ao migrar schema {Schema} do tenant {Subdominio}", tenant.NomeSchema, tenant.Subdominio);
+                    // Continua com os próximos tenants mesmo se um falhar
+                }
+            }
+            
+            _logger.LogInformation("Migração de todos os schemas concluída");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao executar migração de todos os schemas de tenant");
+            throw;
+        }
+    }
+
+    private async Task MigrateOldSchemaAsync(string schemaName)
+    {
+        try
+        {
+            _logger.LogInformation("Verificando migrações de estrutura antiga no schema {Schema}", schemaName);
+            
+            // Usar uma abordagem direta: tentar renomear se existir
+            var renameColumnSql = $@"
+                DO $$
+                BEGIN
+                    IF EXISTS (
+                        SELECT 1 
+                        FROM information_schema.columns 
+                        WHERE table_schema = '{schemaName}' 
+                        AND table_name = 'Insumo' 
+                        AND column_name = 'CategoriaInsumoId'
+                    ) THEN
+                        ALTER TABLE ""{schemaName}"".""Insumo"" 
+                        RENAME COLUMN ""CategoriaInsumoId"" TO ""CategoriaId"";
+                        RAISE NOTICE 'Coluna CategoriaInsumoId renomeada para CategoriaId no schema %', '{schemaName}';
+                    ELSE
+                        RAISE NOTICE 'Coluna CategoriaInsumoId não encontrada no schema % (schema pode ser novo ou já migrado)', '{schemaName}';
+                    END IF;
+                END $$;
+            ";
+            
+            await _tenantContext.Database.ExecuteSqlRawAsync(renameColumnSql);
+            _logger.LogInformation("Migração de estrutura antiga concluída no schema {Schema}", schemaName);
+        }
+        catch (Exception ex)
+        {
+            // Log mas não falha - pode ser que a coluna não exista (schema novo)
+            _logger.LogWarning(ex, "Erro ao executar migração de estrutura antiga no schema {Schema} (pode ser normal se o schema for novo)", schemaName);
         }
     }
 
@@ -474,15 +552,11 @@ public class TenantService : BaseService<ApplicationDbContext, TenantEntity, Ten
                 ""Id"" BIGSERIAL PRIMARY KEY,
                 ""Nome"" VARCHAR(50) NOT NULL,
                 ""Sigla"" VARCHAR(10) NOT NULL,
-                ""Tipo"" VARCHAR(20),
-                ""UnidadeBaseId"" BIGINT,
-                ""FatorConversaoBase"" DECIMAL(18, 6),
                 ""IsAtivo"" BOOLEAN NOT NULL DEFAULT true,
                 ""UsuarioCriacao"" VARCHAR(100),
                 ""UsuarioAtualizacao"" VARCHAR(100),
                 ""DataCriacao"" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT (NOW() AT TIME ZONE 'utc'),
-                ""DataAtualizacao"" TIMESTAMP WITH TIME ZONE,
-                CONSTRAINT ""FK_UnidadeMedida_UnidadeBase_{schemaName}"" FOREIGN KEY (""UnidadeBaseId"") REFERENCES ""{schemaName}"".""UnidadeMedida""(""Id"") ON DELETE RESTRICT
+                ""DataAtualizacao"" TIMESTAMP WITH TIME ZONE
             );
 
             -- Índices únicos para Nome e Sigla da Unidade
@@ -500,7 +574,6 @@ public class TenantService : BaseService<ApplicationDbContext, TenantEntity, Ten
                 ""CustoUnitario"" DECIMAL(18, 4) NOT NULL DEFAULT 0,
                 ""FatorCorrecao"" DECIMAL(18, 4) NOT NULL DEFAULT 1.0,
                 ""Descricao"" TEXT,
-                ""CodigoBarras"" VARCHAR(50),
                 ""PathImagem"" VARCHAR(500),
                 ""IsAtivo"" BOOLEAN NOT NULL DEFAULT true,
                 ""UsuarioCriacao"" VARCHAR(100),
@@ -511,9 +584,6 @@ public class TenantService : BaseService<ApplicationDbContext, TenantEntity, Ten
                 CONSTRAINT ""FK_Insumo_UnidadeCompra_{schemaName}"" FOREIGN KEY (""UnidadeCompraId"") REFERENCES ""{schemaName}"".""UnidadeMedida""(""Id"") ON DELETE RESTRICT,
                 CONSTRAINT ""FK_Insumo_UnidadeUso_{schemaName}"" FOREIGN KEY (""UnidadeUsoId"") REFERENCES ""{schemaName}"".""UnidadeMedida""(""Id"") ON DELETE RESTRICT
             );
-
-            -- Índice único para Código de Barras (apenas quando não nulo)
-            CREATE UNIQUE INDEX IF NOT EXISTS ""IX_Insumo_CodigoBarras_{schemaName}"" ON ""{schemaName}"".""Insumo""(""CodigoBarras"") WHERE ""CodigoBarras"" IS NOT NULL;
 
             -- Tabela CategoriaReceita
             CREATE TABLE IF NOT EXISTS ""{schemaName}"".""CategoriaReceita"" (
@@ -557,12 +627,78 @@ public class TenantService : BaseService<ApplicationDbContext, TenantEntity, Ten
                 ""ReceitaId"" BIGINT NOT NULL,
                 ""InsumoId"" BIGINT NOT NULL,
                 ""Quantidade"" DECIMAL(18, 4) NOT NULL,
+                ""UnidadeMedidaId"" BIGINT NOT NULL,
+                ""ExibirComoQB"" BOOLEAN NOT NULL DEFAULT false,
                 ""Ordem"" INTEGER NOT NULL,
-                ""Observacoes"" VARCHAR(500),
+                ""Observacoes"" TEXT,
                 CONSTRAINT ""FK_ReceitaItem_Receita_{schemaName}"" FOREIGN KEY (""ReceitaId"") REFERENCES ""{schemaName}"".""Receita""(""Id"") ON DELETE CASCADE,
-                CONSTRAINT ""FK_ReceitaItem_Insumo_{schemaName}"" FOREIGN KEY (""InsumoId"") REFERENCES ""{schemaName}"".""Insumo""(""Id"") ON DELETE RESTRICT
+                CONSTRAINT ""FK_ReceitaItem_Insumo_{schemaName}"" FOREIGN KEY (""InsumoId"") REFERENCES ""{schemaName}"".""Insumo""(""Id"") ON DELETE RESTRICT,
+                CONSTRAINT ""FK_ReceitaItem_UnidadeMedida_{schemaName}"" FOREIGN KEY (""UnidadeMedidaId"") REFERENCES ""{schemaName}"".""UnidadeMedida""(""Id"") ON DELETE RESTRICT
             );
             CREATE INDEX IF NOT EXISTS ""IX_ReceitaItem_ReceitaId_Ordem_{schemaName}"" ON ""{schemaName}"".""ReceitaItem""(""ReceitaId"", ""Ordem"");
+
+            -- Tabela FichaTecnica
+            CREATE TABLE IF NOT EXISTS ""{schemaName}"".""FichaTecnica"" (
+                ""Id"" BIGSERIAL PRIMARY KEY,
+                ""CategoriaId"" BIGINT NOT NULL,
+                ""Nome"" VARCHAR(200) NOT NULL,
+                ""Codigo"" VARCHAR(50),
+                ""DescricaoComercial"" TEXT,
+                ""CustoTotal"" DECIMAL(18, 4) NOT NULL DEFAULT 0,
+                ""CustoPorUnidade"" DECIMAL(18, 4) NOT NULL DEFAULT 0,
+                ""RendimentoFinal"" DECIMAL(18, 4),
+                ""IndiceContabil"" DECIMAL(18, 4),
+                ""PrecoSugeridoVenda"" DECIMAL(18, 4),
+                ""ICOperador"" CHAR(1),
+                ""ICValor"" INTEGER,
+                ""IPCValor"" INTEGER,
+                ""MargemAlvoPercentual"" DECIMAL(18, 4),
+                ""IsAtivo"" BOOLEAN NOT NULL DEFAULT true,
+                ""UsuarioCriacao"" VARCHAR(100),
+                ""UsuarioAtualizacao"" VARCHAR(100),
+                ""DataCriacao"" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT (NOW() AT TIME ZONE 'utc'),
+                ""DataAtualizacao"" TIMESTAMP WITH TIME ZONE,
+                CONSTRAINT ""FK_FichaTecnica_CategoriaReceita_{schemaName}"" FOREIGN KEY (""CategoriaId"") REFERENCES ""{schemaName}"".""CategoriaReceita""(""Id"") ON DELETE RESTRICT
+            );
+
+            -- Tabela FichaTecnicaItem
+            CREATE TABLE IF NOT EXISTS ""{schemaName}"".""FichaTecnicaItem"" (
+                ""Id"" BIGSERIAL PRIMARY KEY,
+                ""FichaTecnicaId"" BIGINT NOT NULL,
+                ""TipoItem"" VARCHAR(20) NOT NULL,
+                ""ReceitaId"" BIGINT,
+                ""InsumoId"" BIGINT,
+                ""Quantidade"" DECIMAL(18, 4) NOT NULL,
+                ""UnidadeMedidaId"" BIGINT NOT NULL,
+                ""ExibirComoQB"" BOOLEAN NOT NULL DEFAULT false,
+                ""Ordem"" INTEGER NOT NULL,
+                ""Observacoes"" TEXT,
+                ""UsuarioCriacao"" VARCHAR(100),
+                ""UsuarioAtualizacao"" VARCHAR(100),
+                ""DataCriacao"" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT (NOW() AT TIME ZONE 'utc'),
+                ""DataAtualizacao"" TIMESTAMP WITH TIME ZONE,
+                CONSTRAINT ""FK_FichaTecnicaItem_FichaTecnica_{schemaName}"" FOREIGN KEY (""FichaTecnicaId"") REFERENCES ""{schemaName}"".""FichaTecnica""(""Id"") ON DELETE CASCADE,
+                CONSTRAINT ""FK_FichaTecnicaItem_Receita_{schemaName}"" FOREIGN KEY (""ReceitaId"") REFERENCES ""{schemaName}"".""Receita""(""Id"") ON DELETE RESTRICT,
+                CONSTRAINT ""FK_FichaTecnicaItem_Insumo_{schemaName}"" FOREIGN KEY (""InsumoId"") REFERENCES ""{schemaName}"".""Insumo""(""Id"") ON DELETE RESTRICT,
+                CONSTRAINT ""FK_FichaTecnicaItem_UnidadeMedida_{schemaName}"" FOREIGN KEY (""UnidadeMedidaId"") REFERENCES ""{schemaName}"".""UnidadeMedida""(""Id"") ON DELETE RESTRICT,
+                CONSTRAINT ""CK_FichaTecnicaItem_TipoItem_{schemaName}"" CHECK ((""TipoItem"" = 'Receita' AND ""ReceitaId"" IS NOT NULL AND ""InsumoId"" IS NULL) OR (""TipoItem"" = 'Insumo' AND ""InsumoId"" IS NOT NULL AND ""ReceitaId"" IS NULL))
+            );
+            CREATE INDEX IF NOT EXISTS ""IX_FichaTecnicaItem_FichaTecnicaId_Ordem_{schemaName}"" ON ""{schemaName}"".""FichaTecnicaItem""(""FichaTecnicaId"", ""Ordem"");
+
+            -- Tabela FichaTecnicaCanal
+            CREATE TABLE IF NOT EXISTS ""{schemaName}"".""FichaTecnicaCanal"" (
+                ""Id"" BIGSERIAL PRIMARY KEY,
+                ""FichaTecnicaId"" BIGINT NOT NULL,
+                ""Canal"" VARCHAR(50) NOT NULL,
+                ""NomeExibicao"" VARCHAR(100),
+                ""PrecoVenda"" DECIMAL(18, 4) NOT NULL DEFAULT 0,
+                ""TaxaPercentual"" DECIMAL(18, 4),
+                ""ComissaoPercentual"" DECIMAL(18, 4),
+                ""MargemCalculadaPercentual"" DECIMAL(18, 4),
+                ""Observacoes"" TEXT,
+                ""IsAtivo"" BOOLEAN NOT NULL DEFAULT true,
+                CONSTRAINT ""FK_FichaTecnicaCanal_FichaTecnica_{schemaName}"" FOREIGN KEY (""FichaTecnicaId"") REFERENCES ""{schemaName}"".""FichaTecnica""(""Id"") ON DELETE CASCADE
+            );
         ";
 
         await _tenantContext.Database.ExecuteSqlRawAsync(sql);
@@ -607,42 +743,12 @@ public class TenantService : BaseService<ApplicationDbContext, TenantEntity, Ten
                 ('Outros', true, '{usuarioCriacaoValue}', {dataCriacao})
             ON CONFLICT DO NOTHING;
 
-            -- Inserir Unidades de Medida padrão (primeiro as bases, depois as derivadas)
-            -- Unidades base (sem UnidadeBaseId)
-            INSERT INTO ""{schemaName}"".""UnidadeMedida"" (""Nome"", ""Sigla"", ""Tipo"", ""UnidadeBaseId"", ""FatorConversaoBase"", ""IsAtivo"", ""UsuarioCriacao"", ""DataCriacao"")
+            -- Inserir Unidades de Medida padrão simplificadas
+            INSERT INTO ""{schemaName}"".""UnidadeMedida"" (""Nome"", ""Sigla"", ""IsAtivo"", ""UsuarioCriacao"", ""DataCriacao"")
             VALUES 
-                ('Quilograma', 'kg', 'Peso', NULL, 1.0, true, '{usuarioCriacaoValue}', {dataCriacao}),
-                ('Litro', 'L', 'Volume', NULL, 1.0, true, '{usuarioCriacaoValue}', {dataCriacao}),
-                ('Unidade', 'un', 'Quantidade', NULL, 1.0, true, '{usuarioCriacaoValue}', {dataCriacao})
-            ON CONFLICT DO NOTHING;
-
-            -- Unidades derivadas (com referência à base)
-            -- Peso: g -> kg (1g = 0.001kg)
-            INSERT INTO ""{schemaName}"".""UnidadeMedida"" (""Nome"", ""Sigla"", ""Tipo"", ""UnidadeBaseId"", ""FatorConversaoBase"", ""IsAtivo"", ""UsuarioCriacao"", ""DataCriacao"")
-            SELECT 'Grama', 'g', 'Peso', um_base.""Id"", 0.001, true, '{usuarioCriacaoValue}', {dataCriacao}
-            FROM ""{schemaName}"".""UnidadeMedida"" um_base
-            WHERE um_base.""Sigla"" = 'kg' AND um_base.""Tipo"" = 'Peso'
-            ON CONFLICT DO NOTHING;
-
-            -- Volume: mL -> L (1mL = 0.001L)
-            INSERT INTO ""{schemaName}"".""UnidadeMedida"" (""Nome"", ""Sigla"", ""Tipo"", ""UnidadeBaseId"", ""FatorConversaoBase"", ""IsAtivo"", ""UsuarioCriacao"", ""DataCriacao"")
-            SELECT 'Mililitro', 'mL', 'Volume', um_base.""Id"", 0.001, true, '{usuarioCriacaoValue}', {dataCriacao}
-            FROM ""{schemaName}"".""UnidadeMedida"" um_base
-            WHERE um_base.""Sigla"" = 'L' AND um_base.""Tipo"" = 'Volume'
-            ON CONFLICT DO NOTHING;
-
-            -- Quantidade: dz -> un (1dz = 12un)
-            INSERT INTO ""{schemaName}"".""UnidadeMedida"" (""Nome"", ""Sigla"", ""Tipo"", ""UnidadeBaseId"", ""FatorConversaoBase"", ""IsAtivo"", ""UsuarioCriacao"", ""DataCriacao"")
-            SELECT 'Dúzia', 'dz', 'Quantidade', um_base.""Id"", 12.0, true, '{usuarioCriacaoValue}', {dataCriacao}
-            FROM ""{schemaName}"".""UnidadeMedida"" um_base
-            WHERE um_base.""Sigla"" = 'un' AND um_base.""Tipo"" = 'Quantidade'
-            ON CONFLICT DO NOTHING;
-
-            -- Quantidade: pct, cx (sem conversão automática, serão usadas como unidades de compra)
-            INSERT INTO ""{schemaName}"".""UnidadeMedida"" (""Nome"", ""Sigla"", ""Tipo"", ""UnidadeBaseId"", ""FatorConversaoBase"", ""IsAtivo"", ""UsuarioCriacao"", ""DataCriacao"")
-            VALUES 
-                ('Pacote', 'pct', 'Quantidade', NULL, NULL, true, '{usuarioCriacaoValue}', {dataCriacao}),
-                ('Caixa', 'cx', 'Quantidade', NULL, NULL, true, '{usuarioCriacaoValue}', {dataCriacao})
+                ('Unidade', 'UN', true, '{usuarioCriacaoValue}', {dataCriacao}),
+                ('Grama', 'GR', true, '{usuarioCriacaoValue}', {dataCriacao}),
+                ('Mililitro', 'ML', true, '{usuarioCriacaoValue}', {dataCriacao})
             ON CONFLICT DO NOTHING;
 
             -- Inserir Categorias de Receita padrão

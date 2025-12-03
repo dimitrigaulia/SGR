@@ -43,45 +43,31 @@ public class ReceitaService : IReceitaService
         return fatorRendimentoRequest <= 0 ? 1.0m : fatorRendimentoRequest;
     }
 
-    private decimal CalcularCustoItem(ReceitaItem item, Insumo insumo)
+    /// <summary>
+    /// Calcula o custo por unidade de uso de um insumo
+    /// Fórmula: (CustoUnitario / QuantidadePorEmbalagem) * FatorCorrecao
+    /// </summary>
+    private static decimal CalcularCustoPorUnidadeUso(Insumo insumo)
     {
-        var quantidadeBruta = CalcularQuantidadeBruta(item, insumo);
-
-        var unidadeCompra = insumo.UnidadeCompra;
-        var unidadeUso = insumo.UnidadeUso;
-
-        // Quando as unidades são compatíveis e configuradas, converte automaticamente
-        if (unidadeCompra != null &&
-            unidadeUso != null &&
-            !string.IsNullOrWhiteSpace(unidadeCompra.Tipo) &&
-            unidadeCompra.Tipo == unidadeUso.Tipo &&
-            insumo.QuantidadePorEmbalagem > 0)
-        {
-            var fatorCompraBase = unidadeCompra.FatorConversaoBase ?? 1m;
-            var fatorUsoBase = unidadeUso.FatorConversaoBase ?? 1m;
-
-            if (fatorCompraBase > 0 && fatorUsoBase > 0)
-            {
-                // Quantidade disponível por embalagem na unidade base (ex: 5 kg, 12 un)
-                var quantidadeCompraBase = insumo.QuantidadePorEmbalagem * fatorCompraBase;
-
-                // Quantidade bruta necessária na unidade base (já considerando perdas do insumo)
-                var quantidadeBrutaBase = quantidadeBruta * fatorUsoBase;
-
-                var proporcaoEmbalagens = quantidadeBrutaBase / quantidadeCompraBase;
-
-                return proporcaoEmbalagens * insumo.CustoUnitario;
-            }
-        }
-
-        // Fallback: assume QuantidadePorEmbalagem já está na unidade de uso
         if (insumo.QuantidadePorEmbalagem <= 0)
         {
-            _logger.LogWarning("QuantidadePorEmbalagem invǭlida para Insumo {InsumoId} ao calcular custo de receita", insumo.Id);
             return 0;
         }
 
-        return (quantidadeBruta / insumo.QuantidadePorEmbalagem) * insumo.CustoUnitario;
+        return (insumo.CustoUnitario / insumo.QuantidadePorEmbalagem) * insumo.FatorCorrecao;
+    }
+
+    private decimal CalcularCustoItem(ReceitaItem item, Insumo insumo)
+    {
+        // Quantidade bruta = Quantidade × FatorCorrecao (perdas no preparo do insumo)
+        var quantidadeBruta = CalcularQuantidadeBruta(item, insumo);
+        
+        // Custo por unidade de uso
+        var custoPorUnidadeUso = CalcularCustoPorUnidadeUso(insumo);
+        
+        // Custo do item = QuantidadeBruta × CustoPorUnidadeUso
+        // IMPORTANTE: ExibirComoQB é apenas visual, sempre usar Quantidade numérica para cálculos
+        return quantidadeBruta * custoPorUnidadeUso;
     }
 
     public async Task<PagedResult<ReceitaDto>> GetAllAsync(string? search, int page, int pageSize, string? sort, string? order)
@@ -90,6 +76,14 @@ public class ReceitaService : IReceitaService
 
         var query = _context.Receitas
             .Include(r => r.Categoria)
+            .Include(r => r.Itens)
+                .ThenInclude(i => i.Insumo)
+                    .ThenInclude(i => i.Categoria)
+            .Include(r => r.Itens)
+                .ThenInclude(i => i.Insumo)
+                    .ThenInclude(i => i.UnidadeUso)
+            .Include(r => r.Itens)
+                .ThenInclude(i => i.UnidadeMedida)
             .AsQueryable();
 
         // Aplicar busca
@@ -165,6 +159,8 @@ public class ReceitaService : IReceitaService
             .Include(r => r.Itens)
                 .ThenInclude(i => i.Insumo)
                     .ThenInclude(ins => ins.Categoria)
+            .Include(r => r.Itens)
+                .ThenInclude(i => i.UnidadeMedida)
             .FirstOrDefaultAsync(r => r.Id == id);
 
         if (receita == null)
@@ -228,6 +224,17 @@ public class ReceitaService : IReceitaService
             DataCriacao = DateTime.UtcNow
         };
 
+        // Validar unidades de medida
+        var unidadeMedidaIds = request.Itens.Select(i => i.UnidadeMedidaId).Distinct().ToList();
+        var unidadesMedida = await _context.UnidadesMedida
+            .Where(u => unidadeMedidaIds.Contains(u.Id) && u.IsAtivo)
+            .ToListAsync();
+
+        if (unidadesMedida.Count != unidadeMedidaIds.Count)
+        {
+            throw new BusinessException("Uma ou mais unidades de medida são inválidas ou estão inativas");
+        }
+
         // Criar itens
         var ordem = 1;
         foreach (var itemRequest in request.Itens.OrderBy(i => i.Ordem))
@@ -237,6 +244,8 @@ public class ReceitaService : IReceitaService
             {
                 InsumoId = itemRequest.InsumoId,
                 Quantidade = itemRequest.Quantidade,
+                UnidadeMedidaId = itemRequest.UnidadeMedidaId,
+                ExibirComoQB = itemRequest.ExibirComoQB,
                 Ordem = ordem++,
                 Observacoes = itemRequest.Observacoes
             });
@@ -322,6 +331,8 @@ public class ReceitaService : IReceitaService
             {
                 InsumoId = itemRequest.InsumoId,
                 Quantidade = itemRequest.Quantidade,
+                UnidadeMedidaId = itemRequest.UnidadeMedidaId,
+                ExibirComoQB = itemRequest.ExibirComoQB,
                 Ordem = ordem++,
                 Observacoes = itemRequest.Observacoes
             });
@@ -439,7 +450,9 @@ public class ReceitaService : IReceitaService
         // Aplicar FatorRendimento (perdas no preparo da receita)
         // Se FatorRendimento < 1: há perdas (ex: 0.95 = 5% de perda)
         // Se FatorRendimento > 1: há ganho (raro, mas possível)
-        var custoTotalComRendimento = custoTotal / receita.FatorRendimento;
+        // Proteger divisão por zero
+        var fatorRendimento = receita.FatorRendimento > 0 ? receita.FatorRendimento : 1.0m;
+        var custoTotalComRendimento = custoTotal / fatorRendimento;
         
         receita.CustoTotal = custoTotalComRendimento;
         receita.CustoPorPorcao = receita.Rendimento > 0 ? custoTotalComRendimento / receita.Rendimento : 0;
@@ -447,36 +460,12 @@ public class ReceitaService : IReceitaService
 
     private decimal? CalcularCustoUnitarioUso(Insumo insumo)
     {
-        var unidadeCompra = insumo.UnidadeCompra;
-        var unidadeUso = insumo.UnidadeUso;
-
-        if (unidadeCompra == null ||
-            unidadeUso == null ||
-            string.IsNullOrWhiteSpace(unidadeCompra.Tipo) ||
-            unidadeCompra.Tipo != unidadeUso.Tipo ||
-            insumo.QuantidadePorEmbalagem <= 0 ||
-            insumo.CustoUnitario <= 0)
+        if (insumo.QuantidadePorEmbalagem <= 0 || insumo.CustoUnitario <= 0)
         {
             return null;
         }
 
-        var fatorCompraBase = unidadeCompra.FatorConversaoBase ?? 1m;
-        var fatorUsoBase = unidadeUso.FatorConversaoBase ?? 1m;
-
-        if (fatorCompraBase <= 0 || fatorUsoBase <= 0)
-        {
-            return null;
-        }
-
-        // Quantidade disponível por embalagem na unidade base (ex: 5 kg, 12 un)
-        var quantidadeCompraBase = insumo.QuantidadePorEmbalagem * fatorCompraBase;
-
-        // Quantidade de 1 unidade de uso na unidade base
-        var quantidadeUsoBase = fatorUsoBase;
-
-        var proporcao = quantidadeUsoBase / quantidadeCompraBase;
-
-        return proporcao * insumo.CustoUnitario;
+        return CalcularCustoPorUnidadeUso(insumo);
     }
 
     private ReceitaDto MapToDto(Receita receita)
@@ -533,8 +522,9 @@ public class ReceitaService : IReceitaService
                 if (custoPorUnidadeUso.HasValue)
                 {
                     // Para peso/volume, é comum visualizar custo por 100 g / 100 mL
-                    if (!string.IsNullOrWhiteSpace(insumo.UnidadeUso.Tipo) &&
-                        (insumo.UnidadeUso.Tipo == "Peso" || insumo.UnidadeUso.Tipo == "Volume"))
+                    // Verificar pela sigla se é GR (grama) ou ML (mililitro)
+                    var sigla = insumo.UnidadeUso?.Sigla?.ToUpper();
+                    if (sigla == "GR" || sigla == "ML")
                     {
                         custoPor100UnidadesUso = custoPorUnidadeUso.Value * 100m;
                     }
@@ -547,13 +537,15 @@ public class ReceitaService : IReceitaService
                     InsumoId = item.InsumoId,
                     InsumoNome = insumo.Nome,
                     InsumoCategoriaNome = insumo.Categoria?.Nome,
-                    UnidadeUsoNome = insumo.UnidadeUso?.Nome,
-                    UnidadeUsoSigla = insumo.UnidadeUso?.Sigla,
+                    UnidadeMedidaId = item.UnidadeMedidaId,
+                    UnidadeMedidaNome = item.UnidadeMedida?.Nome,
+                    UnidadeMedidaSigla = item.UnidadeMedida?.Sigla,
                     Quantidade = item.Quantidade,
                     QuantidadeBruta = quantidadeBruta,
                     CustoItem = custoItem,
                     CustoPorUnidadeUso = custoPorUnidadeUso,
                     CustoPor100UnidadesUso = custoPor100UnidadesUso,
+                    ExibirComoQB = item.ExibirComoQB,
                     Ordem = item.Ordem,
                     Observacoes = item.Observacoes
                 };

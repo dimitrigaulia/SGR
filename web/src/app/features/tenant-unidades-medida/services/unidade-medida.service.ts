@@ -7,27 +7,22 @@ export interface UnidadeMedidaDto {
   id: number;
   nome: string;
   sigla: string;
-  tipo?: string | null;
-  unidadeBaseId?: number | null;
-  fatorConversaoBase?: number | null;
   isAtivo: boolean;
+  usuarioCriacao?: string | null;
+  usuarioAtualizacao?: string | null;
+  dataCriacao: string;
+  dataAtualizacao?: string | null;
 }
 
 export interface CreateUnidadeMedidaRequest {
   nome: string;
   sigla: string;
-  tipo?: string | null;
-  unidadeBaseId?: number | null;
-  fatorConversaoBase?: number | null;
   isAtivo: boolean;
 }
 
 export interface UpdateUnidadeMedidaRequest {
   nome: string;
   sigla: string;
-  tipo?: string | null;
-  unidadeBaseId?: number | null;
-  fatorConversaoBase?: number | null;
   isAtivo: boolean;
 }
 

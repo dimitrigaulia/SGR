@@ -77,6 +77,19 @@ using (var scope = app.Services.CreateScope())
         // Inicializar dados padrão (após migrations)
         DbInitializer.Initialize(context);
         logger.LogInformation("Banco de dados inicializado com sucesso.");
+        
+        // Migrar schemas de tenant existentes (corrigir estruturas antigas)
+        try
+        {
+            var tenantService = services.GetRequiredService<SGR.Api.Services.Interfaces.ITenantService>();
+            await tenantService.MigrateAllTenantSchemasAsync();
+            logger.LogInformation("Migração de schemas de tenant concluída com sucesso.");
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Erro ao migrar schemas de tenant (pode ser normal se não houver tenants existentes).");
+            // Não falha a inicialização se a migração de tenants falhar
+        }
     }
     catch (Exception ex)
     {

@@ -2,10 +2,14 @@ using System.ComponentModel.DataAnnotations;
 
 namespace SGR.Api.Models.Tenant.DTOs;
 
-public class UpdateReceitaItemRequest
+public class CreateFichaTecnicaItemRequest
 {
-    [Required(ErrorMessage = "Insumo é obrigatório")]
-    public long InsumoId { get; set; }
+    [Required(ErrorMessage = "TipoItem é obrigatório")]
+    [RegularExpression("^(Receita|Insumo)$", ErrorMessage = "TipoItem deve ser 'Receita' ou 'Insumo'")]
+    public string TipoItem { get; set; } = string.Empty;
+
+    public long? ReceitaId { get; set; }
+    public long? InsumoId { get; set; }
 
     [Required(ErrorMessage = "Quantidade é obrigatória")]
     [Range(0.0001, double.MaxValue, ErrorMessage = "Quantidade deve ser maior que zero")]
@@ -16,10 +20,10 @@ public class UpdateReceitaItemRequest
 
     public bool ExibirComoQB { get; set; }
 
+    [Required(ErrorMessage = "Ordem é obrigatória")]
     [Range(1, int.MaxValue, ErrorMessage = "Ordem deve ser maior que zero")]
-    public int Ordem { get; set; } = 1;
+    public int Ordem { get; set; }
 
-    [MaxLength(500, ErrorMessage = "Observações deve ter no máximo 500 caracteres")]
     public string? Observacoes { get; set; }
 }
 

@@ -34,7 +34,7 @@ export class TenantFichasTecnicasListComponent {
   private destroyRef = inject(DestroyRef);
   private cdr = inject(ChangeDetectorRef);
 
-  displayedColumns = ['nome', 'receita', 'codigo', 'custoTecnicoPorPorcao', 'canais', 'ativo', 'acoes'];
+  displayedColumns = ['nome', 'categoria', 'codigo', 'custoPorUnidade', 'precoSugerido', 'canais', 'ativo', 'acoes'];
   data = signal<FichaTecnicaDto[]>([]);
   total = signal(0);
   pageIndex = signal(0);

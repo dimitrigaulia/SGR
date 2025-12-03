@@ -5,7 +5,7 @@
       <div class="toolbar">
         <mat-form-field appearance="outline" class="search-field">
           <mat-label>Buscar</mat-label>
-          <input matInput [(ngModel)]="searchTerm" (ngModelChange)="onSearchChange()" placeholder="Nome, código ou receita" />
+          <input matInput [(ngModel)]="searchTerm" (ngModelChange)="onSearchChange()" placeholder="Nome, código ou categoria" />
           @if (searchTerm) {
             <button mat-icon-button matSuffix type="button" (click)="clearSearch()">
               <mat-icon>clear</mat-icon>
@@ -25,9 +25,9 @@
             <td mat-cell *matCellDef="let row">{{ row.nome }}</td>
           </ng-container>
 
-          <ng-container matColumnDef="receita">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header="receita">Receita</th>
-            <td mat-cell *matCellDef="let row">{{ row.receitaNome }}</td>
+          <ng-container matColumnDef="categoria">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header="categoria">Categoria</th>
+            <td mat-cell *matCellDef="let row">{{ row.categoriaNome || '-' }}</td>
           </ng-container>
 
           <ng-container matColumnDef="codigo">
@@ -35,9 +35,20 @@
             <td mat-cell *matCellDef="let row">{{ row.codigo || '-' }}</td>
           </ng-container>
 
-          <ng-container matColumnDef="custoTecnicoPorPorcao">
-            <th mat-header-cell *matHeaderCellDef>Custo técnico/porção</th>
-            <td mat-cell *matCellDef="let row">{{ formatCurrency(row.custoTecnicoPorPorcao) }}</td>
+          <ng-container matColumnDef="custoPorUnidade">
+            <th mat-header-cell *matHeaderCellDef>Custo por unidade</th>
+            <td mat-cell *matCellDef="let row">{{ formatCurrency(row.custoPorUnidade) }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="precoSugerido">
+            <th mat-header-cell *matHeaderCellDef>Preço sugerido</th>
+            <td mat-cell *matCellDef="let row">
+              @if (row.precoSugeridoVenda) {
+                {{ formatCurrency(row.precoSugeridoVenda) }}
+              } @else {
+                -
+              }
+            </td>
           </ng-container>
 
           <ng-container matColumnDef="canais">

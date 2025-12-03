@@ -11,16 +11,21 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { ReceitaService, CreateReceitaRequest, UpdateReceitaRequest, ReceitaDto, CreateReceitaItemRequest, UpdateReceitaItemRequest } from '../../../../features/tenant-receitas/services/receita.service';
 import { CategoriaReceitaService, CategoriaReceitaDto } from '../../../../features/tenant-categorias-receita/services/categoria-receita.service';
 import { InsumoService, InsumoDto } from '../../../../features/tenant-insumos/services/insumo.service';
+import { UnidadeMedidaService, UnidadeMedidaDto } from '../../../../features/tenant-unidades-medida/services/unidade-medida.service';
 import { ToastService } from '../../../../core/services/toast.service';
 import { UploadService, UploadResponse } from '../../../../features/usuarios/services/upload.service';
 import { MatCardModule } from '@angular/material/card';
+import { environment } from '../../../../../environments/environment';
 
 type ReceitaItemFormModel = {
   insumoId: number | null;
   quantidade: number;
+  unidadeMedidaId: number | null;
+  exibirComoQB: boolean;
   ordem: number;
   observacoes: string;
   custoItem?: number;
@@ -31,7 +36,7 @@ type ReceitaItemFormModel = {
 @Component({
   standalone: true,
   selector: 'app-tenant-receita-form',
-  imports: [CommonModule, FormsModule, MatCardModule, RouterLink, MatFormFieldModule, MatInputModule, MatButtonModule, MatSelectModule, MatSlideToggleModule, MatSnackBarModule, MatTableModule, MatIconModule],
+  imports: [CommonModule, FormsModule, MatCardModule, RouterLink, MatFormFieldModule, MatInputModule, MatButtonModule, MatSelectModule, MatSlideToggleModule, MatSnackBarModule, MatTableModule, MatIconModule, MatCheckboxModule],
   templateUrl: './receita-form.component.html',
   styleUrls: ['./receita-form.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -41,6 +46,7 @@ export class TenantReceitaFormComponent {
   private service = inject(ReceitaService);
   private categoriaService = inject(CategoriaReceitaService);
   private insumoService = inject(InsumoService);
+  private unidadeService = inject(UnidadeMedidaService);
   private toast = inject(ToastService);
   private upload = inject(UploadService);
   private cdr = inject(ChangeDetectorRef);
@@ -49,6 +55,7 @@ export class TenantReceitaFormComponent {
   id = signal<number | null>(null);
   categorias = signal<CategoriaReceitaDto[]>([]);
   insumos = signal<InsumoDto[]>([]);
+  unidades = signal<UnidadeMedidaDto[]>([]);
   isEdit = computed(() => this.id() !== null);
   isView = signal<boolean>(false);
   error = signal<string>('');
@@ -72,7 +79,11 @@ export class TenantReceitaFormComponent {
   };
 
   itens = signal<ReceitaItemFormModel[]>([]);
-  displayedColumns = ['ordem', 'insumo', 'quantidade', 'observacoes', 'acoes'];
+  displayedColumns = ['ordem', 'insumo', 'quantidade', 'unidade', 'qb', 'observacoes', 'acoes'];
+  
+  // Propriedades para uso no template
+  window = typeof window !== 'undefined' ? window : null;
+  environment = environment;
 
   get fatorRendimentoCalculado(): number {
     const sinal = this.model.icSinal || '-';
@@ -98,6 +109,15 @@ export class TenantReceitaFormComponent {
       .subscribe({ 
         next: res => {
           this.insumos.set(res.items.filter(i => i.isAtivo));
+          this.cdr.markForCheck();
+        }
+      });
+
+    this.unidadeService.list({ pageSize: 1000 })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({ 
+        next: res => {
+          this.unidades.set(res.items.filter(u => u.isAtivo));
           this.cdr.markForCheck();
         }
       });
@@ -132,6 +152,8 @@ export class TenantReceitaFormComponent {
           this.itens.set(e.itens.map(item => ({
             insumoId: item.insumoId,
             quantidade: item.quantidade,
+            unidadeMedidaId: item.unidadeMedidaId,
+            exibirComoQB: item.exibirComoQB,
             ordem: item.ordem,
             observacoes: item.observacoes || '',
             custoItem: item.custoItem,
@@ -152,6 +174,8 @@ export class TenantReceitaFormComponent {
     this.itens.set([...currentItens, {
       insumoId: null,
       quantidade: 0,
+      unidadeMedidaId: null,
+      exibirComoQB: false,
       ordem: newOrdem,
       observacoes: ''
     }]);
@@ -198,48 +222,36 @@ export class TenantReceitaFormComponent {
     return insumo ? insumo.nome : '';
   }
 
-  getInsumoUnidade(insumoId: number | null): string {
-    if (!insumoId) return '';
-    const insumo = this.insumos().find(i => i.id === insumoId);
-    return insumo ? (insumo.unidadeUsoSigla || insumo.unidadeUsoNome || '') : '';
+  getUnidadeSigla(unidadeMedidaId: number | null): string {
+    if (!unidadeMedidaId) return '';
+    const unidade = this.unidades().find(u => u.id === unidadeMedidaId);
+    return unidade ? unidade.sigla : '';
   }
 
-  getInsumoUnidadeTipo(insumoId: number | null): string | null {
-    if (!insumoId) return null;
-    const insumo = this.insumos().find(i => i.id === insumoId);
-    return insumo ? (insumo.unidadeUsoTipo || null) : null;
-  }
-
-  getStepForUnidade(insumoId: number | null): string {
-    const tipo = this.getInsumoUnidadeTipo(insumoId);
-    if (tipo === 'Quantidade') {
+  getStepForUnidade(unidadeMedidaId: number | null): string {
+    if (!unidadeMedidaId) return '0.0001';
+    const unidade = this.unidades().find(u => u.id === unidadeMedidaId);
+    if (!unidade) return '0.0001';
+    // Se for UN (Unidade), usar step 1, caso contrário 0.0001
+    if (unidade.sigla.toUpperCase() === 'UN') {
       return '1';
-    } else if (tipo === 'Peso' || tipo === 'Volume') {
-      return '0.001';
     }
-    return '0.0001'; // Padrão para outros casos
+    return '0.0001';
   }
 
-  formatQuantidade(quantidade: number, insumoId: number | null): string {
-    const tipo = this.getInsumoUnidadeTipo(insumoId);
-    if (tipo === 'Quantidade') {
+  formatQuantidade(quantidade: number, unidadeMedidaId: number | null): string {
+    const unidade = this.unidades().find(u => u.id === unidadeMedidaId);
+    if (unidade && unidade.sigla.toUpperCase() === 'UN') {
       return Math.round(quantidade).toString();
     }
-    // Para Peso e Volume, mostrar até 3 casas decimais
-    return quantidade.toFixed(3).replace(/\.?0+$/, '');
+    // Para outras unidades, mostrar até 4 casas decimais
+    return quantidade.toFixed(4).replace(/\.?0+$/, '');
   }
 
   onInsumoChange(item: ReceitaItemFormModel, index: number) {
-    // Quando o insumo muda, ajustar a quantidade se necessário
-    const tipo = this.getInsumoUnidadeTipo(item.insumoId);
-    if (tipo === 'Quantidade' && item.quantidade > 0) {
-      // Arredondar para inteiro
-      item.quantidade = Math.round(item.quantidade);
-      if (item.quantidade < 1) {
-        item.quantidade = 1;
-      }
-      this.cdr.markForCheck();
-    }
+    // Quando o insumo muda, pode ajustar a unidade de medida padrão se necessário
+    // Por enquanto, apenas marca para check
+    this.cdr.markForCheck();
   }
 
   get pesoTotalTeorico(): number | null {
@@ -259,17 +271,19 @@ export class TenantReceitaFormComponent {
   }
 
   onQuantidadeChange(item: ReceitaItemFormModel, index: number) {
-    // Quando a quantidade muda, ajustar se for unidade de quantidade
-    const tipo = this.getInsumoUnidadeTipo(item.insumoId);
-    if (tipo === 'Quantidade' && item.quantidade > 0) {
-      // Arredondar para inteiro
-      const rounded = Math.round(item.quantidade);
-      if (rounded !== item.quantidade) {
-        item.quantidade = rounded;
-        if (item.quantidade < 1) {
-          item.quantidade = 1;
+    // Quando a quantidade muda, ajustar se for unidade UN
+    if (item.unidadeMedidaId) {
+      const unidade = this.unidades().find(u => u.id === item.unidadeMedidaId);
+      if (unidade && unidade.sigla.toUpperCase() === 'UN' && item.quantidade > 0) {
+        // Arredondar para inteiro
+        const rounded = Math.round(item.quantidade);
+        if (rounded !== item.quantidade) {
+          item.quantidade = rounded;
+          if (item.quantidade < 1) {
+            item.quantidade = 1;
+          }
+          this.cdr.markForCheck();
         }
-        this.cdr.markForCheck();
       }
     }
   }
@@ -312,26 +326,34 @@ export class TenantReceitaFormComponent {
       return;
     }
 
-    const validItens = this.itens().filter(item => item.insumoId !== null && item.quantidade > 0);
+    const validItens = this.itens().filter(item => 
+      item.insumoId !== null && 
+      item.quantidade > 0 && 
+      item.unidadeMedidaId !== null
+    );
     if (validItens.length === 0) {
-      this.toast.error('Adicione pelo menos um item à receita');
+      this.toast.error('Adicione pelo menos um item válido à receita (com insumo, quantidade e unidade de medida)');
       return;
     }
 
-    // Arredondar quantidades baseado no tipo da unidade antes de enviar
+    // Arredondar quantidades baseado na unidade de medida antes de enviar
     const itensRequest = validItens.map(item => {
-      const tipo = this.getInsumoUnidadeTipo(item.insumoId);
       let quantidade = item.quantidade;
       
-      // Se for unidade de quantidade, garantir que seja inteiro
-      if (tipo === 'Quantidade') {
-        quantidade = Math.round(quantidade);
-        if (quantidade < 1) quantidade = 1;
+      // Se for unidade UN, garantir que seja inteiro
+      if (item.unidadeMedidaId) {
+        const unidade = this.unidades().find(u => u.id === item.unidadeMedidaId);
+        if (unidade && unidade.sigla.toUpperCase() === 'UN') {
+          quantidade = Math.round(quantidade);
+          if (quantidade < 1) quantidade = 1;
+        }
       }
       
       return {
         insumoId: item.insumoId!,
         quantidade: quantidade,
+        unidadeMedidaId: item.unidadeMedidaId!,
+        exibirComoQB: item.exibirComoQB,
         ordem: item.ordem,
         observacoes: item.observacoes || undefined
       };

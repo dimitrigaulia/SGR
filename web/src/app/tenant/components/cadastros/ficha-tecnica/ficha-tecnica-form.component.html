@@ -1,34 +1,35 @@
 <div class="form-container">
-  <h2 class="form-title">{{ isEdit() ? (isView() ? 'Visualizar ficha tǸcnica' : 'Editar ficha tǸcnica') : 'Cadastro de ficha tǸcnica' }}</h2>
+  <h2 class="form-title">{{ isEdit() ? (isView() ? 'Visualizar ficha técnica' : 'Editar ficha técnica') : 'Cadastro de ficha técnica' }}</h2>
 
   <form #f="ngForm" (ngSubmit)="save()">
     <mat-form-field appearance="outline" class="form-field-spacing">
-      <mat-label>Receita tǸcnica</mat-label>
-      <mat-select name="receitaId" [(ngModel)]="model.receitaId" [disabled]="isView()" required (selectionChange)="onReceitaChange()">
-        @for (r of receitas(); track r.id) {
-          <mat-option [value]="r.id">{{ r.nome }}</mat-option>
+      <mat-label>Categoria</mat-label>
+      <mat-select name="categoriaId" [(ngModel)]="model.categoriaId" [disabled]="isView()" required>
+        @for (c of categorias(); track c.id) {
+          <mat-option [value]="c.id">{{ c.nome }}</mat-option>
         }
       </mat-select>
+      @if (f.controls['categoriaId']?.errors?.['required']) {
+        <mat-error>Categoria é obrigatória</mat-error>
+      }
     </mat-form-field>
 
     <mat-form-field appearance="outline" class="form-field-spacing">
       <mat-label>Nome comercial</mat-label>
       <input matInput name="nome" [(ngModel)]="model.nome" [disabled]="isView()" required maxlength="200" />
+      @if (f.controls['nome']?.errors?.['required']) {
+        <mat-error>Nome é obrigatório</mat-error>
+      }
     </mat-form-field>
 
     <div class="form-row">
       <mat-form-field appearance="outline" class="form-field-spacing">
-        <mat-label>C��digo</mat-label>
+        <mat-label>Código</mat-label>
         <input matInput name="codigo" [(ngModel)]="model.codigo" [disabled]="isView()" maxlength="50" />
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="form-field-spacing">
-        <mat-label>Rendimento final (por����es)</mat-label>
-        <input matInput type="number" name="rendimentoFinal" [(ngModel)]="model.rendimentoFinal" [disabled]="isView()" min="0.01" step="0.01" />
-      </mat-form-field>
-
-      <mat-form-field appearance="outline" class="form-field-spacing">
-        <mat-label>�?ndice contǭbil / Markup</mat-label>
+        <mat-label>Índice contábil / Markup</mat-label>
         <input matInput type="number" name="indiceContabil" [(ngModel)]="model.indiceContabil" [disabled]="isView()" min="0" step="0.01" />
       </mat-form-field>
 
@@ -39,26 +40,184 @@
     </div>
 
     <div class="form-section">
-      <h3>Descri��ǜo comercial</h3>
+      <h3>Índices de Cocção e Partes Comestíveis</h3>
+      <div class="form-row">
+        <mat-form-field appearance="outline" class="form-field-spacing">
+          <mat-label>IC Operador</mat-label>
+          <mat-select name="icOperador" [(ngModel)]="model.icOperador" [disabled]="isView()">
+            <mat-option [value]="null">Nenhum</mat-option>
+            <mat-option value="+">+ (Aumenta)</mat-option>
+            <mat-option value="-">- (Diminui)</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="form-field-spacing">
+          <mat-label>IC Valor (%)</mat-label>
+          <input matInput type="number" name="icValor" [(ngModel)]="model.icValor" [disabled]="isView()" min="0" max="9999" step="1" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="form-field-spacing">
+          <mat-label>IPC Valor (%)</mat-label>
+          <input matInput type="number" name="ipcValor" [(ngModel)]="model.ipcValor" [disabled]="isView()" min="0" max="999" step="1" />
+        </mat-form-field>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h3>Descrição comercial</h3>
       <mat-form-field appearance="outline" class="form-field-spacing">
-        <mat-label>Descri��ǜo para cardǭpio / canais</mat-label>
+        <mat-label>Descrição para cardápio / canais</mat-label>
         <textarea matInput name="descricaoComercial" rows="4" [(ngModel)]="model.descricaoComercial" [disabled]="isView()" maxlength="5000"></textarea>
       </mat-form-field>
     </div>
 
     <div class="form-section">
-      <h3>Custo tǸcnico (somente leitura)</h3>
+      <h3>Composição (Itens)</h3>
+      <div class="table-wrapper">
+        <table mat-table [dataSource]="itens()" class="full-width-table">
+          <ng-container matColumnDef="ordem">
+            <th mat-header-cell *matHeaderCellDef>Ordem</th>
+            <td mat-cell *matCellDef="let item">
+              @if (isView()) {
+                {{ item.ordem }}
+              } @else {
+                <input type="number" [(ngModel)]="item.ordem" [ngModelOptions]="{standalone: true}" min="1" style="width: 60px;" />
+              }
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="tipo">
+            <th mat-header-cell *matHeaderCellDef>Tipo</th>
+            <td mat-cell *matCellDef="let item">
+              @if (isView()) {
+                {{ item.tipoItem }}
+              } @else {
+                <mat-select [(ngModel)]="item.tipoItem" [ngModelOptions]="{standalone: true}" (selectionChange)="onItemTipoChange(item)" style="width: 120px;">
+                  <mat-option value="Receita">Receita</mat-option>
+                  <mat-option value="Insumo">Insumo</mat-option>
+                </mat-select>
+              }
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="item">
+            <th mat-header-cell *matHeaderCellDef>Item</th>
+            <td mat-cell *matCellDef="let item">
+              @if (isView()) {
+                {{ getItemNome(item) }}
+              } @else {
+                @if (item.tipoItem === 'Receita') {
+                  <mat-select [(ngModel)]="item.receitaId" [ngModelOptions]="{standalone: true}" style="width: 200px;">
+                    <mat-option [value]="null">Selecione...</mat-option>
+                    @for (r of receitas(); track r.id) {
+                      <mat-option [value]="r.id">{{ r.nome }}</mat-option>
+                    }
+                  </mat-select>
+                } @else {
+                  <mat-select [(ngModel)]="item.insumoId" [ngModelOptions]="{standalone: true}" style="width: 200px;">
+                    <mat-option [value]="null">Selecione...</mat-option>
+                    @for (i of insumos(); track i.id) {
+                      <mat-option [value]="i.id">{{ i.nome }}</mat-option>
+                    }
+                  </mat-select>
+                }
+              }
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="quantidade">
+            <th mat-header-cell *matHeaderCellDef>Quantidade</th>
+            <td mat-cell *matCellDef="let item">
+              @if (isView()) {
+                {{ item.quantidade }}
+              } @else {
+                <input type="number" [(ngModel)]="item.quantidade" [ngModelOptions]="{standalone: true}" min="0.0001" step="0.0001" style="width: 100px;" />
+              }
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="unidade">
+            <th mat-header-cell *matHeaderCellDef>Unidade</th>
+            <td mat-cell *matCellDef="let item">
+              @if (isView()) {
+                {{ getUnidadeSigla(item.unidadeMedidaId) }}
+              } @else {
+                <mat-select [(ngModel)]="item.unidadeMedidaId" [ngModelOptions]="{standalone: true}" style="width: 120px;">
+                  <mat-option [value]="null">Selecione...</mat-option>
+                  @for (u of unidades(); track u.id) {
+                    <mat-option [value]="u.id">{{ u.sigla }} - {{ u.nome }}</mat-option>
+                  }
+                </mat-select>
+              }
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="qb">
+            <th mat-header-cell *matHeaderCellDef>QB</th>
+            <td mat-cell *matCellDef="let item">
+              @if (isView()) {
+                {{ item.exibirComoQB ? 'Sim' : 'Não' }}
+              } @else {
+                <mat-checkbox [(ngModel)]="item.exibirComoQB" [ngModelOptions]="{standalone: true}"></mat-checkbox>
+              }
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="observacoes">
+            <th mat-header-cell *matHeaderCellDef>Observações</th>
+            <td mat-cell *matCellDef="let item">
+              @if (isView()) {
+                {{ item.observacoes || '-' }}
+              } @else {
+                <input matInput [(ngModel)]="item.observacoes" [ngModelOptions]="{standalone: true}" style="width: 200px;" />
+              }
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="acoes">
+            <th mat-header-cell *matHeaderCellDef>Ações</th>
+            <td mat-cell *matCellDef="let item; let i = index">
+              @if (!isView()) {
+                <button mat-icon-button type="button" (click)="removeItem(i)" color="warn" matTooltip="Remover item">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              }
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumnsItens"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumnsItens"></tr>
+        </table>
+      </div>
+
+      @if (!isView()) {
+        <button mat-stroked-button type="button" (click)="addItem()">Adicionar item</button>
+      }
+    </div>
+
+    <div class="form-section">
+      <h3>Custos e Preços (somente leitura)</h3>
       <div class="custo-grid">
         <div>
-          <div class="label">Custo tǸcnico total</div>
-          <div class="value">{{ formatCurrency(custoTecnicoTotal()) }}</div>
+          <div class="label">Custo Total</div>
+          <div class="value">{{ formatCurrency(custoTotal()) }}</div>
         </div>
         <div>
-          <div class="label">Custo tǸcnico por por��ǜo</div>
-          <div class="value">{{ formatCurrency(custoTecnicoPorPorcao()) }}</div>
+          <div class="label">Custo por Unidade</div>
+          <div class="value">{{ formatCurrency(custoPorUnidade()) }}</div>
         </div>
         <div>
-          <div class="label">Pre��o sugerido (por por��ǜo)</div>
+          <div class="label">Rendimento Final (GR)</div>
+          <div class="value">
+            @if (rendimentoFinal() !== null) {
+              {{ rendimentoFinal() | number:'1.0-4' }}
+            } @else {
+              -
+            }
+          </div>
+        </div>
+        <div>
+          <div class="label">Preço Sugerido</div>
           <div class="value">
             @if (precoSugeridoVenda() !== null) {
               {{ formatCurrency(precoSugeridoVenda() || 0) }}
@@ -73,11 +232,11 @@
     <div class="form-section">
       <h3>Canais comerciais</h3>
       <div class="presets-row">
-        <span class="presets-label">Presets rǭpidos:</span>
+        <span class="presets-label">Presets rápidos:</span>
         <button mat-stroked-button type="button" (click)="addCanalPreset('IFOOD1')" [disabled]="isView()">Ifood 1</button>
         <button mat-stroked-button type="button" (click)="addCanalPreset('IFOOD2')" [disabled]="isView()">Ifood 2</button>
-        <button mat-stroked-button type="button" (click)="addCanalPreset('BALCAO')" [disabled]="isView()">Balcǜo</button>
-        <button mat-stroked-button type="button" (click)="addCanalPreset('DELIVERY')" [disabled]="isView()">Delivery pr��prio</button>
+        <button mat-stroked-button type="button" (click)="addCanalPreset('BALCAO')" [disabled]="isView()">Balcão</button>
+        <button mat-stroked-button type="button" (click)="addCanalPreset('DELIVERY')" [disabled]="isView()">Delivery próprio</button>
       </div>
       <div class="table-wrapper">
         <table mat-table [dataSource]="canais()" class="full-width-table">
@@ -88,27 +247,27 @@
                 {{ item.canal }}
               } @else {
                 <mat-form-field appearance="outline" style="width: 100%;">
-                  <input matInput [(ngModel)]="item.canal" [ngModelOptions]="{standalone: true}" placeholder="Ex: IFOOD1, BALCAO, DELIVERY" />
+                  <input matInput [(ngModel)]="item.canal" [ngModelOptions]="{standalone: true}" placeholder="Ex: ifood-1, ifood-2, BALCAO" />
                 </mat-form-field>
               }
             </td>
           </ng-container>
 
           <ng-container matColumnDef="nomeExibicao">
-            <th mat-header-cell *matHeaderCellDef>Nome exibi��ǜo</th>
+            <th mat-header-cell *matHeaderCellDef>Nome exibição</th>
             <td mat-cell *matCellDef="let item; let i = index">
               @if (isView()) {
                 {{ item.nomeExibicao || '-' }}
               } @else {
                 <mat-form-field appearance="outline" style="width: 100%;">
-                  <input matInput [(ngModel)]="item.nomeExibicao" [ngModelOptions]="{standalone: true}" placeholder="Ex: Ifood Loja 1" />
+                  <input matInput [(ngModel)]="item.nomeExibicao" [ngModelOptions]="{standalone: true}" placeholder="Ex: Ifood 1" />
                 </mat-form-field>
               }
             </td>
           </ng-container>
 
           <ng-container matColumnDef="precoVenda">
-            <th mat-header-cell *matHeaderCellDef>Pre��o venda</th>
+            <th mat-header-cell *matHeaderCellDef>Preço venda</th>
             <td mat-cell *matCellDef="let item; let i = index">
               @if (isView()) {
                 {{ formatCurrency(item.precoVenda) }}
@@ -125,7 +284,7 @@
             <td mat-cell *matCellDef="let item; let i = index">
               @if (isView()) {
                 <div>Taxa: {{ item.taxaPercentual ?? 0 }}%</div>
-                <div>Comissǜo: {{ item.comissaoPercentual ?? 0 }}%</div>
+                <div>Comissão: {{ item.comissaoPercentual ?? 0 }}%</div>
               } @else {
                 <div class="taxas-row">
                   <mat-form-field appearance="outline">
@@ -133,7 +292,7 @@
                     <input matInput type="number" [(ngModel)]="item.taxaPercentual" [ngModelOptions]="{standalone: true}" min="0" max="100" step="0.1" />
                   </mat-form-field>
                   <mat-form-field appearance="outline">
-                    <mat-label>Comissǜo (%)</mat-label>
+                    <mat-label>Comissão (%)</mat-label>
                     <input matInput type="number" [(ngModel)]="item.comissaoPercentual" [ngModelOptions]="{standalone: true}" min="0" max="100" step="0.1" />
                   </mat-form-field>
                 </div>
@@ -149,7 +308,7 @@
           </ng-container>
 
           <ng-container matColumnDef="acoes">
-            <th mat-header-cell *matHeaderCellDef>A����es</th>
+            <th mat-header-cell *matHeaderCellDef>Ações</th>
             <td mat-cell *matCellDef="let item; let i = index">
               @if (!isView()) {
                 <button mat-icon-button type="button" (click)="removeCanal(i)" color="warn" matTooltip="Remover canal">
@@ -180,7 +339,7 @@
     <div class="form-actions">
       <button mat-stroked-button type="button" routerLink="/tenant/fichas-tecnicas">Voltar</button>
       @if (isView()) {
-        <button mat-stroked-button type="button" (click)="window?.open(environment.apiUrl + '/tenant/fichas-tecnicas/' + id() + '/print', '_blank')">Imprimir / PDF</button>
+        <button mat-stroked-button type="button" (click)="window?.open(environment.apiUrl + '/tenant/fichas-tecnicas/' + id() + '/pdf', '_blank')">Imprimir / PDF</button>
       } @else {
         <button mat-raised-button color="primary" type="submit">Salvar</button>
       }

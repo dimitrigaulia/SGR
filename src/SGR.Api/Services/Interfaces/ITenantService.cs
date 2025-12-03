@@ -26,5 +26,10 @@ public interface ITenantService : IBaseService<TenantEntity, TenantDto, CreateTe
     /// Alterna o status ativo/inativo do tenant
     /// </summary>
     Task<bool> ToggleActiveAsync(long id, string? usuarioAtualizacao = null);
+
+    /// <summary>
+    /// Migra todos os schemas de tenant existentes para corrigir estruturas antigas
+    /// </summary>
+    Task MigrateAllTenantSchemasAsync();
 }
 

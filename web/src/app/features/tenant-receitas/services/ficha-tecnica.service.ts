@@ -16,24 +16,46 @@ export interface FichaTecnicaCanalDto {
   isAtivo: boolean;
 }
 
+export interface FichaTecnicaItemDto {
+  id: number;
+  fichaTecnicaId: number;
+  tipoItem: string;
+  receitaId?: number | null;
+  receitaNome?: string | null;
+  insumoId?: number | null;
+  insumoNome?: string | null;
+  quantidade: number;
+  unidadeMedidaId: number;
+  unidadeMedidaNome?: string | null;
+  unidadeMedidaSigla?: string | null;
+  exibirComoQB: boolean;
+  ordem: number;
+  observacoes?: string | null;
+  custoItem: number;
+}
+
 export interface FichaTecnicaDto {
   id: number;
-  receitaId: number;
-  receitaNome: string;
+  categoriaId: number;
+  categoriaNome?: string | null;
   nome: string;
   codigo?: string | null;
   descricaoComercial?: string | null;
+  custoTotal: number;
+  custoPorUnidade: number;
   rendimentoFinal?: number | null;
   indiceContabil?: number | null;
   precoSugeridoVenda?: number | null;
+  icOperador?: string | null;
+  icValor?: number | null;
+  ipcValor?: number | null;
   margemAlvoPercentual?: number | null;
-  custoTecnicoTotal: number;
-  custoTecnicoPorPorcao: number;
   isAtivo: boolean;
   usuarioCriacao?: string | null;
   usuarioAtualizacao?: string | null;
   dataCriacao: string;
   dataAtualizacao?: string | null;
+  itens: FichaTecnicaItemDto[];
   canais: FichaTecnicaCanalDto[];
 }
 
@@ -51,27 +73,56 @@ export interface UpdateFichaTecnicaCanalRequest extends CreateFichaTecnicaCanalR
   id?: number | null;
 }
 
+export interface CreateFichaTecnicaItemRequest {
+  tipoItem: string;
+  receitaId?: number | null;
+  insumoId?: number | null;
+  quantidade: number;
+  unidadeMedidaId: number;
+  exibirComoQB?: boolean;
+  ordem: number;
+  observacoes?: string | null;
+}
+
+export interface UpdateFichaTecnicaItemRequest {
+  id?: number | null;
+  tipoItem: string;
+  receitaId?: number | null;
+  insumoId?: number | null;
+  quantidade: number;
+  unidadeMedidaId: number;
+  exibirComoQB?: boolean;
+  ordem: number;
+  observacoes?: string | null;
+}
+
 export interface CreateFichaTecnicaRequest {
-  receitaId: number;
+  categoriaId: number;
   nome: string;
   codigo?: string | null;
   descricaoComercial?: string | null;
-  rendimentoFinal?: number | null;
   indiceContabil?: number | null;
+  icOperador?: string | null;
+  icValor?: number | null;
+  ipcValor?: number | null;
   margemAlvoPercentual?: number | null;
   isAtivo: boolean;
+  itens: CreateFichaTecnicaItemRequest[];
   canais: CreateFichaTecnicaCanalRequest[];
 }
 
 export interface UpdateFichaTecnicaRequest {
-  receitaId: number;
+  categoriaId: number;
   nome: string;
   codigo?: string | null;
   descricaoComercial?: string | null;
-  rendimentoFinal?: number | null;
   indiceContabil?: number | null;
+  icOperador?: string | null;
+  icValor?: number | null;
+  ipcValor?: number | null;
   margemAlvoPercentual?: number | null;
   isAtivo: boolean;
+  itens: UpdateFichaTecnicaItemRequest[];
   canais: UpdateFichaTecnicaCanalRequest[];
 }
 

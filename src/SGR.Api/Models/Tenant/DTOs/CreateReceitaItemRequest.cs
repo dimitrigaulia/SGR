@@ -11,6 +11,11 @@ public class CreateReceitaItemRequest
     [Range(0.0001, double.MaxValue, ErrorMessage = "Quantidade deve ser maior que zero")]
     public decimal Quantidade { get; set; }
 
+    [Required(ErrorMessage = "UnidadeMedidaId é obrigatório")]
+    public long UnidadeMedidaId { get; set; }
+
+    public bool ExibirComoQB { get; set; }
+
     [Range(1, int.MaxValue, ErrorMessage = "Ordem deve ser maior que zero")]
     public int Ordem { get; set; } = 1;
 

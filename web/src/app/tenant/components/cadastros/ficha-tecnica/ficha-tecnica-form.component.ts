@@ -12,9 +12,14 @@ import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { ToastService } from '../../../../core/services/toast.service';
+import { environment } from '../../../../../environments/environment';
+import { CategoriaReceitaService, CategoriaReceitaDto } from '../../../../features/tenant-categorias-receita/services/categoria-receita.service';
 import { ReceitaService, ReceitaDto } from '../../../../features/tenant-receitas/services/receita.service';
-import { FichaTecnicaService, CreateFichaTecnicaRequest, UpdateFichaTecnicaRequest } from '../../../../features/tenant-receitas/services/ficha-tecnica.service';
+import { InsumoService, InsumoDto } from '../../../../features/tenant-insumos/services/insumo.service';
+import { UnidadeMedidaService, UnidadeMedidaDto } from '../../../../features/tenant-unidades-medida/services/unidade-medida.service';
+import { FichaTecnicaService, CreateFichaTecnicaRequest, UpdateFichaTecnicaRequest, FichaTecnicaItemDto } from '../../../../features/tenant-receitas/services/ficha-tecnica.service';
 
 type FichaTecnicaCanalFormModel = {
   id?: number | null;
@@ -28,52 +33,110 @@ type FichaTecnicaCanalFormModel = {
   isAtivo: boolean;
 };
 
+type FichaTecnicaItemFormModel = {
+  id?: number | null;
+  tipoItem: 'Receita' | 'Insumo';
+  receitaId?: number | null;
+  insumoId?: number | null;
+  quantidade: number;
+  unidadeMedidaId: number | null;
+  exibirComoQB: boolean;
+  ordem: number;
+  observacoes?: string;
+};
+
 @Component({
   standalone: true,
   selector: 'app-tenant-ficha-tecnica-form',
-  imports: [CommonModule, FormsModule, RouterLink, MatFormFieldModule, MatInputModule, MatButtonModule, MatSelectModule, MatSlideToggleModule, MatSnackBarModule, MatTableModule, MatIconModule, MatCardModule],
+  imports: [CommonModule, FormsModule, RouterLink, MatFormFieldModule, MatInputModule, MatButtonModule, MatSelectModule, MatSlideToggleModule, MatSnackBarModule, MatTableModule, MatIconModule, MatCardModule, MatCheckboxModule],
   templateUrl: './ficha-tecnica-form.component.html',
   styleUrls: ['./ficha-tecnica-form.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class TenantFichaTecnicaFormComponent {
   private router = inject(Router);
+  private categoriaService = inject(CategoriaReceitaService);
   private receitaService = inject(ReceitaService);
+  private insumoService = inject(InsumoService);
+  private unidadeService = inject(UnidadeMedidaService);
   private fichaService = inject(FichaTecnicaService);
   private toast = inject(ToastService);
   private cdr = inject(ChangeDetectorRef);
   private destroyRef = inject(DestroyRef);
 
   id = signal<number | null>(null);
+  categorias = signal<CategoriaReceitaDto[]>([]);
   receitas = signal<ReceitaDto[]>([]);
+  insumos = signal<InsumoDto[]>([]);
+  unidades = signal<UnidadeMedidaDto[]>([]);
   isEdit = computed(() => this.id() !== null);
   isView = signal<boolean>(false);
   error = signal<string>('');
 
   model = {
-    receitaId: null as number | null,
+    categoriaId: null as number | null,
     nome: '',
     codigo: '',
     descricaoComercial: '',
-    rendimentoFinal: null as number | null,
     indiceContabil: null as number | null,
+    icOperador: null as string | null,
+    icValor: null as number | null,
+    ipcValor: null as number | null,
     margemAlvoPercentual: null as number | null,
     isAtivo: true
   };
 
+  itens = signal<FichaTecnicaItemFormModel[]>([]);
   canais = signal<FichaTecnicaCanalFormModel[]>([]);
+  displayedColumnsItens = ['ordem', 'tipo', 'item', 'quantidade', 'unidade', 'qb', 'observacoes', 'acoes'];
   displayedColumns = ['canal', 'nomeExibicao', 'precoVenda', 'taxas', 'margem', 'acoes'];
+  
+  // Propriedades para uso no template
+  window = typeof window !== 'undefined' ? window : null;
+  environment = environment;
 
-  custoTecnicoTotal = signal<number>(0);
-  custoTecnicoPorPorcao = signal<number>(0);
+  custoTotal = signal<number>(0);
+  custoPorUnidade = signal<number>(0);
+  rendimentoFinal = signal<number | null>(null);
   precoSugeridoVenda = signal<number | null>(null);
 
   constructor() {
+    // Carregar categorias
+    this.categoriaService.list({ pageSize: 1000 })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: res => {
+          this.categorias.set(res.items.filter(c => c.isAtivo));
+          this.cdr.markForCheck();
+        }
+      });
+
+    // Carregar receitas
     this.receitaService.list({ pageSize: 1000 })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: res => {
-          this.receitas.set(res.items);
+          this.receitas.set(res.items.filter(r => r.isAtivo));
+          this.cdr.markForCheck();
+        }
+      });
+
+    // Carregar insumos
+    this.insumoService.list({ pageSize: 1000 })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: res => {
+          this.insumos.set(res.items.filter(i => i.isAtivo));
+          this.cdr.markForCheck();
+        }
+      });
+
+    // Carregar unidades de medida
+    this.unidadeService.list({ pageSize: 1000 })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: res => {
+          this.unidades.set(res.items.filter(u => u.isAtivo));
           this.cdr.markForCheck();
         }
       });
@@ -89,18 +152,32 @@ export class TenantFichaTecnicaFormComponent {
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe(e => {
           this.model = {
-            receitaId: e.receitaId,
+            categoriaId: e.categoriaId,
             nome: e.nome,
             codigo: e.codigo || '',
             descricaoComercial: e.descricaoComercial || '',
-            rendimentoFinal: e.rendimentoFinal ?? null,
             indiceContabil: e.indiceContabil ?? null,
+            icOperador: e.icOperador ?? null,
+            icValor: e.icValor ?? null,
+            ipcValor: e.ipcValor ?? null,
             margemAlvoPercentual: e.margemAlvoPercentual ?? null,
             isAtivo: e.isAtivo
           };
-          this.custoTecnicoTotal.set(e.custoTecnicoTotal);
-          this.custoTecnicoPorPorcao.set(e.custoTecnicoPorPorcao);
+          this.custoTotal.set(e.custoTotal);
+          this.custoPorUnidade.set(e.custoPorUnidade);
+          this.rendimentoFinal.set(e.rendimentoFinal ?? null);
           this.precoSugeridoVenda.set(e.precoSugeridoVenda ?? null);
+          this.itens.set(e.itens.map(i => ({
+            id: i.id,
+            tipoItem: i.tipoItem as 'Receita' | 'Insumo',
+            receitaId: i.receitaId ?? null,
+            insumoId: i.insumoId ?? null,
+            quantidade: i.quantidade,
+            unidadeMedidaId: i.unidadeMedidaId,
+            exibirComoQB: i.exibirComoQB,
+            ordem: i.ordem,
+            observacoes: i.observacoes || ''
+          })));
           this.canais.set(e.canais.map(c => ({
             id: c.id,
             canal: c.canal,
@@ -119,26 +196,56 @@ export class TenantFichaTecnicaFormComponent {
     }
   }
 
-  get receitaSelecionada(): ReceitaDto | undefined {
-    const id = this.model.receitaId;
-    if (!id) return undefined;
-    return this.receitas().find(r => r.id === id);
+  formatCurrency(value: number): string {
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
   }
 
-  onReceitaChange() {
-    const r = this.receitaSelecionada;
-    if (r) {
-      this.custoTecnicoTotal.set(r.custoTotal);
-      this.custoTecnicoPorPorcao.set(r.custoPorPorcao);
+  addItem() {
+    const current = this.itens();
+    const ordem = current.length > 0 ? Math.max(...current.map(i => i.ordem)) + 1 : 1;
+    this.itens.set([...current, {
+      tipoItem: 'Insumo',
+      receitaId: null,
+      insumoId: null,
+      quantidade: 0,
+      unidadeMedidaId: null,
+      exibirComoQB: false,
+      ordem,
+      observacoes: ''
+    }]);
+    this.cdr.markForCheck();
+  }
+
+  removeItem(index: number) {
+    const current = this.itens();
+    this.itens.set(current.filter((_, i) => i !== index));
+    this.cdr.markForCheck();
+  }
+
+  onItemTipoChange(item: FichaTecnicaItemFormModel) {
+    if (item.tipoItem === 'Receita') {
+      item.insumoId = null;
     } else {
-      this.custoTecnicoTotal.set(0);
-      this.custoTecnicoPorPorcao.set(0);
+      item.receitaId = null;
     }
     this.cdr.markForCheck();
   }
 
-  formatCurrency(value: number): string {
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
+  getItemNome(item: FichaTecnicaItemFormModel): string {
+    if (item.tipoItem === 'Receita' && item.receitaId) {
+      const receita = this.receitas().find(r => r.id === item.receitaId);
+      return receita?.nome || '';
+    } else if (item.tipoItem === 'Insumo' && item.insumoId) {
+      const insumo = this.insumos().find(i => i.id === item.insumoId);
+      return insumo?.nome || '';
+    }
+    return '';
+  }
+
+  getUnidadeSigla(unidadeMedidaId: number | null): string {
+    if (!unidadeMedidaId) return '-';
+    const unidade = this.unidades().find(u => u.id === unidadeMedidaId);
+    return unidade ? unidade.sigla : '-';
   }
 
   addCanal() {
@@ -158,8 +265,8 @@ export class TenantFichaTecnicaFormComponent {
 
   addCanalPreset(tipo: 'IFOOD1' | 'IFOOD2' | 'BALCAO' | 'DELIVERY') {
     const presets: Record<string, { canal: string; nomeExibicao: string; taxaPercentual?: number | null; comissaoPercentual?: number | null }> = {
-      IFOOD1: { canal: 'IFOOD1', nomeExibicao: 'Ifood Loja 1', taxaPercentual: 18, comissaoPercentual: null },
-      IFOOD2: { canal: 'IFOOD2', nomeExibicao: 'Ifood Loja 2', taxaPercentual: 25, comissaoPercentual: null },
+      IFOOD1: { canal: 'ifood-1', nomeExibicao: 'Ifood 1', taxaPercentual: 13, comissaoPercentual: null },
+      IFOOD2: { canal: 'ifood-2', nomeExibicao: 'Ifood 2', taxaPercentual: 25, comissaoPercentual: null },
       BALCAO: { canal: 'BALCAO', nomeExibicao: 'Balcão', taxaPercentual: 0, comissaoPercentual: null },
       DELIVERY: { canal: 'DELIVERY', nomeExibicao: 'Delivery Próprio', taxaPercentual: 0, comissaoPercentual: null }
     };
@@ -190,28 +297,47 @@ export class TenantFichaTecnicaFormComponent {
     if (this.isView()) return;
 
     const v = this.model;
-    if (!v.receitaId || !v.nome) {
-      this.toast.error('Selecione uma receita e informe o nome');
+    if (!v.categoriaId || !v.nome) {
+      this.toast.error('Selecione uma categoria e informe o nome');
       return;
     }
 
-    const canaisValidos = this.canais().filter(c => c.canal && c.precoVenda > 0);
-    if (canaisValidos.length === 0) {
-      this.toast.error('Adicione pelo menos um canal com preço de venda');
+    const itensValidos = this.itens().filter(i =>
+      (
+        (i.tipoItem === 'Receita' && i.receitaId != null) ||
+        (i.tipoItem === 'Insumo' && i.insumoId != null)
+      )
+      && i.quantidade > 0
+      && !!i.unidadeMedidaId
+    );
+    if (itensValidos.length === 0) {
+      this.toast.error('Adicione pelo menos um item válido');
       return;
     }
 
     if (this.id() === null) {
       const req: CreateFichaTecnicaRequest = {
-        receitaId: v.receitaId,
+        categoriaId: v.categoriaId,
         nome: v.nome,
         codigo: v.codigo || undefined,
         descricaoComercial: v.descricaoComercial || undefined,
-        rendimentoFinal: v.rendimentoFinal ?? undefined,
         indiceContabil: v.indiceContabil ?? undefined,
+        icOperador: v.icOperador || undefined,
+        icValor: v.icValor ?? undefined,
+        ipcValor: v.ipcValor ?? undefined,
         margemAlvoPercentual: v.margemAlvoPercentual ?? undefined,
         isAtivo: !!v.isAtivo,
-        canais: canaisValidos.map(c => ({
+        itens: itensValidos.map(i => ({
+          tipoItem: i.tipoItem,
+          receitaId: i.receitaId ?? undefined,
+          insumoId: i.insumoId ?? undefined,
+          quantidade: i.quantidade,
+          unidadeMedidaId: i.unidadeMedidaId!,
+          exibirComoQB: i.exibirComoQB,
+          ordem: i.ordem,
+          observacoes: i.observacoes || undefined
+        })),
+        canais: this.canais().filter(c => c.canal && c.precoVenda >= 0).map(c => ({
           canal: c.canal,
           nomeExibicao: c.nomeExibicao || undefined,
           precoVenda: c.precoVenda,
@@ -238,15 +364,28 @@ export class TenantFichaTecnicaFormComponent {
         });
     } else {
       const req: UpdateFichaTecnicaRequest = {
-        receitaId: v.receitaId,
+        categoriaId: v.categoriaId,
         nome: v.nome,
         codigo: v.codigo || undefined,
         descricaoComercial: v.descricaoComercial || undefined,
-        rendimentoFinal: v.rendimentoFinal ?? undefined,
         indiceContabil: v.indiceContabil ?? undefined,
+        icOperador: v.icOperador || undefined,
+        icValor: v.icValor ?? undefined,
+        ipcValor: v.ipcValor ?? undefined,
         margemAlvoPercentual: v.margemAlvoPercentual ?? undefined,
         isAtivo: !!v.isAtivo,
-        canais: canaisValidos.map(c => ({
+        itens: itensValidos.map(i => ({
+          id: i.id ?? undefined,
+          tipoItem: i.tipoItem,
+          receitaId: i.receitaId ?? undefined,
+          insumoId: i.insumoId ?? undefined,
+          quantidade: i.quantidade,
+          unidadeMedidaId: i.unidadeMedidaId!,
+          exibirComoQB: i.exibirComoQB,
+          ordem: i.ordem,
+          observacoes: i.observacoes || undefined
+        })),
+        canais: this.canais().filter(c => c.canal && c.precoVenda >= 0).map(c => ({
           id: c.id ?? undefined,
           canal: c.canal,
           nomeExibicao: c.nomeExibicao || undefined,

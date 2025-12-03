@@ -32,7 +32,6 @@ public class UnidadeMedidaService : BaseService<TenantDbContext, UnidadeMedida, 
         {
             "nome" => ascending ? query.OrderBy(u => u.Nome) : query.OrderByDescending(u => u.Nome),
             "sigla" => ascending ? query.OrderBy(u => u.Sigla) : query.OrderByDescending(u => u.Sigla),
-            "tipo" => ascending ? query.OrderBy(u => u.Tipo ?? "") : query.OrderByDescending(u => u.Tipo ?? ""),
             "ativo" or "isativo" => ascending ? query.OrderBy(u => u.IsAtivo) : query.OrderByDescending(u => u.IsAtivo),
             _ => query.OrderBy(u => u.Nome)
         };
@@ -45,9 +44,6 @@ public class UnidadeMedidaService : BaseService<TenantDbContext, UnidadeMedida, 
             Id = u.Id,
             Nome = u.Nome,
             Sigla = u.Sigla,
-            Tipo = u.Tipo,
-            UnidadeBaseId = u.UnidadeBaseId,
-            FatorConversaoBase = u.FatorConversaoBase,
             IsAtivo = u.IsAtivo,
             UsuarioCriacao = u.UsuarioCriacao,
             UsuarioAtualizacao = u.UsuarioAtualizacao,
@@ -62,9 +58,6 @@ public class UnidadeMedidaService : BaseService<TenantDbContext, UnidadeMedida, 
         {
             Nome = request.Nome,
             Sigla = request.Sigla,
-            Tipo = request.Tipo,
-            UnidadeBaseId = request.UnidadeBaseId,
-            FatorConversaoBase = request.FatorConversaoBase,
             IsAtivo = request.IsAtivo
         };
     }
@@ -73,9 +66,6 @@ public class UnidadeMedidaService : BaseService<TenantDbContext, UnidadeMedida, 
     {
         entity.Nome = request.Nome;
         entity.Sigla = request.Sigla;
-        entity.Tipo = request.Tipo;
-        entity.UnidadeBaseId = request.UnidadeBaseId;
-        entity.FatorConversaoBase = request.FatorConversaoBase;
         entity.IsAtivo = request.IsAtivo;
     }
 
@@ -83,11 +73,12 @@ public class UnidadeMedidaService : BaseService<TenantDbContext, UnidadeMedida, 
     {
         var hasInsumosCompra = await _context.Set<Insumo>().AnyAsync(i => i.UnidadeCompraId == entity.Id);
         var hasInsumosUso = await _context.Set<Insumo>().AnyAsync(i => i.UnidadeUsoId == entity.Id);
-        var hasUnidadesBase = await _context.Set<UnidadeMedida>().AnyAsync(u => u.UnidadeBaseId == entity.Id);
+        var hasReceitaItens = await _context.Set<ReceitaItem>().AnyAsync(r => r.UnidadeMedidaId == entity.Id);
+        var hasFichaTecnicaItens = await _context.Set<FichaTecnicaItem>().AnyAsync(f => f.UnidadeMedidaId == entity.Id);
         
-        if (hasInsumosCompra || hasInsumosUso || hasUnidadesBase)
+        if (hasInsumosCompra || hasInsumosUso || hasReceitaItens || hasFichaTecnicaItens)
         {
-            throw new BusinessException("Não é possível excluir uma unidade de medida que possui insumos cadastrados ou outras unidades relacionadas");
+            throw new BusinessException("Não é possível excluir uma unidade de medida que possui insumos, receitas ou fichas técnicas cadastradas");
         }
     }
 }

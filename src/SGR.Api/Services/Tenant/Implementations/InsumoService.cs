@@ -117,7 +117,6 @@ public class InsumoService : BaseService<TenantDbContext, Insumo, InsumoDto, Cre
             UnidadeUsoId = i.UnidadeUsoId,
             UnidadeUsoNome = i.UnidadeUso != null ? i.UnidadeUso.Nome : null,
             UnidadeUsoSigla = i.UnidadeUso != null ? i.UnidadeUso.Sigla : null,
-            UnidadeUsoTipo = i.UnidadeUso != null ? i.UnidadeUso.Tipo : null,
             QuantidadePorEmbalagem = i.QuantidadePorEmbalagem,
             CustoUnitario = i.CustoUnitario,
             FatorCorrecao = i.FatorCorrecao,

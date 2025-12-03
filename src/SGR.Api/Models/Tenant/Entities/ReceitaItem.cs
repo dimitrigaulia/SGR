@@ -8,12 +8,35 @@ public class ReceitaItem
     public long Id { get; set; }
     public long ReceitaId { get; set; }
     public long InsumoId { get; set; }
-    public decimal Quantidade { get; set; } // Quantidade na unidade de uso do insumo
-    public int Ordem { get; set; } // Ordem de exibição (1, 2, 3...)
-    public string? Observacoes { get; set; } // Notas específicas do item
+    
+    /// <summary>
+    /// Quantidade na unidade de medida especificada
+    /// </summary>
+    public decimal Quantidade { get; set; }
+    
+    /// <summary>
+    /// Unidade de medida usada para este item
+    /// </summary>
+    public long UnidadeMedidaId { get; set; }
+    
+    /// <summary>
+    /// Se true, exibir como "QB" (Quantidade a Bel Prazer) na UI e PDF
+    /// </summary>
+    public bool ExibirComoQB { get; set; }
+    
+    /// <summary>
+    /// Ordem de exibição (1, 2, 3...)
+    /// </summary>
+    public int Ordem { get; set; }
+    
+    /// <summary>
+    /// Observações específicas do item
+    /// </summary>
+    public string? Observacoes { get; set; }
 
     // Navegação
     public Receita Receita { get; set; } = null!;
     public Insumo Insumo { get; set; } = null!;
+    public UnidadeMedida UnidadeMedida { get; set; } = null!;
 }
 

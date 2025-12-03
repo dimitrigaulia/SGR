@@ -61,6 +61,14 @@ public class ReceitasController : ControllerBase
         var receita = await _service.GetByIdAsync(id);
         if (receita == null) return NotFound();
 
+        // Construir as linhas da tabela separadamente para evitar problemas de interpolação aninhada
+        var itensHtml = string.Join("", receita.Itens.Select((i, idx) =>
+        {
+            var quantidadeDisplay = i.ExibirComoQB ? "QB" : i.Quantidade.ToString("0.####");
+            var unidadeDisplay = i.ExibirComoQB ? "" : $" {System.Net.WebUtility.HtmlEncode(i.UnidadeMedidaSigla ?? "")}";
+            return $"<tr><td>{idx + 1}</td><td>{System.Net.WebUtility.HtmlEncode(i.InsumoNome ?? "")}</td><td>{quantidadeDisplay}{unidadeDisplay}</td><td>{i.CustoItem:C}</td></tr>";
+        }));
+
         var html = $@"
 <!DOCTYPE html>
 <html lang=""pt-BR"">
@@ -95,8 +103,7 @@ public class ReceitasController : ControllerBase
       </tr>
     </thead>
     <tbody>
-      {string.Join("", receita.Itens.Select((i, idx) =>
-        $"<tr><td>{idx + 1}</td><td>{System.Net.WebUtility.HtmlEncode(i.InsumoNome ?? \"\")}</td><td>{i.Quantidade} {System.Net.WebUtility.HtmlEncode(i.UnidadeUsoSigla ?? \"\")}</td><td>{i.CustoItem:C}</td></tr>"))}
+      {itensHtml}
     </tbody>
   </table>
 
@@ -106,6 +113,22 @@ public class ReceitasController : ControllerBase
 </html>";
 
         return Content(html, "text/html; charset=utf-8");
+    }
+
+    /// <summary>
+    /// Gera PDF da receita
+    /// </summary>
+    [HttpGet("{id:long}/pdf")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetPdf(long id)
+    {
+        var receita = await _service.GetByIdAsync(id);
+        if (receita == null) return NotFound();
+
+        // Por enquanto, retorna HTML (pode ser convertido para PDF no frontend ou adicionar biblioteca de PDF depois)
+        // TODO: Implementar geração de PDF real usando QuestPDF ou iTextSharp
+        return await Print(id);
     }
 
     /// <summary>

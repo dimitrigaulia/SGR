@@ -129,11 +129,8 @@ export class TenantInsumoFormComponent {
       return 'Escolha primeiro as unidades de compra e de uso para ver como o sistema fará a conversão automática.';
     }
 
-    if (compra.tipo && uso.tipo && compra.tipo === uso.tipo) {
-      return `Perfeito: o sistema converte automaticamente de ${compra.sigla} para ${uso.sigla} usando o tipo "${compra.tipo}".`;
-    }
-
-    return `Atenção: como as unidades têm tipos diferentes, a Quantidade por Embalagem deve estar na mesma unidade de uso (${uso.sigla}) para que o custo fique correto.`;
+    // Com unidades simplificadas, não há mais conversão automática por tipo
+    return `Atenção: a Quantidade por Embalagem deve estar na mesma unidade de uso (${uso.sigla}) para que o custo fique correto.`;
   }
 
   get resumoCustoPorUnidadeCompra(): string {
@@ -152,19 +149,13 @@ export class TenantInsumoFormComponent {
     const quantidadePorEmbalagem = this.model.quantidadePorEmbalagem;
     const custo = this.model.custoUnitario || 0;
 
-    if (!unidadeCompra || !unidadeUso || !unidadeCompra.tipo || unidadeCompra.tipo !== unidadeUso.tipo) {
+    if (!unidadeCompra || !unidadeUso || quantidadePorEmbalagem <= 0 || custo <= 0) {
       return '-';
     }
 
-    const fatorCompraBase = unidadeCompra.fatorConversaoBase ?? 1;
-    const fatorUsoBase = unidadeUso.fatorConversaoBase ?? 1;
-
-    if (quantidadePorEmbalagem <= 0 || fatorCompraBase <= 0 || fatorUsoBase <= 0 || custo <= 0) {
-      return '-';
-    }
-
-    // custo por unidade de uso (sem considerar fator de correção, que é aplicado na receita)
-    const custoPorUnidadeUso = custo * fatorUsoBase / (quantidadePorEmbalagem * fatorCompraBase);
+    // Custo por unidade de uso = (CustoUnitario / QuantidadePorEmbalagem) * FatorCorrecao
+    // O FatorCorrecao é aplicado na receita, então aqui mostramos apenas o custo básico
+    const custoPorUnidadeUso = custo / quantidadePorEmbalagem;
     const valor = custoPorUnidadeUso.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     return `${valor} / ${unidadeUso.sigla}`;
   }

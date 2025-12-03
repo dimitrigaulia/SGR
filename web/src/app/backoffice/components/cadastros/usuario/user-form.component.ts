@@ -14,7 +14,10 @@ import { PerfilService, PerfilDto } from '../../../../features/perfis/services/p
 import { ToastService } from '../../../../core/services/toast.service';
 import { UploadService } from '../../../../features/usuarios/services/upload.service';
 
-type UsuarioFormModel = Omit<UsuarioDto, 'id'> & {
+// Tipo do formulário - perfilId pode ser null apenas durante a inicialização/seleção
+// Na validação garantimos que será number antes de salvar (perfil é obrigatório)
+type UsuarioFormModel = Omit<UsuarioDto, 'id' | 'perfilId'> & {
+  perfilId: number | null; // null apenas no formulário, obrigatório ao salvar
   senha?: string;
   novaSenha?: string;
 };
@@ -48,7 +51,7 @@ export class UserFormComponent {
   model: UsuarioFormModel = {
     nomeCompleto: '',
     email: '',
-    perfilId: null as any,
+    perfilId: null,
     isAtivo: true,
     senha: '',
     novaSenha: '',
@@ -87,17 +90,42 @@ export class UserFormComponent {
     this.error.set('');
     if (this.isView()) return;
     const v = this.model;
-    // Validação simples
-    if (!v.nomeCompleto || !v.email || !v.perfilId || this.emailTaken) {
-      this.toast.error('Preencha os campos obrigatórios corretamente');
+    
+    // Validações específicas com mensagens apropriadas
+    if (this.emailTaken) {
+      this.toast.error('Este email já está em uso');
+      return;
+    }
+    
+    if (!v.nomeCompleto?.trim()) {
+      this.toast.error('Nome completo é obrigatório');
+      return;
+    }
+    
+    if (!v.email?.trim()) {
+      this.toast.error('Email é obrigatório');
+      return;
+    }
+    
+    if (v.perfilId == null || v.perfilId === undefined) {
+      this.toast.error('Selecione um perfil');
+      return;
+    }
+    
+    // Validação adicional para senha ao criar
+    if (!this.isEdit() && (!v.senha || v.senha.trim().length < 6)) {
+      this.toast.error('A senha deve ter pelo menos 6 caracteres');
       return;
     }
 
+    // Neste ponto, perfilId é garantidamente number (não null) devido à validação acima
+    const perfilId = v.perfilId;
+
     if (!this.isEdit()) {
       const req: CreateUsuarioRequest = {
-        nomeCompleto: v.nomeCompleto,
-        email: v.email,
-        perfilId: v.perfilId!,
+        nomeCompleto: v.nomeCompleto.trim(),
+        email: v.email.trim(),
+        perfilId: perfilId, // Agora TypeScript sabe que é number
         isAtivo: !!v.isAtivo,
         senha: v.senha || '',
         pathImagem: v.pathImagem || undefined,
@@ -115,9 +143,9 @@ export class UserFormComponent {
         });
     } else {
       const req: UpdateUsuarioRequest = {
-        nomeCompleto: v.nomeCompleto,
-        email: v.email,
-        perfilId: v.perfilId!,
+        nomeCompleto: v.nomeCompleto.trim(),
+        email: v.email.trim(),
+        perfilId: perfilId, // Usa a variável já validada
         isAtivo: !!v.isAtivo,
         novaSenha: v.novaSenha || undefined,
         pathImagem: v.pathImagem || undefined,
@@ -200,6 +228,10 @@ export class UserFormComponent {
           this.cdr.markForCheck();
         }
       });
+  }
+
+  onPerfilChange() {
+    this.cdr.markForCheck();
   }
 }
 

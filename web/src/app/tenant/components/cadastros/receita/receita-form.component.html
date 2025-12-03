@@ -98,9 +98,140 @@
       </mat-form-field>
     </div>
 
-    <!-- resto do template original permanece (modo de preparo, itens, custos, etc.) -->
-    <!-- Para economizar espaço aqui, todo o bloco de itens e ações foi mantido inalterado,
-         apenas o cabeçalho inicial foi adaptado para IC/IPC. -->
+    <div class="form-section">
+      <h3>Modo de Preparo</h3>
+      <mat-form-field appearance="outline" class="form-field-spacing">
+        <mat-label>Descrição do preparo</mat-label>
+        <textarea matInput name="descricao" rows="6" [(ngModel)]="model.descricao" [disabled]="isView()" maxlength="5000"></textarea>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="form-field-spacing">
+        <mat-label>Instruções de Empratamento</mat-label>
+        <textarea matInput name="instrucoesEmpratamento" rows="4" [(ngModel)]="model.instrucoesEmpratamento" [disabled]="isView()" maxlength="2000"></textarea>
+      </mat-form-field>
+    </div>
+
+    <div class="form-section">
+      <h3>Itens da Receita</h3>
+      <div class="table-wrapper">
+        <table mat-table [dataSource]="itens()" class="full-width-table">
+          <ng-container matColumnDef="ordem">
+            <th mat-header-cell *matHeaderCellDef>Ordem</th>
+            <td mat-cell *matCellDef="let item">
+              @if (isView()) {
+                {{ item.ordem }}
+              } @else {
+                <input type="number" [(ngModel)]="item.ordem" [ngModelOptions]="{standalone: true}" min="1" style="width: 60px;" />
+              }
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="insumo">
+            <th mat-header-cell *matHeaderCellDef>Insumo</th>
+            <td mat-cell *matCellDef="let item">
+              @if (isView()) {
+                {{ getInsumoNome(item.insumoId) }}
+              } @else {
+                <mat-select [(ngModel)]="item.insumoId" [ngModelOptions]="{standalone: true}" (selectionChange)="onInsumoChange(item, 0)" style="width: 200px;">
+                  <mat-option [value]="null">Selecione...</mat-option>
+                  @for (i of insumos(); track i.id) {
+                    <mat-option [value]="i.id">{{ i.nome }}</mat-option>
+                  }
+                </mat-select>
+              }
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="quantidade">
+            <th mat-header-cell *matHeaderCellDef>Quantidade</th>
+            <td mat-cell *matCellDef="let item">
+              @if (isView()) {
+                {{ formatQuantidade(item.quantidade, item.unidadeMedidaId) }}
+              } @else {
+                <input type="number" [(ngModel)]="item.quantidade" [ngModelOptions]="{standalone: true}" (ngModelChange)="onQuantidadeChange(item, 0)" [step]="getStepForUnidade(item.unidadeMedidaId)" min="0.0001" style="width: 100px;" />
+              }
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="unidade">
+            <th mat-header-cell *matHeaderCellDef>Unidade</th>
+            <td mat-cell *matCellDef="let item">
+              @if (isView()) {
+                {{ getUnidadeSigla(item.unidadeMedidaId) }}
+              } @else {
+                <mat-select [(ngModel)]="item.unidadeMedidaId" [ngModelOptions]="{standalone: true}" style="width: 120px;">
+                  <mat-option [value]="null">Selecione...</mat-option>
+                  @for (u of unidades(); track u.id) {
+                    <mat-option [value]="u.id">{{ u.sigla }} - {{ u.nome }}</mat-option>
+                  }
+                </mat-select>
+              }
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="qb">
+            <th mat-header-cell *matHeaderCellDef>QB</th>
+            <td mat-cell *matCellDef="let item">
+              @if (isView()) {
+                {{ item.exibirComoQB ? 'Sim' : 'Não' }}
+              } @else {
+                <mat-checkbox [(ngModel)]="item.exibirComoQB" [ngModelOptions]="{standalone: true}"></mat-checkbox>
+              }
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="observacoes">
+            <th mat-header-cell *matHeaderCellDef>Observações</th>
+            <td mat-cell *matCellDef="let item">
+              @if (isView()) {
+                {{ item.observacoes || '-' }}
+              } @else {
+                <input matInput [(ngModel)]="item.observacoes" [ngModelOptions]="{standalone: true}" style="width: 200px;" />
+              }
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="acoes">
+            <th mat-header-cell *matHeaderCellDef>Ações</th>
+            <td mat-cell *matCellDef="let item; let i = index">
+              @if (!isView()) {
+                <button mat-icon-button type="button" (click)="moveItemUp(i)" [disabled]="i === 0" matTooltip="Mover para cima">
+                  <mat-icon>arrow_upward</mat-icon>
+                </button>
+                <button mat-icon-button type="button" (click)="moveItemDown(i)" [disabled]="i === itens().length - 1" matTooltip="Mover para baixo">
+                  <mat-icon>arrow_downward</mat-icon>
+                </button>
+                <button mat-icon-button type="button" (click)="removeItem(i)" color="warn" matTooltip="Remover item">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              }
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+        </table>
+      </div>
+
+      @if (!isView()) {
+        <button mat-stroked-button type="button" (click)="addItem()">Adicionar item</button>
+      }
+    </div>
+
+    <div class="form-section">
+      <h3>Custos (somente leitura)</h3>
+      <div class="custo-grid">
+        <div>
+          <div class="label">Custo Total</div>
+          <div class="value">-</div>
+        </div>
+        <div>
+          <div class="label">Custo por Porção</div>
+          <div class="value">-</div>
+        </div>
+      </div>
+      <p style="font-size: 12px; color: #666; margin-top: 8px;">Os custos são calculados automaticamente pelo sistema.</p>
+    </div>
 
     <!-- Wrapper para o toggle com espaçamento consistente -->
     <div class="form-toggle-wrapper">
@@ -114,7 +245,7 @@
     <div class="form-actions">
       <button mat-stroked-button type="button" routerLink="/tenant/receitas">Voltar</button>
       @if (isView()) {
-        <button mat-stroked-button type="button" (click)="window?.open(environment.apiUrl + '/tenant/receitas/' + id() + '/print', '_blank')">Imprimir / PDF</button>
+        <button mat-stroked-button type="button" (click)="window?.open(environment.apiUrl + '/tenant/receitas/' + id() + '/pdf', '_blank')">Imprimir / PDF</button>
       } @else {
         <button mat-raised-button color="primary" type="submit">Salvar</button>
       }

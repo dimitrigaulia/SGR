@@ -9,9 +9,11 @@ export interface ReceitaItemDto {
   insumoId: number;
   insumoNome?: string | null;
   insumoCategoriaNome?: string | null;
-  unidadeUsoNome?: string | null;
-  unidadeUsoSigla?: string | null;
   quantidade: number;
+  unidadeMedidaId: number;
+  unidadeMedidaNome?: string | null;
+  unidadeMedidaSigla?: string | null;
+  exibirComoQB: boolean;
   quantidadeBruta: number;
   custoItem: number;
   custoPorUnidadeUso?: number | null;
@@ -49,6 +51,8 @@ export interface ReceitaDto {
 export interface CreateReceitaItemRequest {
   insumoId: number;
   quantidade: number;
+  unidadeMedidaId: number;
+  exibirComoQB?: boolean;
   ordem: number;
   observacoes?: string | null;
 }
@@ -56,6 +60,8 @@ export interface CreateReceitaItemRequest {
 export interface UpdateReceitaItemRequest {
   insumoId: number;
   quantidade: number;
+  unidadeMedidaId: number;
+  exibirComoQB?: boolean;
   ordem: number;
   observacoes?: string | null;
 }

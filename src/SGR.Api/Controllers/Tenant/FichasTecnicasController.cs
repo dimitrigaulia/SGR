@@ -55,6 +55,20 @@ public class FichasTecnicasController : ControllerBase
         var ficha = await _service.GetByIdAsync(id);
         if (ficha == null) return NotFound();
 
+        // Construir as linhas da tabela de itens
+        var itensHtml = string.Join("", ficha.Itens.Select(i =>
+        {
+            var quantidadeDisplay = i.ExibirComoQB ? "QB" : i.Quantidade.ToString("0.####");
+            var unidadeDisplay = i.ExibirComoQB ? "" : $" {System.Net.WebUtility.HtmlEncode(i.UnidadeMedidaSigla ?? "")}";
+            var tipoDisplay = i.TipoItem == "Receita" ? "Receita" : "Insumo";
+            var nomeDisplay = i.TipoItem == "Receita" ? (i.ReceitaNome ?? "") : (i.InsumoNome ?? "");
+            return $"<tr><td>{tipoDisplay}</td><td>{System.Net.WebUtility.HtmlEncode(nomeDisplay)}</td><td>{quantidadeDisplay}{unidadeDisplay}</td></tr>";
+        }));
+
+        // Construir as linhas da tabela de canais
+        var canaisHtml = string.Join("", ficha.Canais.Select(c =>
+            $"<tr><td>{System.Net.WebUtility.HtmlEncode(c.Canal)}</td><td>{System.Net.WebUtility.HtmlEncode(c.NomeExibicao ?? "")}</td><td>{c.PrecoVenda:C}</td><td>{c.TaxaPercentual ?? 0}</td><td>{(c.MargemCalculadaPercentual?.ToString("0.##") ?? "-")}</td></tr>"));
+
         var html = $@"
 <!DOCTYPE html>
 <html lang=""pt-BR"">
@@ -72,8 +86,8 @@ public class FichasTecnicasController : ControllerBase
 </head>
 <body>
   <h1>Ficha T��cnica: {System.Net.WebUtility.HtmlEncode(ficha.Nome)}</h1>
-  <p><strong>Receita:</strong> {System.Net.WebUtility.HtmlEncode(ficha.ReceitaNome)}</p>
-  <p><strong>Custo tǸcnico por por��ǜo:</strong> {ficha.CustoTecnicoPorPorcao:C}</p>
+  <p><strong>Receita:</strong> {System.Net.WebUtility.HtmlEncode(ficha.CategoriaNome ?? "")}</p>
+  <p><strong>Custo tǸcnico por por��ǜo:</strong> {ficha.CustoPorUnidade:C}</p>
   <p><strong>Pre��o sugerido (por por��ǜo):</strong> {(ficha.PrecoSugeridoVenda.HasValue ? ficha.PrecoSugeridoVenda.Value.ToString("C") : "-")}</p>
 
   <h2>Canais</h2>
@@ -89,14 +103,29 @@ public class FichasTecnicasController : ControllerBase
       </tr>
     </thead>
     <tbody>
-      {string.Join("", ficha.Canais.Select(c =>
-        $"<tr><td>{System.Net.WebUtility.HtmlEncode(c.Canal)}</td><td>{System.Net.WebUtility.HtmlEncode(c.NomeExibicao ?? \"\")}</td><td>{c.PrecoVenda:C}</td><td>{c.TaxaPercentual ?? 0}</td><td>{c.ComissaoPercentual ?? 0}</td><td>{(c.MargemCalculadaPercentual?.ToString(\"0.##\") ?? \"-\")}</td></tr>"))}
+      {canaisHtml}
     </tbody>
   </table>
 </body>
 </html>";
 
         return Content(html, "text/html; charset=utf-8");
+    }
+
+    /// <summary>
+    /// Gera PDF da ficha técnica
+    /// </summary>
+    [HttpGet("{id:long}/pdf")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetPdf(long id)
+    {
+        var ficha = await _service.GetByIdAsync(id);
+        if (ficha == null) return NotFound();
+
+        // Por enquanto, retorna HTML (pode ser convertido para PDF no frontend ou adicionar biblioteca de PDF depois)
+        // TODO: Implementar geração de PDF real usando QuestPDF ou iTextSharp
+        return await Print(id);
     }
 
     [HttpPost]

@@ -35,6 +35,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IInsumoService, InsumoService>();
         services.AddScoped<ICategoriaReceitaService, CategoriaReceitaService>();
         services.AddScoped<IReceitaService, ReceitaService>();
+        services.AddScoped<IFichaTecnicaService, FichaTecnicaService>();
         
         // Common Services
         services.AddScoped<ITenantService, TenantService>();

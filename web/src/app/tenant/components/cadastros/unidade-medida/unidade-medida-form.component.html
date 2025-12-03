@@ -2,8 +2,7 @@
   <h2 class="form-title">{{ id() === null ? 'Cadastro de unidade de medida' : (isView() ? 'Visualizar unidade' : 'Editar unidade') }}</h2>
 
   <p class="form-help-text">
-    Use esta tela para definir como o sistema entende cada unidade. Primeiro escolha o tipo (Peso, Volume ou Quantidade),
-    depois decida se esta unidade será a base do tipo (kg, L, un) ou uma unidade derivada (g, mL, dz) ligada a uma base.
+    Use esta tela para cadastrar unidades de medida simplificadas. Exemplos: Unidade (UN), Grama (GR), Mililitro (ML).
   </p>
 
   <form #f="ngForm" (ngSubmit)="save()">
@@ -21,41 +20,7 @@
       @if (f.controls['sigla']?.errors?.['required']) {
         <mat-error>Sigla é obrigatória</mat-error>
       }
-    </mat-form-field>
-
-    <mat-form-field appearance="outline" class="form-field-spacing">
-      <mat-label>Tipo</mat-label>
-      <mat-select name="tipo" [(ngModel)]="model.tipo" [disabled]="isView()">
-        <mat-option value="">Nenhum</mat-option>
-        @for (tipo of tiposUnidade; track tipo.value) {
-          <mat-option [value]="tipo.value">{{ tipo.label }}</mat-option>
-        }
-      </mat-select>
-      <mat-hint>
-        Peso: ingredientes em g/kg (farinha, carne). Volume: líquidos em mL/L (leite, óleo). Quantidade: peças e agrupamentos (un, dz, pct, cx).
-      </mat-hint>
-    </mat-form-field>
-
-    <mat-form-field appearance="outline" class="form-field-spacing">
-      <mat-label>Unidade Base (opcional)</mat-label>
-      <mat-select name="unidadeBaseId" [(ngModel)]="model.unidadeBaseId" [disabled]="isView()">
-        <mat-option [value]="null">Nenhuma</mat-option>
-        @for (unidade of unidadesBase(); track unidade.id) {
-          <mat-option [value]="unidade.id">{{ unidade.nome }} ({{ unidade.sigla }})</mat-option>
-        }
-      </mat-select>
-      <mat-hint>
-        Se esta for a unidade principal do tipo (kg, L, un), deixe como "Nenhuma". Para unidades derivadas (g, mL, dz),
-        escolha aqui a unidade base correspondente.
-      </mat-hint>
-    </mat-form-field>
-
-    <mat-form-field appearance="outline" class="form-field-spacing">
-      <mat-label>Fator de Conversão Base</mat-label>
-      <input matInput type="number" step="0.000001" name="fatorConversaoBase" [(ngModel)]="model.fatorConversaoBase" [disabled]="isView()" />
-      <mat-hint>
-        Informe quanto 1 unidade desta representa da base. Ex: 0,001 para g → kg (1 g = 0,001 kg) ou 12 para dz → un (1 dz = 12 un).
-      </mat-hint>
+      <mat-hint>Ex: UN, GR, ML</mat-hint>
     </mat-form-field>
 
     <!-- Wrapper para o toggle com espaçamento consistente -->
