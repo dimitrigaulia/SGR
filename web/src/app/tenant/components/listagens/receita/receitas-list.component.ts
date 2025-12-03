@@ -13,12 +13,14 @@ import { MatSort, MatSortModule, Sort } from "@angular/material/sort";
 import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatInputModule } from "@angular/material/input";
 import { MatCardModule } from "@angular/material/card";
-import { MatDialogModule } from "@angular/material/dialog";
+import { MatDialog, MatDialogModule } from "@angular/material/dialog";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
+import { filter } from "rxjs";
 import { ToastService } from "../../../../core/services/toast.service";
 import { ConfirmationService } from "../../../../core/services/confirmation.service";
 import { ReceitaService, ReceitaDto } from "../../../../features/tenant-receitas/services/receita.service";
 import { LoadingComponent } from "../../../../shared/components/loading/loading.component";
+import { InputDialogComponent, InputDialogData } from "../../../../shared/components/input-dialog/input-dialog.component";
 
 @Component({
   standalone: true,
@@ -33,6 +35,7 @@ export class TenantReceitasListComponent implements OnDestroy {
   private router = inject(Router);
   private toast = inject(ToastService);
   private confirmationService = inject(ConfirmationService);
+  private dialog = inject(MatDialog);
   private breakpointObserver = inject(BreakpointObserver);
   private destroyRef = inject(DestroyRef);
   private cdr = inject(ChangeDetectorRef);
@@ -149,22 +152,45 @@ export class TenantReceitasListComponent implements OnDestroy {
   }
 
   duplicar(e: ReceitaDto) {
-    const novoNome = prompt(`Digite o nome para a nova receita (baseada em "${e.nome}"):`, `${e.nome} (Cópia)`);
-    if (!novoNome || !novoNome.trim()) return;
+    const dialogData: InputDialogData = {
+      title: 'Duplicar Receita',
+      message: `Digite o nome para a nova receita (baseada em "${e.nome}"):`,
+      placeholder: 'Nome da receita',
+      initialValue: `${e.nome} (Cópia)`,
+      confirmText: 'Duplicar',
+      cancelText: 'Cancelar',
+      required: true
+    };
 
-    this.isLoading.set(true);
-    this.service.duplicar(e.id, novoNome.trim())
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: () => {
-          this.toast.success('Receita duplicada com sucesso');
-          this.load();
-        },
-        error: (err: any) => {
-          this.toast.error(err.error?.message || 'Falha ao duplicar receita');
-          this.isLoading.set(false);
-          this.cdr.markForCheck();
-        }
+    const dialogRef = this.dialog.open(InputDialogComponent, {
+      width: '400px',
+      data: dialogData,
+      disableClose: false,
+      autoFocus: true
+    });
+
+    dialogRef.afterClosed()
+      .pipe(
+        filter((result): result is string => result !== null && result !== undefined && result.trim() !== ''),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe(novoNome => {
+        if (!novoNome || !novoNome.trim()) return;
+
+        this.isLoading.set(true);
+        this.service.duplicar(e.id, novoNome.trim())
+          .pipe(takeUntilDestroyed(this.destroyRef))
+          .subscribe({
+            next: () => {
+              this.toast.success('Receita duplicada com sucesso');
+              this.load();
+            },
+            error: (err: any) => {
+              this.toast.error(err.error?.message || 'Falha ao duplicar receita');
+              this.isLoading.set(false);
+              this.cdr.markForCheck();
+            }
+          });
       });
   }
 

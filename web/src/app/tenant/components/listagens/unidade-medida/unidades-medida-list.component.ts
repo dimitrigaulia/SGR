@@ -37,7 +37,7 @@ export class TenantUnidadesMedidaListComponent implements OnDestroy {
   private destroyRef = inject(DestroyRef);
   private cdr = inject(ChangeDetectorRef);
   
-  displayedColumns = ['nome', 'sigla', 'tipo', 'ativo', 'acoes'];
+  displayedColumns = ['nome', 'sigla', 'ativo', 'acoes'];
   data = signal<UnidadeMedidaDto[]>([]);
   total = signal(0);
   pageIndex = signal(0);

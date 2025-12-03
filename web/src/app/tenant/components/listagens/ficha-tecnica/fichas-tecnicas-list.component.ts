@@ -2,6 +2,7 @@ import { Component, inject, signal, ViewChild, ChangeDetectionStrategy, DestroyR
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { Router, RouterLink } from "@angular/router";
+import { BreakpointObserver, Breakpoints } from "@angular/cdk/layout";
 import { MatTableModule } from "@angular/material/table";
 import { MatButtonModule } from "@angular/material/button";
 import { MatIconModule } from "@angular/material/icon";
@@ -17,11 +18,12 @@ import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { ToastService } from "../../../../core/services/toast.service";
 import { ConfirmationService } from "../../../../core/services/confirmation.service";
 import { FichaTecnicaService, FichaTecnicaDto } from "../../../../features/tenant-receitas/services/ficha-tecnica.service";
+import { LoadingComponent } from "../../../../shared/components/loading/loading.component";
 
 @Component({
   standalone: true,
   selector: 'app-tenant-fichas-tecnicas-list',
-  imports: [CommonModule, FormsModule, RouterLink, MatTableModule, MatButtonModule, MatIconModule, MatTooltipModule, MatSnackBarModule, MatPaginatorModule, MatSortModule, MatFormFieldModule, MatInputModule, MatCardModule, MatDialogModule],
+  imports: [CommonModule, FormsModule, RouterLink, MatTableModule, MatButtonModule, MatIconModule, MatTooltipModule, MatSnackBarModule, MatPaginatorModule, MatSortModule, MatFormFieldModule, MatInputModule, MatCardModule, MatDialogModule, LoadingComponent],
   templateUrl: './fichas-tecnicas-list.component.html',
   styleUrls: ['./fichas-tecnicas-list.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -31,6 +33,7 @@ export class TenantFichasTecnicasListComponent {
   private router = inject(Router);
   private toast = inject(ToastService);
   private confirmationService = inject(ConfirmationService);
+  private breakpointObserver = inject(BreakpointObserver);
   private destroyRef = inject(DestroyRef);
   private cdr = inject(ChangeDetectorRef);
 
@@ -42,12 +45,20 @@ export class TenantFichasTecnicasListComponent {
   sortActive = signal<string>('nome');
   sortDirection = signal<'asc' | 'desc'>('asc');
   searchTerm = '';
+  isMobile = signal(false);
   isLoading = signal(false);
   private searchTimeout: any;
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
   constructor() {
+    this.breakpointObserver.observe([Breakpoints.Handset, Breakpoints.TabletPortrait])
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((result) => {
+        this.isMobile.set(result.matches);
+        this.cdr.markForCheck();
+      });
+    
     this.load();
   }
 
