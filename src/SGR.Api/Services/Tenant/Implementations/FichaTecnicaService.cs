@@ -550,9 +550,6 @@ public class FichaTecnicaService : IFichaTecnicaService
             // Calcular preÃ§os dos canais
             CalcularPrecosCanais(ficha);
 
-            // Marcar explicitamente como Modified para garantir que o EF Core gere o UPDATE correto
-            // Isso previne problemas de concorrência quando o tracking perde a referência ao ID original
-            _context.Entry(ficha).State = EntityState.Modified;
             await _context.SaveChangesAsync();
 
             _logger.LogInformation("Ficha TÃ©cnica atualizada com sucesso - ID: {Id}", id);
