@@ -45,7 +45,8 @@ public class BackofficeUsuarioService : BaseService<ApplicationDbContext, Backof
         _logger.LogInformation("Buscando {EntityType} - Página: {Page}, Tamanho: {PageSize}, Busca: {Search}", 
             typeof(BackofficeUsuario).Name, page, pageSize, search ?? "N/A");
 
-        var query = _dbSet.Include(u => u.Perfil).AsQueryable();
+        // Usar AsNoTracking para queries de leitura (melhor performance)
+        var query = _dbSet.Include(u => u.Perfil).AsNoTracking().AsQueryable();
         
         // Aplicar busca
         if (!string.IsNullOrWhiteSpace(search))
@@ -72,7 +73,8 @@ public class BackofficeUsuarioService : BaseService<ApplicationDbContext, Backof
     {
         _logger.LogInformation("Buscando {EntityType} por ID: {Id}", typeof(BackofficeUsuario).Name, id);
 
-        var entity = await _dbSet.Include(u => u.Perfil).FirstOrDefaultAsync(u => u.Id == id);
+        // Usar AsNoTracking para queries de leitura (melhor performance)
+        var entity = await _dbSet.Include(u => u.Perfil).AsNoTracking().FirstOrDefaultAsync(u => u.Id == id);
         if (entity == null)
         {
             _logger.LogWarning("{EntityType} com ID {Id} não encontrado", typeof(BackofficeUsuario).Name, id);
@@ -173,7 +175,7 @@ public class BackofficeUsuarioService : BaseService<ApplicationDbContext, Backof
             var entity = MapToEntity(request);
             
             // Setar campos de auditoria se existirem
-            SetAuditFieldsOnCreate(entity, usuarioCriacao);
+            SetAuditFieldsOnCreate(entity, request, usuarioCriacao);
             
             await BeforeCreateAsync(entity, request, usuarioCriacao);
             
@@ -215,7 +217,7 @@ public class BackofficeUsuarioService : BaseService<ApplicationDbContext, Backof
             UpdateEntity(entity, request);
             
             // Setar campos de auditoria se existirem
-            SetAuditFieldsOnUpdate(entity, usuarioAtualizacao);
+            SetAuditFieldsOnUpdate(entity, request, usuarioAtualizacao);
             
             await BeforeUpdateAsync(entity, request, usuarioAtualizacao);
             

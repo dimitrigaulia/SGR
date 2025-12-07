@@ -74,7 +74,9 @@ public class ReceitaService : IReceitaService
     {
         _logger.LogInformation("Buscando Receitas - Página: {Page}, Tamanho: {PageSize}, Busca: {Search}", page, pageSize, search ?? "N/A");
 
+        // Usar AsNoTracking para queries de leitura (melhor performance)
         var query = _context.Receitas
+            .AsNoTracking()
             .Include(r => r.Categoria)
             .Include(r => r.Itens)
                 .ThenInclude(i => i.Insumo)
@@ -147,7 +149,9 @@ public class ReceitaService : IReceitaService
     {
         _logger.LogInformation("Buscando Receita por ID: {Id}", id);
 
+        // Usar AsNoTracking para queries de leitura (melhor performance)
         var receita = await _context.Receitas
+            .AsNoTracking()
             .Include(r => r.Categoria)
             .Include(r => r.Itens)
                 .ThenInclude(i => i.Insumo)
@@ -176,88 +180,88 @@ public class ReceitaService : IReceitaService
         _logger.LogInformation("Criando nova Receita - Usuário: {Usuario}", usuarioCriacao ?? "Sistema");
 
         // Validar categoria
-        var categoriaExists = await _context.CategoriasReceita.AnyAsync(c => c.Id == request.CategoriaId && c.IsAtivo);
-        if (!categoriaExists)
-        {
-            throw new BusinessException("Categoria inválida ou inativa");
-        }
-
-        // Validar itens
-        if (request.Itens == null || !request.Itens.Any())
-        {
-            throw new BusinessException("A receita deve ter pelo menos um item");
-        }
-
-        // Validar insumos
-        var insumoIds = request.Itens.Select(i => i.InsumoId).Distinct().ToList();
-        var insumos = await _context.Insumos
-            .Include(i => i.UnidadeUso)
-            .Include(i => i.UnidadeCompra)
-            .Include(i => i.Categoria)
-            .Where(i => insumoIds.Contains(i.Id) && i.IsAtivo)
-            .ToListAsync();
-
-        if (insumos.Count != insumoIds.Count)
-        {
-            throw new BusinessException("Um ou mais insumos são inválidos ou estão inativos");
-        }
-
-        // Criar receita
-        var fatorRendimento = CalcularFatorRendimentoFromIc(request.FatorRendimento, request.IcSinal, request.IcValor);
-
-        var receita = new Receita
-        {
-            Nome = request.Nome,
-            CategoriaId = request.CategoriaId,
-            Descricao = request.Descricao,
-            InstrucoesEmpratamento = request.InstrucoesEmpratamento,
-            Rendimento = request.Rendimento,
-            PesoPorPorcao = request.PesoPorPorcao,
-            FatorRendimento = fatorRendimento,
-            TempoPreparo = request.TempoPreparo,
-            Versao = request.Versao ?? "1.0",
-            PathImagem = request.PathImagem,
-            IsAtivo = request.IsAtivo,
-            UsuarioCriacao = usuarioCriacao ?? "Sistema",
-            DataCriacao = DateTime.UtcNow
-        };
-
-        // Validar unidades de medida
-        var unidadeMedidaIds = request.Itens.Select(i => i.UnidadeMedidaId).Distinct().ToList();
-        var unidadesMedida = await _context.UnidadesMedida
-            .Where(u => unidadeMedidaIds.Contains(u.Id) && u.IsAtivo)
-            .ToListAsync();
-
-        if (unidadesMedida.Count != unidadeMedidaIds.Count)
-        {
-            throw new BusinessException("Uma ou mais unidades de medida são inválidas ou estão inativas");
-        }
-
-        // Criar itens
-        var ordem = 1;
-        foreach (var itemRequest in request.Itens.OrderBy(i => i.Ordem))
-        {
-            var insumo = insumos.First(i => i.Id == itemRequest.InsumoId);
-            receita.Itens.Add(new ReceitaItem
+            var categoriaExists = await _context.CategoriasReceita.AnyAsync(c => c.Id == request.CategoriaId && c.IsAtivo);
+            if (!categoriaExists)
             {
-                InsumoId = itemRequest.InsumoId,
-                Quantidade = itemRequest.Quantidade,
-                UnidadeMedidaId = itemRequest.UnidadeMedidaId,
-                ExibirComoQB = itemRequest.ExibirComoQB,
-                Ordem = ordem++,
-                Observacoes = itemRequest.Observacoes
-            });
-        }
+                throw new BusinessException("Categoria inválida ou inativa");
+            }
 
-        // Calcular custos
-        CalcularCustos(receita, insumos);
+            // Validar itens
+            if (request.Itens == null || !request.Itens.Any())
+            {
+                throw new BusinessException("A receita deve ter pelo menos um item");
+            }
 
-        _context.Receitas.Add(receita);
-        await _context.SaveChangesAsync();
+            // Validar insumos
+            var insumoIds = request.Itens.Select(i => i.InsumoId).Distinct().ToList();
+            var insumos = await _context.Insumos
+                .Include(i => i.UnidadeUso)
+                .Include(i => i.UnidadeCompra)
+                .Include(i => i.Categoria)
+                .Where(i => insumoIds.Contains(i.Id) && i.IsAtivo)
+                .ToListAsync();
 
-        _logger.LogInformation("Receita criada com sucesso - ID: {Id}", receita.Id);
+            if (insumos.Count != insumoIds.Count)
+            {
+                throw new BusinessException("Um ou mais insumos são inválidos ou estão inativos");
+            }
 
-        return await GetByIdAsync(receita.Id) ?? throw new InvalidOperationException("Erro ao buscar receita criada");
+            // Criar receita
+            var fatorRendimento = CalcularFatorRendimentoFromIc(request.FatorRendimento, request.IcSinal, request.IcValor);
+
+            var receita = new Receita
+            {
+                Nome = request.Nome,
+                CategoriaId = request.CategoriaId,
+                Descricao = request.Descricao,
+                InstrucoesEmpratamento = request.InstrucoesEmpratamento,
+                Rendimento = request.Rendimento,
+                PesoPorPorcao = request.PesoPorPorcao,
+                FatorRendimento = fatorRendimento,
+                TempoPreparo = request.TempoPreparo,
+                Versao = request.Versao ?? "1.0",
+                PathImagem = request.PathImagem,
+                IsAtivo = request.IsAtivo,
+                UsuarioCriacao = usuarioCriacao ?? "Sistema",
+                DataCriacao = DateTime.UtcNow
+            };
+
+            // Validar unidades de medida
+            var unidadeMedidaIds = request.Itens.Select(i => i.UnidadeMedidaId).Distinct().ToList();
+            var unidadesMedida = await _context.UnidadesMedida
+                .Where(u => unidadeMedidaIds.Contains(u.Id) && u.IsAtivo)
+                .ToListAsync();
+
+            if (unidadesMedida.Count != unidadeMedidaIds.Count)
+            {
+                throw new BusinessException("Uma ou mais unidades de medida são inválidas ou estão inativas");
+            }
+
+            // Criar itens
+            var ordem = 1;
+            foreach (var itemRequest in request.Itens.OrderBy(i => i.Ordem))
+            {
+                var insumo = insumos.First(i => i.Id == itemRequest.InsumoId);
+                receita.Itens.Add(new ReceitaItem
+                {
+                    InsumoId = itemRequest.InsumoId,
+                    Quantidade = itemRequest.Quantidade,
+                    UnidadeMedidaId = itemRequest.UnidadeMedidaId,
+                    ExibirComoQB = itemRequest.ExibirComoQB,
+                    Ordem = ordem++,
+                    Observacoes = itemRequest.Observacoes
+                });
+            }
+
+            // Calcular custos
+            CalcularCustos(receita, insumos);
+
+            _context.Receitas.Add(receita);
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Receita criada com sucesso - ID: {Id}", receita.Id);
+
+            return await GetByIdAsync(receita.Id) ?? throw new InvalidOperationException("Erro ao buscar receita criada");
     }
 
     public async Task<ReceitaDto?> UpdateAsync(long id, UpdateReceitaRequest request, string? usuarioAtualizacao)
@@ -265,86 +269,86 @@ public class ReceitaService : IReceitaService
         _logger.LogInformation("Atualizando Receita - ID: {Id}, Usuário: {Usuario}", id, usuarioAtualizacao ?? "Sistema");
 
         var receita = await _context.Receitas
-            .Include(r => r.Itens)
-            .FirstOrDefaultAsync(r => r.Id == id);
+                .Include(r => r.Itens)
+                .FirstOrDefaultAsync(r => r.Id == id);
 
-        if (receita == null)
-        {
-            _logger.LogWarning("Receita com ID {Id} não encontrada", id);
-            return null;
-        }
-
-        // Validar categoria
-        var categoriaExists = await _context.CategoriasReceita.AnyAsync(c => c.Id == request.CategoriaId && c.IsAtivo);
-        if (!categoriaExists)
-        {
-            throw new BusinessException("Categoria inválida ou inativa");
-        }
-
-        // Validar itens
-        if (request.Itens == null || !request.Itens.Any())
-        {
-            throw new BusinessException("A receita deve ter pelo menos um item");
-        }
-
-        // Validar insumos
-        var insumoIds = request.Itens.Select(i => i.InsumoId).Distinct().ToList();
-        var insumos = await _context.Insumos
-            .Include(i => i.UnidadeUso)
-            .Include(i => i.UnidadeCompra)
-            .Include(i => i.Categoria)
-            .Where(i => insumoIds.Contains(i.Id) && i.IsAtivo)
-            .ToListAsync();
-
-        if (insumos.Count != insumoIds.Count)
-        {
-            throw new BusinessException("Um ou mais insumos são inválidos ou estão inativos");
-        }
-
-        // Atualizar receita
-        receita.Nome = request.Nome;
-        receita.CategoriaId = request.CategoriaId;
-        receita.Descricao = request.Descricao;
-        receita.InstrucoesEmpratamento = request.InstrucoesEmpratamento;
-        receita.Rendimento = request.Rendimento;
-        receita.PesoPorPorcao = request.PesoPorPorcao;
-        receita.FatorRendimento = CalcularFatorRendimentoFromIc(request.FatorRendimento, request.IcSinal, request.IcValor);
-        receita.TempoPreparo = request.TempoPreparo;
-        receita.Versao = request.Versao ?? "1.0";
-        receita.PathImagem = request.PathImagem;
-        receita.IsAtivo = request.IsAtivo;
-        receita.UsuarioAtualizacao = usuarioAtualizacao;
-        receita.DataAtualizacao = DateTime.UtcNow;
-
-        // Remover itens antigos
-        // Não usar Clear() pois RemoveRange já remove do contexto
-        // Apenas remover do contexto, a coleção será atualizada automaticamente
-        var itensParaRemover = receita.Itens.ToList();
-        _context.ReceitaItens.RemoveRange(itensParaRemover);
-
-        // Adicionar novos itens
-        var ordem = 1;
-        foreach (var itemRequest in request.Itens.OrderBy(i => i.Ordem))
-        {
-            receita.Itens.Add(new ReceitaItem
+            if (receita == null)
             {
-                InsumoId = itemRequest.InsumoId,
-                Quantidade = itemRequest.Quantidade,
-                UnidadeMedidaId = itemRequest.UnidadeMedidaId,
-                ExibirComoQB = itemRequest.ExibirComoQB,
-                Ordem = ordem++,
-                Observacoes = itemRequest.Observacoes
-            });
-        }
+                _logger.LogWarning("Receita com ID {Id} não encontrada", id);
+                return null;
+            }
 
-        // Recalcular custos
-        CalcularCustos(receita, insumos);
+            // Validar categoria
+            var categoriaExists = await _context.CategoriasReceita.AnyAsync(c => c.Id == request.CategoriaId && c.IsAtivo);
+            if (!categoriaExists)
+            {
+                throw new BusinessException("Categoria inválida ou inativa");
+            }
 
-        await _context.SaveChangesAsync();
+            // Validar itens
+            if (request.Itens == null || !request.Itens.Any())
+            {
+                throw new BusinessException("A receita deve ter pelo menos um item");
+            }
 
-        _logger.LogInformation("Receita atualizada com sucesso - ID: {Id}", id);
+            // Validar insumos
+            var insumoIds = request.Itens.Select(i => i.InsumoId).Distinct().ToList();
+            var insumos = await _context.Insumos
+                .Include(i => i.UnidadeUso)
+                .Include(i => i.UnidadeCompra)
+                .Include(i => i.Categoria)
+                .Where(i => insumoIds.Contains(i.Id) && i.IsAtivo)
+                .ToListAsync();
 
-        return await GetByIdAsync(id);
+            if (insumos.Count != insumoIds.Count)
+            {
+                throw new BusinessException("Um ou mais insumos são inválidos ou estão inativos");
+            }
+
+            // Atualizar receita
+            receita.Nome = request.Nome;
+            receita.CategoriaId = request.CategoriaId;
+            receita.Descricao = request.Descricao;
+            receita.InstrucoesEmpratamento = request.InstrucoesEmpratamento;
+            receita.Rendimento = request.Rendimento;
+            receita.PesoPorPorcao = request.PesoPorPorcao;
+            receita.FatorRendimento = CalcularFatorRendimentoFromIc(request.FatorRendimento, request.IcSinal, request.IcValor);
+            receita.TempoPreparo = request.TempoPreparo;
+            receita.Versao = request.Versao ?? "1.0";
+            receita.PathImagem = request.PathImagem;
+            receita.IsAtivo = request.IsAtivo;
+            receita.UsuarioAtualizacao = usuarioAtualizacao;
+            receita.DataAtualizacao = DateTime.UtcNow;
+
+            // Remover itens antigos
+            // Não usar Clear() pois RemoveRange já remove do contexto
+            // Apenas remover do contexto, a coleção será atualizada automaticamente
+            var itensParaRemover = receita.Itens.ToList();
+            _context.ReceitaItens.RemoveRange(itensParaRemover);
+
+            // Adicionar novos itens
+            var ordem = 1;
+            foreach (var itemRequest in request.Itens.OrderBy(i => i.Ordem))
+            {
+                receita.Itens.Add(new ReceitaItem
+                {
+                    InsumoId = itemRequest.InsumoId,
+                    Quantidade = itemRequest.Quantidade,
+                    UnidadeMedidaId = itemRequest.UnidadeMedidaId,
+                    ExibirComoQB = itemRequest.ExibirComoQB,
+                    Ordem = ordem++,
+                    Observacoes = itemRequest.Observacoes
+                });
+            }
+
+            // Recalcular custos
+            CalcularCustos(receita, insumos);
+
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Receita atualizada com sucesso - ID: {Id}", id);
+
+            return await GetByIdAsync(id);
     }
 
     public async Task<bool> DeleteAsync(long id)
@@ -371,62 +375,62 @@ public class ReceitaService : IReceitaService
         _logger.LogInformation("Duplicando Receita - ID: {Id}, Novo Nome: {NovoNome}", id, novoNome);
 
         var receitaOriginal = await _context.Receitas
-            .Include(r => r.Itens)
-            .FirstOrDefaultAsync(r => r.Id == id);
+                .Include(r => r.Itens)
+                .FirstOrDefaultAsync(r => r.Id == id);
 
-        if (receitaOriginal == null)
-        {
-            throw new BusinessException("Receita não encontrada");
-        }
-
-        // Criar nova receita
-        var novaReceita = new Receita
-        {
-            Nome = novoNome,
-            CategoriaId = receitaOriginal.CategoriaId,
-            Descricao = receitaOriginal.Descricao,
-            InstrucoesEmpratamento = receitaOriginal.InstrucoesEmpratamento,
-            Rendimento = receitaOriginal.Rendimento,
-            PesoPorPorcao = receitaOriginal.PesoPorPorcao,
-            FatorRendimento = receitaOriginal.FatorRendimento,
-            TempoPreparo = receitaOriginal.TempoPreparo,
-            Versao = receitaOriginal.Versao ?? "1.0",
-            PathImagem = receitaOriginal.PathImagem,
-            IsAtivo = receitaOriginal.IsAtivo,
-            UsuarioCriacao = usuarioCriacao ?? "Sistema",
-            DataCriacao = DateTime.UtcNow
-        };
-
-        // Duplicar itens
-        foreach (var itemOriginal in receitaOriginal.Itens.OrderBy(i => i.Ordem))
-        {
-            novaReceita.Itens.Add(new ReceitaItem
+            if (receitaOriginal == null)
             {
-                InsumoId = itemOriginal.InsumoId,
-                Quantidade = itemOriginal.Quantidade,
-                Ordem = itemOriginal.Ordem,
-                Observacoes = itemOriginal.Observacoes
-            });
-        }
+                throw new BusinessException("Receita não encontrada");
+            }
 
-        // Buscar insumos para calcular custos
-        var insumoIds = novaReceita.Itens.Select(i => i.InsumoId).Distinct().ToList();
-        var insumos = await _context.Insumos
-            .Include(i => i.UnidadeUso)
-            .Include(i => i.UnidadeCompra)
-            .Include(i => i.Categoria)
-            .Where(i => insumoIds.Contains(i.Id))
-            .ToListAsync();
+            // Criar nova receita
+            var novaReceita = new Receita
+            {
+                Nome = novoNome,
+                CategoriaId = receitaOriginal.CategoriaId,
+                Descricao = receitaOriginal.Descricao,
+                InstrucoesEmpratamento = receitaOriginal.InstrucoesEmpratamento,
+                Rendimento = receitaOriginal.Rendimento,
+                PesoPorPorcao = receitaOriginal.PesoPorPorcao,
+                FatorRendimento = receitaOriginal.FatorRendimento,
+                TempoPreparo = receitaOriginal.TempoPreparo,
+                Versao = receitaOriginal.Versao ?? "1.0",
+                PathImagem = receitaOriginal.PathImagem,
+                IsAtivo = receitaOriginal.IsAtivo,
+                UsuarioCriacao = usuarioCriacao ?? "Sistema",
+                DataCriacao = DateTime.UtcNow
+            };
 
-        // Calcular custos
-        CalcularCustos(novaReceita, insumos);
+            // Duplicar itens
+            foreach (var itemOriginal in receitaOriginal.Itens.OrderBy(i => i.Ordem))
+            {
+                novaReceita.Itens.Add(new ReceitaItem
+                {
+                    InsumoId = itemOriginal.InsumoId,
+                    Quantidade = itemOriginal.Quantidade,
+                    Ordem = itemOriginal.Ordem,
+                    Observacoes = itemOriginal.Observacoes
+                });
+            }
 
-        _context.Receitas.Add(novaReceita);
-        await _context.SaveChangesAsync();
+            // Buscar insumos para calcular custos
+            var insumoIds = novaReceita.Itens.Select(i => i.InsumoId).Distinct().ToList();
+            var insumos = await _context.Insumos
+                .Include(i => i.UnidadeUso)
+                .Include(i => i.UnidadeCompra)
+                .Include(i => i.Categoria)
+                .Where(i => insumoIds.Contains(i.Id))
+                .ToListAsync();
 
-        _logger.LogInformation("Receita duplicada com sucesso - ID Original: {IdOriginal}, ID Novo: {IdNovo}", id, novaReceita.Id);
+            // Calcular custos
+            CalcularCustos(novaReceita, insumos);
 
-        return await GetByIdAsync(novaReceita.Id) ?? throw new InvalidOperationException("Erro ao buscar receita duplicada");
+            _context.Receitas.Add(novaReceita);
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Receita duplicada com sucesso - ID Original: {IdOriginal}, ID Novo: {IdNovo}", id, novaReceita.Id);
+
+            return await GetByIdAsync(novaReceita.Id) ?? throw new InvalidOperationException("Erro ao buscar receita duplicada");
     }
 
     private void CalcularCustos(Receita receita, List<Insumo> insumos)

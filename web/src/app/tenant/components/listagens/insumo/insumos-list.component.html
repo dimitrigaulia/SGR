@@ -4,7 +4,7 @@
     <div class="header-actions">
       <mat-form-field appearance="outline" class="search-field">
         <mat-label>Buscar</mat-label>
-        <input matInput [(ngModel)]="searchTerm" (ngModelChange)="onSearchChange()" placeholder="Nome, categoria ou código de barras" />
+        <input matInput [(ngModel)]="searchTerm" (ngModelChange)="onSearchChange()" placeholder="Nome ou categoria" />
         @if (searchTerm) {
           <button mat-icon-button matSuffix (click)="clearSearch()">
             <mat-icon>close</mat-icon>

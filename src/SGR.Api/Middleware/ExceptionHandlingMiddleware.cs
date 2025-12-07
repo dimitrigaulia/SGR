@@ -1,6 +1,8 @@
 using System.Net;
 using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
 using SGR.Api.Exceptions;
+using SGR.Api.Helpers;
 
 namespace SGR.Api.Middleware;
 
@@ -56,6 +58,16 @@ public class ExceptionHandlingMiddleware
             case UnauthorizedAccessException:
                 code = HttpStatusCode.Unauthorized;
                 message = "Acesso não autorizado.";
+                break;
+
+            case DbUpdateConcurrencyException concurrencyEx:
+                code = HttpStatusCode.Conflict;
+                message = "O registro foi modificado por outro usuário. Por favor, atualize a página e tente novamente.";
+                break;
+
+            case DbUpdateException dbUpdateEx:
+                code = HttpStatusCode.Conflict;
+                message = PostgreSqlErrorHelper.ExtractErrorMessage(dbUpdateEx);
                 break;
         }
 

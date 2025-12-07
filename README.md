@@ -1035,8 +1035,7 @@ this.confirmationService.confirm({
 - ✅ **Insumos** (`/api/tenant/insumos`)
   - CRUD completo
   - Relacionamento com CategoriaInsumo e UnidadeMedida
-  - Validação de código de barras único (opcional, dentro do schema do tenant)
-  - Campos: Nome, Categoria, Unidade de Compra, Unidade de Uso, Quantidade por Embalagem, Custo Unitário, Fator de Correção, Estoque Mínimo, Descrição, Código de Barras, Imagem
+  - Campos: Nome, Categoria, Unidade de Compra, Unidade de Uso, Quantidade por Embalagem, Custo Unitário, Fator de Correção, Estoque Mínimo, Descrição, Imagem
   - Usa entidade `Insumo`
 
 - ✅ **Categorias de Receita** (`/api/tenant/categorias-receita`)

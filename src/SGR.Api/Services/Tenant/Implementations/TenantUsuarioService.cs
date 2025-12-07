@@ -45,7 +45,8 @@ public class TenantUsuarioService : BaseService<TenantDbContext, TenantUsuario, 
         _logger.LogInformation("Buscando {EntityType} - Página: {Page}, Tamanho: {PageSize}, Busca: {Search}", 
             typeof(TenantUsuario).Name, page, pageSize, search ?? "N/A");
 
-        var query = _dbSet.Include(u => u.Perfil).AsQueryable();
+        // Usar AsNoTracking para queries de leitura (melhor performance)
+        var query = _dbSet.Include(u => u.Perfil).AsNoTracking().AsQueryable();
         
         // Aplicar busca
         if (!string.IsNullOrWhiteSpace(search))
@@ -72,7 +73,8 @@ public class TenantUsuarioService : BaseService<TenantDbContext, TenantUsuario, 
     {
         _logger.LogInformation("Buscando {EntityType} por ID: {Id}", typeof(TenantUsuario).Name, id);
 
-        var entity = await _dbSet.Include(u => u.Perfil).FirstOrDefaultAsync(u => u.Id == id);
+        // Usar AsNoTracking para queries de leitura (melhor performance)
+        var entity = await _dbSet.Include(u => u.Perfil).AsNoTracking().FirstOrDefaultAsync(u => u.Id == id);
         if (entity == null)
         {
             _logger.LogWarning("{EntityType} com ID {Id} não encontrado", typeof(TenantUsuario).Name, id);
@@ -173,7 +175,7 @@ public class TenantUsuarioService : BaseService<TenantDbContext, TenantUsuario, 
             var entity = MapToEntity(request);
             
             // Setar campos de auditoria se existirem
-            SetAuditFieldsOnCreate(entity, usuarioCriacao);
+            SetAuditFieldsOnCreate(entity, request, usuarioCriacao);
             
             await BeforeCreateAsync(entity, request, usuarioCriacao);
             
@@ -216,13 +218,11 @@ public class TenantUsuarioService : BaseService<TenantDbContext, TenantUsuario, 
             UpdateEntity(entity, request);
             
             // Setar campos de auditoria se existirem
-            SetAuditFieldsOnUpdate(entity, usuarioAtualizacao);
+            SetAuditFieldsOnUpdate(entity, request, usuarioAtualizacao);
             
             await BeforeUpdateAsync(entity, request, usuarioAtualizacao);
             
-            // Marcar explicitamente como modificado para garantir tracking
-            _context.Entry(entity).State = EntityState.Modified;
-            
+            // Não é necessário marcar como Modified explicitamente quando a entidade já está tracked
             await _context.SaveChangesAsync();
 
             _logger.LogInformation("{EntityType} atualizado com sucesso - ID: {Id}", typeof(TenantUsuario).Name, id);

@@ -195,7 +195,9 @@ public class FichaTecnicaService : IFichaTecnicaService
     {
         _logger.LogInformation("Buscando Fichas Técnicas - Página: {Page}, Tamanho: {PageSize}, Busca: {Search}", page, pageSize, search ?? "N/A");
 
+        // Usar AsNoTracking para queries de leitura (melhor performance)
         var query = _context.FichasTecnicas
+            .AsNoTracking()
             .Include(f => f.Categoria)
             .AsQueryable();
 
@@ -239,7 +241,9 @@ public class FichaTecnicaService : IFichaTecnicaService
     {
         _logger.LogInformation("Buscando Ficha Técnica por ID: {Id}", id);
 
+        // Usar AsNoTracking para queries de leitura (melhor performance)
         var ficha = await _context.FichasTecnicas
+            .AsNoTracking()
             .Include(f => f.Categoria)
             .Include(f => f.Itens)
                 .ThenInclude(i => i.Receita)
@@ -402,155 +406,155 @@ public class FichaTecnicaService : IFichaTecnicaService
         _logger.LogInformation("Atualizando Ficha Técnica - ID: {Id}, Usuário: {Usuario}", id, usuarioAtualizacao ?? "Sistema");
 
         var ficha = await _context.FichasTecnicas
-            .Include(f => f.Canais)
-            .Include(f => f.Itens)
-            .FirstOrDefaultAsync(f => f.Id == id);
+                .Include(f => f.Canais)
+                .Include(f => f.Itens)
+                .FirstOrDefaultAsync(f => f.Id == id);
 
-        if (ficha == null)
-        {
-            _logger.LogWarning("Ficha Técnica com ID {Id} não encontrada", id);
-            return null;
-        }
-
-        // Validar categoria
-        var categoriaExists = await _context.CategoriasReceita.AnyAsync(c => c.Id == request.CategoriaId && c.IsAtivo);
-        if (!categoriaExists)
-        {
-            throw new BusinessException("Categoria inválida ou inativa");
-        }
-
-        // Validar itens
-        if (request.Itens == null || !request.Itens.Any())
-        {
-            throw new BusinessException("A ficha técnica deve ter pelo menos um item");
-        }
-
-        // Validar itens
-        foreach (var item in request.Itens)
-        {
-            if (item.TipoItem == "Receita" && !item.ReceitaId.HasValue)
+            if (ficha == null)
             {
-                throw new BusinessException("ReceitaId é obrigatório quando TipoItem é 'Receita'");
+                _logger.LogWarning("Ficha Técnica com ID {Id} não encontrada", id);
+                return null;
             }
-            if (item.TipoItem == "Insumo" && !item.InsumoId.HasValue)
+
+            // Validar categoria
+            var categoriaExists = await _context.CategoriasReceita.AnyAsync(c => c.Id == request.CategoriaId && c.IsAtivo);
+            if (!categoriaExists)
             {
-                throw new BusinessException("InsumoId é obrigatório quando TipoItem é 'Insumo'");
+                throw new BusinessException("Categoria inválida ou inativa");
             }
-            if (item.TipoItem != "Receita" && item.TipoItem != "Insumo")
+
+            // Validar itens
+            if (request.Itens == null || !request.Itens.Any())
             {
-                throw new BusinessException("TipoItem deve ser 'Receita' ou 'Insumo'");
+                throw new BusinessException("A ficha técnica deve ter pelo menos um item");
             }
-        }
 
-        // Validar receitas e insumos
-        var receitaIds = request.Itens.Where(i => i.TipoItem == "Receita" && i.ReceitaId.HasValue).Select(i => i.ReceitaId!.Value).Distinct().ToList();
-        var insumoIds = request.Itens.Where(i => i.TipoItem == "Insumo" && i.InsumoId.HasValue).Select(i => i.InsumoId!.Value).Distinct().ToList();
-        var unidadeMedidaIds = request.Itens.Select(i => i.UnidadeMedidaId).Distinct().ToList();
-
-        var receitas = await _context.Receitas
-            .Where(r => receitaIds.Contains(r.Id) && r.IsAtivo)
-            .ToListAsync();
-
-        if (receitas.Count != receitaIds.Count)
-        {
-            throw new BusinessException("Uma ou mais receitas são inválidas ou estão inativas");
-        }
-
-        var insumos = await _context.Insumos
-            .Where(i => insumoIds.Contains(i.Id) && i.IsAtivo)
-            .ToListAsync();
-
-        if (insumos.Count != insumoIds.Count)
-        {
-            throw new BusinessException("Um ou mais insumos são inválidos ou estão inativos");
-        }
-
-        var unidadesMedida = await _context.UnidadesMedida
-            .Where(u => unidadeMedidaIds.Contains(u.Id) && u.IsAtivo)
-            .ToListAsync();
-
-        if (unidadesMedida.Count != unidadeMedidaIds.Count)
-        {
-            throw new BusinessException("Uma ou mais unidades de medida são inválidas ou estão inativas");
-        }
-
-        // Atualizar ficha
-        ficha.CategoriaId = request.CategoriaId;
-        ficha.Nome = request.Nome;
-        ficha.Codigo = request.Codigo;
-        ficha.DescricaoComercial = request.DescricaoComercial;
-        ficha.IndiceContabil = request.IndiceContabil;
-        ficha.ICOperador = request.ICOperador;
-        ficha.ICValor = request.ICValor;
-        ficha.IPCValor = request.IPCValor;
-        ficha.MargemAlvoPercentual = request.MargemAlvoPercentual;
-        ficha.IsAtivo = request.IsAtivo;
-        ficha.UsuarioAtualizacao = usuarioAtualizacao;
-        ficha.DataAtualizacao = DateTime.UtcNow;
-
-        // Remover itens antigos
-        // Não usar Clear() pois RemoveRange já remove do contexto
-        var itensParaRemover = ficha.Itens.ToList();
-        _context.FichaTecnicaItens.RemoveRange(itensParaRemover);
-
-        // Adicionar novos itens
-        var ordem = 1;
-        foreach (var itemRequest in request.Itens.OrderBy(i => i.Ordem))
-        {
-            ficha.Itens.Add(new FichaTecnicaItem
+            // Validar itens
+            foreach (var item in request.Itens)
             {
-                TipoItem = itemRequest.TipoItem,
-                ReceitaId = itemRequest.ReceitaId,
-                InsumoId = itemRequest.InsumoId,
-                Quantidade = itemRequest.Quantidade,
-                UnidadeMedidaId = itemRequest.UnidadeMedidaId,
-                ExibirComoQB = itemRequest.ExibirComoQB,
-                Ordem = ordem++,
-                Observacoes = itemRequest.Observacoes,
-                UsuarioAtualizacao = usuarioAtualizacao,
-                DataAtualizacao = DateTime.UtcNow
-            });
-        }
-
-        // Calcular rendimento final
-        CalcularRendimentoFinal(ficha, unidadesMedida);
-
-        // Calcular custos
-        CalcularCustosFichaTecnica(ficha, insumos, receitas);
-
-        // Calcular preço sugerido
-        CalcularPrecoSugerido(ficha);
-
-        // Atualizar canais (manter existentes ou criar novos)
-        if (request.Canais != null && request.Canais.Any())
-        {
-            // Não usar Clear() pois RemoveRange já remove do contexto
-            var canaisParaRemover = ficha.Canais.ToList();
-            _context.FichaTecnicaCanais.RemoveRange(canaisParaRemover);
-
-            foreach (var canalReq in request.Canais)
-            {
-                ficha.Canais.Add(new FichaTecnicaCanal
+                if (item.TipoItem == "Receita" && !item.ReceitaId.HasValue)
                 {
-                    Canal = canalReq.Canal,
-                    NomeExibicao = canalReq.NomeExibicao,
-                    PrecoVenda = canalReq.PrecoVenda,
-                    TaxaPercentual = canalReq.TaxaPercentual,
-                    ComissaoPercentual = canalReq.ComissaoPercentual,
-                    Observacoes = canalReq.Observacoes,
-                    IsAtivo = canalReq.IsAtivo
+                    throw new BusinessException("ReceitaId é obrigatório quando TipoItem é 'Receita'");
+                }
+                if (item.TipoItem == "Insumo" && !item.InsumoId.HasValue)
+                {
+                    throw new BusinessException("InsumoId é obrigatório quando TipoItem é 'Insumo'");
+                }
+                if (item.TipoItem != "Receita" && item.TipoItem != "Insumo")
+                {
+                    throw new BusinessException("TipoItem deve ser 'Receita' ou 'Insumo'");
+                }
+            }
+
+            // Validar receitas e insumos
+            var receitaIds = request.Itens.Where(i => i.TipoItem == "Receita" && i.ReceitaId.HasValue).Select(i => i.ReceitaId!.Value).Distinct().ToList();
+            var insumoIds = request.Itens.Where(i => i.TipoItem == "Insumo" && i.InsumoId.HasValue).Select(i => i.InsumoId!.Value).Distinct().ToList();
+            var unidadeMedidaIds = request.Itens.Select(i => i.UnidadeMedidaId).Distinct().ToList();
+
+            var receitas = await _context.Receitas
+                .Where(r => receitaIds.Contains(r.Id) && r.IsAtivo)
+                .ToListAsync();
+
+            if (receitas.Count != receitaIds.Count)
+            {
+                throw new BusinessException("Uma ou mais receitas são inválidas ou estão inativas");
+            }
+
+            var insumos = await _context.Insumos
+                .Where(i => insumoIds.Contains(i.Id) && i.IsAtivo)
+                .ToListAsync();
+
+            if (insumos.Count != insumoIds.Count)
+            {
+                throw new BusinessException("Um ou mais insumos são inválidos ou estão inativos");
+            }
+
+            var unidadesMedida = await _context.UnidadesMedida
+                .Where(u => unidadeMedidaIds.Contains(u.Id) && u.IsAtivo)
+                .ToListAsync();
+
+            if (unidadesMedida.Count != unidadeMedidaIds.Count)
+            {
+                throw new BusinessException("Uma ou mais unidades de medida são inválidas ou estão inativas");
+            }
+
+            // Atualizar ficha
+            ficha.CategoriaId = request.CategoriaId;
+            ficha.Nome = request.Nome;
+            ficha.Codigo = request.Codigo;
+            ficha.DescricaoComercial = request.DescricaoComercial;
+            ficha.IndiceContabil = request.IndiceContabil;
+            ficha.ICOperador = request.ICOperador;
+            ficha.ICValor = request.ICValor;
+            ficha.IPCValor = request.IPCValor;
+            ficha.MargemAlvoPercentual = request.MargemAlvoPercentual;
+            ficha.IsAtivo = request.IsAtivo;
+            ficha.UsuarioAtualizacao = usuarioAtualizacao;
+            ficha.DataAtualizacao = DateTime.UtcNow;
+
+            // Remover itens antigos
+            // Não usar Clear() pois RemoveRange já remove do contexto
+            var itensParaRemover = ficha.Itens.ToList();
+            _context.FichaTecnicaItens.RemoveRange(itensParaRemover);
+
+            // Adicionar novos itens
+            var ordem = 1;
+            foreach (var itemRequest in request.Itens.OrderBy(i => i.Ordem))
+            {
+                ficha.Itens.Add(new FichaTecnicaItem
+                {
+                    TipoItem = itemRequest.TipoItem,
+                    ReceitaId = itemRequest.ReceitaId,
+                    InsumoId = itemRequest.InsumoId,
+                    Quantidade = itemRequest.Quantidade,
+                    UnidadeMedidaId = itemRequest.UnidadeMedidaId,
+                    ExibirComoQB = itemRequest.ExibirComoQB,
+                    Ordem = ordem++,
+                    Observacoes = itemRequest.Observacoes,
+                    UsuarioAtualizacao = usuarioAtualizacao,
+                    DataAtualizacao = DateTime.UtcNow
                 });
             }
-        }
 
-        // Calcular preços dos canais
-        CalcularPrecosCanais(ficha);
+            // Calcular rendimento final
+            CalcularRendimentoFinal(ficha, unidadesMedida);
 
-        await _context.SaveChangesAsync();
+            // Calcular custos
+            CalcularCustosFichaTecnica(ficha, insumos, receitas);
 
-        _logger.LogInformation("Ficha Técnica atualizada com sucesso - ID: {Id}", id);
+            // Calcular preço sugerido
+            CalcularPrecoSugerido(ficha);
 
-        return await GetByIdAsync(id);
+            // Atualizar canais (manter existentes ou criar novos)
+            if (request.Canais != null && request.Canais.Any())
+            {
+                // Não usar Clear() pois RemoveRange já remove do contexto
+                var canaisParaRemover = ficha.Canais.ToList();
+                _context.FichaTecnicaCanais.RemoveRange(canaisParaRemover);
+
+                foreach (var canalReq in request.Canais)
+                {
+                    ficha.Canais.Add(new FichaTecnicaCanal
+                    {
+                        Canal = canalReq.Canal,
+                        NomeExibicao = canalReq.NomeExibicao,
+                        PrecoVenda = canalReq.PrecoVenda,
+                        TaxaPercentual = canalReq.TaxaPercentual,
+                        ComissaoPercentual = canalReq.ComissaoPercentual,
+                        Observacoes = canalReq.Observacoes,
+                        IsAtivo = canalReq.IsAtivo
+                    });
+                }
+            }
+
+            // Calcular preços dos canais
+            CalcularPrecosCanais(ficha);
+
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Ficha Técnica atualizada com sucesso - ID: {Id}", id);
+
+            return await GetByIdAsync(id);
     }
 
     public async Task<bool> DeleteAsync(long id)

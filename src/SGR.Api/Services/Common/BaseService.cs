@@ -43,7 +43,8 @@ public abstract class BaseService<TDbContext, TEntity, TDto, TCreateRequest, TUp
         _logger.LogInformation("Buscando {EntityType} - Página: {Page}, Tamanho: {PageSize}, Busca: {Search}", 
             typeof(TEntity).Name, page, pageSize, search ?? "N/A");
 
-        var query = _dbSet.AsQueryable();
+        // Usar AsNoTracking para queries de leitura (melhor performance)
+        var query = _dbSet.AsNoTracking().AsQueryable();
         
         // Aplicar busca
         if (!string.IsNullOrWhiteSpace(search))
@@ -70,8 +71,9 @@ public abstract class BaseService<TDbContext, TEntity, TDto, TCreateRequest, TUp
     {
         _logger.LogInformation("Buscando {EntityType} por ID: {Id}", typeof(TEntity).Name, id);
 
+        // Usar AsNoTracking para queries de leitura (melhor performance)
         // Usar FirstOrDefaultAsync ao invés de FindAsync para garantir que respeita o schema do tenant
-        var entity = await _dbSet.FirstOrDefaultAsync(e => EF.Property<long>(e, "Id") == id);
+        var entity = await _dbSet.AsNoTracking().FirstOrDefaultAsync(e => EF.Property<long>(e, "Id") == id);
         if (entity == null)
         {
             _logger.LogWarning("{EntityType} com ID {Id} não encontrado", typeof(TEntity).Name, id);
@@ -91,7 +93,7 @@ public abstract class BaseService<TDbContext, TEntity, TDto, TCreateRequest, TUp
             var entity = MapToEntity(request);
             
             // Setar campos de auditoria se existirem
-            SetAuditFieldsOnCreate(entity, usuarioCriacao);
+            SetAuditFieldsOnCreate(entity, request, usuarioCriacao);
             
             await BeforeCreateAsync(entity, request, usuarioCriacao);
             
@@ -101,14 +103,15 @@ public abstract class BaseService<TDbContext, TEntity, TDto, TCreateRequest, TUp
             var entityId = GetEntityId(entity);
             _logger.LogInformation("{EntityType} criado com sucesso - ID: {Id}", typeof(TEntity).Name, entityId);
 
-            // Buscar novamente para garantir que temos os dados atualizados (incluindo ID gerado)
-            // Usar FirstOrDefaultAsync ao invés de FindAsync para garantir que respeita o schema do tenant
-            var savedEntity = await _dbSet.FirstOrDefaultAsync(e => EF.Property<long>(e, "Id") == entityId);
-            if (savedEntity == null)
-                throw new InvalidOperationException("Erro ao salvar entidade");
-
+            // Usar a entidade já tracked ao invés de fazer uma nova query
+            // A entidade já tem o ID gerado após SaveChanges
             var mapper = MapToDto().Compile();
-            return mapper(savedEntity);
+            return mapper(entity);
+        }
+        catch (DbUpdateException ex)
+        {
+            _logger.LogError(ex, "Erro ao criar {EntityType} - Violação de constraint", typeof(TEntity).Name);
+            throw;
         }
         catch (Exception ex)
         {
@@ -125,6 +128,7 @@ public abstract class BaseService<TDbContext, TEntity, TDto, TCreateRequest, TUp
         try
         {
             // Usar FirstOrDefaultAsync ao invés de FindAsync para garantir que respeita o schema do tenant
+            // Não usar AsNoTracking aqui pois precisamos do tracking para update
             var entity = await _dbSet.FirstOrDefaultAsync(e => EF.Property<long>(e, "Id") == id);
             if (entity == null)
             {
@@ -135,23 +139,29 @@ public abstract class BaseService<TDbContext, TEntity, TDto, TCreateRequest, TUp
             UpdateEntity(entity, request);
             
             // Setar campos de auditoria se existirem
-            SetAuditFieldsOnUpdate(entity, usuarioAtualizacao);
+            SetAuditFieldsOnUpdate(entity, request, usuarioAtualizacao);
             
             await BeforeUpdateAsync(entity, request, usuarioAtualizacao);
             
-            // Marcar explicitamente como modificado para garantir tracking
-            _context.Entry(entity).State = EntityState.Modified;
-            
+            // Não é necessário marcar como Modified explicitamente quando a entidade já está tracked
+            // O EF Core detecta automaticamente as mudanças
             await _context.SaveChangesAsync();
 
             _logger.LogInformation("{EntityType} atualizado com sucesso - ID: {Id}", typeof(TEntity).Name, id);
 
-            // Buscar novamente para garantir dados atualizados
-            var updatedEntity = await _dbSet.FirstOrDefaultAsync(e => EF.Property<long>(e, "Id") == id);
-            if (updatedEntity == null) return null;
-
+            // Usar a entidade já tracked ao invés de fazer uma nova query
             var mapper = MapToDto().Compile();
-            return mapper(updatedEntity);
+            return mapper(entity);
+        }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            _logger.LogWarning(ex, "Concorrência detectada ao atualizar {EntityType} - ID: {Id}", typeof(TEntity).Name, id);
+            throw;
+        }
+        catch (DbUpdateException ex)
+        {
+            _logger.LogError(ex, "Erro ao atualizar {EntityType} - ID: {Id} - Violação de constraint", typeof(TEntity).Name, id);
+            throw;
         }
         catch (Exception ex)
         {
@@ -190,7 +200,7 @@ public abstract class BaseService<TDbContext, TEntity, TDto, TCreateRequest, TUp
     }
 
     // Helpers para campos de auditoria usando reflection
-    protected void SetAuditFieldsOnCreate(object entity, string? usuarioCriacao)
+    protected virtual void SetAuditFieldsOnCreate(object entity, TCreateRequest request, string? usuarioCriacao)
     {
         var type = entity.GetType();
         
@@ -201,7 +211,7 @@ public abstract class BaseService<TDbContext, TEntity, TDto, TCreateRequest, TUp
             type.GetProperty("DataCriacao")?.SetValue(entity, DateTime.UtcNow);
     }
 
-    protected void SetAuditFieldsOnUpdate(object entity, string? usuarioAtualizacao)
+    protected virtual void SetAuditFieldsOnUpdate(object entity, TUpdateRequest request, string? usuarioAtualizacao)
     {
         var type = entity.GetType();
         

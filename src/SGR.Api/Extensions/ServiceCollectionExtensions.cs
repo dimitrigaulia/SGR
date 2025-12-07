@@ -57,8 +57,23 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddApplicationDbContext(this IServiceCollection services, IConfiguration configuration)
     {
         var configConnectionString = configuration.GetConnectionString("ConfigConnection");
+        var isDevelopment = configuration.GetValue<bool>("ASPNETCORE_ENVIRONMENT") == "Development" 
+            || Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development";
+        
         services.AddDbContext<ApplicationDbContext>(options =>
-            options.UseNpgsql(configConnectionString));
+        {
+            options.UseNpgsql(configConnectionString);
+            
+            // Configurações recomendadas da Microsoft
+            if (isDevelopment)
+            {
+                options.EnableSensitiveDataLogging();
+                options.EnableDetailedErrors();
+            }
+            
+            // Manter tracking como padrão para operações de escrita
+            // Usar AsNoTracking() explicitamente em queries de leitura
+        });
 
         var tenantsConnectionString = configuration.GetConnectionString("TenantsConnection");
         
@@ -72,6 +87,13 @@ public static class ServiceCollectionExtensions
         services.AddDbContext<TenantDbContext>((serviceProvider, options) =>
         {
             options.UseNpgsql(tenantsConnectionString);
+            
+            // Configurações recomendadas da Microsoft
+            if (isDevelopment)
+            {
+                options.EnableSensitiveDataLogging();
+                options.EnableDetailedErrors();
+            }
             
             // Obter o interceptor do service provider
             var interceptor = serviceProvider.GetRequiredService<TenantSchemaInterceptor>();
