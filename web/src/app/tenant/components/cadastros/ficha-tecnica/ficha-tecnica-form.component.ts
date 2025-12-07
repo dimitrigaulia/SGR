@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { HttpClient } from '@angular/common/http';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -66,6 +67,7 @@ export class TenantFichaTecnicaFormComponent {
   private cdr = inject(ChangeDetectorRef);
   private destroyRef = inject(DestroyRef);
   private breakpointObserver = inject(BreakpointObserver);
+  private http = inject(HttpClient);
 
   id = signal<number | null>(null);
   categorias = signal<CategoriaReceitaDto[]>([]);
@@ -424,5 +426,27 @@ export class TenantFichaTecnicaFormComponent {
           }
         });
     }
+  }
+
+  printPdf() {
+    const currentId = this.id();
+    if (!currentId) return;
+
+    this.http.get(`${this.environment.apiUrl}/tenant/fichas-tecnicas/${currentId}/pdf`, {
+      responseType: 'blob'
+    })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (blob) => {
+          const url = window.URL.createObjectURL(blob);
+          const link = window.open(url, '_blank');
+          if (link) {
+            link.onload = () => window.URL.revokeObjectURL(url);
+          }
+        },
+        error: (err) => {
+          this.toast.error('Erro ao gerar PDF');
+        }
+      });
   }
 }

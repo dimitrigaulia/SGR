@@ -2,6 +2,7 @@ import { Component, inject, signal, ViewChild, ChangeDetectionStrategy, DestroyR
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { Router, RouterLink } from "@angular/router";
+import { HttpClient } from "@angular/common/http";
 import { BreakpointObserver, Breakpoints } from "@angular/cdk/layout";
 import { MatTableModule } from "@angular/material/table";
 import { MatButtonModule } from "@angular/material/button";
@@ -37,6 +38,7 @@ export class TenantFichasTecnicasListComponent {
   private breakpointObserver = inject(BreakpointObserver);
   private destroyRef = inject(DestroyRef);
   private cdr = inject(ChangeDetectorRef);
+  private http = inject(HttpClient);
   
   protected environment = environment;
   protected window = typeof window !== 'undefined' ? window : null;
@@ -155,9 +157,22 @@ export class TenantFichasTecnicasListComponent {
   }
 
   printPdf(e: FichaTecnicaDto) {
-    if (this.window) {
-      this.window.open(`${this.environment.apiUrl}/tenant/fichas-tecnicas/${e.id}/pdf`, '_blank');
-    }
+    this.http.get(`${this.environment.apiUrl}/tenant/fichas-tecnicas/${e.id}/pdf`, {
+      responseType: 'blob'
+    })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (blob) => {
+          const url = window.URL.createObjectURL(blob);
+          const link = window.open(url, '_blank');
+          if (link) {
+            link.onload = () => window.URL.revokeObjectURL(url);
+          }
+        },
+        error: (err) => {
+          this.toast.error('Erro ao gerar PDF');
+        }
+      });
   }
 }
 

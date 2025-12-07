@@ -2,6 +2,7 @@ import { Component, inject, signal, ViewChild, OnDestroy, ChangeDetectionStrateg
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { Router, RouterLink } from "@angular/router";
+import { HttpClient } from "@angular/common/http";
 import { BreakpointObserver, Breakpoints } from "@angular/cdk/layout";
 import { MatTableModule } from "@angular/material/table";
 import { MatButtonModule } from "@angular/material/button";
@@ -40,6 +41,7 @@ export class TenantReceitasListComponent implements OnDestroy {
   private breakpointObserver = inject(BreakpointObserver);
   private destroyRef = inject(DestroyRef);
   private cdr = inject(ChangeDetectorRef);
+  private http = inject(HttpClient);
   
   displayedColumns = ['imagem', 'nome', 'categoria', 'rendimento', 'custoPorPorcao', 'tempoPreparo', 'ativo', 'acoes'];
   data = signal<ReceitaDto[]>([]);
@@ -200,9 +202,22 @@ export class TenantReceitasListComponent implements OnDestroy {
   }
 
   printPdf(e: ReceitaDto) {
-    if (this.window) {
-      this.window.open(`${this.environment.apiUrl}/tenant/receitas/${e.id}/pdf`, '_blank');
-    }
+    this.http.get(`${this.environment.apiUrl}/tenant/receitas/${e.id}/pdf`, {
+      responseType: 'blob'
+    })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (blob) => {
+          const url = window.URL.createObjectURL(blob);
+          const link = window.open(url, '_blank');
+          if (link) {
+            link.onload = () => window.URL.revokeObjectURL(url);
+          }
+        },
+        error: (err) => {
+          this.toast.error('Erro ao gerar PDF');
+        }
+      });
   }
 
   pageChanged(ev: PageEvent) {

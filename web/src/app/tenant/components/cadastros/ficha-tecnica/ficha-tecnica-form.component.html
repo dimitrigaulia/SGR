@@ -470,7 +470,7 @@
     <div class="form-actions">
       <button mat-stroked-button type="button" routerLink="/tenant/fichas-tecnicas">Voltar</button>
       @if (isView()) {
-        <button mat-stroked-button type="button" (click)="window?.open(environment.apiUrl + '/tenant/fichas-tecnicas/' + id() + '/pdf', '_blank')">Imprimir / PDF</button>
+        <button mat-stroked-button type="button" (click)="printPdf()">Imprimir / PDF</button>
       } @else {
         <button mat-raised-button color="primary" type="submit">Salvar</button>
       }
