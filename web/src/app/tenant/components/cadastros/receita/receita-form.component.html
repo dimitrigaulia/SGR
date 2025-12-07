@@ -39,11 +39,43 @@
 
     <div class="rendimento-section">
       <h3 class="section-subtitle">Rendimento da Receita</h3>
+      
+      @if (!isView()) {
+        <div class="form-row" style="margin-bottom: 16px;">
+          <mat-slide-toggle 
+            [(ngModel)]="model.calcularRendimentoAutomatico" 
+            [ngModelOptions]="{standalone: true}"
+            (ngModelChange)="onToggleChange()"
+            [disabled]="isView()">
+            Calcular rendimento automaticamente a partir do peso por porção
+          </mat-slide-toggle>
+        </div>
+      }
+
       <div class="form-row">
         <mat-form-field appearance="outline" class="form-field-spacing">
           <mat-label>Rendimento (porções)</mat-label>
-          <input matInput type="number" name="rendimento" [(ngModel)]="model.rendimento" [disabled]="isView()" required min="0.01" step="0.01" placeholder="Ex.: 10" />
-          <mat-hint class="hint-responsive">Quantas porções padrão essa receita rende ao todo (ex: 10 porções)</mat-hint>
+          <input 
+            matInput 
+            type="number" 
+            name="rendimento" 
+            [(ngModel)]="model.rendimento" 
+            (ngModelChange)="onRendimentoChange()"
+            [disabled]="isView() || model.calcularRendimentoAutomatico" 
+            required 
+            min="0.01" 
+            step="0.01" 
+            placeholder="Ex.: 10" />
+          <mat-hint class="hint-responsive">
+            @if (model.calcularRendimentoAutomatico) {
+              Calculado automaticamente a partir do peso por porção
+            } @else {
+              Quantas porções padrão essa receita rende ao todo (ex: 10 porções)
+              @if (pesoTotalAposRendimento !== null) {
+                <br>Peso total calculado: {{ pesoTotalAposRendimento | number:'1.0-0' }} g
+              }
+            }
+          </mat-hint>
           @if (f.controls['rendimento']?.errors?.['required']) {
             <mat-error>Rendimento é obrigatório</mat-error>
           }
@@ -51,8 +83,32 @@
 
         <mat-form-field appearance="outline" class="form-field-spacing">
           <mat-label>Peso por porção (g)</mat-label>
-          <input matInput type="number" name="pesoPorPorcao" [(ngModel)]="model.pesoPorPorcao" [disabled]="isView()" min="0.01" step="0.01" placeholder="Ex.: 250" />
-          <mat-hint class="hint-responsive">Peso aproximado de cada porção em gramas (ex: 250 g por porção)</mat-hint>
+          <input 
+            matInput 
+            type="number" 
+            name="pesoPorPorcao" 
+            [(ngModel)]="model.pesoPorPorcao" 
+            (ngModelChange)="onPesoPorPorcaoChange()"
+            [disabled]="isView() || (!model.calcularRendimentoAutomatico && pesoTotalAposRendimento === null)" 
+            min="0.01" 
+            step="0.01" 
+            placeholder="Ex.: 250" />
+          <mat-hint class="hint-responsive">
+            @if (model.calcularRendimentoAutomatico) {
+              Informe o peso por porção para calcular o rendimento automaticamente
+              @if (pesoTotalAposRendimento !== null) {
+                <br>Peso total calculado: {{ pesoTotalAposRendimento | number:'1.0-0' }} g
+              }
+            } @else {
+              @if (pesoTotalAposRendimento !== null) {
+                Calculado automaticamente: {{ (pesoTotalAposRendimento / model.rendimento) | number:'1.0-0' }} g por porção
+                <br>Peso total: {{ pesoTotalAposRendimento | number:'1.0-0' }} g
+              } @else {
+                Peso aproximado de cada porção em gramas (ex: 250 g por porção)
+                <br>Adicione itens com unidade de peso (GR ou KG) para cálculo automático
+              }
+            }
+          </mat-hint>
           @if (f.controls['pesoPorPorcao']?.errors?.['min']) {
             <mat-error>Peso por porção deve ser maior que zero</mat-error>
           }
@@ -63,7 +119,7 @@
     <div class="form-row">
       <mat-form-field appearance="outline" class="form-field-spacing">
         <mat-label>IC - Sinal</mat-label>
-        <mat-select name="icSinal" [(ngModel)]="model.icSinal" [disabled]="isView()">
+        <mat-select name="icSinal" [(ngModel)]="model.icSinal" (ngModelChange)="onICChange()" [disabled]="isView()">
           <mat-option value="-">Perda (-)</mat-option>
           <mat-option value="+">Ganho (+)</mat-option>
         </mat-select>
@@ -71,7 +127,7 @@
 
       <mat-form-field appearance="outline" class="form-field-spacing">
         <mat-label>IC - Valor (%)</mat-label>
-        <input matInput type="number" name="icValor" [(ngModel)]="model.icValor" [disabled]="isView()" min="0" max="999" step="1" />
+        <input matInput type="number" name="icValor" [(ngModel)]="model.icValor" (ngModelChange)="onICChange()" [disabled]="isView()" min="0" max="999" step="1" />
         <mat-hint class="hint-responsive">
           <span class="hint-full">Ex: - e 5 = 5% de perda (fator â‰ˆ 0,95)</span>
           <span class="hint-mobile">Ex: - e 5 = 5% de perda</span>
@@ -173,7 +229,7 @@
                   {{ getUnidadeSigla(item.unidadeMedidaId) }}
                 } @else {
                   <mat-form-field appearance="outline" class="field-unidade">
-                    <mat-select [(ngModel)]="item.unidadeMedidaId" [ngModelOptions]="{standalone: true}">
+                    <mat-select [(ngModel)]="item.unidadeMedidaId" [ngModelOptions]="{standalone: true}" (ngModelChange)="atualizarCalculosAutomaticos()">
                       <mat-option [value]="null">Selecione...</mat-option>
                       @for (u of unidades(); track u.id) {
                         <mat-option [value]="u.id">{{ u.sigla }} - {{ u.nome }}</mat-option>
@@ -308,7 +364,7 @@
                       
                       <mat-form-field appearance="outline" class="field-unidade-mobile">
                         <mat-label>Unidade</mat-label>
-                        <mat-select [(ngModel)]="item.unidadeMedidaId" [ngModelOptions]="{standalone: true}">
+                        <mat-select [(ngModel)]="item.unidadeMedidaId" [ngModelOptions]="{standalone: true}" (ngModelChange)="atualizarCalculosAutomaticos()">
                           <mat-option [value]="null">Selecione...</mat-option>
                           @for (u of unidades(); track u.id) {
                             <mat-option [value]="u.id">{{ u.sigla }}</mat-option>

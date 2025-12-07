@@ -80,7 +80,8 @@ export class TenantReceitaFormComponent {
     tempoPreparo: null as number | null,
     versao: '1.0',
     pathImagem: '',
-    isAtivo: true
+    isAtivo: true,
+    calcularRendimentoAutomatico: false
   };
 
   itens = signal<ReceitaItemFormModel[]>([]);
@@ -158,7 +159,8 @@ export class TenantReceitaFormComponent {
             tempoPreparo: e.tempoPreparo ?? null,
             versao: e.versao || '1.0',
             pathImagem: e.pathImagem || '',
-            isAtivo: e.isAtivo
+            isAtivo: e.isAtivo,
+            calcularRendimentoAutomatico: false
           };
           this.previousImageUrl = e.pathImagem ?? null;
           this.itens.set(e.itens.map(item => ({
@@ -191,6 +193,7 @@ export class TenantReceitaFormComponent {
       ordem: newOrdem,
       observacoes: ''
     }]);
+    this.atualizarCalculosAutomaticos();
     this.cdr.markForCheck();
   }
 
@@ -202,6 +205,7 @@ export class TenantReceitaFormComponent {
       item.ordem = idx + 1;
     });
     this.itens.set(newItens);
+    this.atualizarCalculosAutomaticos();
     this.cdr.markForCheck();
   }
 
@@ -268,6 +272,7 @@ export class TenantReceitaFormComponent {
         item.unidadeMedidaId = insumo.unidadeUsoId;
       }
     }
+    this.atualizarCalculosAutomaticos();
     this.cdr.markForCheck();
   }
 
@@ -278,6 +283,98 @@ export class TenantReceitaFormComponent {
       return pesoPorPorcao * rendimento;
     }
     return null;
+  }
+
+  get pesoTotalItens(): number | null {
+    // Somar apenas itens com unidade de peso (GR, KG)
+    let total = 0;
+    let temItensPeso = false;
+
+    for (const item of this.itens()) {
+      if (!item.insumoId || !item.unidadeMedidaId || item.quantidade <= 0) {
+        continue;
+      }
+
+      const unidade = this.unidades().find(u => u.id === item.unidadeMedidaId);
+      if (!unidade) continue;
+
+      const sigla = unidade.sigla.toUpperCase();
+      
+      // Verificar se é unidade de peso (GR ou KG)
+      if (sigla !== 'GR' && sigla !== 'KG') {
+        continue;
+      }
+
+      const insumo = this.insumos().find(i => i.id === item.insumoId);
+      if (!insumo) continue;
+
+      // Converter quantidade para gramas
+      let quantidadeEmGramas = item.quantidade;
+      if (sigla === 'KG') {
+        quantidadeEmGramas = item.quantidade * 1000;
+      }
+
+      // Aplicar fator de correção do insumo
+      const quantidadeComFatorCorrecao = quantidadeEmGramas * insumo.fatorCorrecao;
+      total += quantidadeComFatorCorrecao;
+      temItensPeso = true;
+    }
+
+    return temItensPeso ? total : null;
+  }
+
+  get pesoTotalAposRendimento(): number | null {
+    const pesoTotal = this.pesoTotalItens;
+    if (pesoTotal === null) return null;
+    return pesoTotal * this.fatorRendimentoCalculado;
+  }
+
+  calcularPesoPorPorcaoAutomatico(): void {
+    if (this.model.calcularRendimentoAutomatico) return; // Não calcular se toggle estiver ativo
+    const pesoTotal = this.pesoTotalAposRendimento;
+    const rendimento = this.model.rendimento;
+    if (pesoTotal !== null && rendimento > 0) {
+      this.model.pesoPorPorcao = Math.round(pesoTotal / rendimento * 100) / 100; // Arredondar para 2 casas
+      this.cdr.markForCheck();
+    }
+  }
+
+  calcularRendimentoAutomatico(): void {
+    if (!this.model.calcularRendimentoAutomatico) return;
+    const pesoTotal = this.pesoTotalAposRendimento;
+    const pesoPorPorcao = this.model.pesoPorPorcao;
+    if (pesoTotal !== null && pesoPorPorcao && pesoPorPorcao > 0) {
+      this.model.rendimento = Math.round(pesoTotal / pesoPorPorcao * 100) / 100; // Arredondar para 2 casas
+      this.cdr.markForCheck();
+    }
+  }
+
+  atualizarCalculosAutomaticos(): void {
+    if (this.model.calcularRendimentoAutomatico) {
+      this.calcularRendimentoAutomatico();
+    } else {
+      this.calcularPesoPorPorcaoAutomatico();
+    }
+  }
+
+  onRendimentoChange(): void {
+    if (!this.model.calcularRendimentoAutomatico) {
+      this.calcularPesoPorPorcaoAutomatico();
+    }
+  }
+
+  onPesoPorPorcaoChange(): void {
+    if (this.model.calcularRendimentoAutomatico) {
+      this.calcularRendimentoAutomatico();
+    }
+  }
+
+  onICChange(): void {
+    this.atualizarCalculosAutomaticos();
+  }
+
+  onToggleChange(): void {
+    this.atualizarCalculosAutomaticos();
   }
 
   formatCurrency(value: number | null | undefined): string {
@@ -303,6 +400,7 @@ export class TenantReceitaFormComponent {
         }
       }
     }
+    this.atualizarCalculosAutomaticos();
   }
 
   onFileSelected(event: Event) {
