@@ -348,8 +348,12 @@ export class TenantReceitaFormComponent {
       return;
     }
 
+    console.log('ReceitaForm - Total de itens no formulário:', this.itens().length);
+    console.log('ReceitaForm - Total de itens válidos:', validItens.length);
+
     // Arredondar quantidades baseado na unidade de medida antes de enviar
-    const itensRequest = validItens.map(item => {
+    // Garantir ordem sequencial baseada no índice dos itens válidos
+    const itensRequest = validItens.map((item, index) => {
       let quantidade = item.quantidade;
       
       // Se for unidade UN, garantir que seja inteiro
@@ -366,10 +370,14 @@ export class TenantReceitaFormComponent {
         quantidade: quantidade,
         unidadeMedidaId: item.unidadeMedidaId!,
         exibirComoQB: item.exibirComoQB,
-        ordem: item.ordem,
+        ordem: index + 1, // Ordem sequencial baseada no índice
         observacoes: item.observacoes || undefined
       };
     });
+
+    console.log('ReceitaForm - Total de itens no request:', itensRequest.length);
+    console.log('ReceitaForm - Detalhes dos itens:', itensRequest.map((i, idx) => 
+      `Item[${idx}]: InsumoId=${i.insumoId}, Quantidade=${i.quantidade}, Ordem=${i.ordem}`));
 
     if (this.id() === null) {
       const req: CreateReceitaRequest = {

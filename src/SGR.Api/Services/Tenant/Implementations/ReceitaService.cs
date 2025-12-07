@@ -192,6 +192,10 @@ public class ReceitaService : IReceitaService
                 throw new BusinessException("A receita deve ter pelo menos um item");
             }
 
+            _logger.LogInformation("Receita CreateAsync - Quantidade de itens no request: {QuantidadeItens}", request.Itens.Count);
+            _logger.LogDebug("Receita CreateAsync - Detalhes dos itens: {Itens}", 
+                string.Join(", ", request.Itens.Select((i, idx) => $"Item[{idx}]: InsumoId={i.InsumoId}, Quantidade={i.Quantidade}, Ordem={i.Ordem}")));
+
             // Validar insumos
             var insumoIds = request.Itens.Select(i => i.InsumoId).Distinct().ToList();
             var insumos = await _context.Insumos
@@ -239,10 +243,13 @@ public class ReceitaService : IReceitaService
 
             // Criar itens
             var ordem = 1;
-            foreach (var itemRequest in request.Itens.OrderBy(i => i.Ordem))
+            var itensOrdenados = request.Itens.OrderBy(i => i.Ordem).ToList();
+            _logger.LogInformation("Receita CreateAsync - Itens ordenados: {QuantidadeItensOrdenados}", itensOrdenados.Count);
+            
+            foreach (var itemRequest in itensOrdenados)
             {
                 var insumo = insumos.First(i => i.Id == itemRequest.InsumoId);
-                receita.Itens.Add(new ReceitaItem
+                var novoItem = new ReceitaItem
                 {
                     InsumoId = itemRequest.InsumoId,
                     Quantidade = itemRequest.Quantidade,
@@ -250,7 +257,20 @@ public class ReceitaService : IReceitaService
                     ExibirComoQB = itemRequest.ExibirComoQB,
                     Ordem = ordem++,
                     Observacoes = itemRequest.Observacoes
-                });
+                };
+                receita.Itens.Add(novoItem);
+                _logger.LogDebug("Receita CreateAsync - Item adicionado: InsumoId={InsumoId}, Quantidade={Quantidade}, Ordem={Ordem}", 
+                    novoItem.InsumoId, novoItem.Quantidade, novoItem.Ordem);
+            }
+
+            _logger.LogInformation("Receita CreateAsync - Total de itens adicionados à coleção receita.Itens: {QuantidadeItens}", receita.Itens.Count);
+
+            // Validação explícita: garantir que todos os itens foram processados
+            if (receita.Itens.Count != request.Itens.Count)
+            {
+                _logger.LogError("Receita CreateAsync - ERRO: Quantidade de itens adicionados ({Adicionados}) não corresponde à quantidade no request ({NoRequest})", 
+                    receita.Itens.Count, request.Itens.Count);
+                throw new InvalidOperationException($"Erro ao processar itens da receita. Foram adicionados {receita.Itens.Count} itens, mas esperava-se {request.Itens.Count} itens.");
             }
 
             // Calcular custos
@@ -259,7 +279,7 @@ public class ReceitaService : IReceitaService
             _context.Receitas.Add(receita);
             await _context.SaveChangesAsync();
 
-            _logger.LogInformation("Receita criada com sucesso - ID: {Id}", receita.Id);
+            _logger.LogInformation("Receita criada com sucesso - ID: {Id}, Total de itens salvos: {QuantidadeItens}", receita.Id, receita.Itens.Count);
 
             return await GetByIdAsync(receita.Id) ?? throw new InvalidOperationException("Erro ao buscar receita criada");
     }
@@ -291,6 +311,10 @@ public class ReceitaService : IReceitaService
                 throw new BusinessException("A receita deve ter pelo menos um item");
             }
 
+            _logger.LogInformation("Receita UpdateAsync - Quantidade de itens no request: {QuantidadeItens}", request.Itens.Count);
+            _logger.LogDebug("Receita UpdateAsync - Detalhes dos itens: {Itens}", 
+                string.Join(", ", request.Itens.Select((i, idx) => $"Item[{idx}]: InsumoId={i.InsumoId}, Quantidade={i.Quantidade}, Ordem={i.Ordem}")));
+
             // Validar insumos
             var insumoIds = request.Itens.Select(i => i.InsumoId).Distinct().ToList();
             var insumos = await _context.Insumos
@@ -321,16 +345,20 @@ public class ReceitaService : IReceitaService
             receita.DataAtualizacao = DateTime.UtcNow;
 
             // Remover itens antigos
-            // NÃ£o usar Clear() pois RemoveRange jÃ¡ remove do contexto
-            // Apenas remover do contexto, a coleÃ§Ã£o serÃ¡ atualizada automaticamente
             var itensParaRemover = receita.Itens.ToList();
             _context.ReceitaItens.RemoveRange(itensParaRemover);
+            // Limpar a coleção para que não contenha mais os itens antigos
+            // (RemoveRange remove do contexto, mas a coleção ainda contém até SaveChangesAsync)
+            receita.Itens.Clear();
 
             // Adicionar novos itens
             var ordem = 1;
-            foreach (var itemRequest in request.Itens.OrderBy(i => i.Ordem))
+            var itensOrdenados = request.Itens.OrderBy(i => i.Ordem).ToList();
+            _logger.LogInformation("Receita UpdateAsync - Itens ordenados: {QuantidadeItensOrdenados}", itensOrdenados.Count);
+            
+            foreach (var itemRequest in itensOrdenados)
             {
-                receita.Itens.Add(new ReceitaItem
+                var novoItem = new ReceitaItem
                 {
                     InsumoId = itemRequest.InsumoId,
                     Quantidade = itemRequest.Quantidade,
@@ -338,7 +366,20 @@ public class ReceitaService : IReceitaService
                     ExibirComoQB = itemRequest.ExibirComoQB,
                     Ordem = ordem++,
                     Observacoes = itemRequest.Observacoes
-                });
+                };
+                receita.Itens.Add(novoItem);
+                _logger.LogDebug("Receita UpdateAsync - Item adicionado: InsumoId={InsumoId}, Quantidade={Quantidade}, Ordem={Ordem}", 
+                    novoItem.InsumoId, novoItem.Quantidade, novoItem.Ordem);
+            }
+
+            _logger.LogInformation("Receita UpdateAsync - Total de itens adicionados à coleção receita.Itens: {QuantidadeItens}", receita.Itens.Count);
+
+            // Validação explícita: garantir que todos os itens foram processados
+            if (receita.Itens.Count != request.Itens.Count)
+            {
+                _logger.LogError("Receita UpdateAsync - ERRO: Quantidade de itens adicionados ({Adicionados}) não corresponde à quantidade no request ({NoRequest})", 
+                    receita.Itens.Count, request.Itens.Count);
+                throw new InvalidOperationException($"Erro ao processar itens da receita. Foram adicionados {receita.Itens.Count} itens, mas esperava-se {request.Itens.Count} itens.");
             }
 
             // Recalcular custos
@@ -346,7 +387,7 @@ public class ReceitaService : IReceitaService
 
             await _context.SaveChangesAsync();
 
-            _logger.LogInformation("Receita atualizada com sucesso - ID: {Id}", id);
+            _logger.LogInformation("Receita atualizada com sucesso - ID: {Id}, Total de itens salvos: {QuantidadeItens}", id, receita.Itens.Count);
 
             return await GetByIdAsync(id);
     }
