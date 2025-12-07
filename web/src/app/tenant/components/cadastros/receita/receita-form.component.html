@@ -9,9 +9,9 @@
             Passos para cadastrar uma receita:
           </div>
           <ol style="margin: 0 0 0 16px; padding: 0; font-size: 13px;">
-            <li>Defina nome, categoria e rendimento (nÃºmero de porÃ§Ãµes prontas).</li>
-            <li>Opcional: informe o peso por porÃ§Ã£o e a tolerÃ¢ncia de peso.</li>
-            <li>Ajuste o IC (Ã­ndice de cocÃ§Ã£o) apenas se quiser considerar perdas/ganhos de cocÃ§Ã£o; o fator de rendimento Ã© calculado automaticamente.</li>
+            <li>Defina nome, categoria e rendimento (número de porções prontas).</li>
+            <li>Opcional: informe o peso por porção e a tolerância de peso.</li>
+            <li>Ajuste o IC (índice de cocção) apenas se quiser considerar perdas/ganhos de cocção; o fator de rendimento é calculado automaticamente.</li>
             <li>Adicione os insumos na tabela de itens com as quantidades usadas na receita.</li>
           </ol>
         </mat-card-content>
@@ -21,7 +21,7 @@
       <mat-label>Nome</mat-label>
       <input matInput name="nome" [(ngModel)]="model.nome" [disabled]="isView()" required maxlength="200" />
       @if (f.controls['nome']?.errors?.['required']) {
-        <mat-error>Nome Ã© obrigatÃ³rio</mat-error>
+        <mat-error>Nome é obrigatório</mat-error>
       }
     </mat-form-field>
 
@@ -33,7 +33,7 @@
         }
       </mat-select>
       @if (f.controls['categoriaId']?.errors?.['required']) {
-        <mat-error>Categoria Ã© obrigatÃ³ria</mat-error>
+        <mat-error>Categoria é obrigatória</mat-error>
       }
     </mat-form-field>
 
@@ -41,20 +41,20 @@
       <h3 class="section-subtitle">Rendimento da Receita</h3>
       <div class="form-row">
         <mat-form-field appearance="outline" class="form-field-spacing">
-          <mat-label>Rendimento (porÃ§Ãµes)</mat-label>
+          <mat-label>Rendimento (porções)</mat-label>
           <input matInput type="number" name="rendimento" [(ngModel)]="model.rendimento" [disabled]="isView()" required min="0.01" step="0.01" placeholder="Ex.: 10" />
-          <mat-hint class="hint-responsive">Quantas porÃ§Ãµes padrÃ£o essa receita rende ao todo (ex: 10 porÃ§Ãµes)</mat-hint>
+          <mat-hint class="hint-responsive">Quantas porções padrão essa receita rende ao todo (ex: 10 porções)</mat-hint>
           @if (f.controls['rendimento']?.errors?.['required']) {
-            <mat-error>Rendimento Ã© obrigatÃ³rio</mat-error>
+            <mat-error>Rendimento é obrigatório</mat-error>
           }
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="form-field-spacing">
-          <mat-label>Peso por porÃ§Ã£o (g)</mat-label>
+          <mat-label>Peso por porção (g)</mat-label>
           <input matInput type="number" name="pesoPorPorcao" [(ngModel)]="model.pesoPorPorcao" [disabled]="isView()" min="0.01" step="0.01" placeholder="Ex.: 250" />
-          <mat-hint class="hint-responsive">Peso aproximado de cada porÃ§Ã£o em gramas (ex: 250 g por porÃ§Ã£o)</mat-hint>
+          <mat-hint class="hint-responsive">Peso aproximado de cada porção em gramas (ex: 250 g por porção)</mat-hint>
           @if (f.controls['pesoPorPorcao']?.errors?.['min']) {
-            <mat-error>Peso por porÃ§Ã£o deve ser maior que zero</mat-error>
+            <mat-error>Peso por porção deve ser maior que zero</mat-error>
           }
         </mat-form-field>
       </div>
@@ -81,7 +81,7 @@
       <mat-form-field appearance="outline" class="form-field-spacing" disabled>
         <mat-label>Fator de Rendimento (calculado)</mat-label>
         <input matInput [value]="fatorRendimentoCalculado | number:'1.2-2'" disabled />
-        <mat-hint class="hint-responsive">Usado para aplicar o Ã­ndice de cocÃ§Ã£o nos cÃ¡lculos</mat-hint>
+        <mat-hint class="hint-responsive">Usado para aplicar o índice de cocção nos cálculos</mat-hint>
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="form-field-spacing">
@@ -90,7 +90,7 @@
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="form-field-spacing">
-        <mat-label>VersÃ£o</mat-label>
+        <mat-label>Versão</mat-label>
         <input matInput name="versao" [(ngModel)]="model.versao" [disabled]="isView()" maxlength="20" />
         <mat-hint class="hint-responsive">Ex: 1.0, 2.1, 3.0</mat-hint>
       </mat-form-field>
@@ -99,12 +99,12 @@
     <div class="form-section">
       <h3>Modo de Preparo</h3>
       <mat-form-field appearance="outline" class="form-field-spacing">
-        <mat-label>DescriÃ§Ã£o do preparo</mat-label>
+        <mat-label>Descrição do preparo</mat-label>
         <textarea matInput name="descricao" rows="6" [(ngModel)]="model.descricao" [disabled]="isView()" maxlength="5000"></textarea>
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="form-field-spacing">
-        <mat-label>InstruÃ§Ãµes de Empratamento</mat-label>
+        <mat-label>Instruções de Empratamento</mat-label>
         <textarea matInput name="instrucoesEmpratamento" rows="4" [(ngModel)]="model.instrucoesEmpratamento" [disabled]="isView()" maxlength="2000"></textarea>
       </mat-form-field>
     </div>
@@ -120,7 +120,7 @@
         }
       </div>
 
-      <!-- VersÃ£o Desktop: Tabela -->
+      <!-- Versão Desktop: Tabela -->
       @if (!isMobile() && itens().length > 0) {
         <div class="table-wrapper">
           <table mat-table [dataSource]="itens()" class="mat-elevation-z1 full-width-table">
@@ -188,7 +188,7 @@
               <th mat-header-cell *matHeaderCellDef class="col-qb">QB</th>
               <td mat-cell *matCellDef="let item" class="col-qb">
                 @if (isView()) {
-                  {{ item.exibirComoQB ? 'Sim' : 'NÃ£o' }}
+                  {{ item.exibirComoQB ? 'Sim' : 'Não' }}
                 } @else {
                   <mat-checkbox [(ngModel)]="item.exibirComoQB" [ngModelOptions]="{standalone: true}"></mat-checkbox>
                 }
@@ -203,7 +203,7 @@
             </ng-container>
 
             <ng-container matColumnDef="observacoes">
-              <th mat-header-cell *matHeaderCellDef>ObservaÃ§Ãµes</th>
+              <th mat-header-cell *matHeaderCellDef>Observações</th>
               <td mat-cell *matCellDef="let item">
                 @if (isView()) {
                   {{ item.observacoes || '-' }}
@@ -216,7 +216,7 @@
             </ng-container>
 
             <ng-container matColumnDef="acoes">
-              <th mat-header-cell *matHeaderCellDef class="col-acoes">AÃ§Ãµes</th>
+              <th mat-header-cell *matHeaderCellDef class="col-acoes">Ações</th>
               <td mat-cell *matCellDef="let item; let i = index" class="col-acoes">
                 @if (!isView()) {
                   <div class="action-buttons">
@@ -240,7 +240,7 @@
         </div>
       }
 
-      <!-- VersÃ£o Mobile: Cards -->
+      <!-- Versão Mobile: Cards -->
       @if (isMobile() && itens().length > 0) {
         <div class="items-cards-container">
           @for (item of itens(); track $index; let i = $index) {
@@ -281,7 +281,7 @@
                     }
                     @if (item.observacoes) {
                       <div class="item-field">
-                        <span class="item-label">ObservaÃ§Ãµes:</span>
+                        <span class="item-label">Observações:</span>
                         <span class="item-value">{{ item.observacoes }}</span>
                       </div>
                     }
@@ -325,7 +325,7 @@
                     </div>
                     
                     <mat-form-field appearance="outline" class="field-full">
-                      <mat-label>ObservaÃ§Ãµes (opcional)</mat-label>
+                      <mat-label>Observações (opcional)</mat-label>
                       <input matInput [(ngModel)]="item.observacoes" [ngModelOptions]="{standalone: true}" />
                     </mat-form-field>
                   }
@@ -338,7 +338,7 @@
 
       @if (itens().length === 0) {
         <div class="empty-message">
-          <p>Nenhum item adicionado. Clique em "Adicionar Item" para comeÃ§ar.</p>
+          <p>Nenhum item adicionado. Clique em "Adicionar Item" para começar.</p>
         </div>
       }
     </div>
@@ -351,14 +351,14 @@
           <div class="value">-</div>
         </div>
         <div>
-          <div class="label">Custo por PorÃ§Ã£o</div>
+          <div class="label">Custo por Porção</div>
           <div class="value">-</div>
         </div>
       </div>
-      <p style="font-size: 12px; color: #666; margin-top: 8px;">Os custos sÃ£o calculados automaticamente pelo sistema.</p>
+      <p style="font-size: 12px; color: #666; margin-top: 8px;">Os custos são calculados automaticamente pelo sistema.</p>
     </div>
 
-    <!-- Wrapper para o toggle com espaÃ§amento consistente -->
+    <!-- Wrapper para o toggle com espaçamento consistente -->
     <div class="form-toggle-wrapper">
       <mat-slide-toggle name="isAtivo" [(ngModel)]="model.isAtivo" [disabled]="isView()">Ativo</mat-slide-toggle>
     </div>

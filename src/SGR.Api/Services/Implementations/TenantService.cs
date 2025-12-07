@@ -178,7 +178,7 @@ public class TenantService : BaseService<ApplicationDbContext, TenantEntity, Ten
             IsAtivo = true
         };
 
-        SetAuditFieldsOnCreate(tenant, usuarioCriacao);
+        SetAuditFieldsOnCreate(tenant, request, usuarioCriacao);
         _dbSet.Add(tenant);
         await _context.SaveChangesAsync();
 
@@ -254,7 +254,17 @@ public class TenantService : BaseService<ApplicationDbContext, TenantEntity, Ten
 
             // Inativar o tenant (soft delete)
             tenant.IsAtivo = false;
-            SetAuditFieldsOnUpdate(tenant, null);
+            var updateRequest = new UpdateTenantRequest
+            {
+                RazaoSocial = tenant.RazaoSocial,
+                NomeFantasia = tenant.NomeFantasia,
+                TipoPessoaId = tenant.TipoPessoaId,
+                CpfCnpj = tenant.CpfCnpj,
+                CategoriaId = tenant.CategoriaId,
+                FatorContabil = tenant.FatorContabil,
+                IsAtivo = false
+            };
+            SetAuditFieldsOnUpdate(tenant, updateRequest, null);
             
             await _context.SaveChangesAsync();
 
@@ -285,7 +295,17 @@ public class TenantService : BaseService<ApplicationDbContext, TenantEntity, Ten
             }
 
             tenant.IsAtivo = !tenant.IsAtivo;
-            SetAuditFieldsOnUpdate(tenant, usuarioAtualizacao);
+            var updateRequest = new UpdateTenantRequest
+            {
+                RazaoSocial = tenant.RazaoSocial,
+                NomeFantasia = tenant.NomeFantasia,
+                TipoPessoaId = tenant.TipoPessoaId,
+                CpfCnpj = tenant.CpfCnpj,
+                CategoriaId = tenant.CategoriaId,
+                FatorContabil = tenant.FatorContabil,
+                IsAtivo = tenant.IsAtivo
+            };
+            SetAuditFieldsOnUpdate(tenant, updateRequest, usuarioAtualizacao);
             
             await _context.SaveChangesAsync();
 

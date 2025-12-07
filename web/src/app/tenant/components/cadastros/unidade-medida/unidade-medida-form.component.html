@@ -10,7 +10,7 @@
       <mat-label>Nome</mat-label>
       <input matInput name="nome" [(ngModel)]="model.nome" [disabled]="isView()" required maxlength="50" />
       @if (f.controls['nome']?.errors?.['required']) {
-        <mat-error>Nome Ã© obrigatÃ³rio</mat-error>
+        <mat-error>Nome é obrigatório</mat-error>
       }
     </mat-form-field>
 
@@ -18,12 +18,12 @@
       <mat-label>Sigla</mat-label>
       <input matInput name="sigla" [(ngModel)]="model.sigla" [disabled]="isView()" required maxlength="10" />
       @if (f.controls['sigla']?.errors?.['required']) {
-        <mat-error>Sigla Ã© obrigatÃ³ria</mat-error>
+        <mat-error>Sigla é obrigatória</mat-error>
       }
       <mat-hint class="hint-responsive">Ex: UN, GR, ML</mat-hint>
     </mat-form-field>
 
-    <!-- Wrapper para o toggle com espaÃ§amento consistente -->
+    <!-- Wrapper para o toggle com espaçamento consistente -->
     <div class="form-toggle-wrapper">
       <mat-slide-toggle name="isAtivo" [(ngModel)]="model.isAtivo" [disabled]="isView()">Ativo</mat-slide-toggle>
     </div>

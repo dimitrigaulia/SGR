@@ -7,10 +7,10 @@
       <h3 class="section-title">Dados do Tenant</h3>
 
       <mat-form-field appearance="outline" class="form-field-spacing">
-        <mat-label>RazÃ£o Social</mat-label>
+        <mat-label>Razão Social</mat-label>
         <input matInput name="razaoSocial" [(ngModel)]="model.razaoSocial" [disabled]="isView()" required maxlength="200" />
         @if (f.controls['razaoSocial']?.errors?.['required'] && f.controls['razaoSocial']?.touched) {
-          <mat-error>RazÃ£o social Ã© obrigatÃ³ria</mat-error>
+          <mat-error>Razão social é obrigatória</mat-error>
         }
       </mat-form-field>
 
@@ -18,7 +18,7 @@
         <mat-label>Nome Fantasia</mat-label>
         <input matInput name="nomeFantasia" [(ngModel)]="model.nomeFantasia" (ngModelChange)="onNomeFantasiaChange()" [disabled]="isView()" required maxlength="200" />
         @if (f.controls['nomeFantasia']?.errors?.['required'] && f.controls['nomeFantasia']?.touched) {
-          <mat-error>Nome fantasia Ã© obrigatÃ³rio</mat-error>
+          <mat-error>Nome fantasia é obrigatório</mat-error>
         }
       </mat-form-field>
 
@@ -30,7 +30,7 @@
           }
         </mat-select>
         @if (f.controls['tipoPessoaId']?.errors?.['required'] && f.controls['tipoPessoaId']?.touched) {
-          <mat-error>Tipo de pessoa Ã© obrigatÃ³rio</mat-error>
+          <mat-error>Tipo de pessoa é obrigatório</mat-error>
         }
       </mat-form-field>
 
@@ -48,7 +48,7 @@
           <mat-spinner matSuffix diameter="20"></mat-spinner>
         }
         @if (f.controls['cpfCnpj']?.errors?.['required'] && f.controls['cpfCnpj']?.touched) {
-          <mat-error>CPF/CNPJ Ã© obrigatÃ³rio</mat-error>
+          <mat-error>CPF/CNPJ é obrigatório</mat-error>
         }
         @if (model.tipoPessoaId === 2) {
           <mat-hint>Digite o CNPJ completo para buscar os dados automaticamente</mat-hint>
@@ -63,12 +63,12 @@
           }
         </mat-select>
         @if (f.controls['categoriaId']?.errors?.['required'] && f.controls['categoriaId']?.touched) {
-          <mat-error>Categoria Ã© obrigatÃ³ria</mat-error>
+          <mat-error>Categoria é obrigatória</mat-error>
         }
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="form-field-spacing">
-        <mat-label>Fator ContÃ¡bil</mat-label>
+        <mat-label>Fator Contábil</mat-label>
         <input 
           matInput 
           type="number" 
@@ -80,16 +80,16 @@
           min="0.0001"
           max="9999.9999" />
         @if (f.controls['fatorContabil']?.errors?.['required'] && f.controls['fatorContabil']?.touched) {
-          <mat-error>Fator contÃ¡bil Ã© obrigatÃ³rio</mat-error>
+          <mat-error>Fator contábil é obrigatório</mat-error>
         }
         @if (f.controls['fatorContabil']?.errors?.['min'] && f.controls['fatorContabil']?.touched) {
-          <mat-error>Fator contÃ¡bil deve ser maior que 0</mat-error>
+          <mat-error>Fator contábil deve ser maior que 0</mat-error>
         }
       </mat-form-field>
 
       @if (!isEdit()) {
         <mat-form-field appearance="outline" class="form-field-spacing">
-          <mat-label>SubdomÃ­nio</mat-label>
+          <mat-label>Subdomínio</mat-label>
           <input 
             matInput 
             name="subdominio" 
@@ -101,17 +101,17 @@
             pattern="[a-z0-9]+" />
           <mat-hint>Gerado automaticamente a partir do nome fantasia. Pode ser editado manualmente.</mat-hint>
           @if (f.controls['subdominio']?.errors?.['required'] && f.controls['subdominio']?.touched) {
-            <mat-error>SubdomÃ­nio Ã© obrigatÃ³rio</mat-error>
+            <mat-error>Subdomínio é obrigatório</mat-error>
           }
           @if (f.controls['subdominio']?.errors?.['pattern'] && f.controls['subdominio']?.touched) {
-            <mat-error>SubdomÃ­nio deve conter apenas letras minÃºsculas e nÃºmeros</mat-error>
+            <mat-error>Subdomínio deve conter apenas letras minúsculas e números</mat-error>
           }
         </mat-form-field>
       } @else {
         <mat-form-field appearance="outline" class="form-field-spacing">
-          <mat-label>SubdomÃ­nio</mat-label>
+          <mat-label>Subdomínio</mat-label>
           <input matInput [value]="model.subdominio" disabled />
-          <mat-hint>O subdomÃ­nio nÃ£o pode ser alterado apÃ³s a criaÃ§Ã£o</mat-hint>
+          <mat-hint>O subdomínio não pode ser alterado após a criação</mat-hint>
         </mat-form-field>
       }
 
@@ -120,7 +120,7 @@
       </div>
     </div>
 
-    <!-- Dados do Administrador (apenas na criaÃ§Ã£o) -->
+    <!-- Dados do Administrador (apenas na criação) -->
     @if (!isEdit()) {
       <div class="form-section">
         <h3 class="section-title">Dados do Administrador</h3>
@@ -129,7 +129,7 @@
           <mat-label>Nome Completo</mat-label>
           <input matInput name="adminNomeCompleto" [(ngModel)]="model.admin.nomeCompleto" [disabled]="isView()" required maxlength="200" />
           @if (f.controls['adminNomeCompleto']?.errors?.['required'] && f.controls['adminNomeCompleto']?.touched) {
-            <mat-error>Nome completo Ã© obrigatÃ³rio</mat-error>
+            <mat-error>Nome completo é obrigatório</mat-error>
           }
         </mat-form-field>
 
@@ -137,10 +137,10 @@
           <mat-label>Email</mat-label>
           <input matInput type="email" name="adminEmail" [(ngModel)]="model.admin.email" [disabled]="isView()" required maxlength="200" />
           @if (f.controls['adminEmail']?.errors?.['required'] && f.controls['adminEmail']?.touched) {
-            <mat-error>Email Ã© obrigatÃ³rio</mat-error>
+            <mat-error>Email é obrigatório</mat-error>
           }
           @if (f.controls['adminEmail']?.errors?.['email'] && f.controls['adminEmail']?.touched) {
-            <mat-error>Email invÃ¡lido</mat-error>
+            <mat-error>Email inválido</mat-error>
           }
         </mat-form-field>
 
@@ -164,10 +164,10 @@
             <mat-icon>{{ showPassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
           </button>
           @if (f.controls['adminSenha']?.errors?.['required'] && f.controls['adminSenha']?.touched) {
-            <mat-error>Senha Ã© obrigatÃ³ria</mat-error>
+            <mat-error>Senha é obrigatória</mat-error>
           }
           @if (f.controls['adminSenha']?.errors?.['minlength'] && f.controls['adminSenha']?.touched) {
-            <mat-error>A senha deve ter no mÃ­nimo 6 caracteres</mat-error>
+            <mat-error>A senha deve ter no mínimo 6 caracteres</mat-error>
           }
         </mat-form-field>
 
@@ -190,10 +190,10 @@
             <mat-icon>{{ showConfirmPassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
           </button>
           @if (f.controls['adminConfirmarSenha']?.errors?.['required'] && f.controls['adminConfirmarSenha']?.touched) {
-            <mat-error>ConfirmaÃ§Ã£o de senha Ã© obrigatÃ³ria</mat-error>
+            <mat-error>Confirmação de senha é obrigatória</mat-error>
           }
           @if (model.admin.senha && model.admin.confirmarSenha && model.admin.senha !== model.admin.confirmarSenha && f.controls['adminConfirmarSenha']?.touched) {
-            <mat-error>As senhas nÃ£o coincidem</mat-error>
+            <mat-error>As senhas não coincidem</mat-error>
           }
         </mat-form-field>
       </div>

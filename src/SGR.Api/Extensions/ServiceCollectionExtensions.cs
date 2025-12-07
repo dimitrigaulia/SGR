@@ -57,8 +57,9 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddApplicationDbContext(this IServiceCollection services, IConfiguration configuration)
     {
         var configConnectionString = configuration.GetConnectionString("ConfigConnection");
-        var isDevelopment = configuration.GetValue<bool>("ASPNETCORE_ENVIRONMENT") == "Development" 
-            || Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development";
+        var aspnetcoreEnv = configuration.GetValue<string>("ASPNETCORE_ENVIRONMENT") 
+            ?? Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "";
+        var isDevelopment = aspnetcoreEnv.Equals("Development", StringComparison.OrdinalIgnoreCase);
         
         services.AddDbContext<ApplicationDbContext>(options =>
         {
