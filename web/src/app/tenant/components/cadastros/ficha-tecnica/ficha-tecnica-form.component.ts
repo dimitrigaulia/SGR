@@ -205,8 +205,6 @@ export class TenantFichaTecnicaFormComponent {
           })));
           this.cdr.markForCheck();
         });
-    } else {
-      this.addCanal();
     }
   }
 
@@ -326,6 +324,12 @@ export class TenantFichaTecnicaFormComponent {
     );
     if (itensValidos.length === 0) {
       this.toast.error('Adicione pelo menos um item vÃ¡lido');
+      return;
+    }
+
+    const canaisValidos = this.canais().filter(c => c.canal && c.precoVenda >= 0);
+    if (canaisValidos.length === 0) {
+      this.toast.error('Selecione pelo menos um preset de canal comercial');
       return;
     }
 

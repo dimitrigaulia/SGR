@@ -454,8 +454,10 @@
         </table>
       </div>
 
-      @if (!isView()) {
-        <button mat-stroked-button type="button" (click)="addCanal()">Adicionar canal</button>
+      @if (canais().length === 0) {
+        <div class="empty-message">
+          <p>Nenhum canal adicionado. Selecione um preset acima para adicionar um canal comercial.</p>
+        </div>
       }
     </div>
 

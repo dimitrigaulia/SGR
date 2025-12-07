@@ -35,6 +35,8 @@ public class CreateFichaTecnicaRequest
     [MinLength(1, ErrorMessage = "A ficha tÃ©cnica deve ter pelo menos um item")]
     public List<CreateFichaTecnicaItemRequest> Itens { get; set; } = new();
 
+    public List<CreateFichaTecnicaCanalRequest>? Canais { get; set; }
+
     public bool IsAtivo { get; set; } = true;
 }
 

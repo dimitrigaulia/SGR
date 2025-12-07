@@ -373,25 +373,29 @@ public class FichaTecnicaService : IFichaTecnicaService
         // Calcular preÃ§o sugerido
         CalcularPrecoSugerido(ficha);
 
-        // Criar canais padrÃ£o automaticamente
-        ficha.Canais.Add(new FichaTecnicaCanal
+        // Criar canais da requisição
+        if (request.Canais != null && request.Canais.Any())
         {
-            Canal = "ifood-1",
-            NomeExibicao = "Ifood 1",
-            TaxaPercentual = 13,
-            IsAtivo = true
-        });
+            foreach (var canalReq in request.Canais)
+            {
+                ficha.Canais.Add(new FichaTecnicaCanal
+                {
+                    Canal = canalReq.Canal,
+                    NomeExibicao = canalReq.NomeExibicao,
+                    PrecoVenda = canalReq.PrecoVenda,
+                    TaxaPercentual = canalReq.TaxaPercentual,
+                    ComissaoPercentual = canalReq.ComissaoPercentual,
+                    Observacoes = canalReq.Observacoes,
+                    IsAtivo = canalReq.IsAtivo
+                });
+            }
+        }
 
-        ficha.Canais.Add(new FichaTecnicaCanal
+        // Calcular preÃ§os dos canais (apenas se houver canais)
+        if (ficha.Canais.Any())
         {
-            Canal = "ifood-2",
-            NomeExibicao = "Ifood 2",
-            TaxaPercentual = 25,
-            IsAtivo = true
-        });
-
-        // Calcular preÃ§os dos canais
-        CalcularPrecosCanais(ficha);
+            CalcularPrecosCanais(ficha);
+        }
 
         _context.FichasTecnicas.Add(ficha);
         await _context.SaveChangesAsync();

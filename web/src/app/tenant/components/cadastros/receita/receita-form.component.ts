@@ -178,7 +178,14 @@ export class TenantReceitaFormComponent {
             custoPorUnidadeUso: item.custoPorUnidadeUso ?? null,
             custoPor100UnidadesUso: item.custoPor100UnidadesUso ?? null
           })));
-          this.cdr.markForCheck();
+          
+          // Atualizar cálculos automaticamente após carregar os dados
+          // Usar setTimeout para garantir que insumos e unidades já estejam carregados
+          setTimeout(() => {
+            this.atualizarCalculosAutomaticos();
+            this.atualizarCustosItens();
+            this.cdr.markForCheck();
+          }, 0);
         });
     } else {
       // Adicionar um item vazio inicial
