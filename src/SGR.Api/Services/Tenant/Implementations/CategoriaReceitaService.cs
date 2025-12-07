@@ -68,7 +68,7 @@ public class CategoriaReceitaService : BaseService<TenantDbContext, CategoriaRec
         var hasReceitas = await _context.Set<Receita>().AnyAsync(r => r.CategoriaId == entity.Id);
         if (hasReceitas)
         {
-            throw new BusinessException("Não é possível excluir uma categoria que possui receitas cadastradas");
+            throw new BusinessException("NÃ£o Ã© possÃ­vel excluir uma categoria que possui receitas cadastradas");
         }
     }
 }

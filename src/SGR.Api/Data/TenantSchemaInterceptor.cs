@@ -62,7 +62,7 @@ public class TenantSchemaInterceptor : DbCommandInterceptor
         var schema = _httpContextAccessor.HttpContext?.Items["TenantSchema"] as string;
         if (!string.IsNullOrEmpty(schema))
         {
-            // SET LOCAL define o search_path apenas para a transação atual
+            // SET LOCAL define o search_path apenas para a transaÃ§Ã£o atual
             // Isso garante que todas as queries neste comando usem o schema do tenant
             command.CommandText = $"SET LOCAL search_path TO \"{schema}\", public; {command.CommandText}";
         }

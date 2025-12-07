@@ -7,7 +7,7 @@ using SGR.Api.Services.Tenant.Interfaces;
 namespace SGR.Api.Controllers.Tenant;
 
 /// <summary>
-/// Controller para gerenciamento de fichas técnicas comerciais
+/// Controller para gerenciamento de fichas tÃ©cnicas comerciais
 /// </summary>
 [ApiController]
 [Route("api/tenant/fichas-tecnicas")]
@@ -49,7 +49,7 @@ public class FichasTecnicasController : ControllerBase
     }
 
     /// <summary>
-    /// Visualiza a ficha tǸcnica em HTML para impress��o/PDF
+    /// Visualiza a ficha tÇ¸cnica em HTML para impressï¿½ï¿½o/PDF
     /// </summary>
     [HttpGet("{id:long}/print")]
     [AllowAnonymous]
@@ -77,7 +77,7 @@ public class FichasTecnicasController : ControllerBase
 <html lang=""pt-BR"">
 <head>
   <meta charset=""utf-8"" />
-  <title>Ficha T��cnica - {System.Net.WebUtility.HtmlEncode(ficha.Nome)}</title>
+  <title>Ficha Tï¿½ï¿½cnica - {System.Net.WebUtility.HtmlEncode(ficha.Nome)}</title>
   <style>
     body {{ font-family: Arial, sans-serif; font-size: 12px; margin: 16px; }}
     h1 {{ font-size: 20px; margin-bottom: 4px; }}
@@ -88,10 +88,10 @@ public class FichasTecnicasController : ControllerBase
   </style>
 </head>
 <body>
-  <h1>Ficha T��cnica: {System.Net.WebUtility.HtmlEncode(ficha.Nome)}</h1>
+  <h1>Ficha Tï¿½ï¿½cnica: {System.Net.WebUtility.HtmlEncode(ficha.Nome)}</h1>
   <p><strong>Receita:</strong> {System.Net.WebUtility.HtmlEncode(ficha.CategoriaNome ?? "")}</p>
-  <p><strong>Custo tǸcnico por por��ǜo:</strong> {ficha.CustoPorUnidade:C}</p>
-  <p><strong>Pre��o sugerido (por por��ǜo):</strong> {(ficha.PrecoSugeridoVenda.HasValue ? ficha.PrecoSugeridoVenda.Value.ToString("C") : "-")}</p>
+  <p><strong>Custo tÇ¸cnico por porï¿½ï¿½Çœo:</strong> {ficha.CustoPorUnidade:C}</p>
+  <p><strong>Preï¿½ï¿½o sugerido (por porï¿½ï¿½Çœo):</strong> {(ficha.PrecoSugeridoVenda.HasValue ? ficha.PrecoSugeridoVenda.Value.ToString("C") : "-")}</p>
 
   <h2>Canais</h2>
   <table>
@@ -99,9 +99,9 @@ public class FichasTecnicasController : ControllerBase
       <tr>
         <th>Canal</th>
         <th>Nome</th>
-        <th>Pre��o venda</th>
+        <th>Preï¿½ï¿½o venda</th>
         <th>Taxa (%)</th>
-        <th>Comiss��o (%)</th>
+        <th>Comissï¿½ï¿½o (%)</th>
         <th>Margem (%)</th>
       </tr>
     </thead>
@@ -116,7 +116,7 @@ public class FichasTecnicasController : ControllerBase
     }
 
     /// <summary>
-    /// Gera PDF da ficha técnica
+    /// Gera PDF da ficha tÃ©cnica
     /// </summary>
     [HttpGet("{id:long}/pdf")]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -133,7 +133,7 @@ public class FichasTecnicasController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erro ao gerar PDF da ficha técnica {Id}", id);
+            _logger.LogError(ex, "Erro ao gerar PDF da ficha tÃ©cnica {Id}", id);
             return StatusCode(500, new { message = "Erro ao gerar PDF" });
         }
     }
@@ -152,7 +152,7 @@ public class FichasTecnicasController : ControllerBase
         }
         catch (SGR.Api.Exceptions.BusinessException ex)
         {
-            _logger.LogWarning(ex, "Falha ao criar Ficha Técnica");
+            _logger.LogWarning(ex, "Falha ao criar Ficha TÃ©cnica");
             return BadRequest(new { message = ex.Message });
         }
     }
@@ -173,7 +173,7 @@ public class FichasTecnicasController : ControllerBase
         }
         catch (SGR.Api.Exceptions.BusinessException ex)
         {
-            _logger.LogWarning(ex, "Falha ao atualizar Ficha Técnica");
+            _logger.LogWarning(ex, "Falha ao atualizar Ficha TÃ©cnica");
             return BadRequest(new { message = ex.Message });
         }
     }

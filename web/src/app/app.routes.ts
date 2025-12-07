@@ -1,4 +1,4 @@
-﻿import { Routes } from "@angular/router";
+import { Routes } from "@angular/router";
 import { authGuard } from "./core/guards/auth.guard";
 import { stateGuard } from "./core/guards/state.guard";
 import { ShellComponent } from "./shell/shell.component";

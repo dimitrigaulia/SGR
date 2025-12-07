@@ -2,7 +2,7 @@ import { CanActivateFn, Router } from '@angular/router';
 import { inject } from '@angular/core';
 
 /**
- * Guard para validar state da navegação (usado em formulários)
+ * Guard para validar state da navegaÃ§Ã£o (usado em formulÃ¡rios)
  */
 export const stateGuard: CanActivateFn = (route) => {
   const router = inject(Router);

@@ -1,7 +1,7 @@
 namespace SGR.Api.Models.Tenant.Entities;
 
 /// <summary>
-/// Configuração comercial da ficha técnica por canal (ifood, balcão, etc.)
+/// ConfiguraÃ§Ã£o comercial da ficha tÃ©cnica por canal (ifood, balcÃ£o, etc.)
 /// </summary>
 public class FichaTecnicaCanal
 {
@@ -16,14 +16,14 @@ public class FichaTecnicaCanal
     public decimal? ComissaoPercentual { get; set; }
 
     /// <summary>
-    /// Margem calculada em percentual, considerando custo técnico e taxas
+    /// Margem calculada em percentual, considerando custo tÃ©cnico e taxas
     /// </summary>
     public decimal? MargemCalculadaPercentual { get; set; }
 
     public string? Observacoes { get; set; }
     public bool IsAtivo { get; set; }
 
-    // Navegação
+    // NavegaÃ§Ã£o
     public FichaTecnica FichaTecnica { get; set; } = null!;
 }
 

@@ -1,9 +1,9 @@
 /**
- * Utilitários para máscaras de CPF/CNPJ
+ * UtilitÃ¡rios para mÃ¡scaras de CPF/CNPJ
  */
 
 /**
- * Aplica máscara de CPF (000.000.000-00)
+ * Aplica mÃ¡scara de CPF (000.000.000-00)
  */
 export function applyCpfMask(value: string): string {
   const numbers = value.replace(/\D/g, '');
@@ -14,7 +14,7 @@ export function applyCpfMask(value: string): string {
 }
 
 /**
- * Aplica máscara de CNPJ (00.000.000/0000-00)
+ * Aplica mÃ¡scara de CNPJ (00.000.000/0000-00)
  */
 export function applyCnpjMask(value: string): string {
   const numbers = value.replace(/\D/g, '');
@@ -26,14 +26,14 @@ export function applyCnpjMask(value: string): string {
 }
 
 /**
- * Remove máscara de CPF/CNPJ
+ * Remove mÃ¡scara de CPF/CNPJ
  */
 export function removeMask(value: string): string {
   return value.replace(/\D/g, '');
 }
 
 /**
- * Aplica máscara dinâmica baseada no tipo de pessoa
+ * Aplica mÃ¡scara dinÃ¢mica baseada no tipo de pessoa
  * @param value Valor a ser mascarado
  * @param tipoPessoaId 1 = CPF, 2 = CNPJ
  */

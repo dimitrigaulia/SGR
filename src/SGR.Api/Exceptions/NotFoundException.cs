@@ -1,7 +1,7 @@
 namespace SGR.Api.Exceptions;
 
 /// <summary>
-/// Exceção para recursos não encontrados
+/// ExceÃ§Ã£o para recursos nÃ£o encontrados
 /// </summary>
 public class NotFoundException : Exception
 {
@@ -10,7 +10,7 @@ public class NotFoundException : Exception
     }
 
     public NotFoundException(string resourceName, object key) 
-        : base($"Recurso '{resourceName}' com chave '{key}' não foi encontrado.")
+        : base($"Recurso '{resourceName}' com chave '{key}' nÃ£o foi encontrado.")
     {
     }
 }

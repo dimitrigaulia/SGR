@@ -5,8 +5,8 @@ namespace SGR.Api.Data
 {
     /// <summary>
     /// DbContext para o banco sgr_tenants
-    /// Cada tenant tem seu próprio schema dentro deste banco
-    /// O schema é definido dinamicamente via SetSchema()
+    /// Cada tenant tem seu prÃ³prio schema dentro deste banco
+    /// O schema Ã© definido dinamicamente via SetSchema()
     /// </summary>
     public class TenantDbContext : DbContext
     {
@@ -38,7 +38,7 @@ namespace SGR.Api.Data
         }
 
         /// <summary>
-        /// Obtém o schema atual configurado
+        /// ObtÃ©m o schema atual configurado
         /// </summary>
         public string? GetSchema() => _schema;
 
@@ -46,7 +46,7 @@ namespace SGR.Api.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // Configuração do schema dinâmico
+            // ConfiguraÃ§Ã£o do schema dinÃ¢mico
             if (!string.IsNullOrEmpty(_schema))
             {
                 modelBuilder.HasDefaultSchema(_schema);
@@ -128,8 +128,8 @@ namespace SGR.Api.Data
                 entity.HasIndex(e => e.Nome).IsUnique();
                 entity.HasIndex(e => e.Sigla).IsUnique();
 
-                // Como Insumo tem duas navegações para UnidadeMedida (UnidadeCompra e UnidadeUso),
-                // ignoramos a coleção UnidadeMedida.Insumos para evitar ambiguidades de mapeamento.
+                // Como Insumo tem duas navegaÃ§Ãµes para UnidadeMedida (UnidadeCompra e UnidadeUso),
+                // ignoramos a coleÃ§Ã£o UnidadeMedida.Insumos para evitar ambiguidades de mapeamento.
                 entity.Ignore(e => e.Insumos);
             });
 

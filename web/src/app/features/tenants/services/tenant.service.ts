@@ -92,14 +92,14 @@ export class TenantService {
   }
 
   /**
-   * Busca tenant por subdomínio
+   * Busca tenant por subdomÃ­nio
    */
   getBySubdomain(subdomain: string): Observable<TenantDto> {
     return this.http.get<TenantDto>(`${this.apiUrl}/backoffice/tenants/subdomain/${subdomain}`);
   }
 
   /**
-   * Lista todos os tenants com paginação
+   * Lista todos os tenants com paginaÃ§Ã£o
    */
   getAll(search?: string, page: number = 1, pageSize: number = 10, sort?: string, order?: string): Observable<PagedResult<TenantDto>> {
     const params: any = { page, pageSize };

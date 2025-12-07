@@ -59,7 +59,7 @@ public class InsumoService : BaseService<TenantDbContext, Insumo, InsumoDto, Cre
     public override async Task<PagedResult<InsumoDto>> GetAllAsync(string? search, int page, int pageSize, string? sort, string? order)
     {
         _logger.LogInformation(
-            "Buscando {EntityType} - Págaina: {Page}, Tamanho: {PageSize}, Busca: {Search}",
+            "Buscando {EntityType} - PÃ¡gaina: {Page}, Tamanho: {PageSize}, Busca: {Search}",
             typeof(Insumo).Name, page, pageSize, search ?? "N/A");
 
         var query = _dbSet
@@ -95,7 +95,7 @@ public class InsumoService : BaseService<TenantDbContext, Insumo, InsumoDto, Cre
 
         if (entity == null)
         {
-            _logger.LogWarning("{EntityType} com ID {Id} não encontrado", typeof(Insumo).Name, id);
+            _logger.LogWarning("{EntityType} com ID {Id} nÃ£o encontrado", typeof(Insumo).Name, id);
             return null;
         }
 
@@ -170,20 +170,20 @@ public class InsumoService : BaseService<TenantDbContext, Insumo, InsumoDto, Cre
         var categoriaExists = await _context.Set<CategoriaInsumo>().AnyAsync(c => c.Id == request.CategoriaId && c.IsAtivo);
         if (!categoriaExists)
         {
-            throw new BusinessException("Categoria inválida ou inativa");
+            throw new BusinessException("Categoria invÃ¡lida ou inativa");
         }
 
         // Validar unidades de medida existem
         var unidadeCompraExists = await _context.Set<UnidadeMedida>().AnyAsync(u => u.Id == request.UnidadeCompraId && u.IsAtivo);
         if (!unidadeCompraExists)
         {
-            throw new BusinessException("Unidade de compra inválida ou inativa");
+            throw new BusinessException("Unidade de compra invÃ¡lida ou inativa");
         }
 
         var unidadeUsoExists = await _context.Set<UnidadeMedida>().AnyAsync(u => u.Id == request.UnidadeUsoId && u.IsAtivo);
         if (!unidadeUsoExists)
         {
-            throw new BusinessException("Unidade de uso inválida ou inativa");
+            throw new BusinessException("Unidade de uso invÃ¡lida ou inativa");
         }
     }
 
@@ -193,20 +193,20 @@ public class InsumoService : BaseService<TenantDbContext, Insumo, InsumoDto, Cre
         var categoriaExists = await _context.Set<CategoriaInsumo>().AnyAsync(c => c.Id == request.CategoriaId && c.IsAtivo);
         if (!categoriaExists)
         {
-            throw new BusinessException("Categoria inválida ou inativa");
+            throw new BusinessException("Categoria invÃ¡lida ou inativa");
         }
 
         // Validar unidades de medida existem
         var unidadeCompraExists = await _context.Set<UnidadeMedida>().AnyAsync(u => u.Id == request.UnidadeCompraId && u.IsAtivo);
         if (!unidadeCompraExists)
         {
-            throw new BusinessException("Unidade de compra inválida ou inativa");
+            throw new BusinessException("Unidade de compra invÃ¡lida ou inativa");
         }
 
         var unidadeUsoExists = await _context.Set<UnidadeMedida>().AnyAsync(u => u.Id == request.UnidadeUsoId && u.IsAtivo);
         if (!unidadeUsoExists)
         {
-            throw new BusinessException("Unidade de uso inválida ou inativa");
+            throw new BusinessException("Unidade de uso invÃ¡lida ou inativa");
         }
     }
 }

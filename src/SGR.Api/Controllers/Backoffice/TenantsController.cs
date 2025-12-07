@@ -27,7 +27,7 @@ public class TenantsController : BaseController<ITenantService, TenantDto, Creat
     }
 
     /// <summary>
-    /// Busca tenant por subdomínio
+    /// Busca tenant por subdomÃ­nio
     /// </summary>
     [HttpGet("subdomain/{subdomain}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -60,7 +60,7 @@ public class TenantsController : BaseController<ITenantService, TenantDto, Creat
     public async Task<IActionResult> GetCnpjData(string cnpj)
     {
         var dados = await _cnpjDataService.BuscarDadosAsync(cnpj);
-        if (dados == null) return NotFound(new { message = "CNPJ não encontrado" });
+        if (dados == null) return NotFound(new { message = "CNPJ nÃ£o encontrado" });
         return Ok(dados);
     }
 

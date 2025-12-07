@@ -47,7 +47,7 @@ export class BackofficeLoginComponent {
     this.isLoading = true;
     this.errorMessage = '';
 
-    // Login do backoffice usa endpoint específico
+    // Login do backoffice usa endpoint especÃ­fico
     this.authService.loginBackoffice(this.model)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
@@ -57,7 +57,7 @@ export class BackofficeLoginComponent {
         },
         error: (error) => {
           this.isLoading = false;
-          this.errorMessage = error.error?.message || 'Email ou senha inválidos';
+          this.errorMessage = error.error?.message || 'Email ou senha invÃ¡lidos';
         }
       });
   }

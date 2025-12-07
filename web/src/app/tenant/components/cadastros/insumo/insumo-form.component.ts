@@ -126,11 +126,11 @@ export class TenantInsumoFormComponent {
     const uso = this.unidadeUsoSelecionada;
 
     if (!compra || !uso) {
-      return 'Escolha primeiro as unidades de compra e de uso para ver como o sistema fará a conversão automática.';
+      return 'Escolha primeiro as unidades de compra e de uso para ver como o sistema farÃ¡ a conversÃ£o automÃ¡tica.';
     }
 
-    // Com unidades simplificadas, não há mais conversão automática por tipo
-    return `Atenção: a Quantidade por Embalagem deve estar na mesma unidade de uso (${uso.sigla}) para que o custo fique correto.`;
+    // Com unidades simplificadas, nÃ£o hÃ¡ mais conversÃ£o automÃ¡tica por tipo
+    return `AtenÃ§Ã£o: a Quantidade por Embalagem deve estar na mesma unidade de uso (${uso.sigla}) para que o custo fique correto.`;
   }
 
   get resumoCustoPorUnidadeCompra(): string {
@@ -154,7 +154,7 @@ export class TenantInsumoFormComponent {
     }
 
     // Custo por unidade de uso = (CustoUnitario / QuantidadePorEmbalagem) * FatorCorrecao
-    // O FatorCorrecao é aplicado na receita, então aqui mostramos apenas o custo básico
+    // O FatorCorrecao Ã© aplicado na receita, entÃ£o aqui mostramos apenas o custo bÃ¡sico
     const custoPorUnidadeUso = custo / quantidadePorEmbalagem;
     const valor = custoPorUnidadeUso.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     return `${valor} / ${unidadeUso.sigla}`;
@@ -164,9 +164,9 @@ export class TenantInsumoFormComponent {
     this.error.set('');
     if (this.isView()) return;
     const v = this.model;
-    // Validação simples
+    // ValidaÃ§Ã£o simples
     if (!v.nome || !v.categoriaId || !v.unidadeCompraId || !v.unidadeUsoId || !v.quantidadePorEmbalagem) {
-      this.toast.error('Preencha os campos obrigatórios corretamente');
+      this.toast.error('Preencha os campos obrigatÃ³rios corretamente');
       return;
     }
 

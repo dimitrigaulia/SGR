@@ -1,25 +1,25 @@
-# Plano Refinado - Refatoração Modelagem SGR
+# Plano Refinado - RefatoraÃ§Ã£o Modelagem SGR
 
-## Regras Críticas de Implementação
+## Regras CrÃ­ticas de ImplementaÃ§Ã£o
 
 ### 1. ExibirComoQB - Regra Visual
 
-**REGRA FUNDAMENTAL**: `ExibirComoQB` é APENAS visual e NÃO deve influenciar cálculos.
+**REGRA FUNDAMENTAL**: `ExibirComoQB` Ã© APENAS visual e NÃƒO deve influenciar cÃ¡lculos.
 
-#### Implementação:
-- ✅ **Cálculos de Custo**: Sempre usar `Quantidade` numérica, ignorando completamente `ExibirComoQB`
-- ✅ **Uso Permitido**: Apenas em:
+#### ImplementaÃ§Ã£o:
+- âœ… **CÃ¡lculos de Custo**: Sempre usar `Quantidade` numÃ©rica, ignorando completamente `ExibirComoQB`
+- âœ… **Uso Permitido**: Apenas em:
   - DTOs (para transporte de dados)
   - UI/Frontend (exibir "QB" quando `true`)
-  - PDF/Impressão (exibir "QB" quando `true`)
-- ❌ **Uso Proibido**: Em qualquer cálculo de custo, rendimento ou preço
+  - PDF/ImpressÃ£o (exibir "QB" quando `true`)
+- âŒ **Uso Proibido**: Em qualquer cÃ¡lculo de custo, rendimento ou preÃ§o
 
-#### Exemplos de Código Correto:
+#### Exemplos de CÃ³digo Correto:
 ```csharp
-// ✅ CORRETO - Usa Quantidade numérica
+// âœ… CORRETO - Usa Quantidade numÃ©rica
 custoLinha = item.Quantidade * custoPorUnidadeUso;
 
-// ❌ ERRADO - NÃO fazer isso
+// âŒ ERRADO - NÃƒO fazer isso
 if (!item.ExibirComoQB) {
     custoLinha = item.Quantidade * custoPorUnidadeUso;
 }
@@ -41,12 +41,12 @@ if (!item.ExibirComoQB) {
 PrecoSugeridoVenda = CustoPorUnidade * IndiceContabil
 ```
 
-#### Implementação:
-- ✅ Propriedade existe na entidade `FichaTecnica` (tipo: `decimal?`)
-- ✅ Método `CalcularPrecoSugerido()` implementa a fórmula correta
-- ✅ Chamado após calcular `CustoPorUnidade` e antes de calcular preços dos canais
+#### ImplementaÃ§Ã£o:
+- âœ… Propriedade existe na entidade `FichaTecnica` (tipo: `decimal?`)
+- âœ… MÃ©todo `CalcularPrecoSugerido()` implementa a fÃ³rmula correta
+- âœ… Chamado apÃ³s calcular `CustoPorUnidade` e antes de calcular preÃ§os dos canais
 
-#### Código de Referência:
+#### CÃ³digo de ReferÃªncia:
 ```csharp
 private void CalcularPrecoSugerido(FichaTecnica ficha)
 {
@@ -61,25 +61,25 @@ private void CalcularPrecoSugerido(FichaTecnica ficha)
 }
 ```
 
-#### Ordem de Execução:
+#### Ordem de ExecuÃ§Ã£o:
 1. Calcular `CustoTotal` (soma dos custos dos itens)
 2. Calcular `CustoPorUnidade` (CustoTotal / RendimentoFinal)
 3. Calcular `RendimentoFinal` (aplicar IC e IPC)
 4. **Calcular `PrecoSugeridoVenda`** (CustoPorUnidade * IndiceContabil)
-5. Calcular preços dos canais (baseado em PrecoSugeridoVenda)
+5. Calcular preÃ§os dos canais (baseado em PrecoSugeridoVenda)
 
 ---
 
-### 3. Cálculo de RendimentoFinal
+### 3. CÃ¡lculo de RendimentoFinal
 
-**REGRA**: Para a primeira versão, considerar APENAS itens cuja `UnidadeMedida.Sigla = "GR"`.
+**REGRA**: Para a primeira versÃ£o, considerar APENAS itens cuja `UnidadeMedida.Sigla = "GR"`.
 
-#### Implementação:
-- ✅ Filtrar itens: `unidadeMedida.Sigla.ToUpper() == "GR"`
-- ✅ Ignorar completamente itens com `Sigla = "UN"` ou `Sigla = "ML"`
-- ✅ `RendimentoFinal` = peso comestível total em gramas (após aplicar IC e IPC)
+#### ImplementaÃ§Ã£o:
+- âœ… Filtrar itens: `unidadeMedida.Sigla.ToUpper() == "GR"`
+- âœ… Ignorar completamente itens com `Sigla = "UN"` ou `Sigla = "ML"`
+- âœ… `RendimentoFinal` = peso comestÃ­vel total em gramas (apÃ³s aplicar IC e IPC)
 
-#### Código de Referência:
+#### CÃ³digo de ReferÃªncia:
 ```csharp
 private void CalcularRendimentoFinal(FichaTecnica ficha, List<UnidadeMedida> unidadesMedida)
 {
@@ -90,13 +90,13 @@ private void CalcularRendimentoFinal(FichaTecnica ficha, List<UnidadeMedida> uni
         var unidadeMedida = unidadesMedida.FirstOrDefault(u => u.Id == item.UnidadeMedidaId);
         if (unidadeMedida != null && unidadeMedida.Sigla.ToUpper() == "GR")
         {
-            // IMPORTANTE: ExibirComoQB é apenas visual, sempre usar Quantidade numérica
+            // IMPORTANTE: ExibirComoQB Ã© apenas visual, sempre usar Quantidade numÃ©rica
             quantidadeTotalBase += item.Quantidade;
         }
-        // Itens com UN ou ML são ignorados nesta versão
+        // Itens com UN ou ML sÃ£o ignorados nesta versÃ£o
     }
 
-    // Aplicar IC (Índice de Cocção)
+    // Aplicar IC (Ãndice de CocÃ§Ã£o)
     decimal pesoAposCoccao = quantidadeTotalBase;
     if (ficha.ICOperador.HasValue && ficha.ICValor.HasValue)
     {
@@ -113,7 +113,7 @@ private void CalcularRendimentoFinal(FichaTecnica ficha, List<UnidadeMedida> uni
         }
     }
 
-    // Aplicar IPC (Índice de Partes Comestíveis)
+    // Aplicar IPC (Ãndice de Partes ComestÃ­veis)
     decimal pesoComestivel = pesoAposCoccao;
     if (ficha.IPCValor.HasValue)
     {
@@ -126,24 +126,24 @@ private void CalcularRendimentoFinal(FichaTecnica ficha, List<UnidadeMedida> uni
 }
 ```
 
-#### Nota para Versões Futuras:
-- Em versões futuras, pode-se considerar conversões entre unidades (ex: ML para GR)
-- Por enquanto, apenas GR é considerado para simplificar
+#### Nota para VersÃµes Futuras:
+- Em versÃµes futuras, pode-se considerar conversÃµes entre unidades (ex: ML para GR)
+- Por enquanto, apenas GR Ã© considerado para simplificar
 
 ---
 
-## Checklist de Validação
+## Checklist de ValidaÃ§Ã£o
 
 ### ExibirComoQB
-- [x] Não usado em cálculos de custo
-- [x] Não usado em cálculos de rendimento
+- [x] NÃ£o usado em cÃ¡lculos de custo
+- [x] NÃ£o usado em cÃ¡lculos de rendimento
 - [x] Usado apenas em DTOs
-- [x] Usado apenas em exibição (UI/PDF)
+- [x] Usado apenas em exibiÃ§Ã£o (UI/PDF)
 
 ### PrecoSugeridoVenda
 - [x] Propriedade existe na entidade
 - [x] Calculado como: CustoPorUnidade * IndiceContabil
-- [x] Chamado na ordem correta (após CustoPorUnidade, antes de canais)
+- [x] Chamado na ordem correta (apÃ³s CustoPorUnidade, antes de canais)
 
 ### RendimentoFinal
 - [x] Considera apenas itens com Sigla = "GR"
@@ -154,55 +154,55 @@ private void CalcularRendimentoFinal(FichaTecnica ficha, List<UnidadeMedida> uni
 
 ---
 
-## Estrutura de Cálculos - Ordem de Execução
+## Estrutura de CÃ¡lculos - Ordem de ExecuÃ§Ã£o
 
 ```
 1. CalcularRendimentoFinal()
-   └─> Soma quantidades (apenas GR)
-   └─> Aplica IC (se definido)
-   └─> Aplica IPC (se definido)
-   └─> Atribui RendimentoFinal
+   â””â”€> Soma quantidades (apenas GR)
+   â””â”€> Aplica IC (se definido)
+   â””â”€> Aplica IPC (se definido)
+   â””â”€> Atribui RendimentoFinal
 
 2. CalcularCustosFichaTecnica()
-   └─> Para cada item:
-       ├─> Se Insumo: Quantidade * CustoPorUnidadeUso
-       └─> Se Receita: Quantidade * CustoPorPorcao
-   └─> Soma = CustoTotal
-   └─> CustoPorUnidade = CustoTotal / RendimentoFinal
-       ⚠️ PROTEÇÃO: Se RendimentoFinal for null ou <= 0:
-          └─> CustoPorUnidade = 0 (não calcular divisão)
+   â””â”€> Para cada item:
+       â”œâ”€> Se Insumo: Quantidade * CustoPorUnidadeUso
+       â””â”€> Se Receita: Quantidade * CustoPorPorcao
+   â””â”€> Soma = CustoTotal
+   â””â”€> CustoPorUnidade = CustoTotal / RendimentoFinal
+       âš ï¸ PROTEÃ‡ÃƒO: Se RendimentoFinal for null ou <= 0:
+          â””â”€> CustoPorUnidade = 0 (nÃ£o calcular divisÃ£o)
 
 3. CalcularPrecoSugerido()
-   └─> Verifica se RendimentoFinal > 0
-   └─> Se não: PrecoSugeridoVenda = null (não calcula)
-   └─> Se sim: PrecoSugeridoVenda = CustoPorUnidade * IndiceContabil
+   â””â”€> Verifica se RendimentoFinal > 0
+   â””â”€> Se nÃ£o: PrecoSugeridoVenda = null (nÃ£o calcula)
+   â””â”€> Se sim: PrecoSugeridoVenda = CustoPorUnidade * IndiceContabil
 
 4. CalcularPrecosCanais()
-   └─> Para cada canal:
-       └─> PrecoVenda = PrecoSugeridoVenda * (1 + TaxaPercentual/100)
-       └─> Calcula MargemCalculadaPercentual
+   â””â”€> Para cada canal:
+       â””â”€> PrecoVenda = PrecoSugeridoVenda * (1 + TaxaPercentual/100)
+       â””â”€> Calcula MargemCalculadaPercentual
 ```
 
-### Proteções Contra Divisão por Zero
+### ProteÃ§Ãµes Contra DivisÃ£o por Zero
 
-**CRÍTICO**: Sempre proteger divisões por zero/nulo para evitar exceções.
+**CRÃTICO**: Sempre proteger divisÃµes por zero/nulo para evitar exceÃ§Ãµes.
 
 #### CalcularCustosFichaTecnica:
 ```csharp
-// ✅ CORRETO - Proteção implementada
+// âœ… CORRETO - ProteÃ§Ã£o implementada
 if (ficha.RendimentoFinal.HasValue && ficha.RendimentoFinal.Value > 0)
 {
     ficha.CustoPorUnidade = custoTotal / ficha.RendimentoFinal.Value;
 }
 else
 {
-    ficha.CustoPorUnidade = 0; // Não calcular se RendimentoFinal inválido
+    ficha.CustoPorUnidade = 0; // NÃ£o calcular se RendimentoFinal invÃ¡lido
 }
 ```
 
 #### CalcularPrecoSugerido:
 ```csharp
-// ✅ CORRETO - Não calcula se RendimentoFinal inválido
+// âœ… CORRETO - NÃ£o calcula se RendimentoFinal invÃ¡lido
 if (!ficha.RendimentoFinal.HasValue || ficha.RendimentoFinal.Value <= 0)
 {
     ficha.PrecoSugeridoVenda = null;
@@ -212,25 +212,25 @@ if (!ficha.RendimentoFinal.HasValue || ficha.RendimentoFinal.Value <= 0)
 
 ---
 
-## Observações Importantes
+## ObservaÃ§Ãµes Importantes
 
-1. **ExibirComoQB**: Esta flag é puramente cosmética. Nunca deve afetar cálculos numéricos.
+1. **ExibirComoQB**: Esta flag Ã© puramente cosmÃ©tica. Nunca deve afetar cÃ¡lculos numÃ©ricos.
 
-2. **RendimentoFinal**: Por enquanto, apenas gramas são considerados. Itens em outras unidades (UN, ML) são ignorados no cálculo, mas ainda aparecem na composição da ficha técnica.
+2. **RendimentoFinal**: Por enquanto, apenas gramas sÃ£o considerados. Itens em outras unidades (UN, ML) sÃ£o ignorados no cÃ¡lculo, mas ainda aparecem na composiÃ§Ã£o da ficha tÃ©cnica.
 
-3. **PrecoSugeridoVenda**: É o preço base antes de aplicar taxas dos canais. Os canais aplicam suas próprias taxas sobre este valor.
+3. **PrecoSugeridoVenda**: Ã‰ o preÃ§o base antes de aplicar taxas dos canais. Os canais aplicam suas prÃ³prias taxas sobre este valor.
 
-4. **Ordem de Cálculo**: A ordem é crítica. RendimentoFinal deve ser calculado primeiro, pois é usado para calcular CustoPorUnidade.
+4. **Ordem de CÃ¡lculo**: A ordem Ã© crÃ­tica. RendimentoFinal deve ser calculado primeiro, pois Ã© usado para calcular CustoPorUnidade.
 
-5. **Proteção Divisão por Zero**: 
-   - Sempre verificar se RendimentoFinal é null ou <= 0 antes de dividir
-   - Se inválido, definir CustoPorUnidade = 0 e PrecoSugeridoVenda = null
-   - Nunca deixar exceções de divisão por zero ocorrerem
+5. **ProteÃ§Ã£o DivisÃ£o por Zero**: 
+   - Sempre verificar se RendimentoFinal Ã© null ou <= 0 antes de dividir
+   - Se invÃ¡lido, definir CustoPorUnidade = 0 e PrecoSugeridoVenda = null
+   - Nunca deixar exceÃ§Ãµes de divisÃ£o por zero ocorrerem
 
-6. **ICOperador - Coerência de Tipo**:
+6. **ICOperador - CoerÃªncia de Tipo**:
    - Tipo na entidade: `char? ICOperador`
    - Tipo nos DTOs: `char? ICOperador`
    - Tipo no SQL: `CHAR(1)`
-   - Comparação no código: `ficha.ICOperador == '+'` (char, não string)
-   - ✅ Tudo coerente e consistente
+   - ComparaÃ§Ã£o no cÃ³digo: `ficha.ICOperador == '+'` (char, nÃ£o string)
+   - âœ… Tudo coerente e consistente
 

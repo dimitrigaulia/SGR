@@ -59,7 +59,7 @@ export class TenantUnidadeMedidaFormComponent {
     if (this.isView()) return;
 
     if (!this.model.nome || !this.model.sigla) { 
-      this.toast.error('Nome e sigla são obrigatórios'); 
+      this.toast.error('Nome e sigla sÃ£o obrigatÃ³rios'); 
       return; 
     }
 

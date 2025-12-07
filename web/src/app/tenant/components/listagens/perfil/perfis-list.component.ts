@@ -115,7 +115,7 @@ export class TenantPerfisListComponent implements OnDestroy {
           .pipe(takeUntilDestroyed(this.destroyRef))
           .subscribe({ 
             next: () => { 
-              this.toast.success('Perfil excluído'); 
+              this.toast.success('Perfil excluÃ­do'); 
               this.load();
             }, 
             error: (e: any) => {

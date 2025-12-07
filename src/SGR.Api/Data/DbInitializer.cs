@@ -8,15 +8,15 @@ namespace SGR.Api.Data;
 public static class DbInitializer
 {
     /// <summary>
-    /// Inicializa os dados padrão do banco de dados (backoffice)
-    /// Deve ser chamado APÓS as migrations serem aplicadas
+    /// Inicializa os dados padrÃ£o do banco de dados (backoffice)
+    /// Deve ser chamado APÃ“S as migrations serem aplicadas
     /// </summary>
     public static void Initialize(ApplicationDbContext context)
     {
-        // Verificar se o banco está acessível e as migrations foram aplicadas
+        // Verificar se o banco estÃ¡ acessÃ­vel e as migrations foram aplicadas
         if (!context.Database.CanConnect())
         {
-            return; // Banco não está acessível ou migrations não foram aplicadas
+            return; // Banco nÃ£o estÃ¡ acessÃ­vel ou migrations nÃ£o foram aplicadas
         }
 
         // Verificar se a tabela BackofficePerfil existe (migrations aplicadas)
@@ -24,25 +24,25 @@ public static class DbInitializer
         {
             if (!context.Database.GetPendingMigrations().Any())
             {
-                // Migrations aplicadas, verificar se já existem dados
+                // Migrations aplicadas, verificar se jÃ¡ existem dados
                 if (context.BackofficePerfis.Any())
                 {
-                    return; // Banco já foi inicializado
+                    return; // Banco jÃ¡ foi inicializado
                 }
             }
             else
             {
-                // Ainda há migrations pendentes, não inicializar dados
+                // Ainda hÃ¡ migrations pendentes, nÃ£o inicializar dados
                 return;
             }
         }
         catch
         {
-            // Se houver erro ao verificar (tabela não existe), não inicializar
+            // Se houver erro ao verificar (tabela nÃ£o existe), nÃ£o inicializar
             return;
         }
 
-        // Criar categorias padrão
+        // Criar categorias padrÃ£o
         var categorias = new[]
         {
             new CategoriaTenant { Nome = "Alimentos", IsAtivo = true, UsuarioCriacao = "Sistema", DataCriacao = DateTime.UtcNow },
@@ -71,7 +71,7 @@ public static class DbInitializer
         context.BackofficePerfis.Add(perfilAdmin);
         context.SaveChanges();
 
-        // Criar usuário padrão do backoffice
+        // Criar usuÃ¡rio padrÃ£o do backoffice
         var senhaHash = BCrypt.Net.BCrypt.HashPassword("Dimi@1997");
         var usuario = new BackofficeUsuario
         {

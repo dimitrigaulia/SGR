@@ -7,7 +7,7 @@ using SGR.Api.Services.Interfaces;
 namespace SGR.Api.Services.Implementations;
 
 /// <summary>
-/// Implementação do serviço para buscar dados de empresa via CNPJ usando BrasilApi
+/// ImplementaÃ§Ã£o do serviÃ§o para buscar dados de empresa via CNPJ usando BrasilApi
 /// </summary>
 public class CnpjDataService : ICnpjDataService
 {
@@ -27,13 +27,13 @@ public class CnpjDataService : ICnpjDataService
         if (string.IsNullOrWhiteSpace(cnpj))
             return null;
 
-        // Remove caracteres não numéricos
+        // Remove caracteres nÃ£o numÃ©ricos
         var cnpjLimpo = Regex.Replace(cnpj, @"[^\d]", "");
 
-        // Validação básica
+        // ValidaÃ§Ã£o bÃ¡sica
         if (cnpjLimpo.Length != 14)
         {
-            _logger.LogWarning("CNPJ inválido: {Cnpj} (deve ter 14 dígitos)", cnpj);
+            _logger.LogWarning("CNPJ invÃ¡lido: {Cnpj} (deve ter 14 dÃ­gitos)", cnpj);
             return null;
         }
 
@@ -45,7 +45,7 @@ public class CnpjDataService : ICnpjDataService
 
             if (!response.IsSuccessStatusCode)
             {
-                _logger.LogWarning("CNPJ {Cnpj} não encontrado na BrasilApi. Status: {Status}", cnpjLimpo, response.StatusCode);
+                _logger.LogWarning("CNPJ {Cnpj} nÃ£o encontrado na BrasilApi. Status: {Status}", cnpjLimpo, response.StatusCode);
                 return null;
             }
 
@@ -57,7 +57,7 @@ public class CnpjDataService : ICnpjDataService
 
             if (dados != null)
             {
-                _logger.LogInformation("Dados do CNPJ {Cnpj} recuperados com sucesso. Razão Social: {RazaoSocial}", 
+                _logger.LogInformation("Dados do CNPJ {Cnpj} recuperados com sucesso. RazÃ£o Social: {RazaoSocial}", 
                     cnpjLimpo, dados.RazaoSocial);
             }
 

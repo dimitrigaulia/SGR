@@ -114,7 +114,7 @@ export class TenantUnidadesMedidaListComponent implements OnDestroy {
           .pipe(takeUntilDestroyed(this.destroyRef))
           .subscribe({ 
             next: () => { 
-              this.toast.success('Unidade de medida excluída'); 
+              this.toast.success('Unidade de medida excluÃ­da'); 
               this.load();
             }, 
             error: (e: any) => {

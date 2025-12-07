@@ -3,14 +3,14 @@ import { Router, CanActivateFn } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 
 /**
- * Guard para proteger rotas que requerem autenticação
+ * Guard para proteger rotas que requerem autenticaÃ§Ã£o
  */
 export const authGuard: CanActivateFn = (route, state) => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
   if (authService.isAuthenticated()) {
-    // Verificar se o contexto da rota corresponde ao contexto do usuário
+    // Verificar se o contexto da rota corresponde ao contexto do usuÃ¡rio
     const url = state.url;
     const context = authService.getContext();
     

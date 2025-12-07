@@ -68,8 +68,8 @@ public class TenantPerfilService : BaseService<TenantDbContext, TenantPerfil, Te
         var hasUsers = await _context.Set<TenantUsuario>().AnyAsync(u => u.PerfilId == entity.Id);
         if (hasUsers)
         {
-            _logger.LogWarning("Tentativa de excluir perfil {Id} que possui usuários vinculados", entity.Id);
-            throw new BusinessException("Perfil possui usuários vinculados");
+            _logger.LogWarning("Tentativa de excluir perfil {Id} que possui usuÃ¡rios vinculados", entity.Id);
+            throw new BusinessException("Perfil possui usuÃ¡rios vinculados");
         }
     }
 }

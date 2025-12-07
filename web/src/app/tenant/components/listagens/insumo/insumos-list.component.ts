@@ -114,7 +114,7 @@ export class TenantInsumosListComponent implements OnDestroy {
           .pipe(takeUntilDestroyed(this.destroyRef))
           .subscribe({ 
             next: () => { 
-              this.toast.success('Insumo excluído'); 
+              this.toast.success('Insumo excluÃ­do'); 
               this.load();
             }, 
             error: (e: any) => {

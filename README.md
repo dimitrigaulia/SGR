@@ -4,64 +4,64 @@ Sistema completo de gerenciamento multi-tenant desenvolvido com **Angular 20** (
 
 ---
 
-## 📋 Índice
+## ðŸ“‹ Ãndice
 
-1. [Visão Geral](#-visão-geral)
+1. [VisÃ£o Geral](#-visÃ£o-geral)
 2. [Tecnologias](#-tecnologias)
-3. [Pré-requisitos e Instalação](#-pré-requisitos-e-instalação)
-4. [Configuração](#-configuração)
+3. [PrÃ©-requisitos e InstalaÃ§Ã£o](#-prÃ©-requisitos-e-instalaÃ§Ã£o)
+4. [ConfiguraÃ§Ã£o](#-configuraÃ§Ã£o)
 5. [Arquitetura Multi-Tenant](#-arquitetura-multi-tenant)
 6. [Estrutura de Pastas](#-estrutura-de-pastas)
-7. [Padrões e Convenções](#-padrões-e-convenções)
+7. [PadrÃµes e ConvenÃ§Ãµes](#-padrÃµes-e-convenÃ§Ãµes)
 8. [Funcionalidades Implementadas](#-funcionalidades-implementadas)
 9. [Guias de Uso](#-guias-de-uso)
 10. [Build e Deploy](#-build-e-deploy)
 
 ---
 
-## 🎯 Visão Geral
+## ðŸŽ¯ VisÃ£o Geral
 
-O **SGR** é uma plataforma completa de gerenciamento que permite:
+O **SGR** Ã© uma plataforma completa de gerenciamento que permite:
 
-- **Backoffice**: Sistema administrativo para gerenciar tenants, usuários administrativos e perfis do backoffice
-- **Multi-Tenancy**: Cada tenant (restaurante/empresa) possui seu próprio schema no banco de dados, garantindo isolamento completo de dados
-- **Autenticação**: Sistema de autenticação JWT separado para backoffice e tenants
-- **CRUD Genérico**: Sistema padronizado de operações CRUD que facilita a criação de novos módulos
-- **Validações**: Validação de CPF/CNPJ via BrasilApi, validação de dados em tempo real
+- **Backoffice**: Sistema administrativo para gerenciar tenants, usuÃ¡rios administrativos e perfis do backoffice
+- **Multi-Tenancy**: Cada tenant (restaurante/empresa) possui seu prÃ³prio schema no banco de dados, garantindo isolamento completo de dados
+- **AutenticaÃ§Ã£o**: Sistema de autenticaÃ§Ã£o JWT separado para backoffice e tenants
+- **CRUD GenÃ©rico**: Sistema padronizado de operaÃ§Ãµes CRUD que facilita a criaÃ§Ã£o de novos mÃ³dulos
+- **ValidaÃ§Ãµes**: ValidaÃ§Ã£o de CPF/CNPJ via BrasilApi, validaÃ§Ã£o de dados em tempo real
 - **Upload de Arquivos**: Sistema de upload de avatares e imagens
 - **Interface Moderna**: Interface responsiva com Angular Material 3 e tema escuro/claro
 
 ---
 
-## 🛠️ Tecnologias
+## ðŸ› ï¸ Tecnologias
 
 ### Backend
 - **.NET 9** - Framework principal
 - **ASP.NET Core Web API** - API REST
 - **Entity Framework Core** - ORM
 - **PostgreSQL** - Banco de dados
-- **JWT** - Autenticação
+- **JWT** - AutenticaÃ§Ã£o
 - **BCrypt.Net** - Hash de senhas
-- **BrasilApi** - Validação de CPF/CNPJ e busca de dados de CNPJ
+- **BrasilApi** - ValidaÃ§Ã£o de CPF/CNPJ e busca de dados de CNPJ
 
 ### Frontend
 - **Angular 20** - Framework principal
 - **Angular Material 3** - Componentes UI
-- **RxJS** - Programação reativa
+- **RxJS** - ProgramaÃ§Ã£o reativa
 - **TypeScript** - Linguagem
-- **SCSS** - Estilização
+- **SCSS** - EstilizaÃ§Ã£o
 
 ---
 
-## 📋 Pré-requisitos e Instalação
+## ðŸ“‹ PrÃ©-requisitos e InstalaÃ§Ã£o
 
-### Pré-requisitos
+### PrÃ©-requisitos
 - **.NET 9 SDK**
 - **Node.js 18+** e **npm**
 - **PostgreSQL 14+**
 - **Angular CLI 20+**
 
-### Instalação
+### InstalaÃ§Ã£o
 
 #### Backend
 ```bash
@@ -77,17 +77,17 @@ npm install
 
 ---
 
-## ⚙️ Configuração
+## âš™ï¸ ConfiguraÃ§Ã£o
 
-### Configurações Automáticas
+### ConfiguraÃ§Ãµes AutomÃ¡ticas
 
-O sistema possui algumas configurações que são aplicadas automaticamente:
+O sistema possui algumas configuraÃ§Ãµes que sÃ£o aplicadas automaticamente:
 
-- **Migrations**: As migrations do Entity Framework são aplicadas automaticamente na inicialização da aplicação
-- **Inicialização de Dados**: O `DbInitializer` cria automaticamente:
-  - Categorias padrão de tenants (Alimentos, Bebidas, Outros)
+- **Migrations**: As migrations do Entity Framework sÃ£o aplicadas automaticamente na inicializaÃ§Ã£o da aplicaÃ§Ã£o
+- **InicializaÃ§Ã£o de Dados**: O `DbInitializer` cria automaticamente:
+  - Categorias padrÃ£o de tenants (Alimentos, Bebidas, Outros)
   - Perfil "Administrador" no backoffice
-  - Usuário padrão do backoffice (verificar `DbInitializer.cs` para credenciais)
+  - UsuÃ¡rio padrÃ£o do backoffice (verificar `DbInitializer.cs` para credenciais)
 
 ### Backend
 
@@ -130,14 +130,14 @@ O sistema possui algumas configurações que são aplicadas automaticamente:
 dotnet run
 ```
 
-A API estará disponível em `http://localhost:5281`.
+A API estarÃ¡ disponÃ­vel em `http://localhost:5281`.
 
-**Nota**: As migrations são aplicadas automaticamente na inicialização da aplicação. O sistema também inicializa automaticamente os dados padrão (categorias, perfil administrador e usuário padrão) através do `DbInitializer`.
+**Nota**: As migrations sÃ£o aplicadas automaticamente na inicializaÃ§Ã£o da aplicaÃ§Ã£o. O sistema tambÃ©m inicializa automaticamente os dados padrÃ£o (categorias, perfil administrador e usuÃ¡rio padrÃ£o) atravÃ©s do `DbInitializer`.
 
 **Importante**: 
-- A porta padrão da API é `5281` (configurada em `launchSettings.json`)
-- Em desenvolvimento, o HTTPS redirection é desabilitado para evitar problemas com CORS
-- O OpenAPI está disponível apenas em ambiente de desenvolvimento
+- A porta padrÃ£o da API Ã© `5281` (configurada em `launchSettings.json`)
+- Em desenvolvimento, o HTTPS redirection Ã© desabilitado para evitar problemas com CORS
+- O OpenAPI estÃ¡ disponÃ­vel apenas em ambiente de desenvolvimento
 
 ### Frontend
 
@@ -155,15 +155,15 @@ cd web
 ng serve
 ```
 
-A aplicação estará disponível em `http://localhost:4200`.
+A aplicaÃ§Ã£o estarÃ¡ disponÃ­vel em `http://localhost:4200`.
 
 ---
 
-## 🏢 Arquitetura Multi-Tenant
+## ðŸ¢ Arquitetura Multi-Tenant
 
-### Estratégia: Schema per Tenant
+### EstratÃ©gia: Schema per Tenant
 
-O sistema utiliza uma arquitetura **Schema per Tenant** no PostgreSQL, onde cada tenant possui seu próprio schema, garantindo isolamento completo de dados.
+O sistema utiliza uma arquitetura **Schema per Tenant** no PostgreSQL, onde cada tenant possui seu prÃ³prio schema, garantindo isolamento completo de dados.
 
 ### Bancos de Dados
 
@@ -171,15 +171,15 @@ O sistema utiliza uma arquitetura **Schema per Tenant** no PostgreSQL, onde cada
 **Schema: `public`**
 - `CategoriaTenant` - Categorias de tenants (Alimentos, Bebidas, Outros)
 - `Tenant` - Lista de todos os tenants cadastrados
-- `BackofficeUsuario` - Usuários administrativos do backoffice
+- `BackofficeUsuario` - UsuÃ¡rios administrativos do backoffice
 - `BackofficePerfil` - Perfis de acesso do backoffice (ex: Administrador, Digitador)
 
 #### 2. Banco `sgr_tenants` (Dados dos Tenants)
-**Schemas dinâmicos: `{subdominio}_{id}`** (ex: `vangoghbar_1`, `restaurante_2`)
+**Schemas dinÃ¢micos: `{subdominio}_{id}`** (ex: `vangoghbar_1`, `restaurante_2`)
 
-Cada schema contém:
-- `Perfil` - Perfis de acesso do tenant (específicos de cada tenant, ex: Garçom, Cozinheiro, Gerente)
-- `Usuario` - Usuários do tenant (específicos de cada tenant)
+Cada schema contÃ©m:
+- `Perfil` - Perfis de acesso do tenant (especÃ­ficos de cada tenant, ex: GarÃ§om, Cozinheiro, Gerente)
+- `Usuario` - UsuÃ¡rios do tenant (especÃ­ficos de cada tenant)
 - `CategoriaInsumo` - Categorias de insumos (ex: Hortifruti, Carne, Bebidas)
 - `UnidadeMedida` - Unidades de medida (ex: kg, g, L, mL, unidade)
 - `Insumo` - Insumos do restaurante (ingredientes e materiais)
@@ -187,30 +187,30 @@ Cada schema contém:
 - `Receita` - Receitas do restaurante
 - `ReceitaItem` - Itens de uma receita (insumos utilizados)
 
-### Separação de Contextos
+### SeparaÃ§Ã£o de Contextos
 
-**Importante**: O sistema mantém uma separação clara entre:
-- **Backoffice**: Usuários e perfis administrativos do sistema (gerenciam tenants)
-- **Tenants**: Usuários e perfis específicos de cada tenant (clientes do sistema)
+**Importante**: O sistema mantÃ©m uma separaÃ§Ã£o clara entre:
+- **Backoffice**: UsuÃ¡rios e perfis administrativos do sistema (gerenciam tenants)
+- **Tenants**: UsuÃ¡rios e perfis especÃ­ficos de cada tenant (clientes do sistema)
 
-Esta separação permite que:
+Esta separaÃ§Ã£o permite que:
 - Cada tenant tenha perfis personalizados conforme sua necessidade
 - O backoffice tenha perfis administrativos padronizados
 - Ambos os contextos evoluam independentemente
-- Maior segurança e isolamento entre contextos
+- Maior seguranÃ§a e isolamento entre contextos
 
-### Fluxo de Criação do Tenant
+### Fluxo de CriaÃ§Ã£o do Tenant
 
-1. **Validações**:
-   - Validar CNPJ/CPF (formato + dígitos verificadores) via BrasilApi
-   - Validar subdomínio (apenas letras e números, único)
+1. **ValidaÃ§Ãµes**:
+   - Validar CNPJ/CPF (formato + dÃ­gitos verificadores) via BrasilApi
+   - Validar subdomÃ­nio (apenas letras e nÃºmeros, Ãºnico)
    - Validar dados do admin (nome, email, senha)
 
 2. **Criar Tenant**:
    - Criar registro em `Tenant` (banco `sgr_config`)
    - Gerar `NomeSchema = "{subdominio}_{id}"`
 
-3. **Criar Banco `sgr_tenants`** (se não existir):
+3. **Criar Banco `sgr_tenants`** (se nÃ£o existir):
    - `CREATE DATABASE sgr_tenants;`
 
 4. **Criar Schema do Tenant**:
@@ -218,258 +218,258 @@ Esta separação permite que:
 
 5. **Executar Migrations no Schema**:
    - Criar tabelas: `Perfil`, `Usuario`, `CategoriaInsumo`, `UnidadeMedida`, `Insumo`, `CategoriaReceita`, `Receita`, `ReceitaItem`
-   - Inserir unidades de medida padrão (kg, g, L, mL, un, dz, pct, cx)
-   - Inserir categorias de receita padrão (Entrada, Prato Principal, Sobremesa, Bebida, Acompanhamento, Salada, Sopa, Outros)
+   - Inserir unidades de medida padrÃ£o (kg, g, L, mL, un, dz, pct, cx)
+   - Inserir categorias de receita padrÃ£o (Entrada, Prato Principal, Sobremesa, Bebida, Acompanhamento, Salada, Sopa, Outros)
 
 6. **Inicializar Dados do Tenant**:
    - Criar Perfil "Administrador" (IsAtivo: true) na tabela `Perfil`
    - Criar Usuario admin (com perfil Administrador) na tabela `Usuario`
 
-### Identificação do Tenant
+### IdentificaÃ§Ã£o do Tenant
 
-#### Em Produção
-- Middleware lê o header `Host` (ex: `vangoghbar.sgr.com.br`)
-- Extrai subdomínio: `vangoghbar`
+#### Em ProduÃ§Ã£o
+- Middleware lÃª o header `Host` (ex: `vangoghbar.sgr.com.br`)
+- Extrai subdomÃ­nio: `vangoghbar`
 - Busca tenant no banco `sgr_config`
 - Configura `TenantDbContext` para usar schema do tenant
 
 #### Em Desenvolvimento
 - Frontend envia header `X-Tenant-Subdomain` (via combobox no login)
-- Middleware lê header e identifica tenant
+- Middleware lÃª header e identifica tenant
 - Configura `TenantDbContext` para usar schema do tenant
 
 ---
 
-## 📁 Estrutura de Pastas
+## ðŸ“ Estrutura de Pastas
 
 ### Backend (`src/SGR.Api/`)
 
 ```
 SGR.Api/
-├── Controllers/
-│   ├── Backoffice/
-│   │   ├── BaseController.cs          # Controller base genérico
-│   │   ├── AuthController.cs          # Autenticação backoffice
-│   │   ├── UsuariosController.cs      # CRUD usuários backoffice
-│   │   ├── PerfisController.cs        # CRUD perfis backoffice
-│   │   ├── TenantsController.cs       # CRUD tenants
-│   │   ├── CategoriaTenantsController.cs # CRUD categorias
-│   │   └── UploadsController.cs       # Upload de arquivos
-│   └── Tenant/
-│       ├── BaseController.cs          # Controller base para tenants
-│       ├── AuthController.cs          # Autenticação tenant
-│       ├── UsuariosController.cs      # CRUD usuários tenant
-│       ├── PerfisController.cs        # CRUD perfis tenant
-│       ├── CategoriasInsumoController.cs  # CRUD categorias de insumo
-│       ├── UnidadesMedidaController.cs    # CRUD unidades de medida
-│       ├── InsumosController.cs           # CRUD insumos
-│       ├── CategoriasReceitaController.cs # CRUD categorias de receita
-│       └── ReceitasController.cs          # CRUD receitas
-├── Services/
-│   ├── Backoffice/
-│   │   ├── Interfaces/
-│   │   │   ├── IBackofficeUsuarioService.cs
-│   │   │   └── IBackofficePerfilService.cs
-│   │   └── Implementations/
-│   │       ├── BackofficeUsuarioService.cs
-│   │       └── BackofficePerfilService.cs
-│   ├── Tenant/
-│   │   ├── Interfaces/
-│   │   │   ├── ITenantUsuarioService.cs
-│   │   │   ├── ITenantPerfilService.cs
-│   │   │   ├── ICategoriaInsumoService.cs
-│   │   │   ├── IUnidadeMedidaService.cs
-│   │   │   ├── IInsumoService.cs
-│   │   │   ├── ICategoriaReceitaService.cs
-│   │   │   └── IReceitaService.cs
-│   │   └── Implementations/
-│   │       ├── TenantUsuarioService.cs
-│   │       ├── TenantPerfilService.cs
-│   │       ├── CategoriaInsumoService.cs
-│   │       ├── UnidadeMedidaService.cs
-│   │       └── InsumoService.cs
-│   ├── Common/
-│   │   └── BaseService.cs             # Service base genérico
-│   ├── Interfaces/
-│   │   ├── IBaseService.cs            # Interface base genérica
-│   │   ├── ITenantService.cs
-│   │   ├── IAuthService.cs
-│   │   ├── ITenantAuthService.cs
-│   │   ├── ICpfCnpjValidationService.cs
-│   │   └── ICnpjDataService.cs
-│   └── Implementations/
-│       ├── TenantService.cs
-│       ├── AuthService.cs
-│       ├── TenantAuthService.cs
-│       ├── CpfCnpjValidationService.cs
-│       └── CnpjDataService.cs
-├── Models/
-│   ├── Backoffice/
-│   │   ├── Entities/
-│   │   │   ├── BackofficeUsuario.cs
-│   │   │   └── BackofficePerfil.cs
-│   │   └── DTOs/
-│   │       ├── BackofficeUsuarioDto.cs
-│   │       ├── BackofficePerfilDto.cs
-│   │       ├── CreateBackofficeUsuarioRequest.cs
-│   │       ├── UpdateBackofficeUsuarioRequest.cs
-│   │       ├── CreateBackofficePerfilRequest.cs
-│   │       └── UpdateBackofficePerfilRequest.cs
-│   ├── Tenant/
-│   │   ├── Entities/
-│   │   │   ├── TenantUsuario.cs
-│   │   │   ├── TenantPerfil.cs
-│   │   │   ├── CategoriaInsumo.cs
-│   │   │   ├── UnidadeMedida.cs
-│   │   │   └── Insumo.cs
-│   │   └── DTOs/
-│   │       ├── TenantUsuarioDto.cs
-│   │       ├── TenantPerfilDto.cs
-│   │       ├── CategoriaInsumoDto.cs
-│   │       ├── UnidadeMedidaDto.cs
-│   │       ├── InsumoDto.cs
-│   │       ├── CreateTenantUsuarioRequest.cs
-│   │       ├── UpdateTenantUsuarioRequest.cs
-│   │       ├── CreateTenantPerfilRequest.cs
-│   │       ├── UpdateTenantPerfilRequest.cs
-│   │       ├── CreateCategoriaInsumoRequest.cs
-│   │       ├── UpdateCategoriaInsumoRequest.cs
-│   │       ├── CreateUnidadeMedidaRequest.cs
-│   │       ├── UpdateUnidadeMedidaRequest.cs
-│   │       ├── CreateInsumoRequest.cs
-│   │       └── UpdateInsumoRequest.cs
-│   ├── Entities/
-│   │   ├── Tenant.cs
-│   │   └── CategoriaTenant.cs
-│   └── DTOs/
-│       ├── TenantDto.cs
-│       ├── CreateTenantRequest.cs
-│       ├── UpdateTenantRequest.cs
-│       ├── CategoriaTenantDto.cs
-│       ├── CnpjDataResponse.cs
-│       ├── LoginRequest.cs
-│       ├── LoginResponse.cs
-│       └── PagedResult.cs
-├── Data/
-│   ├── ApplicationDbContext.cs        # Contexto sgr_config
-│   ├── TenantDbContext.cs             # Contexto sgr_tenants (schema dinâmico)
-│   └── DbInitializer.cs               # Inicializador do banco
-├── Extensions/
-│   └── ServiceCollectionExtensions.cs # Extension methods para DI
-├── Middleware/
-│   ├── ExceptionHandlingMiddleware.cs # Tratamento global de exceções
-│   └── TenantIdentificationMiddleware.cs # Identificação do tenant
-├── Exceptions/
-│   ├── BusinessException.cs           # Exceção de negócio
-│   └── NotFoundException.cs           # Exceção de não encontrado
-├── Migrations/                        # Migrations do EF Core
-├── wwwroot/                          # Arquivos estáticos
-│   └── avatars/                      # Avatares dos usuários
-└── Program.cs                         # Configuração da aplicação
+â”œâ”€â”€ Controllers/
+â”‚   â”œâ”€â”€ Backoffice/
+â”‚   â”‚   â”œâ”€â”€ BaseController.cs          # Controller base genÃ©rico
+â”‚   â”‚   â”œâ”€â”€ AuthController.cs          # AutenticaÃ§Ã£o backoffice
+â”‚   â”‚   â”œâ”€â”€ UsuariosController.cs      # CRUD usuÃ¡rios backoffice
+â”‚   â”‚   â”œâ”€â”€ PerfisController.cs        # CRUD perfis backoffice
+â”‚   â”‚   â”œâ”€â”€ TenantsController.cs       # CRUD tenants
+â”‚   â”‚   â”œâ”€â”€ CategoriaTenantsController.cs # CRUD categorias
+â”‚   â”‚   â””â”€â”€ UploadsController.cs       # Upload de arquivos
+â”‚   â””â”€â”€ Tenant/
+â”‚       â”œâ”€â”€ BaseController.cs          # Controller base para tenants
+â”‚       â”œâ”€â”€ AuthController.cs          # AutenticaÃ§Ã£o tenant
+â”‚       â”œâ”€â”€ UsuariosController.cs      # CRUD usuÃ¡rios tenant
+â”‚       â”œâ”€â”€ PerfisController.cs        # CRUD perfis tenant
+â”‚       â”œâ”€â”€ CategoriasInsumoController.cs  # CRUD categorias de insumo
+â”‚       â”œâ”€â”€ UnidadesMedidaController.cs    # CRUD unidades de medida
+â”‚       â”œâ”€â”€ InsumosController.cs           # CRUD insumos
+â”‚       â”œâ”€â”€ CategoriasReceitaController.cs # CRUD categorias de receita
+â”‚       â””â”€â”€ ReceitasController.cs          # CRUD receitas
+â”œâ”€â”€ Services/
+â”‚   â”œâ”€â”€ Backoffice/
+â”‚   â”‚   â”œâ”€â”€ Interfaces/
+â”‚   â”‚   â”‚   â”œâ”€â”€ IBackofficeUsuarioService.cs
+â”‚   â”‚   â”‚   â””â”€â”€ IBackofficePerfilService.cs
+â”‚   â”‚   â””â”€â”€ Implementations/
+â”‚   â”‚       â”œâ”€â”€ BackofficeUsuarioService.cs
+â”‚   â”‚       â””â”€â”€ BackofficePerfilService.cs
+â”‚   â”œâ”€â”€ Tenant/
+â”‚   â”‚   â”œâ”€â”€ Interfaces/
+â”‚   â”‚   â”‚   â”œâ”€â”€ ITenantUsuarioService.cs
+â”‚   â”‚   â”‚   â”œâ”€â”€ ITenantPerfilService.cs
+â”‚   â”‚   â”‚   â”œâ”€â”€ ICategoriaInsumoService.cs
+â”‚   â”‚   â”‚   â”œâ”€â”€ IUnidadeMedidaService.cs
+â”‚   â”‚   â”‚   â”œâ”€â”€ IInsumoService.cs
+â”‚   â”‚   â”‚   â”œâ”€â”€ ICategoriaReceitaService.cs
+â”‚   â”‚   â”‚   â””â”€â”€ IReceitaService.cs
+â”‚   â”‚   â””â”€â”€ Implementations/
+â”‚   â”‚       â”œâ”€â”€ TenantUsuarioService.cs
+â”‚   â”‚       â”œâ”€â”€ TenantPerfilService.cs
+â”‚   â”‚       â”œâ”€â”€ CategoriaInsumoService.cs
+â”‚   â”‚       â”œâ”€â”€ UnidadeMedidaService.cs
+â”‚   â”‚       â””â”€â”€ InsumoService.cs
+â”‚   â”œâ”€â”€ Common/
+â”‚   â”‚   â””â”€â”€ BaseService.cs             # Service base genÃ©rico
+â”‚   â”œâ”€â”€ Interfaces/
+â”‚   â”‚   â”œâ”€â”€ IBaseService.cs            # Interface base genÃ©rica
+â”‚   â”‚   â”œâ”€â”€ ITenantService.cs
+â”‚   â”‚   â”œâ”€â”€ IAuthService.cs
+â”‚   â”‚   â”œâ”€â”€ ITenantAuthService.cs
+â”‚   â”‚   â”œâ”€â”€ ICpfCnpjValidationService.cs
+â”‚   â”‚   â””â”€â”€ ICnpjDataService.cs
+â”‚   â””â”€â”€ Implementations/
+â”‚       â”œâ”€â”€ TenantService.cs
+â”‚       â”œâ”€â”€ AuthService.cs
+â”‚       â”œâ”€â”€ TenantAuthService.cs
+â”‚       â”œâ”€â”€ CpfCnpjValidationService.cs
+â”‚       â””â”€â”€ CnpjDataService.cs
+â”œâ”€â”€ Models/
+â”‚   â”œâ”€â”€ Backoffice/
+â”‚   â”‚   â”œâ”€â”€ Entities/
+â”‚   â”‚   â”‚   â”œâ”€â”€ BackofficeUsuario.cs
+â”‚   â”‚   â”‚   â””â”€â”€ BackofficePerfil.cs
+â”‚   â”‚   â””â”€â”€ DTOs/
+â”‚   â”‚       â”œâ”€â”€ BackofficeUsuarioDto.cs
+â”‚   â”‚       â”œâ”€â”€ BackofficePerfilDto.cs
+â”‚   â”‚       â”œâ”€â”€ CreateBackofficeUsuarioRequest.cs
+â”‚   â”‚       â”œâ”€â”€ UpdateBackofficeUsuarioRequest.cs
+â”‚   â”‚       â”œâ”€â”€ CreateBackofficePerfilRequest.cs
+â”‚   â”‚       â””â”€â”€ UpdateBackofficePerfilRequest.cs
+â”‚   â”œâ”€â”€ Tenant/
+â”‚   â”‚   â”œâ”€â”€ Entities/
+â”‚   â”‚   â”‚   â”œâ”€â”€ TenantUsuario.cs
+â”‚   â”‚   â”‚   â”œâ”€â”€ TenantPerfil.cs
+â”‚   â”‚   â”‚   â”œâ”€â”€ CategoriaInsumo.cs
+â”‚   â”‚   â”‚   â”œâ”€â”€ UnidadeMedida.cs
+â”‚   â”‚   â”‚   â””â”€â”€ Insumo.cs
+â”‚   â”‚   â””â”€â”€ DTOs/
+â”‚   â”‚       â”œâ”€â”€ TenantUsuarioDto.cs
+â”‚   â”‚       â”œâ”€â”€ TenantPerfilDto.cs
+â”‚   â”‚       â”œâ”€â”€ CategoriaInsumoDto.cs
+â”‚   â”‚       â”œâ”€â”€ UnidadeMedidaDto.cs
+â”‚   â”‚       â”œâ”€â”€ InsumoDto.cs
+â”‚   â”‚       â”œâ”€â”€ CreateTenantUsuarioRequest.cs
+â”‚   â”‚       â”œâ”€â”€ UpdateTenantUsuarioRequest.cs
+â”‚   â”‚       â”œâ”€â”€ CreateTenantPerfilRequest.cs
+â”‚   â”‚       â”œâ”€â”€ UpdateTenantPerfilRequest.cs
+â”‚   â”‚       â”œâ”€â”€ CreateCategoriaInsumoRequest.cs
+â”‚   â”‚       â”œâ”€â”€ UpdateCategoriaInsumoRequest.cs
+â”‚   â”‚       â”œâ”€â”€ CreateUnidadeMedidaRequest.cs
+â”‚   â”‚       â”œâ”€â”€ UpdateUnidadeMedidaRequest.cs
+â”‚   â”‚       â”œâ”€â”€ CreateInsumoRequest.cs
+â”‚   â”‚       â””â”€â”€ UpdateInsumoRequest.cs
+â”‚   â”œâ”€â”€ Entities/
+â”‚   â”‚   â”œâ”€â”€ Tenant.cs
+â”‚   â”‚   â””â”€â”€ CategoriaTenant.cs
+â”‚   â””â”€â”€ DTOs/
+â”‚       â”œâ”€â”€ TenantDto.cs
+â”‚       â”œâ”€â”€ CreateTenantRequest.cs
+â”‚       â”œâ”€â”€ UpdateTenantRequest.cs
+â”‚       â”œâ”€â”€ CategoriaTenantDto.cs
+â”‚       â”œâ”€â”€ CnpjDataResponse.cs
+â”‚       â”œâ”€â”€ LoginRequest.cs
+â”‚       â”œâ”€â”€ LoginResponse.cs
+â”‚       â””â”€â”€ PagedResult.cs
+â”œâ”€â”€ Data/
+â”‚   â”œâ”€â”€ ApplicationDbContext.cs        # Contexto sgr_config
+â”‚   â”œâ”€â”€ TenantDbContext.cs             # Contexto sgr_tenants (schema dinÃ¢mico)
+â”‚   â””â”€â”€ DbInitializer.cs               # Inicializador do banco
+â”œâ”€â”€ Extensions/
+â”‚   â””â”€â”€ ServiceCollectionExtensions.cs # Extension methods para DI
+â”œâ”€â”€ Middleware/
+â”‚   â”œâ”€â”€ ExceptionHandlingMiddleware.cs # Tratamento global de exceÃ§Ãµes
+â”‚   â””â”€â”€ TenantIdentificationMiddleware.cs # IdentificaÃ§Ã£o do tenant
+â”œâ”€â”€ Exceptions/
+â”‚   â”œâ”€â”€ BusinessException.cs           # ExceÃ§Ã£o de negÃ³cio
+â”‚   â””â”€â”€ NotFoundException.cs           # ExceÃ§Ã£o de nÃ£o encontrado
+â”œâ”€â”€ Migrations/                        # Migrations do EF Core
+â”œâ”€â”€ wwwroot/                          # Arquivos estÃ¡ticos
+â”‚   â””â”€â”€ avatars/                      # Avatares dos usuÃ¡rios
+â””â”€â”€ Program.cs                         # ConfiguraÃ§Ã£o da aplicaÃ§Ã£o
 ```
 
 ### Frontend (`web/src/app/`)
 
 ```
 app/
-├── backoffice/                        # Backoffice
-│   ├── components/
-│   │   ├── listagens/                # Componentes de listagem
-│   │   │   ├── usuario/
-│   │   │   ├── perfil/
-│   │   │   └── tenants/
-│   │   └── cadastros/                # Componentes de formulários
-│   │       ├── usuario/
-│   │       ├── perfil/
-│   │       └── tenants/
-│   └── login/                        # Login do backoffice
-│       └── backoffice-login.component.*
-├── tenant/                            # Tenant
-│   ├── components/
-│   │   ├── listagens/                # Componentes de listagem
-│   │   │   ├── usuario/
-│   │   │   ├── perfil/
-│   │   │   ├── categoria-insumo/
-│   │   │   ├── unidade-medida/
-│   │   │   └── insumo/
-│   │   └── cadastros/                # Componentes de formulários
-│   │       ├── usuario/
-│   │       ├── perfil/
-│   │       ├── categoria-insumo/
-│   │       ├── unidade-medida/
-│   │       └── insumo/
-│   └── login/                        # Login do tenant
-│       └── tenant-login.component.*
-├── core/                              # Funcionalidades core
-│   ├── guards/
-│   │   ├── auth.guard.ts            # Guard de autenticação
-│   │   └── state.guard.ts           # Guard de estado
-│   ├── interceptors/
-│   │   ├── auth.interceptor.ts      # Interceptor de autenticação
-│   │   ├── error.interceptor.ts     # Interceptor de erros
-│   │   └── tenant.interceptor.ts    # Interceptor de tenant
-│   ├── services/
-│   │   ├── auth.service.ts          # Service de autenticação
-│   │   ├── toast.service.ts         # Service de notificações
-│   │   ├── confirmation.service.ts  # Service de confirmações
-│   │   ├── api.service.ts           # Service base da API
-│   │   └── layout.service.ts        # Service de layout
-│   ├── utils/
-│   │   ├── mask.utils.ts            # Utilitários de máscara
-│   │   └── subdomain.utils.ts       # Utilitários de subdomínio
-│   └── models/
-│       ├── auth.model.ts
-│       └── menu-item.model.ts
-├── shared/                            # Componentes compartilhados
-│   └── components/
-│       ├── loading/
-│       │   └── loading.component.*
-│       └── confirmation-dialog/       # Diálogo de confirmação
-│           └── confirmation-dialog.component.*
-├── features/                          # Services por feature
-│   ├── usuarios/
-│   │   └── services/
-│   │       ├── usuario.service.ts
-│   │       └── upload.service.ts
-│   ├── perfis/
-│   │   └── services/
-│   │       └── perfil.service.ts
-│   ├── tenants/
-│   │   └── services/
-│   │       ├── tenant.service.ts
-│   │       └── categoria-tenant.service.ts
-│   ├── tenant-usuarios/
-│   │   └── services/
-│   │       └── tenant-usuario.service.ts
-│   ├── tenant-perfis/
-│   │   └── services/
-│   │       └── tenant-perfil.service.ts
-│   ├── tenant-categorias-insumo/
-│   │   └── services/
-│   │       └── categoria-insumo.service.ts
-│   ├── tenant-unidades-medida/
-│   │   └── services/
-│   │       └── unidade-medida.service.ts
-│   └── tenant-insumos/
-│       └── services/
-│           └── insumo.service.ts
-├── shell/                             # Layout principal
-│   ├── shell.component.ts
-│   ├── shell.component.html
-│   └── shell.component.scss
-├── app.routes.ts                      # Configuração de rotas
-└── app.config.ts                      # Configuração da aplicação
+â”œâ”€â”€ backoffice/                        # Backoffice
+â”‚   â”œâ”€â”€ components/
+â”‚   â”‚   â”œâ”€â”€ listagens/                # Componentes de listagem
+â”‚   â”‚   â”‚   â”œâ”€â”€ usuario/
+â”‚   â”‚   â”‚   â”œâ”€â”€ perfil/
+â”‚   â”‚   â”‚   â””â”€â”€ tenants/
+â”‚   â”‚   â””â”€â”€ cadastros/                # Componentes de formulÃ¡rios
+â”‚   â”‚       â”œâ”€â”€ usuario/
+â”‚   â”‚       â”œâ”€â”€ perfil/
+â”‚   â”‚       â””â”€â”€ tenants/
+â”‚   â””â”€â”€ login/                        # Login do backoffice
+â”‚       â””â”€â”€ backoffice-login.component.*
+â”œâ”€â”€ tenant/                            # Tenant
+â”‚   â”œâ”€â”€ components/
+â”‚   â”‚   â”œâ”€â”€ listagens/                # Componentes de listagem
+â”‚   â”‚   â”‚   â”œâ”€â”€ usuario/
+â”‚   â”‚   â”‚   â”œâ”€â”€ perfil/
+â”‚   â”‚   â”‚   â”œâ”€â”€ categoria-insumo/
+â”‚   â”‚   â”‚   â”œâ”€â”€ unidade-medida/
+â”‚   â”‚   â”‚   â””â”€â”€ insumo/
+â”‚   â”‚   â””â”€â”€ cadastros/                # Componentes de formulÃ¡rios
+â”‚   â”‚       â”œâ”€â”€ usuario/
+â”‚   â”‚       â”œâ”€â”€ perfil/
+â”‚   â”‚       â”œâ”€â”€ categoria-insumo/
+â”‚   â”‚       â”œâ”€â”€ unidade-medida/
+â”‚   â”‚       â””â”€â”€ insumo/
+â”‚   â””â”€â”€ login/                        # Login do tenant
+â”‚       â””â”€â”€ tenant-login.component.*
+â”œâ”€â”€ core/                              # Funcionalidades core
+â”‚   â”œâ”€â”€ guards/
+â”‚   â”‚   â”œâ”€â”€ auth.guard.ts            # Guard de autenticaÃ§Ã£o
+â”‚   â”‚   â””â”€â”€ state.guard.ts           # Guard de estado
+â”‚   â”œâ”€â”€ interceptors/
+â”‚   â”‚   â”œâ”€â”€ auth.interceptor.ts      # Interceptor de autenticaÃ§Ã£o
+â”‚   â”‚   â”œâ”€â”€ error.interceptor.ts     # Interceptor de erros
+â”‚   â”‚   â””â”€â”€ tenant.interceptor.ts    # Interceptor de tenant
+â”‚   â”œâ”€â”€ services/
+â”‚   â”‚   â”œâ”€â”€ auth.service.ts          # Service de autenticaÃ§Ã£o
+â”‚   â”‚   â”œâ”€â”€ toast.service.ts         # Service de notificaÃ§Ãµes
+â”‚   â”‚   â”œâ”€â”€ confirmation.service.ts  # Service de confirmaÃ§Ãµes
+â”‚   â”‚   â”œâ”€â”€ api.service.ts           # Service base da API
+â”‚   â”‚   â””â”€â”€ layout.service.ts        # Service de layout
+â”‚   â”œâ”€â”€ utils/
+â”‚   â”‚   â”œâ”€â”€ mask.utils.ts            # UtilitÃ¡rios de mÃ¡scara
+â”‚   â”‚   â””â”€â”€ subdomain.utils.ts       # UtilitÃ¡rios de subdomÃ­nio
+â”‚   â””â”€â”€ models/
+â”‚       â”œâ”€â”€ auth.model.ts
+â”‚       â””â”€â”€ menu-item.model.ts
+â”œâ”€â”€ shared/                            # Componentes compartilhados
+â”‚   â””â”€â”€ components/
+â”‚       â”œâ”€â”€ loading/
+â”‚       â”‚   â””â”€â”€ loading.component.*
+â”‚       â””â”€â”€ confirmation-dialog/       # DiÃ¡logo de confirmaÃ§Ã£o
+â”‚           â””â”€â”€ confirmation-dialog.component.*
+â”œâ”€â”€ features/                          # Services por feature
+â”‚   â”œâ”€â”€ usuarios/
+â”‚   â”‚   â””â”€â”€ services/
+â”‚   â”‚       â”œâ”€â”€ usuario.service.ts
+â”‚   â”‚       â””â”€â”€ upload.service.ts
+â”‚   â”œâ”€â”€ perfis/
+â”‚   â”‚   â””â”€â”€ services/
+â”‚   â”‚       â””â”€â”€ perfil.service.ts
+â”‚   â”œâ”€â”€ tenants/
+â”‚   â”‚   â””â”€â”€ services/
+â”‚   â”‚       â”œâ”€â”€ tenant.service.ts
+â”‚   â”‚       â””â”€â”€ categoria-tenant.service.ts
+â”‚   â”œâ”€â”€ tenant-usuarios/
+â”‚   â”‚   â””â”€â”€ services/
+â”‚   â”‚       â””â”€â”€ tenant-usuario.service.ts
+â”‚   â”œâ”€â”€ tenant-perfis/
+â”‚   â”‚   â””â”€â”€ services/
+â”‚   â”‚       â””â”€â”€ tenant-perfil.service.ts
+â”‚   â”œâ”€â”€ tenant-categorias-insumo/
+â”‚   â”‚   â””â”€â”€ services/
+â”‚   â”‚       â””â”€â”€ categoria-insumo.service.ts
+â”‚   â”œâ”€â”€ tenant-unidades-medida/
+â”‚   â”‚   â””â”€â”€ services/
+â”‚   â”‚       â””â”€â”€ unidade-medida.service.ts
+â”‚   â””â”€â”€ tenant-insumos/
+â”‚       â””â”€â”€ services/
+â”‚           â””â”€â”€ insumo.service.ts
+â”œâ”€â”€ shell/                             # Layout principal
+â”‚   â”œâ”€â”€ shell.component.ts
+â”‚   â”œâ”€â”€ shell.component.html
+â”‚   â””â”€â”€ shell.component.scss
+â”œâ”€â”€ app.routes.ts                      # ConfiguraÃ§Ã£o de rotas
+â””â”€â”€ app.config.ts                      # ConfiguraÃ§Ã£o da aplicaÃ§Ã£o
 ```
 
 ---
 
-## 📐 Padrões e Convenções
+## ðŸ“ PadrÃµes e ConvenÃ§Ãµes
 
 ### Backend (.NET C#)
 
 #### 1. Controllers
 
-**Padrão**: Herdar de `BaseController` para operações CRUD padrão.
+**PadrÃ£o**: Herdar de `BaseController` para operaÃ§Ãµes CRUD padrÃ£o.
 
 ```csharp
 [ApiController]
@@ -485,15 +485,15 @@ public class MinhaEntidadeController
     {
     }
 
-    // Métodos específicos podem ser adicionados aqui
-    // Os métodos CRUD padrão (GetAll, GetById, Create, Update, Delete) 
-    // já estão disponíveis via BaseController
+    // MÃ©todos especÃ­ficos podem ser adicionados aqui
+    // Os mÃ©todos CRUD padrÃ£o (GetAll, GetById, Create, Update, Delete) 
+    // jÃ¡ estÃ£o disponÃ­veis via BaseController
 }
 ```
 
 #### 2. Services
 
-**Padrão**: Herdar de `BaseService` (em `Services/Common/`) e implementar métodos abstratos.
+**PadrÃ£o**: Herdar de `BaseService` (em `Services/Common/`) e implementar mÃ©todos abstratos.
 
 **Para Backoffice** (usa `ApplicationDbContext`):
 ```csharp
@@ -601,13 +601,13 @@ public class TenantMinhaEntidadeService
 
 #### 3. DTOs
 
-**Padrão**: Usar Data Annotations para validação.
+**PadrÃ£o**: Usar Data Annotations para validaÃ§Ã£o.
 
 ```csharp
 public class CreateMinhaEntidadeRequest
 {
-    [Required(ErrorMessage = "O nome é obrigatório")]
-    [MaxLength(100, ErrorMessage = "O nome deve ter no máximo 100 caracteres")]
+    [Required(ErrorMessage = "O nome Ã© obrigatÃ³rio")]
+    [MaxLength(100, ErrorMessage = "O nome deve ter no mÃ¡ximo 100 caracteres")]
     public string Nome { get; set; } = string.Empty;
 }
 
@@ -628,7 +628,7 @@ public class MinhaEntidadeDto
 
 #### 5. Registro de Services
 
-**Padrão**: Registrar no `ServiceCollectionExtensions.cs`.
+**PadrÃ£o**: Registrar no `ServiceCollectionExtensions.cs`.
 
 ```csharp
 public static IServiceCollection AddApplicationServices(this IServiceCollection services)
@@ -647,7 +647,7 @@ public static IServiceCollection AddApplicationServices(this IServiceCollection 
 
 #### 1. Componentes
 
-**Padrão**: Todos os componentes são standalone com `OnPush` change detection.
+**PadrÃ£o**: Todos os componentes sÃ£o standalone com `OnPush` change detection.
 
 ```typescript
 import { Component, ChangeDetectionStrategy, signal, computed, inject, DestroyRef } from '@angular/core';
@@ -659,7 +659,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
   imports: [CommonModule, FormsModule],
   templateUrl: './example.component.html',
   styleUrls: ['./example.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush // ✅ Sempre usar OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush // âœ… Sempre usar OnPush
 })
 export class ExampleComponent {
   private destroyRef = inject(DestroyRef);
@@ -680,16 +680,16 @@ export class ExampleComponent {
 
 #### 2. Sintaxe Angular 20
 
-**⚠️ Diretivas Antigas (DEPRECIADAS)**: `*ngIf`, `*ngFor`, `*ngSwitch`
+**âš ï¸ Diretivas Antigas (DEPRECIADAS)**: `*ngIf`, `*ngFor`, `*ngSwitch`
 
-**✅ Nova Sintaxe**:
+**âœ… Nova Sintaxe**:
 
 ```html
 <!-- @if (substitui *ngIf) -->
 @if (isLoading()) {
   <app-loading></app-loading>
 } @else {
-  <div>Conteúdo</div>
+  <div>ConteÃºdo</div>
 }
 
 <!-- @for (substitui *ngFor) -->
@@ -708,22 +708,22 @@ export class ExampleComponent {
     <div>Sucesso!</div>
   }
   @default {
-    <div>Padrão</div>
+    <div>PadrÃ£o</div>
   }
 }
 ```
 
-**Variáveis disponíveis no `@for`**:
-- `$index` - índice do item
+**VariÃ¡veis disponÃ­veis no `@for`**:
+- `$index` - Ã­ndice do item
 - `$first` - primeiro item
-- `$last` - último item
-- `$even` - índice par
-- `$odd` - índice ímpar
+- `$last` - Ãºltimo item
+- `$even` - Ã­ndice par
+- `$odd` - Ã­ndice Ã­mpar
 - `$count` - total de itens
 
 #### 3. Template-Driven Forms
 
-**Padrão**: Usar Template-Driven Forms para formulários simples.
+**PadrÃ£o**: Usar Template-Driven Forms para formulÃ¡rios simples.
 
 ```html
 <form #f="ngForm" (ngSubmit)="save()">
@@ -731,33 +731,33 @@ export class ExampleComponent {
     <mat-label>Nome</mat-label>
     <input matInput name="nome" [(ngModel)]="model.nome" required />
     @if (f.controls['nome']?.errors?.['required'] && f.controls['nome']?.touched) {
-      <mat-error>Nome é obrigatório</mat-error>
+      <mat-error>Nome Ã© obrigatÃ³rio</mat-error>
     }
   </mat-form-field>
 </form>
 ```
 
-#### 4. Classes Globais de Formulários
+#### 4. Classes Globais de FormulÃ¡rios
 
-Todas as classes abaixo estão disponíveis globalmente em `styles.scss`:
+Todas as classes abaixo estÃ£o disponÃ­veis globalmente em `styles.scss`:
 
-- **`.form-container`** - Container principal do formulário
+- **`.form-container`** - Container principal do formulÃ¡rio
   - Padding: 16px (12px no mobile)
   - Max-width: 800px
   - Centralizado automaticamente
 
-- **`.form-title`** - Título do formulário
+- **`.form-title`** - TÃ­tulo do formulÃ¡rio
   - Font-size: 1.75rem (1.5rem tablet, 1.25rem mobile)
   - Margin-bottom: 32px (24px tablet, 20px mobile)
 
-- **`.form-field-spacing`** - Espaçamento entre campos
+- **`.form-field-spacing`** - EspaÃ§amento entre campos
   - Width: 100%
   - Margin-bottom: 24px (20px tablet, 16px mobile)
 
-- **`.form-section`** - Agrupar seções relacionadas
+- **`.form-section`** - Agrupar seÃ§Ãµes relacionadas
   - Margin-bottom: 32px
 
-- **`.form-actions`** - Container para botões
+- **`.form-actions`** - Container para botÃµes
   - Display: flex
   - Gap: 12px (8px no mobile)
   - Justify-content: flex-end
@@ -796,7 +796,7 @@ Todas as classes abaixo estão disponíveis globalmente em `styles.scss`:
 
 #### 5. Services
 
-**Padrão**: Services injetáveis com métodos tipados.
+**PadrÃ£o**: Services injetÃ¡veis com mÃ©todos tipados.
 
 ```typescript
 import { Injectable, inject } from '@angular/core';
@@ -839,29 +839,29 @@ export class MinhaEntidadeService {
 
 - **Componentes**: kebab-case (ex: `user-form.component.ts`), classe PascalCase (ex: `UserFormComponent`)
 - **Services**: kebab-case (ex: `usuario.service.ts`), classe PascalCase (ex: `UsuarioService`)
-- **Variáveis**: camelCase (ex: `isLoading`, `userName`)
+- **VariÃ¡veis**: camelCase (ex: `isLoading`, `userName`)
 - **Signals**: Acessar com `()` no template (ex: `isLoading()`, `users()`)
-- **Métodos**: camelCase (ex: `loadData()`, `onSubmit()`)
+- **MÃ©todos**: camelCase (ex: `loadData()`, `onSubmit()`)
 - **Constantes**: UPPER_SNAKE_CASE (ex: `MAX_FILE_SIZE`)
 
-#### 7. Padrões de Botões e UI
+#### 7. PadrÃµes de BotÃµes e UI
 
-**⚠️ IMPORTANTE**: Nunca use `alert()`, `confirm()` ou `prompt()` do navegador. Use sempre o `ConfirmationService`.
+**âš ï¸ IMPORTANTE**: Nunca use `alert()`, `confirm()` ou `prompt()` do navegador. Use sempre o `ConfirmationService`.
 
-##### Botões de Ação em Listagens
+##### BotÃµes de AÃ§Ã£o em Listagens
 
-**Ordem Padrão** (sempre nesta ordem):
-1. **Visualizar** - `mat-icon-button` (sem cor), ícone `visibility`
-2. **Editar** - `mat-icon-button` (sem cor), ícone `edit`
-3. **Ações Específicas** - `mat-icon-button` com cor quando aplicável
-   - Ativar: `color="primary"`, ícone `check_circle`
-   - Inativar: `color="warn"`, ícone `block`
-4. **Excluir** - `mat-icon-button` com `color="warn"`, ícone `delete` (sempre último)
+**Ordem PadrÃ£o** (sempre nesta ordem):
+1. **Visualizar** - `mat-icon-button` (sem cor), Ã­cone `visibility`
+2. **Editar** - `mat-icon-button` (sem cor), Ã­cone `edit`
+3. **AÃ§Ãµes EspecÃ­ficas** - `mat-icon-button` com cor quando aplicÃ¡vel
+   - Ativar: `color="primary"`, Ã­cone `check_circle`
+   - Inativar: `color="warn"`, Ã­cone `block`
+4. **Excluir** - `mat-icon-button` com `color="warn"`, Ã­cone `delete` (sempre Ãºltimo)
 
 **Exemplo**:
 ```html
 <ng-container matColumnDef="acoes">
-  <th mat-header-cell *matHeaderCellDef>Ações</th>
+  <th mat-header-cell *matHeaderCellDef>AÃ§Ãµes</th>
   <td mat-cell *matCellDef="let e">
     <button mat-icon-button (click)="view(e.id)" matTooltip="Visualizar">
       <mat-icon>visibility</mat-icon>
@@ -876,11 +876,11 @@ export class MinhaEntidadeService {
 </ng-container>
 ```
 
-##### Botão "Adicionar" em Listagens
+##### BotÃ£o "Adicionar" em Listagens
 
-**Padrão**: Sempre usar o formato "Novo [Entidade]"
-- Texto: "Novo Tenant", "Novo Usuário", "Novo Perfil", etc.
-- Estilo: `mat-raised-button color="primary"` com ícone `add`
+**PadrÃ£o**: Sempre usar o formato "Novo [Entidade]"
+- Texto: "Novo Tenant", "Novo UsuÃ¡rio", "Novo Perfil", etc.
+- Estilo: `mat-raised-button color="primary"` com Ã­cone `add`
 
 **Exemplo**:
 ```html
@@ -890,13 +890,13 @@ export class MinhaEntidadeService {
 </a>
 ```
 
-##### Botões em Formulários
+##### BotÃµes em FormulÃ¡rios
 
-**Padrão**:
+**PadrÃ£o**:
 - **Voltar**: `mat-stroked-button` (sem cor)
 - **Salvar**: `mat-raised-button color="primary"`
-- **Ações Destrutivas Secundárias**: `mat-button color="warn"`
-- **Ações Neutras Secundárias**: `mat-stroked-button`
+- **AÃ§Ãµes Destrutivas SecundÃ¡rias**: `mat-button color="warn"`
+- **AÃ§Ãµes Neutras SecundÃ¡rias**: `mat-stroked-button`
 
 **Exemplo**:
 ```html
@@ -908,7 +908,7 @@ export class MinhaEntidadeService {
 
 ##### Uso do ConfirmationService
 
-**Exemplo de Exclusão**:
+**Exemplo de ExclusÃ£o**:
 ```typescript
 import { ConfirmationService } from '../../../../core/services/confirmation.service';
 
@@ -921,7 +921,7 @@ export class MinhaListaComponent {
       .subscribe(confirmed => {
         if (!confirmed) return;
         
-        // Executar exclusão
+        // Executar exclusÃ£o
         this.service.delete(id).subscribe(/* ... */);
       });
   }
@@ -933,7 +933,7 @@ export class MinhaListaComponent {
 toggleActive(id: number, currentStatus: boolean) {
   const action = currentStatus ? 'inativar' : 'ativar';
   const warningMessage = currentStatus 
-    ? 'Este item não poderá mais ser usado.'
+    ? 'Este item nÃ£o poderÃ¡ mais ser usado.'
     : undefined;
 
   this.confirmationService.confirmToggleActive(action, 'este item', warningMessage)
@@ -941,41 +941,41 @@ toggleActive(id: number, currentStatus: boolean) {
     .subscribe(confirmed => {
       if (!confirmed) return;
       
-      // Executar ação
+      // Executar aÃ§Ã£o
       this.service.toggleActive(id).subscribe(/* ... */);
     });
 }
 ```
 
-**Exemplo de Confirmação Customizada**:
+**Exemplo de ConfirmaÃ§Ã£o Customizada**:
 ```typescript
 this.confirmationService.confirm({
-  title: 'Confirmar ação',
-  message: 'Tem certeza que deseja executar esta ação?',
+  title: 'Confirmar aÃ§Ã£o',
+  message: 'Tem certeza que deseja executar esta aÃ§Ã£o?',
   confirmText: 'Executar',
   cancelText: 'Cancelar',
   confirmColor: 'warn'
 }).subscribe(confirmed => {
   if (confirmed) {
-    // Executar ação
+    // Executar aÃ§Ã£o
   }
 });
 ```
 
 ---
 
-## ✨ Funcionalidades Implementadas
+## âœ¨ Funcionalidades Implementadas
 
 ### Backend
 
-#### 1. CRUD Genérico
-- `BaseController` e `BaseService` para padronizar operações CRUD
-- Suporte a paginação, ordenação e busca
-- Validação automática via Data Annotations
-- Tratamento de exceções padronizado
+#### 1. CRUD GenÃ©rico
+- `BaseController` e `BaseService` para padronizar operaÃ§Ãµes CRUD
+- Suporte a paginaÃ§Ã£o, ordenaÃ§Ã£o e busca
+- ValidaÃ§Ã£o automÃ¡tica via Data Annotations
+- Tratamento de exceÃ§Ãµes padronizado
 
-#### 2. Autenticação
-- JWT para autenticação
+#### 2. AutenticaÃ§Ã£o
+- JWT para autenticaÃ§Ã£o
 - Endpoints separados:
   - `/api/backoffice/auth/login` - Login do backoffice
   - `/api/tenant/auth/login` - Login do tenant
@@ -984,116 +984,116 @@ this.confirmationService.confirm({
 #### 3. Entidades e CRUDs
 
 **Backoffice:**
-- ✅ **Usuários** (`/api/backoffice/usuarios`)
+- âœ… **UsuÃ¡rios** (`/api/backoffice/usuarios`)
   - CRUD completo
   - Upload de avatar
-  - Troca de senha opcional na atualização
-  - Validação de email único
+  - Troca de senha opcional na atualizaÃ§Ã£o
+  - ValidaÃ§Ã£o de email Ãºnico
   - Usa entidade `BackofficeUsuario` e `BackofficePerfil`
 
-- ✅ **Perfis** (`/api/backoffice/perfis`)
+- âœ… **Perfis** (`/api/backoffice/perfis`)
   - CRUD completo
-  - Bloqueio de exclusão se houver usuários vinculados
+  - Bloqueio de exclusÃ£o se houver usuÃ¡rios vinculados
   - Usa entidade `BackofficePerfil`
 
-- ✅ **Tenants** (`/api/backoffice/tenants`)
+- âœ… **Tenants** (`/api/backoffice/tenants`)
   - CRUD completo
-  - Criação automática de schema e dados iniciais
-  - Validação de CNPJ/CPF via BrasilApi
-  - Busca automática de dados do CNPJ
-  - Criação automática de perfil "Administrador" e usuário admin no tenant
+  - CriaÃ§Ã£o automÃ¡tica de schema e dados iniciais
+  - ValidaÃ§Ã£o de CNPJ/CPF via BrasilApi
+  - Busca automÃ¡tica de dados do CNPJ
+  - CriaÃ§Ã£o automÃ¡tica de perfil "Administrador" e usuÃ¡rio admin no tenant
 
-- ✅ **Categorias de Tenant** (`/api/backoffice/categoriatenants`)
+- âœ… **Categorias de Tenant** (`/api/backoffice/categoriatenants`)
   - CRUD completo
-  - Endpoint público para listar categorias ativas
+  - Endpoint pÃºblico para listar categorias ativas
 
 **Tenant:**
-- ✅ **Usuários** (`/api/tenant/usuarios`)
+- âœ… **UsuÃ¡rios** (`/api/tenant/usuarios`)
   - CRUD completo
   - Upload de avatar
-  - Troca de senha opcional na atualização
-  - Validação de email único (dentro do schema do tenant)
+  - Troca de senha opcional na atualizaÃ§Ã£o
+  - ValidaÃ§Ã£o de email Ãºnico (dentro do schema do tenant)
   - Usa entidade `TenantUsuario` e `TenantPerfil`
 
-- ✅ **Perfis** (`/api/tenant/perfis`)
+- âœ… **Perfis** (`/api/tenant/perfis`)
   - CRUD completo
-  - Bloqueio de exclusão se houver usuários vinculados
-  - Perfis específicos de cada tenant
+  - Bloqueio de exclusÃ£o se houver usuÃ¡rios vinculados
+  - Perfis especÃ­ficos de cada tenant
   - Usa entidade `TenantPerfil`
 
-- ✅ **Categorias de Insumo** (`/api/tenant/categorias-insumo`)
+- âœ… **Categorias de Insumo** (`/api/tenant/categorias-insumo`)
   - CRUD completo
-  - Validação de nome único (dentro do schema do tenant)
+  - ValidaÃ§Ã£o de nome Ãºnico (dentro do schema do tenant)
   - Usa entidade `CategoriaInsumo`
 
-- ✅ **Unidades de Medida** (`/api/tenant/unidades-medida`)
+- âœ… **Unidades de Medida** (`/api/tenant/unidades-medida`)
   - CRUD completo
-  - Validação de nome e sigla únicos (dentro do schema do tenant)
-  - Unidades padrão criadas automaticamente ao criar tenant (kg, g, L, mL, un, dz, pct, cx)
+  - ValidaÃ§Ã£o de nome e sigla Ãºnicos (dentro do schema do tenant)
+  - Unidades padrÃ£o criadas automaticamente ao criar tenant (kg, g, L, mL, un, dz, pct, cx)
   - Usa entidade `UnidadeMedida`
 
-- ✅ **Insumos** (`/api/tenant/insumos`)
+- âœ… **Insumos** (`/api/tenant/insumos`)
   - CRUD completo
   - Relacionamento com CategoriaInsumo e UnidadeMedida
-  - Campos: Nome, Categoria, Unidade de Compra, Unidade de Uso, Quantidade por Embalagem, Custo Unitário, Fator de Correção, Estoque Mínimo, Descrição, Imagem
+  - Campos: Nome, Categoria, Unidade de Compra, Unidade de Uso, Quantidade por Embalagem, Custo UnitÃ¡rio, Fator de CorreÃ§Ã£o, Estoque MÃ­nimo, DescriÃ§Ã£o, Imagem
   - Usa entidade `Insumo`
 
-- ✅ **Categorias de Receita** (`/api/tenant/categorias-receita`)
+- âœ… **Categorias de Receita** (`/api/tenant/categorias-receita`)
   - CRUD completo
-  - Validação de nome único (dentro do schema do tenant)
-  - Categorias padrão criadas automaticamente ao criar tenant (Entrada, Prato Principal, Sobremesa, Bebida, Acompanhamento, Salada, Sopa, Outros)
+  - ValidaÃ§Ã£o de nome Ãºnico (dentro do schema do tenant)
+  - Categorias padrÃ£o criadas automaticamente ao criar tenant (Entrada, Prato Principal, Sobremesa, Bebida, Acompanhamento, Salada, Sopa, Outros)
   - Usa entidade `CategoriaReceita`
 
-- ✅ **Receitas** (`/api/tenant/receitas`)
+- âœ… **Receitas** (`/api/tenant/receitas`)
   - CRUD completo
   - Relacionamento com CategoriaReceita e Insumo (via ReceitaItem)
-  - Cálculo automático de custos (CustoTotal e CustoPorPorcao)
-  - Campos: Nome, Categoria, Descrição, Instruções de Empratamento, Rendimento, Peso por Porção, Tolerância de Peso, Fator de Rendimento, Tempo de Preparo, Versão, Imagem
-  - Itens da receita: Insumo, Quantidade, Ordem, Observações
+  - CÃ¡lculo automÃ¡tico de custos (CustoTotal e CustoPorPorcao)
+  - Campos: Nome, Categoria, DescriÃ§Ã£o, InstruÃ§Ãµes de Empratamento, Rendimento, Peso por PorÃ§Ã£o, TolerÃ¢ncia de Peso, Fator de Rendimento, Tempo de Preparo, VersÃ£o, Imagem
+  - Itens da receita: Insumo, Quantidade, Ordem, ObservaÃ§Ãµes
   - Funcionalidade de duplicar receita
-  - Cálculo automático considera:
+  - CÃ¡lculo automÃ¡tico considera:
     - FatorCorrecao dos insumos (perdas no preparo/limpeza de cada insumo)
     - QuantidadePorEmbalagem dos insumos
-    - FatorRendimento da receita (perdas no preparo da receita completa, ex: evaporação, queima)
-  - Controle de versão para rastreabilidade
-  - Controle de peso por porção e tolerância para padronização
+    - FatorRendimento da receita (perdas no preparo da receita completa, ex: evaporaÃ§Ã£o, queima)
+  - Controle de versÃ£o para rastreabilidade
+  - Controle de peso por porÃ§Ã£o e tolerÃ¢ncia para padronizaÃ§Ã£o
   - Usa entidades `Receita` e `ReceitaItem`
 
-- ✅ Autenticação de usuários do tenant
-- ✅ Identificação automática via middleware
+- âœ… AutenticaÃ§Ã£o de usuÃ¡rios do tenant
+- âœ… IdentificaÃ§Ã£o automÃ¡tica via middleware
 
-#### 4. Validações
-- Validação de CPF/CNPJ via BrasilApi
-- Validação de formato e dígitos verificadores
-- Validação de subdomínio (único, apenas letras e números)
+#### 4. ValidaÃ§Ãµes
+- ValidaÃ§Ã£o de CPF/CNPJ via BrasilApi
+- ValidaÃ§Ã£o de formato e dÃ­gitos verificadores
+- ValidaÃ§Ã£o de subdomÃ­nio (Ãºnico, apenas letras e nÃºmeros)
 
 #### 5. Upload de Arquivos
 - **Upload**: `POST /api/uploads/avatar` para upload de avatares
   - Limite de tamanho: 10 MB
   - Formatos suportados: PNG e JPG
-  - Arquivos salvos em `wwwroot/avatars/` com nome único (GUID)
+  - Arquivos salvos em `wwwroot/avatars/` com nome Ãºnico (GUID)
   - Retorna URL completa do arquivo: `{baseUrl}/avatars/{nome}`
 - **Delete**: `DELETE /api/uploads/avatar?url=...` ou `?name=...` para remover avatares
 - Arquivos servidos estaticamente via `UseStaticFiles()` em `/avatars/{nome}`
 
 #### 6. Health Checks
-- Endpoint `/health` para verificação de saúde do banco de dados
-- Verifica especificamente a conexão com o `ApplicationDbContext`
+- Endpoint `/health` para verificaÃ§Ã£o de saÃºde do banco de dados
+- Verifica especificamente a conexÃ£o com o `ApplicationDbContext`
 
 #### 7. OpenAPI/Swagger
-- Em desenvolvimento, OpenAPI disponível em `/openapi/v1.json`
+- Em desenvolvimento, OpenAPI disponÃ­vel em `/openapi/v1.json`
 - Configurado via `app.MapOpenApi()` no `Program.cs`
 
-#### 8. Serialização JSON
-- API configurada para usar `camelCase` na serialização JSON (padrão do Angular)
+#### 8. SerializaÃ§Ã£o JSON
+- API configurada para usar `camelCase` na serializaÃ§Ã£o JSON (padrÃ£o do Angular)
 - Configurado via `AddJsonOptions` no `Program.cs`
 
-#### 9. Inicialização Automática
-- **Migrations**: Aplicadas automaticamente na inicialização da aplicação
-- **DbInitializer**: Inicializa dados padrão automaticamente:
+#### 9. InicializaÃ§Ã£o AutomÃ¡tica
+- **Migrations**: Aplicadas automaticamente na inicializaÃ§Ã£o da aplicaÃ§Ã£o
+- **DbInitializer**: Inicializa dados padrÃ£o automaticamente:
   - Categorias de tenant: "Alimentos", "Bebidas", "Outros"
   - Perfil "Administrador" no backoffice
-  - Usuário padrão do backoffice (verificar `DbInitializer.cs` para credenciais)
+  - UsuÃ¡rio padrÃ£o do backoffice (verificar `DbInitializer.cs` para credenciais)
 
 #### 10. Logging
 - Logging estruturado em todos os services e controllers
@@ -1103,86 +1103,86 @@ this.confirmationService.confirm({
 
 #### 1. Interface Responsiva
 - Layout responsivo com Angular Material 3
-- Tema escuro/claro configurável
-- Sidebar colapsável com estado persistente
-- Prevenção de scroll horizontal
-- **Navegação hierárquica com submenus** - Organização lógica de funcionalidades
+- Tema escuro/claro configurÃ¡vel
+- Sidebar colapsÃ¡vel com estado persistente
+- PrevenÃ§Ã£o de scroll horizontal
+- **NavegaÃ§Ã£o hierÃ¡rquica com submenus** - OrganizaÃ§Ã£o lÃ³gica de funcionalidades
 
 #### 2. Componentes
 
 **Listagens:**
-- ✅ Listagem de Usuários (backoffice)
-- ✅ Listagem de Perfis (backoffice)
-- ✅ Listagem de Tenants (backoffice)
-  - Coluna Categoria (substituiu Subdomínio)
-  - Ordenação por categoria
-  - Padrão de botões padronizado
-- ✅ Listagem de Usuários (tenant)
-- ✅ Listagem de Perfis (tenant)
-- ✅ Listagem de Categorias de Insumo (tenant)
-- ✅ Listagem de Unidades de Medida (tenant)
-- ✅ Listagem de Insumos (tenant)
-- ✅ Listagem de Categorias de Receita (tenant)
-- ✅ Listagem de Receitas (tenant)
-  - Exibição de custo por porção
-  - Formatação de tempo de preparo
+- âœ… Listagem de UsuÃ¡rios (backoffice)
+- âœ… Listagem de Perfis (backoffice)
+- âœ… Listagem de Tenants (backoffice)
+  - Coluna Categoria (substituiu SubdomÃ­nio)
+  - OrdenaÃ§Ã£o por categoria
+  - PadrÃ£o de botÃµes padronizado
+- âœ… Listagem de UsuÃ¡rios (tenant)
+- âœ… Listagem de Perfis (tenant)
+- âœ… Listagem de Categorias de Insumo (tenant)
+- âœ… Listagem de Unidades de Medida (tenant)
+- âœ… Listagem de Insumos (tenant)
+- âœ… Listagem de Categorias de Receita (tenant)
+- âœ… Listagem de Receitas (tenant)
+  - ExibiÃ§Ã£o de custo por porÃ§Ã£o
+  - FormataÃ§Ã£o de tempo de preparo
   - Funcionalidade de duplicar receita
-- Paginação server-side
-- Ordenação por colunas
+- PaginaÃ§Ã£o server-side
+- OrdenaÃ§Ã£o por colunas
 - Busca com debounce
-- Visualização mobile-friendly (cards)
+- VisualizaÃ§Ã£o mobile-friendly (cards)
 
-**Formulários:**
-- ✅ Formulário de Usuário (backoffice)
+**FormulÃ¡rios:**
+- âœ… FormulÃ¡rio de UsuÃ¡rio (backoffice)
   - Upload de avatar com preview
-  - Validação de email
+  - ValidaÃ§Ã£o de email
   - Troca de senha opcional
 
-- ✅ Formulário de Perfil (backoffice)
-  - Validação de nome único
+- âœ… FormulÃ¡rio de Perfil (backoffice)
+  - ValidaÃ§Ã£o de nome Ãºnico
 
-- ✅ Formulário de Tenant (backoffice)
-  - Máscara dinâmica de CPF/CNPJ
-  - Busca automática de dados do CNPJ
-  - Geração automática de subdomínio
-  - Seleção de categoria
-  - Criação de administrador
-- ✅ Formulário de Usuário (tenant)
-- ✅ Formulário de Perfil (tenant)
-- ✅ Formulário de Categoria de Insumo (tenant)
-- ✅ Formulário de Unidade de Medida (tenant)
-- ✅ Formulário de Insumo (tenant)
-- ✅ Formulário de Categoria de Receita (tenant)
-- ✅ Formulário de Receita (tenant)
-  - Tabela editável de itens
+- âœ… FormulÃ¡rio de Tenant (backoffice)
+  - MÃ¡scara dinÃ¢mica de CPF/CNPJ
+  - Busca automÃ¡tica de dados do CNPJ
+  - GeraÃ§Ã£o automÃ¡tica de subdomÃ­nio
+  - SeleÃ§Ã£o de categoria
+  - CriaÃ§Ã£o de administrador
+- âœ… FormulÃ¡rio de UsuÃ¡rio (tenant)
+- âœ… FormulÃ¡rio de Perfil (tenant)
+- âœ… FormulÃ¡rio de Categoria de Insumo (tenant)
+- âœ… FormulÃ¡rio de Unidade de Medida (tenant)
+- âœ… FormulÃ¡rio de Insumo (tenant)
+- âœ… FormulÃ¡rio de Categoria de Receita (tenant)
+- âœ… FormulÃ¡rio de Receita (tenant)
+  - Tabela editÃ¡vel de itens
   - Adicionar/remover/reordenar itens
-  - Validação de itens obrigatórios
+  - ValidaÃ§Ã£o de itens obrigatÃ³rios
 
-#### 3. Autenticação
+#### 3. AutenticaÃ§Ã£o
 - Login separado para backoffice e tenant
-- Guard de autenticação
+- Guard de autenticaÃ§Ã£o
 - Interceptor para adicionar token JWT
 - Interceptor para identificar tenant (header `X-Tenant-Subdomain`)
 
-#### 4. Utilitários
-- Máscaras de CPF/CNPJ dinâmicas
-- Geração de subdomínio a partir de nome fantasia
+#### 4. UtilitÃ¡rios
+- MÃ¡scaras de CPF/CNPJ dinÃ¢micas
+- GeraÃ§Ã£o de subdomÃ­nio a partir de nome fantasia
 - Toast notifications padronizadas
 - Loading global
-- **ConfirmationService** - Diálogos de confirmação padronizados
+- **ConfirmationService** - DiÃ¡logos de confirmaÃ§Ã£o padronizados
 
-#### 5. Diálogos de Confirmação
-- ✅ **ConfirmationService** - Service centralizado para confirmações
+#### 5. DiÃ¡logos de ConfirmaÃ§Ã£o
+- âœ… **ConfirmationService** - Service centralizado para confirmaÃ§Ãµes
   - Substitui `confirm()` e `alert()` do navegador
-  - Diálogos do Angular Material para melhor UX
-  - Métodos helpers para casos comuns:
-    - `confirmDelete(itemName?)` - Confirmação de exclusão
-    - `confirmToggleActive(action, itemName?, warningMessage?)` - Confirmação de ativar/inativar
-    - `confirmSimple(message, title?)` - Confirmação simples
-    - `confirm(data)` - Confirmação customizada completa
-  - Retorna `Observable<boolean>` para integração reativa
+  - DiÃ¡logos do Angular Material para melhor UX
+  - MÃ©todos helpers para casos comuns:
+    - `confirmDelete(itemName?)` - ConfirmaÃ§Ã£o de exclusÃ£o
+    - `confirmToggleActive(action, itemName?, warningMessage?)` - ConfirmaÃ§Ã£o de ativar/inativar
+    - `confirmSimple(message, title?)` - ConfirmaÃ§Ã£o simples
+    - `confirm(data)` - ConfirmaÃ§Ã£o customizada completa
+  - Retorna `Observable<boolean>` para integraÃ§Ã£o reativa
 
-#### 6. Padrões Modernos
+#### 6. PadrÃµes Modernos
 - Standalone Components
 - OnPush Change Detection
 - Signals para estado reativo
@@ -1192,7 +1192,7 @@ this.confirmationService.confirm({
 
 ---
 
-## 📖 Guias de Uso
+## ðŸ“– Guias de Uso
 
 ### Criar um Novo CRUD
 
@@ -1272,7 +1272,7 @@ dotnet ef database update --context ApplicationDbContext
 
 2. **Criar Componente de Listagem** em `backoffice/components/listagens/minhaentidade/`
 
-3. **Criar Componente de Formulário** em `backoffice/components/cadastros/minhaentidade/`
+3. **Criar Componente de FormulÃ¡rio** em `backoffice/components/cadastros/minhaentidade/`
 
 4. **Adicionar Rotas** em `app.routes.ts`:
 ```typescript
@@ -1287,7 +1287,7 @@ dotnet ef database update --context ApplicationDbContext
 
 ---
 
-## 📦 Build e Deploy
+## ðŸ“¦ Build e Deploy
 
 ### Backend
 
@@ -1306,93 +1306,93 @@ ng build --configuration production
 
 ---
 
-## 🎯 Resumo
+## ðŸŽ¯ Resumo
 
-O **SGR** é um sistema completo de gerenciamento multi-tenant que permite:
+O **SGR** Ã© um sistema completo de gerenciamento multi-tenant que permite:
 
-1. **Gerenciar múltiplos tenants** (restaurantes/empresas) de forma isolada
-2. **Criar e gerenciar usuários e perfis** separadamente no backoffice e em cada tenant
+1. **Gerenciar mÃºltiplos tenants** (restaurantes/empresas) de forma isolada
+2. **Criar e gerenciar usuÃ¡rios e perfis** separadamente no backoffice e em cada tenant
    - Backoffice: perfis administrativos (Administrador, Digitador, etc.)
-   - Tenants: perfis personalizados por tenant (Garçom, Cozinheiro, Gerente, etc.)
+   - Tenants: perfis personalizados por tenant (GarÃ§om, Cozinheiro, Gerente, etc.)
 3. **Validar e buscar dados** de CNPJ automaticamente via BrasilApi
-4. **Autenticar usuários** separadamente no backoffice e nos tenants
+4. **Autenticar usuÃ¡rios** separadamente no backoffice e nos tenants
 5. **Fazer upload de arquivos** (avatares, imagens)
-6. **Operar com CRUD genérico** que facilita a criação de novos módulos
+6. **Operar com CRUD genÃ©rico** que facilita a criaÃ§Ã£o de novos mÃ³dulos
 7. **Interface responsiva e moderna** com Angular Material 3
-8. **Arquitetura escalável** com separação clara de contextos e isolamento de dados
+8. **Arquitetura escalÃ¡vel** com separaÃ§Ã£o clara de contextos e isolamento de dados
 
-O sistema está preparado para escalar horizontalmente, com isolamento completo de dados por tenant e arquitetura modular que facilita a manutenção e evolução.
+O sistema estÃ¡ preparado para escalar horizontalmente, com isolamento completo de dados por tenant e arquitetura modular que facilita a manutenÃ§Ã£o e evoluÃ§Ã£o.
 
 ---
 
-## 🧭 Estrutura de Navegação
+## ðŸ§­ Estrutura de NavegaÃ§Ã£o
 
-O sistema utiliza uma estrutura de navegação hierárquica com submenus, organizada de forma lógica baseada em sistemas de referência como TOTVS, iFood Gestão e Kitchen Display.
+O sistema utiliza uma estrutura de navegaÃ§Ã£o hierÃ¡rquica com submenus, organizada de forma lÃ³gica baseada em sistemas de referÃªncia como TOTVS, iFood GestÃ£o e Kitchen Display.
 
-### Princípios de Organização
+### PrincÃ­pios de OrganizaÃ§Ã£o
 
-1. **Agrupamento Lógico**: Funcionalidades relacionadas são agrupadas em submenus
-2. **Hierarquia Clara**: Submenus dividem categorias amplas em seções específicas
+1. **Agrupamento LÃ³gico**: Funcionalidades relacionadas sÃ£o agrupadas em submenus
+2. **Hierarquia Clara**: Submenus dividem categorias amplas em seÃ§Ãµes especÃ­ficas
 3. **Ordem de Uso**: Funcionalidades mais utilizadas aparecem primeiro
-4. **Nomenclatura Clara**: Evita termos genéricos e confusos
+4. **Nomenclatura Clara**: Evita termos genÃ©ricos e confusos
 
 ### Estrutura do Menu - Tenant
 
 ```
-📊 Dashboard
-📦 Cadastros
-   ├── Insumos
-   ├── Receitas
-   ├── Categorias de Insumo
-   ├── Categorias de Receita
-   └── Unidades de Medida
-⚙️ Configurações
-   ├── Usuários
-   └── Perfis
+ðŸ“Š Dashboard
+ðŸ“¦ Cadastros
+   â”œâ”€â”€ Insumos
+   â”œâ”€â”€ Receitas
+   â”œâ”€â”€ Categorias de Insumo
+   â”œâ”€â”€ Categorias de Receita
+   â””â”€â”€ Unidades de Medida
+âš™ï¸ ConfiguraÃ§Ãµes
+   â”œâ”€â”€ UsuÃ¡rios
+   â””â”€â”€ Perfis
 ```
 
 ### Estrutura do Menu - Backoffice
 
 ```
-📊 Dashboard
-🏢 Gestão
-   ├── Tenants
-   ├── Usuários
-   └── Perfis
+ðŸ“Š Dashboard
+ðŸ¢ GestÃ£o
+   â”œâ”€â”€ Tenants
+   â”œâ”€â”€ UsuÃ¡rios
+   â””â”€â”€ Perfis
 ```
 
-### Funcionalidades da Navegação
+### Funcionalidades da NavegaÃ§Ã£o
 
-- **Submenus Expansíveis**: Usa `mat-expansion-panel` do Angular Material
-- **Expansão Automática**: Submenus com rotas ativas são expandidos automaticamente
-- **Destaque Visual**: Itens ativos e submenus com rotas ativas são destacados
-- **Responsivo**: Em modo colapsado, mostra apenas ícones com tooltips
-- **Estado Persistente**: Estado de expansão dos submenus é mantido durante a navegação
+- **Submenus ExpansÃ­veis**: Usa `mat-expansion-panel` do Angular Material
+- **ExpansÃ£o AutomÃ¡tica**: Submenus com rotas ativas sÃ£o expandidos automaticamente
+- **Destaque Visual**: Itens ativos e submenus com rotas ativas sÃ£o destacados
+- **Responsivo**: Em modo colapsado, mostra apenas Ã­cones com tooltips
+- **Estado Persistente**: Estado de expansÃ£o dos submenus Ã© mantido durante a navegaÃ§Ã£o
 
 ---
 
-**Última atualização**: 2025-01-27
+**Ãšltima atualizaÃ§Ã£o**: 2025-01-27
 
 **Changelog**:
-- ✅ **Navegação Hierárquica**: Reorganização da sidebar com submenus expansíveis
-  - Agrupamento lógico: Cadastros e Configurações (Tenant), Gestão (Backoffice)
+- âœ… **NavegaÃ§Ã£o HierÃ¡rquica**: ReorganizaÃ§Ã£o da sidebar com submenus expansÃ­veis
+  - Agrupamento lÃ³gico: Cadastros e ConfiguraÃ§Ãµes (Tenant), GestÃ£o (Backoffice)
   - Nomenclatura melhorada: "Categorias de Insumo" e "Categorias de Receita" (antes apenas "Categorias")
-  - Expansão automática de submenus com rotas ativas
+  - ExpansÃ£o automÃ¡tica de submenus com rotas ativas
   - Destaque visual para itens e submenus ativos
-- ✅ Implementado ConfirmationService para substituir alertas do navegador
-- ✅ Padronização de botões em todas as listagens
-- ✅ Adicionada coluna Categoria na listagem de Tenants
-- ✅ Removida coluna Subdomínio da listagem de Tenants
-- ✅ **Refatoração**: Separação completa entre usuários/perfis do backoffice e dos tenants
+- âœ… Implementado ConfirmationService para substituir alertas do navegador
+- âœ… PadronizaÃ§Ã£o de botÃµes em todas as listagens
+- âœ… Adicionada coluna Categoria na listagem de Tenants
+- âœ… Removida coluna SubdomÃ­nio da listagem de Tenants
+- âœ… **RefatoraÃ§Ã£o**: SeparaÃ§Ã£o completa entre usuÃ¡rios/perfis do backoffice e dos tenants
   - Criadas entidades separadas: `BackofficeUsuario`, `BackofficePerfil`, `TenantUsuario`, `TenantPerfil`
   - Services e controllers reorganizados por contexto (Backoffice/Tenant)
   - DTOs separados para cada contexto
   - Melhor isolamento e escalabilidade do sistema
-- ✅ **Receitas**: Implementado FatorRendimento para cálculo de perdas no preparo da receita
-  - Campo FatorRendimento adicionado à entidade Receita
-  - Cálculo automático de custos considera perdas no preparo (evaporação, queima, etc.)
+- âœ… **Receitas**: Implementado FatorRendimento para cÃ¡lculo de perdas no preparo da receita
+  - Campo FatorRendimento adicionado Ã  entidade Receita
+  - CÃ¡lculo automÃ¡tico de custos considera perdas no preparo (evaporaÃ§Ã£o, queima, etc.)
   - Complementa o FatorCorrecao dos insumos (perdas no preparo individual)
-- ✅ **Receitas**: Melhorias na padronização e controle de qualidade
-  - Campo Versao para rastreabilidade de mudanças na receita
-  - Campo PesoPorPorcao para controle de gramagem por porção
-  - Campo InstrucoesEmpratamento separado das instruções de preparo
+- âœ… **Receitas**: Melhorias na padronizaÃ§Ã£o e controle de qualidade
+  - Campo Versao para rastreabilidade de mudanÃ§as na receita
+  - Campo PesoPorPorcao para controle de gramagem por porÃ§Ã£o
+  - Campo InstrucoesEmpratamento separado das instruÃ§Ãµes de preparo

@@ -18,7 +18,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 })
 export class LoadingComponent {
   /**
-   * Diâmetro do spinner (padrão: 50)
+   * DiÃ¢metro do spinner (padrÃ£o: 50)
    */
   @Input() diameter: number = 50;
 }

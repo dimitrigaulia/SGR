@@ -8,12 +8,12 @@ public interface ITenantService : IBaseService<TenantEntity, TenantDto, CreateTe
     IBaseServiceController<TenantDto, CreateTenantRequest, UpdateTenantRequest>
 {
     /// <summary>
-    /// Cria um novo tenant com toda a infraestrutura necessária
+    /// Cria um novo tenant com toda a infraestrutura necessÃ¡ria
     /// </summary>
     Task<TenantDto> CreateTenantAsync(CreateTenantRequest request, string? usuarioCriacao);
 
     /// <summary>
-    /// Busca tenant por subdomínio
+    /// Busca tenant por subdomÃ­nio
     /// </summary>
     Task<TenantDto?> GetBySubdomainAsync(string subdomain);
 

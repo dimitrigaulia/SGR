@@ -11,12 +11,12 @@ using SGR.Api.Services.Tenant.Interfaces;
 namespace SGR.Api.Extensions;
 
 /// <summary>
-/// Extension methods para configuração de serviços
+/// Extension methods para configuraÃ§Ã£o de serviÃ§os
 /// </summary>
 public static class ServiceCollectionExtensions
 {
     /// <summary>
-    /// Adiciona os serviços da aplicação ao container de DI
+    /// Adiciona os serviÃ§os da aplicaÃ§Ã£o ao container de DI
     /// </summary>
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
@@ -42,7 +42,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ITenantService, TenantService>();
         services.AddScoped<PdfService>();
         
-        // HTTP Client para validação de CPF/CNPJ
+        // HTTP Client para validaÃ§Ã£o de CPF/CNPJ
         services.AddHttpClient<ICpfCnpjValidationService, CpfCnpjValidationService>();
         
         // HTTP Client para busca de dados do CNPJ
@@ -64,23 +64,23 @@ public static class ServiceCollectionExtensions
         {
             options.UseNpgsql(configConnectionString);
             
-            // Configurações recomendadas da Microsoft
+            // ConfiguraÃ§Ãµes recomendadas da Microsoft
             if (isDevelopment)
             {
                 options.EnableSensitiveDataLogging();
                 options.EnableDetailedErrors();
             }
             
-            // Manter tracking como padrão para operações de escrita
+            // Manter tracking como padrÃ£o para operaÃ§Ãµes de escrita
             // Usar AsNoTracking() explicitamente em queries de leitura
         });
 
         var tenantsConnectionString = configuration.GetConnectionString("TenantsConnection");
         
-        // Adicionar HttpContextAccessor se ainda não estiver registrado
+        // Adicionar HttpContextAccessor se ainda nÃ£o estiver registrado
         services.AddHttpContextAccessor();
         
-        // Registrar o interceptor como singleton (não precisa de estado, apenas do HttpContextAccessor)
+        // Registrar o interceptor como singleton (nÃ£o precisa de estado, apenas do HttpContextAccessor)
         services.AddSingleton<TenantSchemaInterceptor>();
         
         // Registrar o DbContext com o interceptor
@@ -88,7 +88,7 @@ public static class ServiceCollectionExtensions
         {
             options.UseNpgsql(tenantsConnectionString);
             
-            // Configurações recomendadas da Microsoft
+            // ConfiguraÃ§Ãµes recomendadas da Microsoft
             if (isDevelopment)
             {
                 options.EnableSensitiveDataLogging();

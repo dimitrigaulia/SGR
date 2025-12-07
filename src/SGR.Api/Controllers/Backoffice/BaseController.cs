@@ -6,12 +6,12 @@ using SGR.Api.Services.Interfaces;
 namespace SGR.Api.Controllers.Backoffice;
 
 /// <summary>
-/// Controller base genérico para operações CRUD
+/// Controller base genÃ©rico para operaÃ§Ãµes CRUD
 /// </summary>
 /// <typeparam name="TService">Tipo do service</typeparam>
 /// <typeparam name="TDto">Tipo do DTO de resposta</typeparam>
-/// <typeparam name="TCreateRequest">Tipo do DTO de criação</typeparam>
-/// <typeparam name="TUpdateRequest">Tipo do DTO de atualização</typeparam>
+/// <typeparam name="TCreateRequest">Tipo do DTO de criaÃ§Ã£o</typeparam>
+/// <typeparam name="TUpdateRequest">Tipo do DTO de atualizaÃ§Ã£o</typeparam>
 [ApiController]
 [Route("api/backoffice/[controller]")]
 [Authorize]
@@ -31,13 +31,13 @@ public abstract class BaseController<TService, TDto, TCreateRequest, TUpdateRequ
     }
 
     /// <summary>
-    /// Lista todos os registros com paginação, busca e ordenação
+    /// Lista todos os registros com paginaÃ§Ã£o, busca e ordenaÃ§Ã£o
     /// </summary>
     /// <param name="search">Termo de busca</param>
-    /// <param name="page">Número da página (padrão: 1)</param>
-    /// <param name="pageSize">Tamanho da página (padrão: 10)</param>
-    /// <param name="sort">Campo para ordenação</param>
-    /// <param name="order">Direção da ordenação (asc/desc)</param>
+    /// <param name="page">NÃºmero da pÃ¡gina (padrÃ£o: 1)</param>
+    /// <param name="pageSize">Tamanho da pÃ¡gina (padrÃ£o: 10)</param>
+    /// <param name="sort">Campo para ordenaÃ§Ã£o</param>
+    /// <param name="order">DireÃ§Ã£o da ordenaÃ§Ã£o (asc/desc)</param>
     /// <returns>Lista paginada de registros</returns>
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -108,7 +108,7 @@ public abstract class BaseController<TService, TDto, TCreateRequest, TUpdateRequ
     /// Exclui um registro
     /// </summary>
     /// <param name="id">ID do registro</param>
-    /// <returns>Sem conteúdo</returns>
+    /// <returns>Sem conteÃºdo</returns>
     [HttpDelete("{id:long}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -125,7 +125,7 @@ public abstract class BaseController<TService, TDto, TCreateRequest, TUpdateRequ
         var idProperty = typeof(TDto).GetProperty("Id");
         if (idProperty != null)
             return Convert.ToInt64(idProperty.GetValue(dto));
-        throw new InvalidOperationException("DTO não possui propriedade Id");
+        throw new InvalidOperationException("DTO nÃ£o possui propriedade Id");
     }
 }
 

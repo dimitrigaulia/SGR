@@ -1,7 +1,7 @@
 namespace SGR.Api.Models.Tenant.Entities;
 
 /// <summary>
-/// Item de uma ficha técnica (pode ser uma Receita ou um Insumo)
+/// Item de uma ficha tÃ©cnica (pode ser uma Receita ou um Insumo)
 /// </summary>
 public class FichaTecnicaItem
 {
@@ -39,12 +39,12 @@ public class FichaTecnicaItem
     public bool ExibirComoQB { get; set; }
     
     /// <summary>
-    /// Ordem de exibição (1, 2, 3...)
+    /// Ordem de exibiÃ§Ã£o (1, 2, 3...)
     /// </summary>
     public int Ordem { get; set; }
     
     /// <summary>
-    /// Observações específicas do item
+    /// ObservaÃ§Ãµes especÃ­ficas do item
     /// </summary>
     public string? Observacoes { get; set; }
     
@@ -53,7 +53,7 @@ public class FichaTecnicaItem
     public string? UsuarioAtualizacao { get; set; }
     public DateTime? DataAtualizacao { get; set; }
     
-    // Navegação
+    // NavegaÃ§Ã£o
     public FichaTecnica FichaTecnica { get; set; } = null!;
     public Receita? Receita { get; set; }
     public Insumo? Insumo { get; set; }

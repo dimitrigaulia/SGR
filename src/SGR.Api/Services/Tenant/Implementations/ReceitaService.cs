@@ -22,7 +22,7 @@ public class ReceitaService : IReceitaService
 
     private static decimal CalcularQuantidadeBruta(ReceitaItem item, Insumo insumo)
     {
-        // Quantidade bruta = Quantidade × FatorCorrecao (perdas no preparo do insumo)
+        // Quantidade bruta = Quantidade Ã— FatorCorrecao (perdas no preparo do insumo)
         return item.Quantidade * insumo.FatorCorrecao;
     }
 
@@ -45,7 +45,7 @@ public class ReceitaService : IReceitaService
 
     /// <summary>
     /// Calcula o custo por unidade de uso de um insumo
-    /// Fórmula: (CustoUnitario / QuantidadePorEmbalagem) * FatorCorrecao
+    /// FÃ³rmula: (CustoUnitario / QuantidadePorEmbalagem) * FatorCorrecao
     /// </summary>
     private static decimal CalcularCustoPorUnidadeUso(Insumo insumo)
     {
@@ -59,20 +59,20 @@ public class ReceitaService : IReceitaService
 
     private decimal CalcularCustoItem(ReceitaItem item, Insumo insumo)
     {
-        // Quantidade bruta = Quantidade × FatorCorrecao (perdas no preparo do insumo)
+        // Quantidade bruta = Quantidade Ã— FatorCorrecao (perdas no preparo do insumo)
         var quantidadeBruta = CalcularQuantidadeBruta(item, insumo);
         
         // Custo por unidade de uso
         var custoPorUnidadeUso = CalcularCustoPorUnidadeUso(insumo);
         
-        // Custo do item = QuantidadeBruta × CustoPorUnidadeUso
-        // IMPORTANTE: ExibirComoQB é apenas visual, sempre usar Quantidade numérica para cálculos
+        // Custo do item = QuantidadeBruta Ã— CustoPorUnidadeUso
+        // IMPORTANTE: ExibirComoQB Ã© apenas visual, sempre usar Quantidade numÃ©rica para cÃ¡lculos
         return quantidadeBruta * custoPorUnidadeUso;
     }
 
     public async Task<PagedResult<ReceitaDto>> GetAllAsync(string? search, int page, int pageSize, string? sort, string? order)
     {
-        _logger.LogInformation("Buscando Receitas - Página: {Page}, Tamanho: {PageSize}, Busca: {Search}", page, pageSize, search ?? "N/A");
+        _logger.LogInformation("Buscando Receitas - PÃ¡gina: {Page}, Tamanho: {PageSize}, Busca: {Search}", page, pageSize, search ?? "N/A");
 
         // Usar AsNoTracking para queries de leitura (melhor performance)
         var query = _context.Receitas
@@ -98,7 +98,7 @@ public class ReceitaService : IReceitaService
                 (r.Categoria != null && EF.Functions.ILike(r.Categoria.Nome, $"%{search}%")));
         }
 
-        // Aplicar ordenação
+        // Aplicar ordenaÃ§Ã£o
         var ascending = string.Equals(order, "asc", StringComparison.OrdinalIgnoreCase);
         query = (sort?.ToLower()) switch
         {
@@ -136,7 +136,7 @@ public class ReceitaService : IReceitaService
                 UsuarioAtualizacao = r.UsuarioAtualizacao,
                 DataCriacao = r.DataCriacao,
                 DataAtualizacao = r.DataAtualizacao,
-                Itens = new List<ReceitaItemDto>() // Itens não são carregados na listagem
+                Itens = new List<ReceitaItemDto>() // Itens nÃ£o sÃ£o carregados na listagem
             })
             .ToListAsync();
 
@@ -168,7 +168,7 @@ public class ReceitaService : IReceitaService
 
         if (receita == null)
         {
-            _logger.LogWarning("Receita com ID {Id} não encontrada", id);
+            _logger.LogWarning("Receita com ID {Id} nÃ£o encontrada", id);
             return null;
         }
 
@@ -177,13 +177,13 @@ public class ReceitaService : IReceitaService
 
     public async Task<ReceitaDto> CreateAsync(CreateReceitaRequest request, string? usuarioCriacao)
     {
-        _logger.LogInformation("Criando nova Receita - Usuário: {Usuario}", usuarioCriacao ?? "Sistema");
+        _logger.LogInformation("Criando nova Receita - UsuÃ¡rio: {Usuario}", usuarioCriacao ?? "Sistema");
 
         // Validar categoria
             var categoriaExists = await _context.CategoriasReceita.AnyAsync(c => c.Id == request.CategoriaId && c.IsAtivo);
             if (!categoriaExists)
             {
-                throw new BusinessException("Categoria inválida ou inativa");
+                throw new BusinessException("Categoria invÃ¡lida ou inativa");
             }
 
             // Validar itens
@@ -203,7 +203,7 @@ public class ReceitaService : IReceitaService
 
             if (insumos.Count != insumoIds.Count)
             {
-                throw new BusinessException("Um ou mais insumos são inválidos ou estão inativos");
+                throw new BusinessException("Um ou mais insumos sÃ£o invÃ¡lidos ou estÃ£o inativos");
             }
 
             // Criar receita
@@ -234,7 +234,7 @@ public class ReceitaService : IReceitaService
 
             if (unidadesMedida.Count != unidadeMedidaIds.Count)
             {
-                throw new BusinessException("Uma ou mais unidades de medida são inválidas ou estão inativas");
+                throw new BusinessException("Uma ou mais unidades de medida sÃ£o invÃ¡lidas ou estÃ£o inativas");
             }
 
             // Criar itens
@@ -266,7 +266,7 @@ public class ReceitaService : IReceitaService
 
     public async Task<ReceitaDto?> UpdateAsync(long id, UpdateReceitaRequest request, string? usuarioAtualizacao)
     {
-        _logger.LogInformation("Atualizando Receita - ID: {Id}, Usuário: {Usuario}", id, usuarioAtualizacao ?? "Sistema");
+        _logger.LogInformation("Atualizando Receita - ID: {Id}, UsuÃ¡rio: {Usuario}", id, usuarioAtualizacao ?? "Sistema");
 
         var receita = await _context.Receitas
                 .Include(r => r.Itens)
@@ -274,7 +274,7 @@ public class ReceitaService : IReceitaService
 
             if (receita == null)
             {
-                _logger.LogWarning("Receita com ID {Id} não encontrada", id);
+                _logger.LogWarning("Receita com ID {Id} nÃ£o encontrada", id);
                 return null;
             }
 
@@ -282,7 +282,7 @@ public class ReceitaService : IReceitaService
             var categoriaExists = await _context.CategoriasReceita.AnyAsync(c => c.Id == request.CategoriaId && c.IsAtivo);
             if (!categoriaExists)
             {
-                throw new BusinessException("Categoria inválida ou inativa");
+                throw new BusinessException("Categoria invÃ¡lida ou inativa");
             }
 
             // Validar itens
@@ -302,7 +302,7 @@ public class ReceitaService : IReceitaService
 
             if (insumos.Count != insumoIds.Count)
             {
-                throw new BusinessException("Um ou mais insumos são inválidos ou estão inativos");
+                throw new BusinessException("Um ou mais insumos sÃ£o invÃ¡lidos ou estÃ£o inativos");
             }
 
             // Atualizar receita
@@ -321,8 +321,8 @@ public class ReceitaService : IReceitaService
             receita.DataAtualizacao = DateTime.UtcNow;
 
             // Remover itens antigos
-            // Não usar Clear() pois RemoveRange já remove do contexto
-            // Apenas remover do contexto, a coleção será atualizada automaticamente
+            // NÃ£o usar Clear() pois RemoveRange jÃ¡ remove do contexto
+            // Apenas remover do contexto, a coleÃ§Ã£o serÃ¡ atualizada automaticamente
             var itensParaRemover = receita.Itens.ToList();
             _context.ReceitaItens.RemoveRange(itensParaRemover);
 
@@ -355,18 +355,18 @@ public class ReceitaService : IReceitaService
     {
         _logger.LogInformation("Excluindo Receita - ID: {Id}", id);
 
-        // Usar FirstOrDefaultAsync ao invés de FindAsync para garantir que respeita o schema do tenant
+        // Usar FirstOrDefaultAsync ao invÃ©s de FindAsync para garantir que respeita o schema do tenant
         var receita = await _context.Receitas.FirstOrDefaultAsync(r => r.Id == id);
         if (receita == null)
         {
-            _logger.LogWarning("Receita com ID {Id} não encontrada", id);
+            _logger.LogWarning("Receita com ID {Id} nÃ£o encontrada", id);
             return false;
         }
 
         _context.Receitas.Remove(receita);
         await _context.SaveChangesAsync();
 
-        _logger.LogInformation("Receita excluída com sucesso - ID: {Id}", id);
+        _logger.LogInformation("Receita excluÃ­da com sucesso - ID: {Id}", id);
         return true;
     }
 
@@ -380,7 +380,7 @@ public class ReceitaService : IReceitaService
 
             if (receitaOriginal == null)
             {
-                throw new BusinessException("Receita não encontrada");
+                throw new BusinessException("Receita nÃ£o encontrada");
             }
 
             // Criar nova receita
@@ -441,19 +441,19 @@ public class ReceitaService : IReceitaService
         {
             var insumo = insumos.First(i => i.Id == item.InsumoId);
             
-            // Quantidade bruta = Quantidade × FatorCorrecao (perdas no preparo do insumo)
+            // Quantidade bruta = Quantidade Ã— FatorCorrecao (perdas no preparo do insumo)
             var quantidadeBruta = item.Quantidade * insumo.FatorCorrecao;
             
-            // Custo do item = (QuantidadeBruta / QuantidadePorEmbalagem) × CustoUnitario
+            // Custo do item = (QuantidadeBruta / QuantidadePorEmbalagem) Ã— CustoUnitario
             var custoItem = CalcularCustoItem(item, insumo);
             
             custoTotal += custoItem;
         }
 
         // Aplicar FatorRendimento (perdas no preparo da receita)
-        // Se FatorRendimento < 1: há perdas (ex: 0.95 = 5% de perda)
-        // Se FatorRendimento > 1: há ganho (raro, mas possível)
-        // Proteger divisão por zero
+        // Se FatorRendimento < 1: hÃ¡ perdas (ex: 0.95 = 5% de perda)
+        // Se FatorRendimento > 1: hÃ¡ ganho (raro, mas possÃ­vel)
+        // Proteger divisÃ£o por zero
         var fatorRendimento = receita.FatorRendimento > 0 ? receita.FatorRendimento : 1.0m;
         var custoTotalComRendimento = custoTotal / fatorRendimento;
         
@@ -523,8 +523,8 @@ public class ReceitaService : IReceitaService
 
                 if (custoPorUnidadeUso.HasValue)
                 {
-                    // Para peso/volume, é comum visualizar custo por 100 g / 100 mL
-                    // Verificar pela sigla se é GR (grama) ou ML (mililitro)
+                    // Para peso/volume, Ã© comum visualizar custo por 100 g / 100 mL
+                    // Verificar pela sigla se Ã© GR (grama) ou ML (mililitro)
                     var sigla = insumo.UnidadeUso?.Sigla?.ToUpper();
                     if (sigla == "GR" || sigla == "ML")
                     {

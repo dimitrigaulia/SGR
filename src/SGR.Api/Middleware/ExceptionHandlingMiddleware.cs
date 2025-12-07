@@ -7,7 +7,7 @@ using SGR.Api.Helpers;
 namespace SGR.Api.Middleware;
 
 /// <summary>
-/// Middleware para tratamento global de exceções
+/// Middleware para tratamento global de exceÃ§Ãµes
 /// </summary>
 public class ExceptionHandlingMiddleware
 {
@@ -28,7 +28,7 @@ public class ExceptionHandlingMiddleware
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erro não tratado: {Message}", ex.Message);
+            _logger.LogError(ex, "Erro nÃ£o tratado: {Message}", ex.Message);
             await HandleExceptionAsync(context, ex);
         }
     }
@@ -57,12 +57,12 @@ public class ExceptionHandlingMiddleware
 
             case UnauthorizedAccessException:
                 code = HttpStatusCode.Unauthorized;
-                message = "Acesso não autorizado.";
+                message = "Acesso nÃ£o autorizado.";
                 break;
 
             case DbUpdateConcurrencyException concurrencyEx:
                 code = HttpStatusCode.Conflict;
-                message = "O registro foi modificado por outro usuário. Por favor, atualize a página e tente novamente.";
+                message = "O registro foi modificado por outro usuÃ¡rio. Por favor, atualize a pÃ¡gina e tente novamente.";
                 break;
 
             case DbUpdateException dbUpdateEx:

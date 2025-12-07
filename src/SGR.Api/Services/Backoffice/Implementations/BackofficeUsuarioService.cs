@@ -42,7 +42,7 @@ public class BackofficeUsuarioService : BaseService<ApplicationDbContext, Backof
 
     public override async Task<PagedResult<BackofficeUsuarioDto>> GetAllAsync(string? search, int page, int pageSize, string? sort, string? order)
     {
-        _logger.LogInformation("Buscando {EntityType} - Página: {Page}, Tamanho: {PageSize}, Busca: {Search}", 
+        _logger.LogInformation("Buscando {EntityType} - PÃ¡gina: {Page}, Tamanho: {PageSize}, Busca: {Search}", 
             typeof(BackofficeUsuario).Name, page, pageSize, search ?? "N/A");
 
         // Usar AsNoTracking para queries de leitura (melhor performance)
@@ -54,7 +54,7 @@ public class BackofficeUsuarioService : BaseService<ApplicationDbContext, Backof
             query = ApplySearch(query, search);
         }
 
-        // Aplicar ordenação
+        // Aplicar ordenaÃ§Ã£o
         query = ApplySorting(query, sort, order);
 
         var total = await query.CountAsync();
@@ -77,7 +77,7 @@ public class BackofficeUsuarioService : BaseService<ApplicationDbContext, Backof
         var entity = await _dbSet.Include(u => u.Perfil).AsNoTracking().FirstOrDefaultAsync(u => u.Id == id);
         if (entity == null)
         {
-            _logger.LogWarning("{EntityType} com ID {Id} não encontrado", typeof(BackofficeUsuario).Name, id);
+            _logger.LogWarning("{EntityType} com ID {Id} nÃ£o encontrado", typeof(BackofficeUsuario).Name, id);
             return null;
         }
 
@@ -130,45 +130,45 @@ public class BackofficeUsuarioService : BaseService<ApplicationDbContext, Backof
 
     protected override async Task BeforeCreateAsync(BackofficeUsuario entity, CreateBackofficeUsuarioRequest request, string? usuarioCriacao)
     {
-        // Validação de email único
+        // ValidaÃ§Ã£o de email Ãºnico
         var exists = await _context.Set<BackofficeUsuario>().AnyAsync(x => x.Email == request.Email);
         if (exists)
         {
-            _logger.LogWarning("Tentativa de criar usuário com email já existente: {Email}", request.Email);
-            throw new BusinessException("E-mail já cadastrado");
+            _logger.LogWarning("Tentativa de criar usuÃ¡rio com email jÃ¡ existente: {Email}", request.Email);
+            throw new BusinessException("E-mail jÃ¡ cadastrado");
         }
 
-        // Validação de perfil
+        // ValidaÃ§Ã£o de perfil
         var perfilExists = await _context.Set<BackofficePerfil>().AnyAsync(p => p.Id == request.PerfilId && p.IsAtivo);
         if (!perfilExists)
         {
-            _logger.LogWarning("Tentativa de criar usuário com perfil inválido ou inativo: {PerfilId}", request.PerfilId);
-            throw new BusinessException("Perfil inválido ou inativo");
+            _logger.LogWarning("Tentativa de criar usuÃ¡rio com perfil invÃ¡lido ou inativo: {PerfilId}", request.PerfilId);
+            throw new BusinessException("Perfil invÃ¡lido ou inativo");
         }
     }
 
     protected override async Task BeforeUpdateAsync(BackofficeUsuario entity, UpdateBackofficeUsuarioRequest request, string? usuarioAtualizacao)
     {
-        // Validação de email único (exceto o próprio)
+        // ValidaÃ§Ã£o de email Ãºnico (exceto o prÃ³prio)
         var emailTaken = await _context.Set<BackofficeUsuario>().AnyAsync(x => x.Email == request.Email && x.Id != entity.Id);
         if (emailTaken)
         {
-            _logger.LogWarning("Tentativa de atualizar usuário {Id} com email já existente: {Email}", entity.Id, request.Email);
-            throw new BusinessException("E-mail já cadastrado");
+            _logger.LogWarning("Tentativa de atualizar usuÃ¡rio {Id} com email jÃ¡ existente: {Email}", entity.Id, request.Email);
+            throw new BusinessException("E-mail jÃ¡ cadastrado");
         }
 
-        // Validação de perfil
+        // ValidaÃ§Ã£o de perfil
         var perfilExists = await _context.Set<BackofficePerfil>().AnyAsync(p => p.Id == request.PerfilId);
         if (!perfilExists)
         {
-            _logger.LogWarning("Tentativa de atualizar usuário {Id} com perfil inválido: {PerfilId}", entity.Id, request.PerfilId);
-            throw new BusinessException("Perfil inválido");
+            _logger.LogWarning("Tentativa de atualizar usuÃ¡rio {Id} com perfil invÃ¡lido: {PerfilId}", entity.Id, request.PerfilId);
+            throw new BusinessException("Perfil invÃ¡lido");
         }
     }
 
     public override async Task<BackofficeUsuarioDto> CreateAsync(CreateBackofficeUsuarioRequest request, string? usuarioCriacao)
     {
-        _logger.LogInformation("Criando novo {EntityType} - Usuário: {Usuario}", typeof(BackofficeUsuario).Name, usuarioCriacao ?? "Sistema");
+        _logger.LogInformation("Criando novo {EntityType} - UsuÃ¡rio: {Usuario}", typeof(BackofficeUsuario).Name, usuarioCriacao ?? "Sistema");
 
         try
         {
@@ -202,7 +202,7 @@ public class BackofficeUsuarioService : BaseService<ApplicationDbContext, Backof
 
     public override async Task<BackofficeUsuarioDto?> UpdateAsync(long id, UpdateBackofficeUsuarioRequest request, string? usuarioAtualizacao)
     {
-        _logger.LogInformation("Atualizando {EntityType} - ID: {Id}, Usuário: {Usuario}", 
+        _logger.LogInformation("Atualizando {EntityType} - ID: {Id}, UsuÃ¡rio: {Usuario}", 
             typeof(BackofficeUsuario).Name, id, usuarioAtualizacao ?? "Sistema");
 
         try
@@ -210,7 +210,7 @@ public class BackofficeUsuarioService : BaseService<ApplicationDbContext, Backof
             var entity = await _dbSet.FindAsync(id);
             if (entity == null)
             {
-                _logger.LogWarning("{EntityType} com ID {Id} não encontrado para atualização", typeof(BackofficeUsuario).Name, id);
+                _logger.LogWarning("{EntityType} com ID {Id} nÃ£o encontrado para atualizaÃ§Ã£o", typeof(BackofficeUsuario).Name, id);
                 return null;
             }
 
@@ -239,7 +239,7 @@ public class BackofficeUsuarioService : BaseService<ApplicationDbContext, Backof
         }
     }
 
-    // Método específico que não está na interface base
+    // MÃ©todo especÃ­fico que nÃ£o estÃ¡ na interface base
     public async Task<bool> EmailExistsAsync(string email, long? excludeId = null)
     {
         var q = _context.Set<BackofficeUsuario>().AsQueryable().Where(x => x.Email == email);

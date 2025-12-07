@@ -22,7 +22,7 @@ public class FichaTecnicaService : IFichaTecnicaService
 
     /// <summary>
     /// Calcula o custo por unidade de uso de um insumo
-    /// Fórmula: (CustoUnitario / QuantidadePorEmbalagem) * FatorCorrecao
+    /// FÃ³rmula: (CustoUnitario / QuantidadePorEmbalagem) * FatorCorrecao
     /// </summary>
     private static decimal CalcularCustoPorUnidadeUso(Insumo insumo)
     {
@@ -35,7 +35,7 @@ public class FichaTecnicaService : IFichaTecnicaService
     }
 
     /// <summary>
-    /// Calcula os custos da ficha técnica
+    /// Calcula os custos da ficha tÃ©cnica
     /// </summary>
     private void CalcularCustosFichaTecnica(FichaTecnica ficha, List<Insumo> insumos, List<Receita> receitas)
     {
@@ -51,7 +51,7 @@ public class FichaTecnicaService : IFichaTecnicaService
                 if (insumo != null)
                 {
                     var custoPorUnidadeUso = CalcularCustoPorUnidadeUso(insumo);
-                    // IMPORTANTE: ExibirComoQB é apenas visual, sempre usar Quantidade numérica
+                    // IMPORTANTE: ExibirComoQB Ã© apenas visual, sempre usar Quantidade numÃ©rica
                     custoLinha = item.Quantidade * custoPorUnidadeUso;
                 }
             }
@@ -60,8 +60,8 @@ public class FichaTecnicaService : IFichaTecnicaService
                 var receita = receitas.FirstOrDefault(r => r.Id == item.ReceitaId.Value);
                 if (receita != null)
                 {
-                    // Usar CustoPorPorcao da receita como custo unitário
-                    // IMPORTANTE: ExibirComoQB é apenas visual, sempre usar Quantidade numérica
+                    // Usar CustoPorPorcao da receita como custo unitÃ¡rio
+                    // IMPORTANTE: ExibirComoQB Ã© apenas visual, sempre usar Quantidade numÃ©rica
                     custoLinha = item.Quantidade * receita.CustoPorPorcao;
                 }
             }
@@ -71,19 +71,19 @@ public class FichaTecnicaService : IFichaTecnicaService
 
         ficha.CustoTotal = Math.Round(custoTotal, 4);
         
-        // Proteger divisão por zero/nulo
+        // Proteger divisÃ£o por zero/nulo
         if (ficha.RendimentoFinal.HasValue && ficha.RendimentoFinal.Value > 0)
         {
             ficha.CustoPorUnidade = Math.Round(custoTotal / ficha.RendimentoFinal.Value, 4);
         }
         else
         {
-            ficha.CustoPorUnidade = 0m; // Definir como 0 quando RendimentoFinal não estiver disponível
+            ficha.CustoPorUnidade = 0m; // Definir como 0 quando RendimentoFinal nÃ£o estiver disponÃ­vel
         }
     }
 
     /// <summary>
-    /// Calcula o rendimento final da ficha técnica considerando apenas itens em GR (gramas)
+    /// Calcula o rendimento final da ficha tÃ©cnica considerando apenas itens em GR (gramas)
     /// </summary>
     private void CalcularRendimentoFinal(FichaTecnica ficha, List<UnidadeMedida> unidadesMedida)
     {
@@ -95,12 +95,12 @@ public class FichaTecnicaService : IFichaTecnicaService
             var unidadeMedida = unidadesMedida.FirstOrDefault(u => u.Id == item.UnidadeMedidaId);
             if (unidadeMedida != null && unidadeMedida.Sigla.ToUpper() == "GR")
             {
-                // IMPORTANTE: ExibirComoQB é apenas visual, sempre usar Quantidade numérica
+                // IMPORTANTE: ExibirComoQB Ã© apenas visual, sempre usar Quantidade numÃ©rica
                 quantidadeTotalBase += item.Quantidade;
             }
         }
 
-        // Aplicar IC (Índice de Cocção)
+        // Aplicar IC (Ãndice de CocÃ§Ã£o)
         decimal pesoAposCoccao = quantidadeTotalBase;
         if (ficha.ICOperador.HasValue && ficha.ICValor.HasValue)
         {
@@ -117,7 +117,7 @@ public class FichaTecnicaService : IFichaTecnicaService
             }
         }
 
-        // Aplicar IPC (Índice de Partes Comestíveis)
+        // Aplicar IPC (Ãndice de Partes ComestÃ­veis)
         decimal pesoComestivel = pesoAposCoccao;
         if (ficha.IPCValor.HasValue)
         {
@@ -130,13 +130,13 @@ public class FichaTecnicaService : IFichaTecnicaService
     }
 
     /// <summary>
-    /// Calcula o preço sugerido de venda
+    /// Calcula o preÃ§o sugerido de venda
     /// PrecoSugeridoVenda = CustoPorUnidade * IndiceContabil
-    /// Só calcula se CustoPorUnidade for válido (RendimentoFinal > 0)
+    /// SÃ³ calcula se CustoPorUnidade for vÃ¡lido (RendimentoFinal > 0)
     /// </summary>
     private void CalcularPrecoSugerido(FichaTecnica ficha)
     {
-        // Não calcular se RendimentoFinal não estiver disponível (CustoPorUnidade seria inválido)
+        // NÃ£o calcular se RendimentoFinal nÃ£o estiver disponÃ­vel (CustoPorUnidade seria invÃ¡lido)
         if (!ficha.RendimentoFinal.HasValue || ficha.RendimentoFinal.Value <= 0)
         {
             ficha.PrecoSugeridoVenda = null;
@@ -154,7 +154,7 @@ public class FichaTecnicaService : IFichaTecnicaService
     }
 
     /// <summary>
-    /// Calcula os preços dos canais
+    /// Calcula os preÃ§os dos canais
     /// </summary>
     private void CalcularPrecosCanais(FichaTecnica ficha)
     {
@@ -162,7 +162,7 @@ public class FichaTecnicaService : IFichaTecnicaService
 
         foreach (var canal in ficha.Canais)
         {
-            // Se PrecoSugeridoVenda não for válido, zerar preço e margem para não ficar com valor antigo
+            // Se PrecoSugeridoVenda nÃ£o for vÃ¡lido, zerar preÃ§o e margem para nÃ£o ficar com valor antigo
             if (precoBase <= 0)
             {
                 canal.PrecoVenda = 0m;
@@ -170,7 +170,7 @@ public class FichaTecnicaService : IFichaTecnicaService
                 continue;
             }
 
-            // Tratar TaxaPercentual null como 0% (vende pelo preço base)
+            // Tratar TaxaPercentual null como 0% (vende pelo preÃ§o base)
             var taxaPercentual = canal.TaxaPercentual ?? 0m;
             var taxa = taxaPercentual / 100m;
             canal.PrecoVenda = Math.Round(precoBase * (1 + taxa), 4);
@@ -193,7 +193,7 @@ public class FichaTecnicaService : IFichaTecnicaService
 
     public async Task<PagedResult<FichaTecnicaDto>> GetAllAsync(string? search, int page, int pageSize, string? sort, string? order)
     {
-        _logger.LogInformation("Buscando Fichas Técnicas - Página: {Page}, Tamanho: {PageSize}, Busca: {Search}", page, pageSize, search ?? "N/A");
+        _logger.LogInformation("Buscando Fichas TÃ©cnicas - PÃ¡gina: {Page}, Tamanho: {PageSize}, Busca: {Search}", page, pageSize, search ?? "N/A");
 
         // Usar AsNoTracking para queries de leitura (melhor performance)
         var query = _context.FichasTecnicas
@@ -239,7 +239,7 @@ public class FichaTecnicaService : IFichaTecnicaService
 
     public async Task<FichaTecnicaDto?> GetByIdAsync(long id)
     {
-        _logger.LogInformation("Buscando Ficha Técnica por ID: {Id}", id);
+        _logger.LogInformation("Buscando Ficha TÃ©cnica por ID: {Id}", id);
 
         // Usar AsNoTracking para queries de leitura (melhor performance)
         var ficha = await _context.FichasTecnicas
@@ -256,7 +256,7 @@ public class FichaTecnicaService : IFichaTecnicaService
 
         if (ficha == null)
         {
-            _logger.LogWarning("Ficha Técnica com ID {Id} não encontrada", id);
+            _logger.LogWarning("Ficha TÃ©cnica com ID {Id} nÃ£o encontrada", id);
             return null;
         }
 
@@ -265,19 +265,19 @@ public class FichaTecnicaService : IFichaTecnicaService
 
     public async Task<FichaTecnicaDto> CreateAsync(CreateFichaTecnicaRequest request, string? usuarioCriacao)
     {
-        _logger.LogInformation("Criando nova Ficha Técnica - Usuário: {Usuario}", usuarioCriacao ?? "Sistema");
+        _logger.LogInformation("Criando nova Ficha TÃ©cnica - UsuÃ¡rio: {Usuario}", usuarioCriacao ?? "Sistema");
 
         // Validar categoria
         var categoriaExists = await _context.CategoriasReceita.AnyAsync(c => c.Id == request.CategoriaId && c.IsAtivo);
         if (!categoriaExists)
         {
-            throw new BusinessException("Categoria inválida ou inativa");
+            throw new BusinessException("Categoria invÃ¡lida ou inativa");
         }
 
         // Validar itens
         if (request.Itens == null || !request.Itens.Any())
         {
-            throw new BusinessException("A ficha técnica deve ter pelo menos um item");
+            throw new BusinessException("A ficha tÃ©cnica deve ter pelo menos um item");
         }
 
         // Validar itens
@@ -285,11 +285,11 @@ public class FichaTecnicaService : IFichaTecnicaService
         {
             if (item.TipoItem == "Receita" && !item.ReceitaId.HasValue)
             {
-                throw new BusinessException("ReceitaId é obrigatório quando TipoItem é 'Receita'");
+                throw new BusinessException("ReceitaId Ã© obrigatÃ³rio quando TipoItem Ã© 'Receita'");
             }
             if (item.TipoItem == "Insumo" && !item.InsumoId.HasValue)
             {
-                throw new BusinessException("InsumoId é obrigatório quando TipoItem é 'Insumo'");
+                throw new BusinessException("InsumoId Ã© obrigatÃ³rio quando TipoItem Ã© 'Insumo'");
             }
             if (item.TipoItem != "Receita" && item.TipoItem != "Insumo")
             {
@@ -308,7 +308,7 @@ public class FichaTecnicaService : IFichaTecnicaService
 
         if (receitas.Count != receitaIds.Count)
         {
-            throw new BusinessException("Uma ou mais receitas são inválidas ou estão inativas");
+            throw new BusinessException("Uma ou mais receitas sÃ£o invÃ¡lidas ou estÃ£o inativas");
         }
 
         var insumos = await _context.Insumos
@@ -317,7 +317,7 @@ public class FichaTecnicaService : IFichaTecnicaService
 
         if (insumos.Count != insumoIds.Count)
         {
-            throw new BusinessException("Um ou mais insumos são inválidos ou estão inativos");
+            throw new BusinessException("Um ou mais insumos sÃ£o invÃ¡lidos ou estÃ£o inativos");
         }
 
         var unidadesMedida = await _context.UnidadesMedida
@@ -326,7 +326,7 @@ public class FichaTecnicaService : IFichaTecnicaService
 
         if (unidadesMedida.Count != unidadeMedidaIds.Count)
         {
-            throw new BusinessException("Uma ou mais unidades de medida são inválidas ou estão inativas");
+            throw new BusinessException("Uma ou mais unidades de medida sÃ£o invÃ¡lidas ou estÃ£o inativas");
         }
 
         var ficha = new FichaTecnica
@@ -370,10 +370,10 @@ public class FichaTecnicaService : IFichaTecnicaService
         // Calcular custos
         CalcularCustosFichaTecnica(ficha, insumos, receitas);
 
-        // Calcular preço sugerido
+        // Calcular preÃ§o sugerido
         CalcularPrecoSugerido(ficha);
 
-        // Criar canais padrão automaticamente
+        // Criar canais padrÃ£o automaticamente
         ficha.Canais.Add(new FichaTecnicaCanal
         {
             Canal = "ifood-1",
@@ -390,20 +390,20 @@ public class FichaTecnicaService : IFichaTecnicaService
             IsAtivo = true
         });
 
-        // Calcular preços dos canais
+        // Calcular preÃ§os dos canais
         CalcularPrecosCanais(ficha);
 
         _context.FichasTecnicas.Add(ficha);
         await _context.SaveChangesAsync();
 
-        _logger.LogInformation("Ficha Técnica criada com sucesso - ID: {Id}", ficha.Id);
+        _logger.LogInformation("Ficha TÃ©cnica criada com sucesso - ID: {Id}", ficha.Id);
 
-        return await GetByIdAsync(ficha.Id) ?? throw new InvalidOperationException("Erro ao buscar ficha técnica criada");
+        return await GetByIdAsync(ficha.Id) ?? throw new InvalidOperationException("Erro ao buscar ficha tÃ©cnica criada");
     }
 
     public async Task<FichaTecnicaDto?> UpdateAsync(long id, UpdateFichaTecnicaRequest request, string? usuarioAtualizacao)
     {
-        _logger.LogInformation("Atualizando Ficha Técnica - ID: {Id}, Usuário: {Usuario}", id, usuarioAtualizacao ?? "Sistema");
+        _logger.LogInformation("Atualizando Ficha TÃ©cnica - ID: {Id}, UsuÃ¡rio: {Usuario}", id, usuarioAtualizacao ?? "Sistema");
 
         var ficha = await _context.FichasTecnicas
                 .Include(f => f.Canais)
@@ -412,7 +412,7 @@ public class FichaTecnicaService : IFichaTecnicaService
 
             if (ficha == null)
             {
-                _logger.LogWarning("Ficha Técnica com ID {Id} não encontrada", id);
+                _logger.LogWarning("Ficha TÃ©cnica com ID {Id} nÃ£o encontrada", id);
                 return null;
             }
 
@@ -420,13 +420,13 @@ public class FichaTecnicaService : IFichaTecnicaService
             var categoriaExists = await _context.CategoriasReceita.AnyAsync(c => c.Id == request.CategoriaId && c.IsAtivo);
             if (!categoriaExists)
             {
-                throw new BusinessException("Categoria inválida ou inativa");
+                throw new BusinessException("Categoria invÃ¡lida ou inativa");
             }
 
             // Validar itens
             if (request.Itens == null || !request.Itens.Any())
             {
-                throw new BusinessException("A ficha técnica deve ter pelo menos um item");
+                throw new BusinessException("A ficha tÃ©cnica deve ter pelo menos um item");
             }
 
             // Validar itens
@@ -434,11 +434,11 @@ public class FichaTecnicaService : IFichaTecnicaService
             {
                 if (item.TipoItem == "Receita" && !item.ReceitaId.HasValue)
                 {
-                    throw new BusinessException("ReceitaId é obrigatório quando TipoItem é 'Receita'");
+                    throw new BusinessException("ReceitaId Ã© obrigatÃ³rio quando TipoItem Ã© 'Receita'");
                 }
                 if (item.TipoItem == "Insumo" && !item.InsumoId.HasValue)
                 {
-                    throw new BusinessException("InsumoId é obrigatório quando TipoItem é 'Insumo'");
+                    throw new BusinessException("InsumoId Ã© obrigatÃ³rio quando TipoItem Ã© 'Insumo'");
                 }
                 if (item.TipoItem != "Receita" && item.TipoItem != "Insumo")
                 {
@@ -457,7 +457,7 @@ public class FichaTecnicaService : IFichaTecnicaService
 
             if (receitas.Count != receitaIds.Count)
             {
-                throw new BusinessException("Uma ou mais receitas são inválidas ou estão inativas");
+                throw new BusinessException("Uma ou mais receitas sÃ£o invÃ¡lidas ou estÃ£o inativas");
             }
 
             var insumos = await _context.Insumos
@@ -466,7 +466,7 @@ public class FichaTecnicaService : IFichaTecnicaService
 
             if (insumos.Count != insumoIds.Count)
             {
-                throw new BusinessException("Um ou mais insumos são inválidos ou estão inativos");
+                throw new BusinessException("Um ou mais insumos sÃ£o invÃ¡lidos ou estÃ£o inativos");
             }
 
             var unidadesMedida = await _context.UnidadesMedida
@@ -475,7 +475,7 @@ public class FichaTecnicaService : IFichaTecnicaService
 
             if (unidadesMedida.Count != unidadeMedidaIds.Count)
             {
-                throw new BusinessException("Uma ou mais unidades de medida são inválidas ou estão inativas");
+                throw new BusinessException("Uma ou mais unidades de medida sÃ£o invÃ¡lidas ou estÃ£o inativas");
             }
 
             // Atualizar ficha
@@ -493,7 +493,7 @@ public class FichaTecnicaService : IFichaTecnicaService
             ficha.DataAtualizacao = DateTime.UtcNow;
 
             // Remover itens antigos
-            // Não usar Clear() pois RemoveRange já remove do contexto
+            // NÃ£o usar Clear() pois RemoveRange jÃ¡ remove do contexto
             var itensParaRemover = ficha.Itens.ToList();
             _context.FichaTecnicaItens.RemoveRange(itensParaRemover);
 
@@ -522,13 +522,13 @@ public class FichaTecnicaService : IFichaTecnicaService
             // Calcular custos
             CalcularCustosFichaTecnica(ficha, insumos, receitas);
 
-            // Calcular preço sugerido
+            // Calcular preÃ§o sugerido
             CalcularPrecoSugerido(ficha);
 
             // Atualizar canais (manter existentes ou criar novos)
             if (request.Canais != null && request.Canais.Any())
             {
-                // Não usar Clear() pois RemoveRange já remove do contexto
+                // NÃ£o usar Clear() pois RemoveRange jÃ¡ remove do contexto
                 var canaisParaRemover = ficha.Canais.ToList();
                 _context.FichaTecnicaCanais.RemoveRange(canaisParaRemover);
 
@@ -547,19 +547,19 @@ public class FichaTecnicaService : IFichaTecnicaService
                 }
             }
 
-            // Calcular preços dos canais
+            // Calcular preÃ§os dos canais
             CalcularPrecosCanais(ficha);
 
             await _context.SaveChangesAsync();
 
-            _logger.LogInformation("Ficha Técnica atualizada com sucesso - ID: {Id}", id);
+            _logger.LogInformation("Ficha TÃ©cnica atualizada com sucesso - ID: {Id}", id);
 
             return await GetByIdAsync(id);
     }
 
     public async Task<bool> DeleteAsync(long id)
     {
-        _logger.LogInformation("Excluindo Ficha Técnica - ID: {Id}", id);
+        _logger.LogInformation("Excluindo Ficha TÃ©cnica - ID: {Id}", id);
 
         var ficha = await _context.FichasTecnicas
             .Include(f => f.Canais)
@@ -567,7 +567,7 @@ public class FichaTecnicaService : IFichaTecnicaService
 
         if (ficha == null)
         {
-            _logger.LogWarning("Ficha Técnica com ID {Id} não encontrada", id);
+            _logger.LogWarning("Ficha TÃ©cnica com ID {Id} nÃ£o encontrada", id);
             return false;
         }
 
@@ -575,7 +575,7 @@ public class FichaTecnicaService : IFichaTecnicaService
         _context.FichasTecnicas.Remove(ficha);
         await _context.SaveChangesAsync();
 
-        _logger.LogInformation("Ficha Técnica excluída com sucesso - ID: {Id}", id);
+        _logger.LogInformation("Ficha TÃ©cnica excluÃ­da com sucesso - ID: {Id}", id);
         return true;
     }
 

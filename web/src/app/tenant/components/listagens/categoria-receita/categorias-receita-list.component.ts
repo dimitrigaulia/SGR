@@ -114,7 +114,7 @@ export class TenantCategoriasReceitaListComponent implements OnDestroy {
           .pipe(takeUntilDestroyed(this.destroyRef))
           .subscribe({ 
             next: () => { 
-              this.toast.success('Categoria excluída'); 
+              this.toast.success('Categoria excluÃ­da'); 
               this.load();
             }, 
             error: (e: any) => {

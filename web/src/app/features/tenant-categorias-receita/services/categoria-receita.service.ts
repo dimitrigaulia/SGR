@@ -30,7 +30,7 @@ export class CategoriaReceitaService {
   private base = `${environment.apiUrl}/tenant/categorias-receita`;
 
   /**
-   * Lista categorias com paginação, busca e ordenação
+   * Lista categorias com paginaÃ§Ã£o, busca e ordenaÃ§Ã£o
    */
   list(opts?: { search?: string; page?: number; pageSize?: number; sort?: string; order?: 'asc'|'desc' }): Observable<Paged<CategoriaReceitaDto>> {
     const { search, page = 1, pageSize = 10, sort, order } = opts ?? {};

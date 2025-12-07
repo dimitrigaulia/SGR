@@ -14,10 +14,10 @@ import { PerfilService, PerfilDto } from '../../../../features/perfis/services/p
 import { ToastService } from '../../../../core/services/toast.service';
 import { UploadService } from '../../../../features/usuarios/services/upload.service';
 
-// Tipo do formulário - perfilId pode ser null apenas durante a inicialização/seleção
-// Na validação garantimos que será number antes de salvar (perfil é obrigatório)
+// Tipo do formulÃ¡rio - perfilId pode ser null apenas durante a inicializaÃ§Ã£o/seleÃ§Ã£o
+// Na validaÃ§Ã£o garantimos que serÃ¡ number antes de salvar (perfil Ã© obrigatÃ³rio)
 type UsuarioFormModel = Omit<UsuarioDto, 'id' | 'perfilId'> & {
-  perfilId: number | null; // null apenas no formulário, obrigatório ao salvar
+  perfilId: number | null; // null apenas no formulÃ¡rio, obrigatÃ³rio ao salvar
   senha?: string;
   novaSenha?: string;
 };
@@ -91,19 +91,19 @@ export class UserFormComponent {
     if (this.isView()) return;
     const v = this.model;
     
-    // Validações específicas com mensagens apropriadas
+    // ValidaÃ§Ãµes especÃ­ficas com mensagens apropriadas
     if (this.emailTaken) {
-      this.toast.error('Este email já está em uso');
+      this.toast.error('Este email jÃ¡ estÃ¡ em uso');
       return;
     }
     
     if (!v.nomeCompleto?.trim()) {
-      this.toast.error('Nome completo é obrigatório');
+      this.toast.error('Nome completo Ã© obrigatÃ³rio');
       return;
     }
     
     if (!v.email?.trim()) {
-      this.toast.error('Email é obrigatório');
+      this.toast.error('Email Ã© obrigatÃ³rio');
       return;
     }
     
@@ -112,20 +112,20 @@ export class UserFormComponent {
       return;
     }
     
-    // Validação adicional para senha ao criar
+    // ValidaÃ§Ã£o adicional para senha ao criar
     if (!this.isEdit() && (!v.senha || v.senha.trim().length < 6)) {
       this.toast.error('A senha deve ter pelo menos 6 caracteres');
       return;
     }
 
-    // Neste ponto, perfilId é garantidamente number (não null) devido à validação acima
+    // Neste ponto, perfilId Ã© garantidamente number (nÃ£o null) devido Ã  validaÃ§Ã£o acima
     const perfilId = v.perfilId;
 
     if (!this.isEdit()) {
       const req: CreateUsuarioRequest = {
         nomeCompleto: v.nomeCompleto.trim(),
         email: v.email.trim(),
-        perfilId: perfilId, // Agora TypeScript sabe que é number
+        perfilId: perfilId, // Agora TypeScript sabe que Ã© number
         isAtivo: !!v.isAtivo,
         senha: v.senha || '',
         pathImagem: v.pathImagem || undefined,
@@ -133,9 +133,9 @@ export class UserFormComponent {
       this.service.create(req)
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
-          next: () => { this.toast.success('Usuário criado'); this.router.navigate(['/backoffice/usuarios']); },
+          next: () => { this.toast.success('UsuÃ¡rio criado'); this.router.navigate(['/backoffice/usuarios']); },
           error: (err) => { 
-            const msg = err.error?.message || 'Erro ao salvar usuário'; 
+            const msg = err.error?.message || 'Erro ao salvar usuÃ¡rio'; 
             this.toast.error(msg); 
             this.error.set(msg);
             this.cdr.markForCheck();
@@ -145,7 +145,7 @@ export class UserFormComponent {
       const req: UpdateUsuarioRequest = {
         nomeCompleto: v.nomeCompleto.trim(),
         email: v.email.trim(),
-        perfilId: perfilId, // Usa a variável já validada
+        perfilId: perfilId, // Usa a variÃ¡vel jÃ¡ validada
         isAtivo: !!v.isAtivo,
         novaSenha: v.novaSenha || undefined,
         pathImagem: v.pathImagem || undefined,
@@ -161,11 +161,11 @@ export class UserFormComponent {
                 .subscribe({ next: () => {}, error: () => {} });
             }
             this.previousAvatarUrl = newUrl || null;
-            this.toast.success('Usuário atualizado');
+            this.toast.success('UsuÃ¡rio atualizado');
             this.router.navigate(['/backoffice/usuarios']);
           },
           error: (err) => { 
-            const msg = err.error?.message || 'Erro ao salvar usuário'; 
+            const msg = err.error?.message || 'Erro ao salvar usuÃ¡rio'; 
             this.toast.error(msg); 
             this.error.set(msg);
             this.cdr.markForCheck();

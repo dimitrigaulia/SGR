@@ -30,7 +30,7 @@ export class PerfilService {
   private base = `${environment.apiUrl}/backoffice/perfis`;
 
   /**
-   * Lista perfis com paginação, busca e ordenação
+   * Lista perfis com paginaÃ§Ã£o, busca e ordenaÃ§Ã£o
    */
   list(opts?: { search?: string; page?: number; pageSize?: number; sort?: string; order?: 'asc'|'desc' }): Observable<Paged<PerfilDto>> {
     const { search, page = 1, pageSize = 10, sort, order } = opts ?? {};

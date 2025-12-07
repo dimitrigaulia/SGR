@@ -1,7 +1,7 @@
 namespace SGR.Api.Models.Tenant.Entities;
 
 /// <summary>
-/// Perfil de usuário do tenant (perfis específicos de cada tenant)
+/// Perfil de usuÃ¡rio do tenant (perfis especÃ­ficos de cada tenant)
 /// </summary>
 public class TenantPerfil
 {
@@ -13,7 +13,7 @@ public class TenantPerfil
     public DateTime DataCriacao { get; set; }
     public DateTime? DataAtualizacao { get; set; }
 
-    // Navegação
+    // NavegaÃ§Ã£o
     public ICollection<TenantUsuario> Usuarios { get; set; } = new List<TenantUsuario>();
 }
 

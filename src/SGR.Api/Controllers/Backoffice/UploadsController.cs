@@ -13,14 +13,14 @@ public class UploadsController : ControllerBase
     public async Task<IActionResult> UploadAvatar([FromForm] IFormFile file)
     {
         if (file == null || file.Length == 0)
-            return BadRequest(new { message = "Arquivo não enviado" });
+            return BadRequest(new { message = "Arquivo nÃ£o enviado" });
 
         if (file.ContentType != "image/png" && file.ContentType != "image/jpeg")
             return BadRequest(new { message = "Apenas PNG ou JPG" });
 
         var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
         if (ext != ".png" && ext != ".jpg" && ext != ".jpeg")
-            return BadRequest(new { message = "Extensão inválida" });
+            return BadRequest(new { message = "ExtensÃ£o invÃ¡lida" });
 
         var uploadsDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "avatars");
         Directory.CreateDirectory(uploadsDir);
@@ -45,10 +45,10 @@ public class UploadsController : ControllerBase
         {
             try { fileName = Path.GetFileName(new Uri(url).AbsolutePath); } catch { }
         }
-        if (string.IsNullOrWhiteSpace(fileName)) return BadRequest(new { message = "Parâmetro inválido" });
+        if (string.IsNullOrWhiteSpace(fileName)) return BadRequest(new { message = "ParÃ¢metro invÃ¡lido" });
 
         var ext = Path.GetExtension(fileName).ToLowerInvariant();
-        if (ext != ".png" && ext != ".jpg" && ext != ".jpeg") return BadRequest(new { message = "Extensão inválida" });
+        if (ext != ".png" && ext != ".jpg" && ext != ".jpeg") return BadRequest(new { message = "ExtensÃ£o invÃ¡lida" });
 
         var uploadsDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "avatars");
         var path = Path.Combine(uploadsDir, fileName);

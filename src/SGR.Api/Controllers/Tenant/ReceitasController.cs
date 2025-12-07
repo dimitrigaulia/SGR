@@ -26,7 +26,7 @@ public class ReceitasController : ControllerBase
     }
 
     /// <summary>
-    /// Lista todas as receitas com paginação, busca e ordenação
+    /// Lista todas as receitas com paginaÃ§Ã£o, busca e ordenaÃ§Ã£o
     /// </summary>
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -55,7 +55,7 @@ public class ReceitasController : ControllerBase
     }
 
     /// <summary>
-    /// Visualiza a receita em HTML para impress��o/PDF
+    /// Visualiza a receita em HTML para impressï¿½ï¿½o/PDF
     /// </summary>
     [HttpGet("{id:long}/print")]
     [AllowAnonymous]
@@ -64,7 +64,7 @@ public class ReceitasController : ControllerBase
         var receita = await _service.GetByIdAsync(id);
         if (receita == null) return NotFound();
 
-        // Construir as linhas da tabela separadamente para evitar problemas de interpolação aninhada
+        // Construir as linhas da tabela separadamente para evitar problemas de interpolaÃ§Ã£o aninhada
         var itensHtml = string.Join("", receita.Itens.Select((i, idx) =>
         {
             var quantidadeDisplay = i.ExibirComoQB ? "QB" : i.Quantidade.ToString("0.####");
@@ -90,10 +90,10 @@ public class ReceitasController : ControllerBase
 <body>
   <h1>Receita: {System.Net.WebUtility.HtmlEncode(receita.Nome)}</h1>
   <p><strong>Categoria:</strong> {System.Net.WebUtility.HtmlEncode(receita.CategoriaNome ?? string.Empty)}</p>
-  <p><strong>Rendimento:</strong> {receita.Rendimento} por��es</p>
-  <p><strong>Peso por por��ǜo:</strong> {(receita.PesoPorPorcao?.ToString("0.##") ?? "-")} g</p>
+  <p><strong>Rendimento:</strong> {receita.Rendimento} porï¿½ï¿½es</p>
+  <p><strong>Peso por porï¿½ï¿½Çœo:</strong> {(receita.PesoPorPorcao?.ToString("0.##") ?? "-")} g</p>
   <p><strong>Custo total:</strong> {receita.CustoTotal:C}</p>
-  <p><strong>Custo por por��ǜo:</strong> {receita.CustoPorPorcao:C}</p>
+  <p><strong>Custo por porï¿½ï¿½Çœo:</strong> {receita.CustoPorPorcao:C}</p>
 
   <h2>Itens</h2>
   <table>
@@ -196,7 +196,7 @@ public class ReceitasController : ControllerBase
         if (!ModelState.IsValid) return BadRequest(ModelState);
         if (string.IsNullOrWhiteSpace(request.NovoNome))
         {
-            return BadRequest(new { message = "Novo nome é obrigatório" });
+            return BadRequest(new { message = "Novo nome Ã© obrigatÃ³rio" });
         }
 
         try

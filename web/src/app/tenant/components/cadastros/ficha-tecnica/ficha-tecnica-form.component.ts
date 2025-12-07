@@ -279,8 +279,8 @@ export class TenantFichaTecnicaFormComponent {
     const presets: Record<string, { canal: string; nomeExibicao: string; taxaPercentual?: number | null; comissaoPercentual?: number | null }> = {
       IFOOD1: { canal: 'ifood-1', nomeExibicao: 'Ifood 1', taxaPercentual: 13, comissaoPercentual: null },
       IFOOD2: { canal: 'ifood-2', nomeExibicao: 'Ifood 2', taxaPercentual: 25, comissaoPercentual: null },
-      BALCAO: { canal: 'BALCAO', nomeExibicao: 'Balcão', taxaPercentual: 0, comissaoPercentual: null },
-      DELIVERY: { canal: 'DELIVERY', nomeExibicao: 'Delivery Próprio', taxaPercentual: 0, comissaoPercentual: null }
+      BALCAO: { canal: 'BALCAO', nomeExibicao: 'BalcÃ£o', taxaPercentual: 0, comissaoPercentual: null },
+      DELIVERY: { canal: 'DELIVERY', nomeExibicao: 'Delivery PrÃ³prio', taxaPercentual: 0, comissaoPercentual: null }
     };
 
     const preset = presets[tipo];
@@ -323,7 +323,7 @@ export class TenantFichaTecnicaFormComponent {
       && !!i.unidadeMedidaId
     );
     if (itensValidos.length === 0) {
-      this.toast.error('Adicione pelo menos um item válido');
+      this.toast.error('Adicione pelo menos um item vÃ¡lido');
       return;
     }
 
@@ -364,11 +364,11 @@ export class TenantFichaTecnicaFormComponent {
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
           next: () => {
-            this.toast.success('Ficha técnica criada');
+            this.toast.success('Ficha tÃ©cnica criada');
             this.router.navigate(['/tenant/fichas-tecnicas']);
           },
           error: err => {
-            const msg = err.error?.message || 'Erro ao salvar ficha técnica';
+            const msg = err.error?.message || 'Erro ao salvar ficha tÃ©cnica';
             this.toast.error(msg);
             this.error.set(msg);
             this.cdr.markForCheck();
@@ -413,11 +413,11 @@ export class TenantFichaTecnicaFormComponent {
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
           next: () => {
-            this.toast.success('Ficha técnica atualizada');
+            this.toast.success('Ficha tÃ©cnica atualizada');
             this.router.navigate(['/tenant/fichas-tecnicas']);
           },
           error: err => {
-            const msg = err.error?.message || 'Erro ao salvar ficha técnica';
+            const msg = err.error?.message || 'Erro ao salvar ficha tÃ©cnica';
             this.toast.error(msg);
             this.error.set(msg);
             this.cdr.markForCheck();

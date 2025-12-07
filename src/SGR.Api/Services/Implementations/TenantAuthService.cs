@@ -12,8 +12,8 @@ using SGR.Api.Services.Interfaces;
 namespace SGR.Api.Services.Implementations;
 
 /// <summary>
-/// Service para autenticação de tenants
-/// Usa o TenantDbContext que já está configurado com o schema do tenant pelo middleware
+/// Service para autenticaÃ§Ã£o de tenants
+/// Usa o TenantDbContext que jÃ¡ estÃ¡ configurado com o schema do tenant pelo middleware
 /// </summary>
 public class TenantAuthService : ITenantAuthService
 {
@@ -32,25 +32,25 @@ public class TenantAuthService : ITenantAuthService
     {
         _logger.LogInformation("Tentativa de login do tenant para email: {Email}", request.Email);
 
-        // Buscar usuário por email no schema do tenant
+        // Buscar usuÃ¡rio por email no schema do tenant
         var usuario = await _context.TenantUsuarios
             .Include(u => u.Perfil)
             .FirstOrDefaultAsync(u => u.Email == request.Email && u.IsAtivo);
 
         if (usuario == null)
         {
-            _logger.LogWarning("Tentativa de login do tenant falhou - Usuário não encontrado ou inativo: {Email}", request.Email);
+            _logger.LogWarning("Tentativa de login do tenant falhou - UsuÃ¡rio nÃ£o encontrado ou inativo: {Email}", request.Email);
             return null;
         }
 
         // Verificar senha
         if (!BCrypt.Net.BCrypt.Verify(request.Senha, usuario.SenhaHash))
         {
-            _logger.LogWarning("Tentativa de login do tenant falhou - Senha inválida para: {Email}", request.Email);
+            _logger.LogWarning("Tentativa de login do tenant falhou - Senha invÃ¡lida para: {Email}", request.Email);
             return null;
         }
 
-        // Verificar se o perfil está ativo
+        // Verificar se o perfil estÃ¡ ativo
         if (!usuario.Perfil.IsAtivo)
         {
             _logger.LogWarning("Tentativa de login do tenant falhou - Perfil inativo para: {Email}", request.Email);
@@ -96,7 +96,7 @@ public class TenantAuthService : ITenantAuthService
 
     private string GenerateJwtToken(TenantUsuario usuario)
     {
-        var secretKey = _configuration["Jwt:SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey não configurada");
+        var secretKey = _configuration["Jwt:SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey nÃ£o configurada");
         var issuer = _configuration["Jwt:Issuer"] ?? "SGR.Api";
         var audience = _configuration["Jwt:Audience"] ?? "SGR.Frontend";
         var expirationMinutes = int.Parse(_configuration["Jwt:ExpirationMinutes"] ?? "60");

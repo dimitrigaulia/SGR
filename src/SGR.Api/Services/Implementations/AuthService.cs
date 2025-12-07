@@ -28,25 +28,25 @@ public class AuthService : IAuthService
     {
         _logger.LogInformation("Tentativa de login para email: {Email}", request.Email);
 
-        // Buscar usuário por email
+        // Buscar usuÃ¡rio por email
         var usuario = await _context.BackofficeUsuarios
             .Include(u => u.Perfil)
             .FirstOrDefaultAsync(u => u.Email == request.Email && u.IsAtivo);
 
         if (usuario == null)
         {
-            _logger.LogWarning("Tentativa de login falhou - Usuário não encontrado ou inativo: {Email}", request.Email);
-            return null; // Usuário não encontrado ou inativo
+            _logger.LogWarning("Tentativa de login falhou - UsuÃ¡rio nÃ£o encontrado ou inativo: {Email}", request.Email);
+            return null; // UsuÃ¡rio nÃ£o encontrado ou inativo
         }
 
         // Verificar senha
         if (!BCrypt.Net.BCrypt.Verify(request.Senha, usuario.SenhaHash))
         {
-            _logger.LogWarning("Tentativa de login falhou - Senha inválida para: {Email}", request.Email);
-            return null; // Senha inválida
+            _logger.LogWarning("Tentativa de login falhou - Senha invÃ¡lida para: {Email}", request.Email);
+            return null; // Senha invÃ¡lida
         }
 
-        // Verificar se o perfil está ativo
+        // Verificar se o perfil estÃ¡ ativo
         if (!usuario.Perfil.IsAtivo)
         {
             _logger.LogWarning("Tentativa de login falhou - Perfil inativo para: {Email}", request.Email);
@@ -58,7 +58,7 @@ public class AuthService : IAuthService
         // Gerar token JWT
         var token = GenerateJwtToken(usuario);
 
-        // Mapear para DTOs (usando DTOs genéricos para LoginResponse)
+        // Mapear para DTOs (usando DTOs genÃ©ricos para LoginResponse)
         var usuarioDto = new UsuarioDto
         {
             Id = usuario.Id,
@@ -92,7 +92,7 @@ public class AuthService : IAuthService
 
     private string GenerateJwtToken(BackofficeUsuario usuario)
     {
-        var secretKey = _configuration["Jwt:SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey não configurada");
+        var secretKey = _configuration["Jwt:SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey nÃ£o configurada");
         var issuer = _configuration["Jwt:Issuer"] ?? "SGR.Api";
         var audience = _configuration["Jwt:Audience"] ?? "SGR.Frontend";
         var expirationMinutes = int.Parse(_configuration["Jwt:ExpirationMinutes"] ?? "60");

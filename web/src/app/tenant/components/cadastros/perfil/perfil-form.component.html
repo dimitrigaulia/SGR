@@ -6,11 +6,11 @@
       <mat-label>Nome</mat-label>
       <input matInput name="nome" [(ngModel)]="model.nome" [disabled]="isView()" required maxlength="100" />
       @if (f.controls['nome']?.errors?.['required']) {
-        <mat-error>Nome é obrigatório</mat-error>
+        <mat-error>Nome Ã© obrigatÃ³rio</mat-error>
       }
     </mat-form-field>
 
-    <!-- Wrapper para o toggle com espaçamento consistente -->
+    <!-- Wrapper para o toggle com espaÃ§amento consistente -->
     <div class="form-toggle-wrapper">
       <mat-slide-toggle name="isAtivo" [(ngModel)]="model.isAtivo" [disabled]="isView()">Ativo</mat-slide-toggle>
     </div>

@@ -1,4 +1,4 @@
-﻿import { Component, computed, inject, signal, ViewChild, AfterViewInit, ChangeDetectionStrategy, DestroyRef, ChangeDetectorRef } from '@angular/core';
+import { Component, computed, inject, signal, ViewChild, AfterViewInit, ChangeDetectionStrategy, DestroyRef, ChangeDetectorRef } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';

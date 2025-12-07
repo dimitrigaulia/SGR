@@ -242,7 +242,7 @@ export class TenantReceitaFormComponent {
     if (!unidadeMedidaId) return '0.0001';
     const unidade = this.unidades().find(u => u.id === unidadeMedidaId);
     if (!unidade) return '0.0001';
-    // Se for UN (Unidade), usar step 1, caso contrário 0.0001
+    // Se for UN (Unidade), usar step 1, caso contrÃ¡rio 0.0001
     if (unidade.sigla.toUpperCase() === 'UN') {
       return '1';
     }
@@ -254,12 +254,12 @@ export class TenantReceitaFormComponent {
     if (unidade && unidade.sigla.toUpperCase() === 'UN') {
       return Math.round(quantidade).toString();
     }
-    // Para outras unidades, mostrar até 4 casas decimais
+    // Para outras unidades, mostrar atÃ© 4 casas decimais
     return quantidade.toFixed(4).replace(/\.?0+$/, '');
   }
 
   onInsumoChange(item: ReceitaItemFormModel, index: number) {
-    // Quando o insumo muda, pode ajustar a unidade de medida padrão se necessário
+    // Quando o insumo muda, pode ajustar a unidade de medida padrÃ£o se necessÃ¡rio
     // Por enquanto, apenas marca para check
     this.cdr.markForCheck();
   }
@@ -332,7 +332,7 @@ export class TenantReceitaFormComponent {
     
     const v = this.model;
     if (!v.nome || !v.categoriaId || v.rendimento <= 0) {
-      this.toast.error('Preencha os campos obrigatórios corretamente');
+      this.toast.error('Preencha os campos obrigatÃ³rios corretamente');
       return;
     }
 
@@ -342,7 +342,7 @@ export class TenantReceitaFormComponent {
       item.unidadeMedidaId !== null
     );
     if (validItens.length === 0) {
-      this.toast.error('Adicione pelo menos um item válido à receita (com insumo, quantidade e unidade de medida)');
+      this.toast.error('Adicione pelo menos um item vÃ¡lido Ã  receita (com insumo, quantidade e unidade de medida)');
       return;
     }
 

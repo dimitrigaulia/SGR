@@ -1,5 +1,5 @@
-// Estilos específicos do componente
-// Os estilos globais de formulário estão em styles.scss
+// Estilos especÃ­ficos do componente
+// Os estilos globais de formulÃ¡rio estÃ£o em styles.scss
 
 .form-row {
   display: grid;
@@ -52,7 +52,7 @@
   }
 }
 
-// Garantir que mat-form-field tenha espaço suficiente para hints longos
+// Garantir que mat-form-field tenha espaÃ§o suficiente para hints longos
 ::ng-deep .form-field-spacing {
   mat-form-field {
     .mat-mdc-form-field-subscript-wrapper {
@@ -74,17 +74,17 @@
       max-width: 100%;
     }
     
-    // Garantir espaço extra quando há hint longo
+    // Garantir espaÃ§o extra quando hÃ¡ hint longo
     &.mat-form-field-has-hint {
       margin-bottom: 8px;
     }
   }
 }
 
-// Ajustar espaçamento do form-row para acomodar hints
+// Ajustar espaÃ§amento do form-row para acomodar hints
 .form-row {
   .form-field-spacing {
-    // Espaçamento extra quando há hints longos
+    // EspaÃ§amento extra quando hÃ¡ hints longos
     mat-form-field {
       margin-bottom: 32px;
       

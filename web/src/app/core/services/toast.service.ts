@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
 /**
- * Service para exibição de notificações toast
+ * Service para exibiÃ§Ã£o de notificaÃ§Ãµes toast
  */
 @Injectable({ providedIn: 'root' })
 export class ToastService {

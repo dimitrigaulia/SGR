@@ -1,4 +1,4 @@
-// Variáveis
+// VariÃ¡veis
 $sidenav-width: 280px;
 $sidenav-width-collapsed: 64px;
 $toolbar-height: 64px;
@@ -25,7 +25,7 @@ $toolbar-height: 64px;
   flex-direction: column;
   overflow: hidden; // Previne scroll horizontal
 
-  // Transição suave
+  // TransiÃ§Ã£o suave
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
   // Estado colapsado
@@ -70,7 +70,7 @@ $toolbar-height: 64px;
     }
   }
 
-  // Navegação
+  // NavegaÃ§Ã£o
   .sidenav-nav {
     flex: 1;
     overflow-y: auto;
@@ -80,7 +80,7 @@ $toolbar-height: 64px;
     flex-direction: column;
     gap: 4px;
 
-    // Container para itens de navegação
+    // Container para itens de navegaÃ§Ã£o
     .nav-items-container {
       display: flex;
       flex-direction: column;
@@ -88,7 +88,7 @@ $toolbar-height: 64px;
       width: 100%;
     }
 
-    // Itens de navegação
+    // Itens de navegaÃ§Ã£o
     a[mat-list-item] {
       border-radius: 12px;
       margin: 0;
@@ -110,7 +110,7 @@ $toolbar-height: 64px;
         }
       }
 
-      // Ícone
+      // Ãcone
       ::ng-deep {
         mat-icon[matListItemIcon] {
           margin: 0;
@@ -129,7 +129,7 @@ $toolbar-height: 64px;
       }
     }
 
-    // Item único (sem submenu)
+    // Item Ãºnico (sem submenu)
     .nav-item-single {
       border-radius: 12px;
       margin: 0;
@@ -249,7 +249,7 @@ $toolbar-height: 64px;
           margin: 0 8px;
           min-height: 40px;
           height: 40px;
-          padding: 0 12px 0 40px; // Indentação para submenu
+          padding: 0 12px 0 40px; // IndentaÃ§Ã£o para submenu
           transition: background-color 0.2s;
 
           &:hover {
@@ -286,7 +286,7 @@ $toolbar-height: 64px;
       }
     }
 
-    // Item de menu colapsado (apenas ícone)
+    // Item de menu colapsado (apenas Ã­cone)
     .nav-menu-header {
       border-radius: 12px;
       margin: 0;
@@ -328,7 +328,7 @@ $toolbar-height: 64px;
   }
 }
 
-// Conteúdo Principal
+// ConteÃºdo Principal
 .app-content {
   display: flex;
   flex-direction: column;
@@ -358,7 +358,7 @@ $toolbar-height: 64px;
   }
 }
 
-// Área de Conteúdo
+// Ãrea de ConteÃºdo
 .app-main {
   flex: 1;
   overflow-y: auto;
@@ -368,7 +368,7 @@ $toolbar-height: 64px;
   min-height: 0; // Importante para flexbox funcionar corretamente
 }
 
-// Menu do Usuário
+// Menu do UsuÃ¡rio
 ::ng-deep {
   .user-menu-header {
     padding: 16px;

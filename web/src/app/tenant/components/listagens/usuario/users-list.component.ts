@@ -91,7 +91,7 @@ export class TenantUsersListComponent implements OnDestroy {
           this.cdr.markForCheck();
         },
         error: () => {
-          this.toast.error('Falha ao carregar usuários');
+          this.toast.error('Falha ao carregar usuÃ¡rios');
           this.isLoading.set(false);
           this.cdr.markForCheck();
         }
@@ -105,7 +105,7 @@ export class TenantUsersListComponent implements OnDestroy {
   }
 
   delete(id: number) {
-    this.confirmationService.confirmDelete('este usuário')
+    this.confirmationService.confirmDelete('este usuÃ¡rio')
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(confirmed => {
         if (!confirmed) return;
@@ -115,11 +115,11 @@ export class TenantUsersListComponent implements OnDestroy {
           .pipe(takeUntilDestroyed(this.destroyRef))
           .subscribe({ 
             next: () => { 
-              this.toast.success('Usuário excluído'); 
+              this.toast.success('UsuÃ¡rio excluÃ­do'); 
               this.load();
             }, 
             error: (e: any) => {
-              this.toast.error(e.error?.message || 'Falha ao excluir usuário');
+              this.toast.error(e.error?.message || 'Falha ao excluir usuÃ¡rio');
               this.isLoading.set(false);
               this.cdr.markForCheck();
             }

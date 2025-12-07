@@ -13,7 +13,7 @@ public class CategoriaInsumo
     public DateTime DataCriacao { get; set; }
     public DateTime? DataAtualizacao { get; set; }
 
-    // Navegação
+    // NavegaÃ§Ã£o
     public ICollection<Insumo> Insumos { get; set; } = new List<Insumo>();
 }
 

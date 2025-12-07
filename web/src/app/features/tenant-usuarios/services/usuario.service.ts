@@ -34,7 +34,7 @@ export interface UpdateTenantUsuarioRequest {
 export interface Paged<T> { items: T[]; total: number }
 
 /**
- * Service para gerenciamento de usuários do tenant
+ * Service para gerenciamento de usuÃ¡rios do tenant
  */
 @Injectable({ providedIn: 'root' })
 export class TenantUsuarioService {
@@ -42,7 +42,7 @@ export class TenantUsuarioService {
   private base = `${environment.apiUrl}/tenant/usuarios`;
 
   /**
-   * Lista usuários com paginação, busca e ordenação
+   * Lista usuÃ¡rios com paginaÃ§Ã£o, busca e ordenaÃ§Ã£o
    */
   list(opts?: { search?: string; page?: number; pageSize?: number; sort?: string; order?: 'asc'|'desc' }): Observable<Paged<TenantUsuarioDto>> {
     const { search, page = 1, pageSize = 10, sort, order } = opts ?? {};
@@ -54,35 +54,35 @@ export class TenantUsuarioService {
   }
 
   /**
-   * Busca um usuário por ID
+   * Busca um usuÃ¡rio por ID
    */
   get(id: number): Observable<TenantUsuarioDto> {
     return this.http.get<TenantUsuarioDto>(`${this.base}/${id}`);
   }
 
   /**
-   * Cria um novo usuário
+   * Cria um novo usuÃ¡rio
    */
   create(req: CreateTenantUsuarioRequest): Observable<TenantUsuarioDto> {
     return this.http.post<TenantUsuarioDto>(this.base, req);
   }
 
   /**
-   * Atualiza um usuário existente
+   * Atualiza um usuÃ¡rio existente
    */
   update(id: number, req: UpdateTenantUsuarioRequest): Observable<TenantUsuarioDto> {
     return this.http.put<TenantUsuarioDto>(`${this.base}/${id}`, req);
   }
 
   /**
-   * Exclui um usuário
+   * Exclui um usuÃ¡rio
    */
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.base}/${id}`);
   }
 
   /**
-   * Verifica se um email já está em uso
+   * Verifica se um email jÃ¡ estÃ¡ em uso
    */
   checkEmail(email: string, excludeId?: number): Observable<{ exists: boolean }> {
     const params: any = { email };

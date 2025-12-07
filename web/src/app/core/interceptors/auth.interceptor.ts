@@ -3,7 +3,7 @@ import { inject } from '@angular/core';
 import { AuthService } from '../services/auth.service';
 
 /**
- * Interceptor para adicionar token JWT nas requisições HTTP
+ * Interceptor para adicionar token JWT nas requisiÃ§Ãµes HTTP
  */
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);

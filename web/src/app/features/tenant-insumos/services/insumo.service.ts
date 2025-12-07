@@ -63,7 +63,7 @@ export class InsumoService {
   private base = `${environment.apiUrl}/tenant/insumos`;
 
   /**
-   * Lista insumos com paginação, busca e ordenação
+   * Lista insumos com paginaÃ§Ã£o, busca e ordenaÃ§Ã£o
    */
   list(opts?: { search?: string; page?: number; pageSize?: number; sort?: string; order?: 'asc'|'desc' }): Observable<Paged<InsumoDto>> {
     const { search, page = 1, pageSize = 10, sort, order } = opts ?? {};

@@ -34,7 +34,7 @@ export interface UpdateUsuarioRequest {
 export interface Paged<T> { items: T[]; total: number }
 
 /**
- * Service para gerenciamento de usuários
+ * Service para gerenciamento de usuÃ¡rios
  */
 @Injectable({ providedIn: 'root' })
 export class UsuarioService {
@@ -42,7 +42,7 @@ export class UsuarioService {
   private base = `${environment.apiUrl}/backoffice/usuarios`;
 
   /**
-   * Lista usuários com paginação, busca e ordenação
+   * Lista usuÃ¡rios com paginaÃ§Ã£o, busca e ordenaÃ§Ã£o
    */
   list(opts?: { search?: string; page?: number; pageSize?: number; sort?: string; order?: 'asc'|'desc' }): Observable<Paged<UsuarioDto>> {
     const { search, page = 1, pageSize = 10, sort, order } = opts ?? {};
@@ -54,35 +54,35 @@ export class UsuarioService {
   }
 
   /**
-   * Busca um usuário por ID
+   * Busca um usuÃ¡rio por ID
    */
   get(id: number): Observable<UsuarioDto> {
     return this.http.get<UsuarioDto>(`${this.base}/${id}`);
   }
 
   /**
-   * Cria um novo usuário
+   * Cria um novo usuÃ¡rio
    */
   create(req: CreateUsuarioRequest): Observable<UsuarioDto> {
     return this.http.post<UsuarioDto>(this.base, req);
   }
 
   /**
-   * Atualiza um usuário existente
+   * Atualiza um usuÃ¡rio existente
    */
   update(id: number, req: UpdateUsuarioRequest): Observable<UsuarioDto> {
     return this.http.put<UsuarioDto>(`${this.base}/${id}`, req);
   }
 
   /**
-   * Exclui um usuário
+   * Exclui um usuÃ¡rio
    */
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.base}/${id}`);
   }
 
   /**
-   * Verifica se um email já está em uso
+   * Verifica se um email jÃ¡ estÃ¡ em uso
    */
   checkEmail(email: string, excludeId?: number): Observable<{ exists: boolean }> {
     const params: any = { email };

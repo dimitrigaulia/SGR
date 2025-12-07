@@ -52,7 +52,7 @@ export class PerfilFormComponent {
   save() {
     this.error.set('');
     if (this.isView()) return;
-    if (!this.model.nome) { this.toast.error('Nome é obrigatório'); return; }
+    if (!this.model.nome) { this.toast.error('Nome Ã© obrigatÃ³rio'); return; }
     const v = this.model;
     if (this.id() === null) {
       const req: CreatePerfilRequest = { nome: v.nome, isAtivo: !!v.isAtivo };

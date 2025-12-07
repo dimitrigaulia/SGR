@@ -12,7 +12,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { TenantService, TenantDto } from '../../features/tenants/services/tenant.service';
 
 /**
- * Componente de login do tenant (com seleção de tenant)
+ * Componente de login do tenant (com seleÃ§Ã£o de tenant)
  */
 @Component({
   selector: 'app-tenant-login',
@@ -89,7 +89,7 @@ export class TenantLoginComponent {
         },
         error: (error) => {
           this.isLoading.set(false);
-          this.errorMessage.set(error.error?.message || 'Email ou senha inválidos');
+          this.errorMessage.set(error.error?.message || 'Email ou senha invÃ¡lidos');
         }
       });
   }

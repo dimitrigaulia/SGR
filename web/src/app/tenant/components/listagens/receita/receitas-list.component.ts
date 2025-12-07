@@ -136,7 +136,7 @@ export class TenantReceitasListComponent implements OnDestroy {
           .pipe(takeUntilDestroyed(this.destroyRef))
           .subscribe({ 
             next: () => { 
-              this.toast.success('Receita excluída'); 
+              this.toast.success('Receita excluÃ­da'); 
               this.load();
             }, 
             error: (e: any) => {
@@ -161,7 +161,7 @@ export class TenantReceitasListComponent implements OnDestroy {
       title: 'Duplicar Receita',
       message: `Digite o nome para a nova receita (baseada em "${e.nome}"):`,
       placeholder: 'Nome da receita',
-      initialValue: `${e.nome} (Cópia)`,
+      initialValue: `${e.nome} (CÃ³pia)`,
       confirmText: 'Duplicar',
       cancelText: 'Cancelar',
       required: true

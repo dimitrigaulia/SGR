@@ -22,7 +22,7 @@
               @for (tenant of tenants(); track tenant.id) {
                 <mat-option [value]="tenant.subdominio">{{ tenant.nomeFantasia }}</mat-option>
               } @empty {
-                <mat-option disabled>Nenhum restaurante disponível</mat-option>
+                <mat-option disabled>Nenhum restaurante disponÃ­vel</mat-option>
               }
             }
           </mat-select>
@@ -45,10 +45,10 @@
           @if (email.invalid && email.touched) {
             <mat-error>
               @if (email.errors?.['required']) {
-                <span>Email é obrigatório</span>
+                <span>Email Ã© obrigatÃ³rio</span>
               }
               @if (email.errors?.['email']) {
-                <span>Email inválido</span>
+                <span>Email invÃ¡lido</span>
               }
             </mat-error>
           }
@@ -66,7 +66,7 @@
             #senha="ngModel">
           @if (senha.invalid && senha.touched) {
             <mat-error>
-              Senha é obrigatória
+              Senha Ã© obrigatÃ³ria
             </mat-error>
           }
         </mat-form-field>

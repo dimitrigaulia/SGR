@@ -42,7 +42,7 @@ public class TenantUsuarioService : BaseService<TenantDbContext, TenantUsuario, 
 
     public override async Task<PagedResult<TenantUsuarioDto>> GetAllAsync(string? search, int page, int pageSize, string? sort, string? order)
     {
-        _logger.LogInformation("Buscando {EntityType} - Página: {Page}, Tamanho: {PageSize}, Busca: {Search}", 
+        _logger.LogInformation("Buscando {EntityType} - PÃ¡gina: {Page}, Tamanho: {PageSize}, Busca: {Search}", 
             typeof(TenantUsuario).Name, page, pageSize, search ?? "N/A");
 
         // Usar AsNoTracking para queries de leitura (melhor performance)
@@ -54,7 +54,7 @@ public class TenantUsuarioService : BaseService<TenantDbContext, TenantUsuario, 
             query = ApplySearch(query, search);
         }
 
-        // Aplicar ordenação
+        // Aplicar ordenaÃ§Ã£o
         query = ApplySorting(query, sort, order);
 
         var total = await query.CountAsync();
@@ -77,7 +77,7 @@ public class TenantUsuarioService : BaseService<TenantDbContext, TenantUsuario, 
         var entity = await _dbSet.Include(u => u.Perfil).AsNoTracking().FirstOrDefaultAsync(u => u.Id == id);
         if (entity == null)
         {
-            _logger.LogWarning("{EntityType} com ID {Id} não encontrado", typeof(TenantUsuario).Name, id);
+            _logger.LogWarning("{EntityType} com ID {Id} nÃ£o encontrado", typeof(TenantUsuario).Name, id);
             return null;
         }
 
@@ -130,45 +130,45 @@ public class TenantUsuarioService : BaseService<TenantDbContext, TenantUsuario, 
 
     protected override async Task BeforeCreateAsync(TenantUsuario entity, CreateTenantUsuarioRequest request, string? usuarioCriacao)
     {
-        // Validação de email único
+        // ValidaÃ§Ã£o de email Ãºnico
         var exists = await _context.Set<TenantUsuario>().AnyAsync(x => x.Email == request.Email);
         if (exists)
         {
-            _logger.LogWarning("Tentativa de criar usuário com email já existente: {Email}", request.Email);
-            throw new BusinessException("E-mail já cadastrado");
+            _logger.LogWarning("Tentativa de criar usuÃ¡rio com email jÃ¡ existente: {Email}", request.Email);
+            throw new BusinessException("E-mail jÃ¡ cadastrado");
         }
 
-        // Validação de perfil
+        // ValidaÃ§Ã£o de perfil
         var perfilExists = await _context.Set<TenantPerfil>().AnyAsync(p => p.Id == request.PerfilId && p.IsAtivo);
         if (!perfilExists)
         {
-            _logger.LogWarning("Tentativa de criar usuário com perfil inválido ou inativo: {PerfilId}", request.PerfilId);
-            throw new BusinessException("Perfil inválido ou inativo");
+            _logger.LogWarning("Tentativa de criar usuÃ¡rio com perfil invÃ¡lido ou inativo: {PerfilId}", request.PerfilId);
+            throw new BusinessException("Perfil invÃ¡lido ou inativo");
         }
     }
 
     protected override async Task BeforeUpdateAsync(TenantUsuario entity, UpdateTenantUsuarioRequest request, string? usuarioAtualizacao)
     {
-        // Validação de email único (exceto o próprio)
+        // ValidaÃ§Ã£o de email Ãºnico (exceto o prÃ³prio)
         var emailTaken = await _context.Set<TenantUsuario>().AnyAsync(x => x.Email == request.Email && x.Id != entity.Id);
         if (emailTaken)
         {
-            _logger.LogWarning("Tentativa de atualizar usuário {Id} com email já existente: {Email}", entity.Id, request.Email);
-            throw new BusinessException("E-mail já cadastrado");
+            _logger.LogWarning("Tentativa de atualizar usuÃ¡rio {Id} com email jÃ¡ existente: {Email}", entity.Id, request.Email);
+            throw new BusinessException("E-mail jÃ¡ cadastrado");
         }
 
-        // Validação de perfil
+        // ValidaÃ§Ã£o de perfil
         var perfilExists = await _context.Set<TenantPerfil>().AnyAsync(p => p.Id == request.PerfilId);
         if (!perfilExists)
         {
-            _logger.LogWarning("Tentativa de atualizar usuário {Id} com perfil inválido: {PerfilId}", entity.Id, request.PerfilId);
-            throw new BusinessException("Perfil inválido");
+            _logger.LogWarning("Tentativa de atualizar usuÃ¡rio {Id} com perfil invÃ¡lido: {PerfilId}", entity.Id, request.PerfilId);
+            throw new BusinessException("Perfil invÃ¡lido");
         }
     }
 
     public override async Task<TenantUsuarioDto> CreateAsync(CreateTenantUsuarioRequest request, string? usuarioCriacao)
     {
-        _logger.LogInformation("Criando novo {EntityType} - Usuário: {Usuario}", typeof(TenantUsuario).Name, usuarioCriacao ?? "Sistema");
+        _logger.LogInformation("Criando novo {EntityType} - UsuÃ¡rio: {Usuario}", typeof(TenantUsuario).Name, usuarioCriacao ?? "Sistema");
 
         try
         {
@@ -202,16 +202,16 @@ public class TenantUsuarioService : BaseService<TenantDbContext, TenantUsuario, 
 
     public override async Task<TenantUsuarioDto?> UpdateAsync(long id, UpdateTenantUsuarioRequest request, string? usuarioAtualizacao)
     {
-        _logger.LogInformation("Atualizando {EntityType} - ID: {Id}, Usuário: {Usuario}", 
+        _logger.LogInformation("Atualizando {EntityType} - ID: {Id}, UsuÃ¡rio: {Usuario}", 
             typeof(TenantUsuario).Name, id, usuarioAtualizacao ?? "Sistema");
 
         try
         {
-            // Usar FirstOrDefaultAsync ao invés de FindAsync para garantir que respeita o schema do tenant
+            // Usar FirstOrDefaultAsync ao invÃ©s de FindAsync para garantir que respeita o schema do tenant
             var entity = await _dbSet.FirstOrDefaultAsync(e => e.Id == id);
             if (entity == null)
             {
-                _logger.LogWarning("{EntityType} com ID {Id} não encontrado para atualização", typeof(TenantUsuario).Name, id);
+                _logger.LogWarning("{EntityType} com ID {Id} nÃ£o encontrado para atualizaÃ§Ã£o", typeof(TenantUsuario).Name, id);
                 return null;
             }
 
@@ -222,7 +222,7 @@ public class TenantUsuarioService : BaseService<TenantDbContext, TenantUsuario, 
             
             await BeforeUpdateAsync(entity, request, usuarioAtualizacao);
             
-            // Não é necessário marcar como Modified explicitamente quando a entidade já está tracked
+            // NÃ£o Ã© necessÃ¡rio marcar como Modified explicitamente quando a entidade jÃ¡ estÃ¡ tracked
             await _context.SaveChangesAsync();
 
             _logger.LogInformation("{EntityType} atualizado com sucesso - ID: {Id}", typeof(TenantUsuario).Name, id);
@@ -241,7 +241,7 @@ public class TenantUsuarioService : BaseService<TenantDbContext, TenantUsuario, 
         }
     }
 
-    // Método específico que não está na interface base
+    // MÃ©todo especÃ­fico que nÃ£o estÃ¡ na interface base
     public async Task<bool> EmailExistsAsync(string email, long? excludeId = null)
     {
         var q = _context.Set<TenantUsuario>().AsQueryable().Where(x => x.Email == email);

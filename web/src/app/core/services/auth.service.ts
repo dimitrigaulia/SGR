@@ -5,7 +5,7 @@ import { environment } from '../../../environments/environment';
 import { LoginRequest, LoginResponse } from '../models/auth.model';
 
 /**
- * Service para gerenciamento de autenticação
+ * Service para gerenciamento de autenticaÃ§Ã£o
  */
 @Injectable({
   providedIn: 'root'
@@ -55,14 +55,14 @@ export class AuthService {
   }
 
   /**
-   * Realiza login do usuário (método genérico - mantido para compatibilidade)
+   * Realiza login do usuÃ¡rio (mÃ©todo genÃ©rico - mantido para compatibilidade)
    */
   login(request: LoginRequest): Observable<LoginResponse> {
     return this.loginBackoffice(request);
   }
 
   /**
-   * Realiza logout do usuário
+   * Realiza logout do usuÃ¡rio
    */
   logout(): void {
     localStorage.removeItem('token');
@@ -73,35 +73,35 @@ export class AuthService {
   }
 
   /**
-   * Obtém o contexto atual (backoffice ou tenant)
+   * ObtÃ©m o contexto atual (backoffice ou tenant)
    */
   getContext(): 'backoffice' | 'tenant' | null {
     return localStorage.getItem('context') as 'backoffice' | 'tenant' | null;
   }
 
   /**
-   * Obtém o subdomínio do tenant atual
+   * ObtÃ©m o subdomÃ­nio do tenant atual
    */
   getTenantSubdomain(): string | null {
     return localStorage.getItem('tenantSubdomain');
   }
 
   /**
-   * Obtém o token JWT armazenado
+   * ObtÃ©m o token JWT armazenado
    */
   getToken(): string | null {
     return localStorage.getItem('token');
   }
 
   /**
-   * Verifica se o usuário está autenticado
+   * Verifica se o usuÃ¡rio estÃ¡ autenticado
    */
   isAuthenticated(): boolean {
     return !!this.getToken();
   }
 
   /**
-   * Obtém os dados do usuário logado
+   * ObtÃ©m os dados do usuÃ¡rio logado
    */
   getUsuario(): any {
     const usuarioStr = localStorage.getItem('usuario');

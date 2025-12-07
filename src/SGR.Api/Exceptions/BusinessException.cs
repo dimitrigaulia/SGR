@@ -1,7 +1,7 @@
 namespace SGR.Api.Exceptions;
 
 /// <summary>
-/// Exceção para erros de regra de negócio
+/// ExceÃ§Ã£o para erros de regra de negÃ³cio
 /// </summary>
 public class BusinessException : Exception
 {

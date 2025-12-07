@@ -24,10 +24,10 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
         // Erro do lado do servidor
         switch (error.status) {
           case 400:
-            errorMessage = error.error?.message || 'Requisição inválida';
+            errorMessage = error.error?.message || 'RequisiÃ§Ã£o invÃ¡lida';
             break;
           case 401:
-            errorMessage = 'Não autorizado. Faça login novamente.';
+            errorMessage = 'NÃ£o autorizado. FaÃ§a login novamente.';
             auth.logout();
             router.navigate(['/']);
             break;
@@ -35,10 +35,10 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
             errorMessage = 'Acesso negado';
             break;
           case 404:
-            errorMessage = error.error?.message || 'Recurso não encontrado';
+            errorMessage = error.error?.message || 'Recurso nÃ£o encontrado';
             break;
           case 409:
-            errorMessage = error.error?.message || 'Conflito na operação';
+            errorMessage = error.error?.message || 'Conflito na operaÃ§Ã£o';
             break;
           case 500:
             errorMessage = 'Erro interno do servidor. Tente novamente mais tarde.';
@@ -48,7 +48,7 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
         }
       }
 
-      // Exibir mensagem de erro apenas se não for 401 (já redireciona)
+      // Exibir mensagem de erro apenas se nÃ£o for 401 (jÃ¡ redireciona)
       if (error.status !== 401) {
         toast.error(errorMessage);
       }

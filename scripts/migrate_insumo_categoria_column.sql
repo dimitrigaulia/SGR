@@ -1,4 +1,4 @@
--- Script de migração para renomear coluna CategoriaInsumoId para CategoriaId
+-- Script de migraÃ§Ã£o para renomear coluna CategoriaInsumoId para CategoriaId
 -- Execute este script no banco de dados sgr_tenants para corrigir schemas existentes
 
 -- Para cada schema de tenant, execute:
@@ -6,8 +6,8 @@ DO $$
 DECLARE
     schema_record RECORD;
 BEGIN
-    -- Iterar sobre todos os schemas que começam com um padrão de tenant
-    -- Ajuste o filtro conforme necessário
+    -- Iterar sobre todos os schemas que comeÃ§am com um padrÃ£o de tenant
+    -- Ajuste o filtro conforme necessÃ¡rio
     FOR schema_record IN 
         SELECT schema_name 
         FROM information_schema.schemata 
@@ -30,7 +30,7 @@ BEGIN
                         RENAME COLUMN "CategoriaInsumoId" TO "CategoriaId";
                         RAISE NOTICE ''Coluna renomeada no schema: %'', %L;
                     ELSE
-                        RAISE NOTICE ''Coluna não encontrada no schema: %'', %L;
+                        RAISE NOTICE ''Coluna nÃ£o encontrada no schema: %'', %L;
                     END IF;
                 END $inner$;
             ', schema_record.schema_name, schema_record.schema_name, schema_record.schema_name, schema_record.schema_name);
@@ -41,7 +41,7 @@ BEGIN
     END LOOP;
 END $$;
 
--- Para executar em um schema específico, use:
+-- Para executar em um schema especÃ­fico, use:
 -- ALTER TABLE "nome_do_schema"."Insumo" RENAME COLUMN "CategoriaInsumoId" TO "CategoriaId";
 
 

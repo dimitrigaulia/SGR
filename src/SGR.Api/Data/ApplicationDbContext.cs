@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using SGR.Api.Models.Backoffice.Entities;
 using SGR.Api.Models.Entities;
 

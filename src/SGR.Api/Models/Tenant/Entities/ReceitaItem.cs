@@ -25,16 +25,16 @@ public class ReceitaItem
     public bool ExibirComoQB { get; set; }
     
     /// <summary>
-    /// Ordem de exibição (1, 2, 3...)
+    /// Ordem de exibiÃ§Ã£o (1, 2, 3...)
     /// </summary>
     public int Ordem { get; set; }
     
     /// <summary>
-    /// Observações específicas do item
+    /// ObservaÃ§Ãµes especÃ­ficas do item
     /// </summary>
     public string? Observacoes { get; set; }
 
-    // Navegação
+    // NavegaÃ§Ã£o
     public Receita Receita { get; set; } = null!;
     public Insumo Insumo { get; set; } = null!;
     public UnidadeMedida UnidadeMedida { get; set; } = null!;

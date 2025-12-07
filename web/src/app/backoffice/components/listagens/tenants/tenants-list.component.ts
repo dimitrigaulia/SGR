@@ -145,7 +145,7 @@ export class TenantsListComponent {
   toggleActive(id: number, currentStatus: boolean) {
     const action = currentStatus ? 'inativar' : 'ativar';
     const warningMessage = currentStatus 
-      ? 'O tenant não poderá mais acessar o sistema.'
+      ? 'O tenant nÃ£o poderÃ¡ mais acessar o sistema.'
       : undefined;
 
     this.confirmationService.confirmToggleActive(action, 'este tenant', warningMessage)

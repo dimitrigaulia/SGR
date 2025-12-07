@@ -19,22 +19,22 @@ $theme-dark: mat.define-theme((
   )
 ));
 
-// Tema padrão (escuro) - aplicado em :root
+// Tema padrÃ£o (escuro) - aplicado em :root
 :root { 
   @include mat.all-component-themes($theme-dark);
 }
 
-// Tema escuro também aplicado na classe .dark-theme (para garantir)
+// Tema escuro tambÃ©m aplicado na classe .dark-theme (para garantir)
 .dark-theme { 
   @include mat.all-component-themes($theme-dark);
 }
 
-// Tema claro (aplicar na classe .light-theme se necessário)
+// Tema claro (aplicar na classe .light-theme se necessÃ¡rio)
 .light-theme { 
   @include mat.all-component-themes($theme-light);
 }
 
-// Utilitários
+// UtilitÃ¡rios
 .container { 
   max-width: 1440px; 
   margin-inline: auto; 
@@ -51,18 +51,18 @@ $theme-dark: mat.define-theme((
 }
 
 // ============================================
-// ESTILOS GLOBAIS PARA FORMULÁRIOS
+// ESTILOS GLOBAIS PARA FORMULÃRIOS
 // ============================================
-// Use estas classes em qualquer formulário do sistema para manter consistência
+// Use estas classes em qualquer formulÃ¡rio do sistema para manter consistÃªncia
 
-// Espaçamento padrão entre campos de formulário
+// EspaÃ§amento padrÃ£o entre campos de formulÃ¡rio
 .form-field-spacing {
   width: 100%;
   margin-bottom: 24px;
   display: block;
 }
 
-// Wrapper para toggles (mat-slide-toggle) com espaçamento consistente
+// Wrapper para toggles (mat-slide-toggle) com espaÃ§amento consistente
 .form-toggle-wrapper {
   display: flex;
   align-items: center;
@@ -70,26 +70,26 @@ $theme-dark: mat.define-theme((
   padding: 8px 0;
 }
 
-// Seções do formulário (grupos de campos relacionados)
+// SeÃ§Ãµes do formulÃ¡rio (grupos de campos relacionados)
 .form-section {
   margin-bottom: 32px;
 }
 
-// Container de formulário padrão
+// Container de formulÃ¡rio padrÃ£o
 .form-container {
   padding: 16px;
   max-width: 800px;
   margin: 0 auto;
 }
 
-// Título de formulário padrão
+// TÃ­tulo de formulÃ¡rio padrÃ£o
 .form-title {
   margin: 0 0 32px 0;
   font-size: 1.75rem;
   font-weight: 500;
 }
 
-// Área de ações (botões) do formulário
+// Ãrea de aÃ§Ãµes (botÃµes) do formulÃ¡rio
 .form-actions {
   display: flex;
   gap: 12px;
@@ -102,7 +102,7 @@ $theme-dark: mat.define-theme((
   }
 }
 
-// Mensagem de erro do formulário
+// Mensagem de erro do formulÃ¡rio
 .form-error {
   color: var(--mat-error);
   margin: 16px 0;
@@ -112,7 +112,7 @@ $theme-dark: mat.define-theme((
   font-size: 0.875rem;
 }
 
-// Título de seção do formulário
+// TÃ­tulo de seÃ§Ã£o do formulÃ¡rio
 .section-title {
   margin: 0 0 24px 0;
   font-size: 1.25rem;
@@ -122,7 +122,7 @@ $theme-dark: mat.define-theme((
   border-bottom: 1px solid var(--mat-divider-color);
 }
 
-// Responsividade para formulários
+// Responsividade para formulÃ¡rios
 @media (max-width: 959px) {
   .form-container {
     padding: 16px;

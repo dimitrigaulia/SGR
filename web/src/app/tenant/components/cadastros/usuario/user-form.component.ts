@@ -87,9 +87,9 @@ export class TenantUserFormComponent {
     this.error.set('');
     if (this.isView()) return;
     const v = this.model;
-    // Validação simples
+    // ValidaÃ§Ã£o simples
     if (!v.nomeCompleto || !v.email || !v.perfilId || this.emailTaken) {
-      this.toast.error('Preencha os campos obrigatórios corretamente');
+      this.toast.error('Preencha os campos obrigatÃ³rios corretamente');
       return;
     }
 
@@ -105,9 +105,9 @@ export class TenantUserFormComponent {
       this.service.create(req)
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
-          next: () => { this.toast.success('Usuário criado'); this.router.navigate(['/tenant/usuarios']); },
+          next: () => { this.toast.success('UsuÃ¡rio criado'); this.router.navigate(['/tenant/usuarios']); },
           error: (err) => { 
-            const msg = err.error?.message || 'Erro ao salvar usuário'; 
+            const msg = err.error?.message || 'Erro ao salvar usuÃ¡rio'; 
             this.toast.error(msg); 
             this.error.set(msg);
             this.cdr.markForCheck();
@@ -133,11 +133,11 @@ export class TenantUserFormComponent {
                 .subscribe({ next: () => {}, error: () => {} });
             }
             this.previousAvatarUrl = newUrl || null;
-            this.toast.success('Usuário atualizado');
+            this.toast.success('UsuÃ¡rio atualizado');
             this.router.navigate(['/tenant/usuarios']);
           },
           error: (err) => { 
-            const msg = err.error?.message || 'Erro ao salvar usuário'; 
+            const msg = err.error?.message || 'Erro ao salvar usuÃ¡rio'; 
             this.toast.error(msg); 
             this.error.set(msg);
             this.cdr.markForCheck();

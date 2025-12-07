@@ -13,7 +13,7 @@ public class CategoriaReceita
     public DateTime DataCriacao { get; set; }
     public DateTime? DataAtualizacao { get; set; }
 
-    // Navegação
+    // NavegaÃ§Ã£o
     public ICollection<Receita> Receitas { get; set; } = new List<Receita>();
 }
 

@@ -16,7 +16,7 @@ export interface ConfirmationDialogData {
   standalone: true,
   imports: [CommonModule, MatDialogModule, MatButtonModule],
   template: `
-    <h2 mat-dialog-title>{{ data.title || 'Confirmação' }}</h2>
+    <h2 mat-dialog-title>{{ data.title || 'ConfirmaÃ§Ã£o' }}</h2>
     <mat-dialog-content>
       <p>{{ data.message }}</p>
     </mat-dialog-content>

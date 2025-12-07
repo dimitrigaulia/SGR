@@ -82,12 +82,12 @@ export class LayoutService {
     if (this.sidenav) {
       this.sidenav.toggle();
     } else {
-      console.warn('Sidenav não está disponível');
+      console.warn('Sidenav nÃ£o estÃ¡ disponÃ­vel');
     }
   }
 
   /**
-   * Define o tema da aplicação
+   * Define o tema da aplicaÃ§Ã£o
    */
   setTheme(mode: 'dark' | 'light') {
     this._themeMode.set(mode);
