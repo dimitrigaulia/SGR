@@ -1,15 +1,17 @@
 using Microsoft.AspNetCore.Http;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using System.Data.Common;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SGR.Api.Data;
 
 /// <summary>
-/// Interceptor simples que define o search_path do PostgreSQL antes de cada comando
+/// Interceptor que configura o search_path do PostgreSQL ao abrir a conexão
 /// Isso permite que o EF Core use o schema do tenant sem modificar o SQL gerado
+/// e evita problemas de concorrência causados pela modificação do CommandText
 /// </summary>
-public class TenantSchemaInterceptor : DbCommandInterceptor
+public class TenantSchemaInterceptor : DbConnectionInterceptor
 {
     private readonly IHttpContextAccessor _httpContextAccessor;
 
@@ -18,54 +20,41 @@ public class TenantSchemaInterceptor : DbCommandInterceptor
         _httpContextAccessor = httpContextAccessor;
     }
 
-    public override InterceptionResult<DbDataReader> ReaderExecuting(
-        DbCommand command,
-        CommandEventData eventData,
-        InterceptionResult<DbDataReader> result)
+    public override void ConnectionOpened(DbConnection connection, ConnectionEndEventData eventData)
     {
-        SetSearchPath(command);
-        return base.ReaderExecuting(command, eventData, result);
+        SetSearchPath(connection);
+        base.ConnectionOpened(connection, eventData);
     }
 
-    public override ValueTask<InterceptionResult<DbDataReader>> ReaderExecutingAsync(
-        DbCommand command,
-        CommandEventData eventData,
-        InterceptionResult<DbDataReader> result,
+    public override async Task ConnectionOpenedAsync(
+        DbConnection connection,
+        ConnectionEndEventData eventData,
         CancellationToken cancellationToken = default)
     {
-        SetSearchPath(command);
-        return base.ReaderExecutingAsync(command, eventData, result, cancellationToken);
+        await SetSearchPathAsync(connection, cancellationToken);
+        await base.ConnectionOpenedAsync(connection, eventData, cancellationToken);
     }
 
-    public override InterceptionResult<int> NonQueryExecuting(
-        DbCommand command,
-        CommandEventData eventData,
-        InterceptionResult<int> result)
+    private void SetSearchPath(DbConnection connection)
     {
-        SetSearchPath(command);
-        return base.NonQueryExecuting(command, eventData, result);
-    }
-
-    public override ValueTask<InterceptionResult<int>> NonQueryExecutingAsync(
-        DbCommand command,
-        CommandEventData eventData,
-        InterceptionResult<int> result,
-        CancellationToken cancellationToken = default)
-    {
-        SetSearchPath(command);
-        return base.NonQueryExecutingAsync(command, eventData, result, cancellationToken);
-    }
-
-    private void SetSearchPath(DbCommand command)
-    {
-        // Obter o schema do HttpContext (definido pelo middleware)
         var schema = _httpContextAccessor.HttpContext?.Items["TenantSchema"] as string;
-        if (!string.IsNullOrEmpty(schema))
-        {
-            // SET LOCAL define o search_path apenas para a transaÃ§Ã£o atual
-            // Isso garante que todas as queries neste comando usem o schema do tenant
-            command.CommandText = $"SET LOCAL search_path TO \"{schema}\", public; {command.CommandText}";
-        }
+        if (string.IsNullOrEmpty(schema))
+            return;
+
+        using var command = connection.CreateCommand();
+        command.CommandText = $"SET search_path TO \"{schema}\", public;";
+        command.ExecuteNonQuery();
+    }
+
+    private async Task SetSearchPathAsync(DbConnection connection, CancellationToken cancellationToken)
+    {
+        var schema = _httpContextAccessor.HttpContext?.Items["TenantSchema"] as string;
+        if (string.IsNullOrEmpty(schema))
+            return;
+
+        await using var command = connection.CreateCommand();
+        command.CommandText = $"SET search_path TO \"{schema}\", public;";
+        await command.ExecuteNonQueryAsync(cancellationToken);
     }
 }
 
