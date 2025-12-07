@@ -404,11 +404,11 @@
       <div class="custo-grid">
         <div>
           <div class="label">Custo Total</div>
-          <div class="value">-</div>
+          <div class="value">{{ formatCurrency(custoTotalCalculado) }}</div>
         </div>
         <div>
           <div class="label">Custo por Porção</div>
-          <div class="value">-</div>
+          <div class="value">{{ formatCurrency(custoPorPorcaoCalculado) }}</div>
         </div>
       </div>
       <p style="font-size: 12px; color: #666; margin-top: 8px;">Os custos são calculados automaticamente pelo sistema.</p>

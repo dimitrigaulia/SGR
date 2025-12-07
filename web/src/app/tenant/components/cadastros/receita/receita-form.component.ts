@@ -81,7 +81,9 @@ export class TenantReceitaFormComponent {
     versao: '1.0',
     pathImagem: '',
     isAtivo: true,
-    calcularRendimentoAutomatico: false
+    calcularRendimentoAutomatico: false,
+    custoTotal: null as number | null,
+    custoPorPorcao: null as number | null
   };
 
   itens = signal<ReceitaItemFormModel[]>([]);
@@ -160,7 +162,9 @@ export class TenantReceitaFormComponent {
             versao: e.versao || '1.0',
             pathImagem: e.pathImagem || '',
             isAtivo: e.isAtivo,
-            calcularRendimentoAutomatico: false
+            calcularRendimentoAutomatico: false,
+            custoTotal: e.custoTotal ?? null,
+            custoPorPorcao: e.custoPorPorcao ?? null
           };
           this.previousImageUrl = e.pathImagem ?? null;
           this.itens.set(e.itens.map(item => ({
@@ -194,6 +198,7 @@ export class TenantReceitaFormComponent {
       observacoes: ''
     }]);
     this.atualizarCalculosAutomaticos();
+    this.atualizarCustosItens();
     this.cdr.markForCheck();
   }
 
@@ -206,6 +211,7 @@ export class TenantReceitaFormComponent {
     });
     this.itens.set(newItens);
     this.atualizarCalculosAutomaticos();
+    this.atualizarCustosItens();
     this.cdr.markForCheck();
   }
 
@@ -273,6 +279,7 @@ export class TenantReceitaFormComponent {
       }
     }
     this.atualizarCalculosAutomaticos();
+    this.atualizarCustosItens();
     this.cdr.markForCheck();
   }
 
@@ -361,6 +368,8 @@ export class TenantReceitaFormComponent {
     if (!this.model.calcularRendimentoAutomatico) {
       this.calcularPesoPorPorcaoAutomatico();
     }
+    // Os custos são recalculados automaticamente pelos getters
+    this.cdr.markForCheck();
   }
 
   onPesoPorPorcaoChange(): void {
@@ -371,6 +380,7 @@ export class TenantReceitaFormComponent {
 
   onICChange(): void {
     this.atualizarCalculosAutomaticos();
+    this.atualizarCustosItens();
   }
 
   onToggleChange(): void {
@@ -382,6 +392,59 @@ export class TenantReceitaFormComponent {
       return '-';
     }
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+  }
+
+  calcularCustoPorUnidadeUso(insumo: InsumoDto): number {
+    if (insumo.quantidadePorEmbalagem <= 0) return 0;
+    return (insumo.custoUnitario / insumo.quantidadePorEmbalagem) * insumo.fatorCorrecao;
+  }
+
+  calcularCustoItem(item: ReceitaItemFormModel): number {
+    if (!item.insumoId || item.quantidade <= 0) return 0;
+    const insumo = this.insumos().find(i => i.id === item.insumoId);
+    if (!insumo) return 0;
+    
+    const quantidadeBruta = item.quantidade * insumo.fatorCorrecao;
+    const custoPorUnidadeUso = this.calcularCustoPorUnidadeUso(insumo);
+    return quantidadeBruta * custoPorUnidadeUso;
+  }
+
+  get custoTotalCalculado(): number | null {
+    let custoTotalBruto = 0;
+    let temItensValidos = false;
+    
+    for (const item of this.itens()) {
+      if (!item.insumoId || item.quantidade <= 0) continue;
+      const custoItem = this.calcularCustoItem(item);
+      custoTotalBruto += custoItem;
+      temItensValidos = true;
+    }
+    
+    if (!temItensValidos) return null;
+    
+    // Aplicar fator de rendimento
+    const fatorRendimento = this.fatorRendimentoCalculado > 0 ? this.fatorRendimentoCalculado : 1.0;
+    return custoTotalBruto / fatorRendimento;
+  }
+
+  get custoPorPorcaoCalculado(): number | null {
+    const custoTotal = this.custoTotalCalculado;
+    const rendimento = this.model.rendimento;
+    if (custoTotal === null || rendimento <= 0) return null;
+    return custoTotal / rendimento;
+  }
+
+  atualizarCustosItens(): void {
+    const currentItens = this.itens();
+    const updatedItens = currentItens.map(item => {
+      const custoItem = this.calcularCustoItem(item);
+      return {
+        ...item,
+        custoItem: custoItem > 0 ? custoItem : undefined
+      };
+    });
+    this.itens.set(updatedItens);
+    this.cdr.markForCheck();
   }
 
   onQuantidadeChange(item: ReceitaItemFormModel, index: number) {
@@ -401,6 +464,7 @@ export class TenantReceitaFormComponent {
       }
     }
     this.atualizarCalculosAutomaticos();
+    this.atualizarCustosItens();
   }
 
   onFileSelected(event: Event) {
