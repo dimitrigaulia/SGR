@@ -24,8 +24,6 @@ public class CreateReceitaRequest
     [Range(0.01, double.MaxValue, ErrorMessage = "Peso por por��ǜo deve ser maior que zero")]
     public decimal? PesoPorPorcao { get; set; }
 
-    [Range(0, 100, ErrorMessage = "Tolerǽncia de peso deve estar entre 0 e 100%")]
-    public decimal? ToleranciaPeso { get; set; }
 
     [Required(ErrorMessage = "Fator de rendimento Ǹ obrigat��rio")]
     [Range(0.01, 10.0, ErrorMessage = "Fator de rendimento deve estar entre 0.01 e 10.0")]

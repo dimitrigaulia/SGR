@@ -205,7 +205,8 @@ public class TenantUsuarioService : BaseService<TenantDbContext, TenantUsuario, 
 
         try
         {
-            var entity = await _dbSet.FindAsync(id);
+            // Usar FirstOrDefaultAsync ao invés de FindAsync para garantir que respeita o schema do tenant
+            var entity = await _dbSet.FirstOrDefaultAsync(e => e.Id == id);
             if (entity == null)
             {
                 _logger.LogWarning("{EntityType} com ID {Id} não encontrado para atualização", typeof(TenantUsuario).Name, id);
@@ -218,6 +219,9 @@ public class TenantUsuarioService : BaseService<TenantDbContext, TenantUsuario, 
             SetAuditFieldsOnUpdate(entity, usuarioAtualizacao);
             
             await BeforeUpdateAsync(entity, request, usuarioAtualizacao);
+            
+            // Marcar explicitamente como modificado para garantir tracking
+            _context.Entry(entity).State = EntityState.Modified;
             
             await _context.SaveChangesAsync();
 

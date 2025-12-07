@@ -12,7 +12,6 @@ public class Receita
     public string? InstrucoesEmpratamento { get; set; } // Instruções de como servir/empratar
     public decimal Rendimento { get; set; } // Quantas porções rende
     public decimal? PesoPorPorcao { get; set; } // Peso em gramas por porção
-    public decimal? ToleranciaPeso { get; set; } // Tolerância de peso em % (ex: 5 = ±5%)
     public decimal FatorRendimento { get; set; } = 1.0m; // Fator de perdas no preparo (0-1: perdas, >1: ganho raro). Ex: 0.95 = 5% de perda
     public int? TempoPreparo { get; set; } // Tempo em minutos
     public string? Versao { get; set; } = "1.0"; // Versão da receita (ex: "1.0", "2.1")

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
@@ -13,6 +14,7 @@ import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { ToastService } from '../../../../core/services/toast.service';
 import { environment } from '../../../../../environments/environment';
 import { CategoriaReceitaService, CategoriaReceitaDto } from '../../../../features/tenant-categorias-receita/services/categoria-receita.service';
@@ -48,7 +50,7 @@ type FichaTecnicaItemFormModel = {
 @Component({
   standalone: true,
   selector: 'app-tenant-ficha-tecnica-form',
-  imports: [CommonModule, FormsModule, RouterLink, MatFormFieldModule, MatInputModule, MatButtonModule, MatSelectModule, MatSlideToggleModule, MatSnackBarModule, MatTableModule, MatIconModule, MatCardModule, MatCheckboxModule],
+  imports: [CommonModule, FormsModule, RouterLink, MatFormFieldModule, MatInputModule, MatButtonModule, MatSelectModule, MatSlideToggleModule, MatSnackBarModule, MatTableModule, MatIconModule, MatCardModule, MatCheckboxModule, MatTooltipModule],
   templateUrl: './ficha-tecnica-form.component.html',
   styleUrls: ['./ficha-tecnica-form.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -63,6 +65,7 @@ export class TenantFichaTecnicaFormComponent {
   private toast = inject(ToastService);
   private cdr = inject(ChangeDetectorRef);
   private destroyRef = inject(DestroyRef);
+  private breakpointObserver = inject(BreakpointObserver);
 
   id = signal<number | null>(null);
   categorias = signal<CategoriaReceitaDto[]>([]);
@@ -71,6 +74,7 @@ export class TenantFichaTecnicaFormComponent {
   unidades = signal<UnidadeMedidaDto[]>([]);
   isEdit = computed(() => this.id() !== null);
   isView = signal<boolean>(false);
+  isMobile = signal(false);
   error = signal<string>('');
 
   model = {
@@ -101,6 +105,14 @@ export class TenantFichaTecnicaFormComponent {
   precoSugeridoVenda = signal<number | null>(null);
 
   constructor() {
+    // Detectar mobile
+    this.breakpointObserver.observe([Breakpoints.Handset, Breakpoints.TabletPortrait])
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((result) => {
+        this.isMobile.set(result.matches);
+        this.cdr.markForCheck();
+      });
+
     // Carregar categorias
     this.categoriaService.list({ pageSize: 1000 })
       .pipe(takeUntilDestroyed(this.destroyRef))

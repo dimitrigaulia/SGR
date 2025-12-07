@@ -70,7 +70,8 @@ public abstract class BaseService<TDbContext, TEntity, TDto, TCreateRequest, TUp
     {
         _logger.LogInformation("Buscando {EntityType} por ID: {Id}", typeof(TEntity).Name, id);
 
-        var entity = await _dbSet.FindAsync(id);
+        // Usar FirstOrDefaultAsync ao invés de FindAsync para garantir que respeita o schema do tenant
+        var entity = await _dbSet.FirstOrDefaultAsync(e => EF.Property<long>(e, "Id") == id);
         if (entity == null)
         {
             _logger.LogWarning("{EntityType} com ID {Id} não encontrado", typeof(TEntity).Name, id);
@@ -101,7 +102,8 @@ public abstract class BaseService<TDbContext, TEntity, TDto, TCreateRequest, TUp
             _logger.LogInformation("{EntityType} criado com sucesso - ID: {Id}", typeof(TEntity).Name, entityId);
 
             // Buscar novamente para garantir que temos os dados atualizados (incluindo ID gerado)
-            var savedEntity = await _dbSet.FindAsync(entityId);
+            // Usar FirstOrDefaultAsync ao invés de FindAsync para garantir que respeita o schema do tenant
+            var savedEntity = await _dbSet.FirstOrDefaultAsync(e => EF.Property<long>(e, "Id") == entityId);
             if (savedEntity == null)
                 throw new InvalidOperationException("Erro ao salvar entidade");
 
@@ -122,7 +124,8 @@ public abstract class BaseService<TDbContext, TEntity, TDto, TCreateRequest, TUp
 
         try
         {
-            var entity = await _dbSet.FindAsync(id);
+            // Usar FirstOrDefaultAsync ao invés de FindAsync para garantir que respeita o schema do tenant
+            var entity = await _dbSet.FirstOrDefaultAsync(e => EF.Property<long>(e, "Id") == id);
             if (entity == null)
             {
                 _logger.LogWarning("{EntityType} com ID {Id} não encontrado para atualização", typeof(TEntity).Name, id);
@@ -136,12 +139,15 @@ public abstract class BaseService<TDbContext, TEntity, TDto, TCreateRequest, TUp
             
             await BeforeUpdateAsync(entity, request, usuarioAtualizacao);
             
+            // Marcar explicitamente como modificado para garantir tracking
+            _context.Entry(entity).State = EntityState.Modified;
+            
             await _context.SaveChangesAsync();
 
             _logger.LogInformation("{EntityType} atualizado com sucesso - ID: {Id}", typeof(TEntity).Name, id);
 
             // Buscar novamente para garantir dados atualizados
-            var updatedEntity = await _dbSet.FindAsync(id);
+            var updatedEntity = await _dbSet.FirstOrDefaultAsync(e => EF.Property<long>(e, "Id") == id);
             if (updatedEntity == null) return null;
 
             var mapper = MapToDto().Compile();
@@ -160,7 +166,8 @@ public abstract class BaseService<TDbContext, TEntity, TDto, TCreateRequest, TUp
 
         try
         {
-            var entity = await _dbSet.FindAsync(id);
+            // Usar FirstOrDefaultAsync ao invés de FindAsync para garantir que respeita o schema do tenant
+            var entity = await _dbSet.FirstOrDefaultAsync(e => EF.Property<long>(e, "Id") == id);
             if (entity == null)
             {
                 _logger.LogWarning("{EntityType} com ID {Id} não encontrado para exclusão", typeof(TEntity).Name, id);

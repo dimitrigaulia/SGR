@@ -31,7 +31,6 @@ export interface ReceitaDto {
   instrucoesEmpratamento?: string | null;
   rendimento: number;
   pesoPorPorcao?: number | null;
-  toleranciaPeso?: number | null;
   fatorRendimento: number;
   icSinal?: string | null;
   icValor?: number | null;
@@ -73,7 +72,6 @@ export interface CreateReceitaRequest {
   instrucoesEmpratamento?: string | null;
   rendimento: number;
   pesoPorPorcao?: number | null;
-  toleranciaPeso?: number | null;
   fatorRendimento: number;
   icSinal?: string | null;
   icValor?: number | null;
@@ -91,7 +89,6 @@ export interface UpdateReceitaRequest {
   instrucoesEmpratamento?: string | null;
   rendimento: number;
   pesoPorPorcao?: number | null;
-  toleranciaPeso?: number | null;
   fatorRendimento: number;
   icSinal?: string | null;
   icValor?: number | null;

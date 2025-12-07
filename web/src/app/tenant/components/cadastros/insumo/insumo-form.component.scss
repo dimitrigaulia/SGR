@@ -27,6 +27,9 @@
 .hint-responsive {
   font-size: 12px;
   line-height: 1.4;
+  white-space: normal;
+  word-wrap: break-word;
+  max-width: 100%;
   
   .hint-full {
     display: block;
@@ -45,6 +48,49 @@
     
     .hint-mobile {
       display: block;
+    }
+  }
+}
+
+// Garantir que mat-form-field tenha espaço suficiente para hints longos
+::ng-deep .form-field-spacing {
+  mat-form-field {
+    .mat-mdc-form-field-subscript-wrapper {
+      min-height: auto;
+      margin-top: 4px;
+      position: relative;
+    }
+    
+    .mat-mdc-form-field-hint-wrapper {
+      padding: 0;
+      margin-top: 4px;
+    }
+    
+    .mat-mdc-form-field-hint {
+      white-space: normal;
+      word-wrap: break-word;
+      line-height: 1.4;
+      display: block;
+      max-width: 100%;
+    }
+    
+    // Garantir espaço extra quando há hint longo
+    &.mat-form-field-has-hint {
+      margin-bottom: 8px;
+    }
+  }
+}
+
+// Ajustar espaçamento do form-row para acomodar hints
+.form-row {
+  .form-field-spacing {
+    // Espaçamento extra quando há hints longos
+    mat-form-field {
+      margin-bottom: 32px;
+      
+      @media (max-width: 599px) {
+        margin-bottom: 28px;
+      }
     }
   }
 }

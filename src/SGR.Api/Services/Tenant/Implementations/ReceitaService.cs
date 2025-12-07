@@ -123,7 +123,6 @@ public class ReceitaService : IReceitaService
                 InstrucoesEmpratamento = r.InstrucoesEmpratamento,
                 Rendimento = r.Rendimento,
                 PesoPorPorcao = r.PesoPorPorcao,
-                ToleranciaPeso = r.ToleranciaPeso,
                 FatorRendimento = r.FatorRendimento,
                 TempoPreparo = r.TempoPreparo,
                 Versao = r.Versao,
@@ -214,7 +213,6 @@ public class ReceitaService : IReceitaService
             InstrucoesEmpratamento = request.InstrucoesEmpratamento,
             Rendimento = request.Rendimento,
             PesoPorPorcao = request.PesoPorPorcao,
-            ToleranciaPeso = request.ToleranciaPeso,
             FatorRendimento = fatorRendimento,
             TempoPreparo = request.TempoPreparo,
             Versao = request.Versao ?? "1.0",
@@ -310,7 +308,6 @@ public class ReceitaService : IReceitaService
         receita.InstrucoesEmpratamento = request.InstrucoesEmpratamento;
         receita.Rendimento = request.Rendimento;
         receita.PesoPorPorcao = request.PesoPorPorcao;
-        receita.ToleranciaPeso = request.ToleranciaPeso;
         receita.FatorRendimento = CalcularFatorRendimentoFromIc(request.FatorRendimento, request.IcSinal, request.IcValor);
         receita.TempoPreparo = request.TempoPreparo;
         receita.Versao = request.Versao ?? "1.0";
@@ -320,8 +317,10 @@ public class ReceitaService : IReceitaService
         receita.DataAtualizacao = DateTime.UtcNow;
 
         // Remover itens antigos
-        _context.ReceitaItens.RemoveRange(receita.Itens);
-        receita.Itens.Clear();
+        // Não usar Clear() pois RemoveRange já remove do contexto
+        // Apenas remover do contexto, a coleção será atualizada automaticamente
+        var itensParaRemover = receita.Itens.ToList();
+        _context.ReceitaItens.RemoveRange(itensParaRemover);
 
         // Adicionar novos itens
         var ordem = 1;
@@ -352,7 +351,8 @@ public class ReceitaService : IReceitaService
     {
         _logger.LogInformation("Excluindo Receita - ID: {Id}", id);
 
-        var receita = await _context.Receitas.FindAsync(id);
+        // Usar FirstOrDefaultAsync ao invés de FindAsync para garantir que respeita o schema do tenant
+        var receita = await _context.Receitas.FirstOrDefaultAsync(r => r.Id == id);
         if (receita == null)
         {
             _logger.LogWarning("Receita com ID {Id} não encontrada", id);
@@ -388,7 +388,6 @@ public class ReceitaService : IReceitaService
             InstrucoesEmpratamento = receitaOriginal.InstrucoesEmpratamento,
             Rendimento = receitaOriginal.Rendimento,
             PesoPorPorcao = receitaOriginal.PesoPorPorcao,
-            ToleranciaPeso = receitaOriginal.ToleranciaPeso,
             FatorRendimento = receitaOriginal.FatorRendimento,
             TempoPreparo = receitaOriginal.TempoPreparo,
             Versao = receitaOriginal.Versao ?? "1.0",
@@ -497,7 +496,6 @@ public class ReceitaService : IReceitaService
             InstrucoesEmpratamento = receita.InstrucoesEmpratamento,
             Rendimento = receita.Rendimento,
             PesoPorPorcao = receita.PesoPorPorcao,
-            ToleranciaPeso = receita.ToleranciaPeso,
             FatorRendimento = receita.FatorRendimento,
             IcSinal = icSinal,
             IcValor = icValor,

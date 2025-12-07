@@ -3,6 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
@@ -12,6 +13,7 @@ import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { ReceitaService, CreateReceitaRequest, UpdateReceitaRequest, ReceitaDto, CreateReceitaItemRequest, UpdateReceitaItemRequest } from '../../../../features/tenant-receitas/services/receita.service';
 import { CategoriaReceitaService, CategoriaReceitaDto } from '../../../../features/tenant-categorias-receita/services/categoria-receita.service';
 import { InsumoService, InsumoDto } from '../../../../features/tenant-insumos/services/insumo.service';
@@ -36,7 +38,7 @@ type ReceitaItemFormModel = {
 @Component({
   standalone: true,
   selector: 'app-tenant-receita-form',
-  imports: [CommonModule, FormsModule, MatCardModule, RouterLink, MatFormFieldModule, MatInputModule, MatButtonModule, MatSelectModule, MatSlideToggleModule, MatSnackBarModule, MatTableModule, MatIconModule, MatCheckboxModule],
+  imports: [CommonModule, FormsModule, MatCardModule, RouterLink, MatFormFieldModule, MatInputModule, MatButtonModule, MatSelectModule, MatSlideToggleModule, MatSnackBarModule, MatTableModule, MatIconModule, MatCheckboxModule, MatTooltipModule],
   templateUrl: './receita-form.component.html',
   styleUrls: ['./receita-form.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -51,6 +53,7 @@ export class TenantReceitaFormComponent {
   private upload = inject(UploadService);
   private cdr = inject(ChangeDetectorRef);
   private destroyRef = inject(DestroyRef);
+  private breakpointObserver = inject(BreakpointObserver);
 
   id = signal<number | null>(null);
   categorias = signal<CategoriaReceitaDto[]>([]);
@@ -58,6 +61,7 @@ export class TenantReceitaFormComponent {
   unidades = signal<UnidadeMedidaDto[]>([]);
   isEdit = computed(() => this.id() !== null);
   isView = signal<boolean>(false);
+  isMobile = signal(false);
   error = signal<string>('');
   previousImageUrl: string | null = null;
   
@@ -68,7 +72,6 @@ export class TenantReceitaFormComponent {
     instrucoesEmpratamento: '',
     rendimento: 1,
     pesoPorPorcao: null as number | null,
-    toleranciaPeso: null as number | null,
     fatorRendimento: 1.0,
     icSinal: '-' as string | null,
     icValor: 0 as number | null,
@@ -79,7 +82,7 @@ export class TenantReceitaFormComponent {
   };
 
   itens = signal<ReceitaItemFormModel[]>([]);
-  displayedColumns = ['ordem', 'insumo', 'quantidade', 'unidade', 'qb', 'observacoes', 'acoes'];
+  displayedColumns = ['ordem', 'insumo', 'quantidade', 'unidade', 'qb', 'custo', 'observacoes', 'acoes'];
   
   // Propriedades para uso no template
   window = typeof window !== 'undefined' ? window : null;
@@ -94,6 +97,14 @@ export class TenantReceitaFormComponent {
   }
 
   constructor() {
+    // Detectar mobile
+    this.breakpointObserver.observe([Breakpoints.Handset, Breakpoints.TabletPortrait])
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((result) => {
+        this.isMobile.set(result.matches);
+        this.cdr.markForCheck();
+      });
+
     // Carregar categorias e insumos
     this.categoriaService.list({ pageSize: 1000 })
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -139,7 +150,6 @@ export class TenantReceitaFormComponent {
             instrucoesEmpratamento: e.instrucoesEmpratamento || '',
             rendimento: e.rendimento,
             pesoPorPorcao: e.pesoPorPorcao ?? null,
-            toleranciaPeso: e.toleranciaPeso ?? null,
             fatorRendimento: e.fatorRendimento,
             icSinal: e.icSinal ?? '-',
             icValor: e.icValor ?? 0,
@@ -367,7 +377,6 @@ export class TenantReceitaFormComponent {
         instrucoesEmpratamento: v.instrucoesEmpratamento || undefined,
         rendimento: v.rendimento,
         pesoPorPorcao: v.pesoPorPorcao || undefined,
-        toleranciaPeso: v.toleranciaPeso || undefined,
         fatorRendimento: this.fatorRendimentoCalculado || 1.0,
         icSinal: v.icSinal || undefined,
         icValor: v.icValor ?? undefined,
@@ -399,7 +408,6 @@ export class TenantReceitaFormComponent {
         instrucoesEmpratamento: v.instrucoesEmpratamento || undefined,
         rendimento: v.rendimento,
         pesoPorPorcao: v.pesoPorPorcao || undefined,
-        toleranciaPeso: v.toleranciaPeso || undefined,
         fatorRendimento: this.fatorRendimentoCalculado || 1.0,
         icSinal: v.icSinal || undefined,
         icValor: v.icValor ?? undefined,

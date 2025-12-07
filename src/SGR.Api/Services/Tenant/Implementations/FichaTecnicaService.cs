@@ -489,8 +489,9 @@ public class FichaTecnicaService : IFichaTecnicaService
         ficha.DataAtualizacao = DateTime.UtcNow;
 
         // Remover itens antigos
-        _context.FichaTecnicaItens.RemoveRange(ficha.Itens);
-        ficha.Itens.Clear();
+        // Não usar Clear() pois RemoveRange já remove do contexto
+        var itensParaRemover = ficha.Itens.ToList();
+        _context.FichaTecnicaItens.RemoveRange(itensParaRemover);
 
         // Adicionar novos itens
         var ordem = 1;
@@ -523,8 +524,9 @@ public class FichaTecnicaService : IFichaTecnicaService
         // Atualizar canais (manter existentes ou criar novos)
         if (request.Canais != null && request.Canais.Any())
         {
-            _context.FichaTecnicaCanais.RemoveRange(ficha.Canais);
-            ficha.Canais.Clear();
+            // Não usar Clear() pois RemoveRange já remove do contexto
+            var canaisParaRemover = ficha.Canais.ToList();
+            _context.FichaTecnicaCanais.RemoveRange(canaisParaRemover);
 
             foreach (var canalReq in request.Canais)
             {

@@ -21,6 +21,7 @@ import { ConfirmationService } from "../../../../core/services/confirmation.serv
 import { ReceitaService, ReceitaDto } from "../../../../features/tenant-receitas/services/receita.service";
 import { LoadingComponent } from "../../../../shared/components/loading/loading.component";
 import { InputDialogComponent, InputDialogData } from "../../../../shared/components/input-dialog/input-dialog.component";
+import { environment } from "../../../../../environments/environment";
 
 @Component({
   standalone: true,
@@ -53,6 +54,10 @@ export class TenantReceitasListComponent implements OnDestroy {
   private searchTimeout: any;
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
+  
+  // Propriedades para uso no template
+  window = typeof window !== 'undefined' ? window : null;
+  environment = environment;
 
   constructor() {
     this.breakpointObserver.observe([Breakpoints.Handset, Breakpoints.TabletPortrait])
@@ -192,6 +197,12 @@ export class TenantReceitasListComponent implements OnDestroy {
             }
           });
       });
+  }
+
+  printPdf(e: ReceitaDto) {
+    if (this.window) {
+      this.window.open(`${this.environment.apiUrl}/tenant/receitas/${e.id}/pdf`, '_blank');
+    }
   }
 
   pageChanged(ev: PageEvent) {

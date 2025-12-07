@@ -11,6 +11,20 @@
       margin: 0;
       font-size: 1.25rem;
     }
+
+    .button-text {
+      margin-left: 8px;
+    }
+
+    @media (max-width: 599px) {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
+
+      button {
+        width: 100%;
+      }
+    }
   }
 
   .empty-message {
@@ -24,6 +38,162 @@
 
   .table-container {
     overflow-x: auto;
+  }
+}
+
+// Estilos para tabela de itens
+.table-wrapper {
+  overflow-x: auto;
+  margin-bottom: 16px;
+}
+
+.full-width-table {
+  width: 100%;
+  
+  .col-ordem {
+    width: 60px;
+    min-width: 60px;
+  }
+  
+  .col-qb {
+    width: 80px;
+    min-width: 80px;
+    text-align: center;
+  }
+  
+  .col-acoes {
+    width: 140px;
+    min-width: 140px;
+  }
+  
+  .input-ordem {
+    width: 50px;
+    padding: 4px 8px;
+    border: 1px solid var(--mat-divider-color);
+    border-radius: 4px;
+    text-align: center;
+  }
+  
+  .field-insumo,
+  .field-quantidade,
+  .field-unidade,
+  .field-observacoes {
+    width: 100%;
+    margin: 0;
+    
+    ::ng-deep .mat-mdc-form-field-wrapper {
+      padding-bottom: 0;
+    }
+    
+    ::ng-deep .mat-mdc-text-field-wrapper {
+      margin: 0;
+    }
+  }
+  
+  .field-insumo {
+    min-width: 200px;
+  }
+  
+  .field-quantidade {
+    min-width: 120px;
+  }
+  
+  .field-unidade {
+    min-width: 140px;
+  }
+  
+  .field-observacoes {
+    min-width: 180px;
+  }
+  
+  .action-buttons {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+  }
+}
+
+// Estilos para cards mobile
+.items-cards-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.item-card {
+  .item-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--mat-divider-color);
+    
+    .item-ordem {
+      font-weight: 600;
+      font-size: 1.1rem;
+      color: var(--mat-primary);
+    }
+    
+    .item-card-actions {
+      display: flex;
+      gap: 4px;
+    }
+  }
+  
+  .item-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    
+    .item-field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      
+      .item-label {
+        font-size: 12px;
+        color: var(--mat-app-text-color);
+        opacity: 0.7;
+        font-weight: 500;
+      }
+      
+      .item-value {
+        font-size: 14px;
+        color: var(--mat-app-text-color);
+        
+        &.item-custo {
+          font-weight: 600;
+          color: var(--mat-primary);
+        }
+      }
+    }
+    
+    .field-full {
+      width: 100%;
+    }
+    
+    .item-row-mobile {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      
+      .field-quantidade-mobile {
+        flex: 2;
+      }
+      
+      .field-unidade-mobile {
+        flex: 1;
+      }
+      
+      .item-custo-mobile {
+        margin-left: auto;
+        font-weight: 600;
+        color: var(--mat-primary);
+        font-size: 14px;
+      }
+    }
   }
 }
 
@@ -73,6 +243,41 @@
     
     .hint-mobile {
       display: block;
+    }
+  }
+}
+
+.rendimento-section {
+  margin: 24px 0;
+  padding: 16px;
+  background-color: var(--mat-surface-variant);
+  border-radius: 8px;
+  border: 1px solid var(--mat-divider-color);
+
+  .section-subtitle {
+    margin: 0 0 16px 0;
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--mat-app-text-color);
+  }
+
+  .form-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+
+    .form-field-spacing {
+      flex: 1;
+      min-width: 200px;
+    }
+
+    @media (max-width: 599px) {
+      flex-direction: column;
+      gap: 0;
+
+      .form-field-spacing {
+        min-width: 100%;
+      }
     }
   }
 }

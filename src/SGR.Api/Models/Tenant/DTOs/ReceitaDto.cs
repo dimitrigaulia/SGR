@@ -10,7 +10,6 @@ public class ReceitaDto
     public string? InstrucoesEmpratamento { get; set; }
     public decimal Rendimento { get; set; }
     public decimal? PesoPorPorcao { get; set; }
-    public decimal? ToleranciaPeso { get; set; }
     public decimal FatorRendimento { get; set; }
     public string? IcSinal { get; set; }
     public int? IcValor { get; set; }

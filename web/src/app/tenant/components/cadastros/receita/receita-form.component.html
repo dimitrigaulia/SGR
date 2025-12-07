@@ -25,44 +25,39 @@
       }
     </mat-form-field>
 
-    <div class="form-row">
-      <mat-form-field appearance="outline" class="form-field-spacing">
-        <mat-label>Categoria</mat-label>
-        <mat-select name="categoriaId" [(ngModel)]="model.categoriaId" [disabled]="isView()" required>
-          @for (c of categorias(); track c.id) {
-            <mat-option [value]="c.id">{{ c.nome }}</mat-option>
+    <mat-form-field appearance="outline" class="form-field-spacing">
+      <mat-label>Categoria</mat-label>
+      <mat-select name="categoriaId" [(ngModel)]="model.categoriaId" [disabled]="isView()" required>
+        @for (c of categorias(); track c.id) {
+          <mat-option [value]="c.id">{{ c.nome }}</mat-option>
+        }
+      </mat-select>
+      @if (f.controls['categoriaId']?.errors?.['required']) {
+        <mat-error>Categoria é obrigatória</mat-error>
+      }
+    </mat-form-field>
+
+    <div class="rendimento-section">
+      <h3 class="section-subtitle">Rendimento da Receita</h3>
+      <div class="form-row">
+        <mat-form-field appearance="outline" class="form-field-spacing">
+          <mat-label>Rendimento (porções)</mat-label>
+          <input matInput type="number" name="rendimento" [(ngModel)]="model.rendimento" [disabled]="isView()" required min="0.01" step="0.01" placeholder="Ex.: 10" />
+          <mat-hint class="hint-responsive">Quantas porções padrão essa receita rende ao todo (ex: 10 porções)</mat-hint>
+          @if (f.controls['rendimento']?.errors?.['required']) {
+            <mat-error>Rendimento é obrigatório</mat-error>
           }
-        </mat-select>
-        @if (f.controls['categoriaId']?.errors?.['required']) {
-          <mat-error>Categoria é obrigatória</mat-error>
-        }
-      </mat-form-field>
+        </mat-form-field>
 
-      <mat-form-field appearance="outline" class="form-field-spacing">
-        <mat-label>Rendimento (porções)</mat-label>
-        <input matInput type="number" name="rendimento" [(ngModel)]="model.rendimento" [disabled]="isView()" required min="0.01" step="0.01" />
-        @if (f.controls['rendimento']?.errors?.['required']) {
-          <mat-error>Rendimento é obrigatório</mat-error>
-        }
-      </mat-form-field>
-
-      <mat-form-field appearance="outline" class="form-field-spacing">
-        <mat-label>Peso por Porção (gramas)</mat-label>
-        <input matInput type="number" name="pesoPorPorcao" [(ngModel)]="model.pesoPorPorcao" [disabled]="isView()" min="0.01" step="0.01" />
-        <mat-hint class="hint-responsive">Ex: 180g por porção</mat-hint>
-        @if (f.controls['pesoPorPorcao']?.errors?.['min']) {
-          <mat-error>Peso por porção deve ser maior que zero</mat-error>
-        }
-      </mat-form-field>
-
-      <mat-form-field appearance="outline" class="form-field-spacing">
-        <mat-label>Tolerância de Peso (%)</mat-label>
-        <input matInput type="number" name="toleranciaPeso" [(ngModel)]="model.toleranciaPeso" [disabled]="isView()" min="0" max="100" step="0.1" />
-        <mat-hint class="hint-responsive">Ex: 5 = ±5% de tolerância</mat-hint>
-        @if (f.controls['toleranciaPeso']?.errors?.['min'] || f.controls['toleranciaPeso']?.errors?.['max']) {
-          <mat-error>Tolerância deve estar entre 0 e 100%</mat-error>
-        }
-      </mat-form-field>
+        <mat-form-field appearance="outline" class="form-field-spacing">
+          <mat-label>Peso por porção (g)</mat-label>
+          <input matInput type="number" name="pesoPorPorcao" [(ngModel)]="model.pesoPorPorcao" [disabled]="isView()" min="0.01" step="0.01" placeholder="Ex.: 250" />
+          <mat-hint class="hint-responsive">Peso aproximado de cada porção em gramas (ex: 250 g por porção)</mat-hint>
+          @if (f.controls['pesoPorPorcao']?.errors?.['min']) {
+            <mat-error>Peso por porção deve ser maior que zero</mat-error>
+          }
+        </mat-form-field>
+      </div>
     </div>
 
     <div class="form-row">
@@ -115,109 +110,236 @@
     </div>
 
     <div class="form-section">
-      <h3>Itens da Receita</h3>
-      <div class="table-wrapper">
-        <table mat-table [dataSource]="itens()" class="full-width-table">
-          <ng-container matColumnDef="ordem">
-            <th mat-header-cell *matHeaderCellDef>Ordem</th>
-            <td mat-cell *matCellDef="let item">
-              @if (isView()) {
-                {{ item.ordem }}
-              } @else {
-                <input type="number" [(ngModel)]="item.ordem" [ngModelOptions]="{standalone: true}" min="1" style="width: 60px;" />
-              }
-            </td>
-          </ng-container>
-
-          <ng-container matColumnDef="insumo">
-            <th mat-header-cell *matHeaderCellDef>Insumo</th>
-            <td mat-cell *matCellDef="let item">
-              @if (isView()) {
-                {{ getInsumoNome(item.insumoId) }}
-              } @else {
-                <mat-select [(ngModel)]="item.insumoId" [ngModelOptions]="{standalone: true}" (selectionChange)="onInsumoChange(item, 0)" style="width: 200px;">
-                  <mat-option [value]="null">Selecione...</mat-option>
-                  @for (i of insumos(); track i.id) {
-                    <mat-option [value]="i.id">{{ i.nome }}</mat-option>
-                  }
-                </mat-select>
-              }
-            </td>
-          </ng-container>
-
-          <ng-container matColumnDef="quantidade">
-            <th mat-header-cell *matHeaderCellDef>Quantidade</th>
-            <td mat-cell *matCellDef="let item">
-              @if (isView()) {
-                {{ formatQuantidade(item.quantidade, item.unidadeMedidaId) }}
-              } @else {
-                <input type="number" [(ngModel)]="item.quantidade" [ngModelOptions]="{standalone: true}" (ngModelChange)="onQuantidadeChange(item, 0)" [step]="getStepForUnidade(item.unidadeMedidaId)" min="0.0001" style="width: 100px;" />
-              }
-            </td>
-          </ng-container>
-
-          <ng-container matColumnDef="unidade">
-            <th mat-header-cell *matHeaderCellDef>Unidade</th>
-            <td mat-cell *matCellDef="let item">
-              @if (isView()) {
-                {{ getUnidadeSigla(item.unidadeMedidaId) }}
-              } @else {
-                <mat-select [(ngModel)]="item.unidadeMedidaId" [ngModelOptions]="{standalone: true}" style="width: 120px;">
-                  <mat-option [value]="null">Selecione...</mat-option>
-                  @for (u of unidades(); track u.id) {
-                    <mat-option [value]="u.id">{{ u.sigla }} - {{ u.nome }}</mat-option>
-                  }
-                </mat-select>
-              }
-            </td>
-          </ng-container>
-
-          <ng-container matColumnDef="qb">
-            <th mat-header-cell *matHeaderCellDef>QB</th>
-            <td mat-cell *matCellDef="let item">
-              @if (isView()) {
-                {{ item.exibirComoQB ? 'Sim' : 'Não' }}
-              } @else {
-                <mat-checkbox [(ngModel)]="item.exibirComoQB" [ngModelOptions]="{standalone: true}"></mat-checkbox>
-              }
-            </td>
-          </ng-container>
-
-          <ng-container matColumnDef="observacoes">
-            <th mat-header-cell *matHeaderCellDef>Observações</th>
-            <td mat-cell *matCellDef="let item">
-              @if (isView()) {
-                {{ item.observacoes || '-' }}
-              } @else {
-                <input matInput [(ngModel)]="item.observacoes" [ngModelOptions]="{standalone: true}" style="width: 200px;" />
-              }
-            </td>
-          </ng-container>
-
-          <ng-container matColumnDef="acoes">
-            <th mat-header-cell *matHeaderCellDef>Ações</th>
-            <td mat-cell *matCellDef="let item; let i = index">
-              @if (!isView()) {
-                <button mat-icon-button type="button" (click)="moveItemUp(i)" [disabled]="i === 0" matTooltip="Mover para cima">
-                  <mat-icon>arrow_upward</mat-icon>
-                </button>
-                <button mat-icon-button type="button" (click)="moveItemDown(i)" [disabled]="i === itens().length - 1" matTooltip="Mover para baixo">
-                  <mat-icon>arrow_downward</mat-icon>
-                </button>
-                <button mat-icon-button type="button" (click)="removeItem(i)" color="warn" matTooltip="Remover item">
-                  <mat-icon>delete</mat-icon>
-                </button>
-              }
-            </td>
-          </ng-container>
-
-          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-        </table>
+      <div class="section-header">
+        <h3>Itens da Receita</h3>
+        @if (!isView()) {
+          <button mat-raised-button color="primary" type="button" (click)="addItem()">
+            <mat-icon>add</mat-icon>
+            <span class="button-text">Adicionar Item</span>
+          </button>
+        }
       </div>
 
-      @if (!isView()) {
-        <button mat-stroked-button type="button" (click)="addItem()">Adicionar item</button>
+      <!-- Versão Desktop: Tabela -->
+      @if (!isMobile() && itens().length > 0) {
+        <div class="table-wrapper">
+          <table mat-table [dataSource]="itens()" class="mat-elevation-z1 full-width-table">
+            <ng-container matColumnDef="ordem">
+              <th mat-header-cell *matHeaderCellDef class="col-ordem">#</th>
+              <td mat-cell *matCellDef="let item" class="col-ordem">
+                @if (isView()) {
+                  {{ item.ordem }}
+                } @else {
+                  <input type="number" class="input-ordem" [(ngModel)]="item.ordem" [ngModelOptions]="{standalone: true}" min="1" />
+                }
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="insumo">
+              <th mat-header-cell *matHeaderCellDef>Insumo</th>
+              <td mat-cell *matCellDef="let item">
+                @if (isView()) {
+                  {{ getInsumoNome(item.insumoId) }}
+                } @else {
+                  <mat-form-field appearance="outline" class="field-insumo">
+                    <mat-select [(ngModel)]="item.insumoId" [ngModelOptions]="{standalone: true}" (selectionChange)="onInsumoChange(item, 0)">
+                      <mat-option [value]="null">Selecione...</mat-option>
+                      @for (i of insumos(); track i.id) {
+                        <mat-option [value]="i.id">{{ i.nome }}</mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+                }
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="quantidade">
+              <th mat-header-cell *matHeaderCellDef>Quantidade</th>
+              <td mat-cell *matCellDef="let item">
+                @if (isView()) {
+                  {{ formatQuantidade(item.quantidade, item.unidadeMedidaId) }}
+                } @else {
+                  <mat-form-field appearance="outline" class="field-quantidade">
+                    <input matInput type="number" [(ngModel)]="item.quantidade" [ngModelOptions]="{standalone: true}" (ngModelChange)="onQuantidadeChange(item, 0)" [step]="getStepForUnidade(item.unidadeMedidaId)" min="0.0001" />
+                  </mat-form-field>
+                }
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="unidade">
+              <th mat-header-cell *matHeaderCellDef>Unidade</th>
+              <td mat-cell *matCellDef="let item">
+                @if (isView()) {
+                  {{ getUnidadeSigla(item.unidadeMedidaId) }}
+                } @else {
+                  <mat-form-field appearance="outline" class="field-unidade">
+                    <mat-select [(ngModel)]="item.unidadeMedidaId" [ngModelOptions]="{standalone: true}">
+                      <mat-option [value]="null">Selecione...</mat-option>
+                      @for (u of unidades(); track u.id) {
+                        <mat-option [value]="u.id">{{ u.sigla }} - {{ u.nome }}</mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+                }
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="qb">
+              <th mat-header-cell *matHeaderCellDef class="col-qb">QB</th>
+              <td mat-cell *matCellDef="let item" class="col-qb">
+                @if (isView()) {
+                  {{ item.exibirComoQB ? 'Sim' : 'Não' }}
+                } @else {
+                  <mat-checkbox [(ngModel)]="item.exibirComoQB" [ngModelOptions]="{standalone: true}"></mat-checkbox>
+                }
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="custo">
+              <th mat-header-cell *matHeaderCellDef>Custo</th>
+              <td mat-cell *matCellDef="let item">
+                {{ formatCurrency(item.custoItem) }}
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="observacoes">
+              <th mat-header-cell *matHeaderCellDef>Observações</th>
+              <td mat-cell *matCellDef="let item">
+                @if (isView()) {
+                  {{ item.observacoes || '-' }}
+                } @else {
+                  <mat-form-field appearance="outline" class="field-observacoes">
+                    <input matInput [(ngModel)]="item.observacoes" [ngModelOptions]="{standalone: true}" placeholder="Opcional" />
+                  </mat-form-field>
+                }
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="acoes">
+              <th mat-header-cell *matHeaderCellDef class="col-acoes">Ações</th>
+              <td mat-cell *matCellDef="let item; let i = index" class="col-acoes">
+                @if (!isView()) {
+                  <div class="action-buttons">
+                    <button mat-icon-button type="button" (click)="moveItemUp(i)" [disabled]="i === 0" matTooltip="Mover para cima">
+                      <mat-icon>arrow_upward</mat-icon>
+                    </button>
+                    <button mat-icon-button type="button" (click)="moveItemDown(i)" [disabled]="i === itens().length - 1" matTooltip="Mover para baixo">
+                      <mat-icon>arrow_downward</mat-icon>
+                    </button>
+                    <button mat-icon-button type="button" (click)="removeItem(i)" color="warn" matTooltip="Remover item">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </div>
+                }
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+          </table>
+        </div>
+      }
+
+      <!-- Versão Mobile: Cards -->
+      @if (isMobile() && itens().length > 0) {
+        <div class="items-cards-container">
+          @for (item of itens(); track $index; let i = $index) {
+            <mat-card class="item-card">
+              <mat-card-content>
+                <div class="item-card-header">
+                  <span class="item-ordem">#{{ item.ordem }}</span>
+                  @if (!isView()) {
+                    <div class="item-card-actions">
+                      <button mat-icon-button type="button" (click)="moveItemUp(i)" [disabled]="i === 0" matTooltip="Mover para cima">
+                        <mat-icon>arrow_upward</mat-icon>
+                      </button>
+                      <button mat-icon-button type="button" (click)="moveItemDown(i)" [disabled]="i === itens().length - 1" matTooltip="Mover para baixo">
+                        <mat-icon>arrow_downward</mat-icon>
+                      </button>
+                      <button mat-icon-button type="button" (click)="removeItem(i)" color="warn" matTooltip="Remover">
+                        <mat-icon>delete</mat-icon>
+                      </button>
+                    </div>
+                  }
+                </div>
+                
+                <div class="item-card-body">
+                  @if (isView()) {
+                    <div class="item-field">
+                      <span class="item-label">Insumo:</span>
+                      <span class="item-value">{{ getInsumoNome(item.insumoId) }}</span>
+                    </div>
+                    <div class="item-field">
+                      <span class="item-label">Quantidade:</span>
+                      <span class="item-value">{{ formatQuantidade(item.quantidade, item.unidadeMedidaId) }} {{ getUnidadeSigla(item.unidadeMedidaId) }}</span>
+                    </div>
+                    @if (item.exibirComoQB) {
+                      <div class="item-field">
+                        <span class="item-label">QB:</span>
+                        <span class="item-value">Sim</span>
+                      </div>
+                    }
+                    @if (item.observacoes) {
+                      <div class="item-field">
+                        <span class="item-label">Observações:</span>
+                        <span class="item-value">{{ item.observacoes }}</span>
+                      </div>
+                    }
+                    <div class="item-field">
+                      <span class="item-label">Custo:</span>
+                      <span class="item-value item-custo">{{ formatCurrency(item.custoItem) }}</span>
+                    </div>
+                  } @else {
+                    <mat-form-field appearance="outline" class="field-full">
+                      <mat-label>Insumo</mat-label>
+                      <mat-select [(ngModel)]="item.insumoId" [ngModelOptions]="{standalone: true}" (selectionChange)="onInsumoChange(item, 0)">
+                        <mat-option [value]="null">Selecione...</mat-option>
+                        @for (i of insumos(); track i.id) {
+                          <mat-option [value]="i.id">{{ i.nome }}</mat-option>
+                        }
+                      </mat-select>
+                    </mat-form-field>
+                    
+                    <div class="item-row-mobile">
+                      <mat-form-field appearance="outline" class="field-quantidade-mobile">
+                        <mat-label>Quantidade</mat-label>
+                        <input matInput type="number" [(ngModel)]="item.quantidade" [ngModelOptions]="{standalone: true}" (ngModelChange)="onQuantidadeChange(item, 0)" [step]="getStepForUnidade(item.unidadeMedidaId)" min="0.0001" />
+                      </mat-form-field>
+                      
+                      <mat-form-field appearance="outline" class="field-unidade-mobile">
+                        <mat-label>Unidade</mat-label>
+                        <mat-select [(ngModel)]="item.unidadeMedidaId" [ngModelOptions]="{standalone: true}">
+                          <mat-option [value]="null">Selecione...</mat-option>
+                          @for (u of unidades(); track u.id) {
+                            <mat-option [value]="u.id">{{ u.sigla }}</mat-option>
+                          }
+                        </mat-select>
+                      </mat-form-field>
+                    </div>
+                    
+                    <div class="item-row-mobile">
+                      <mat-checkbox [(ngModel)]="item.exibirComoQB" [ngModelOptions]="{standalone: true}">Exibir como QB</mat-checkbox>
+                      @if (item.custoItem) {
+                        <span class="item-custo-mobile">{{ formatCurrency(item.custoItem) }}</span>
+                      }
+                    </div>
+                    
+                    <mat-form-field appearance="outline" class="field-full">
+                      <mat-label>Observações (opcional)</mat-label>
+                      <input matInput [(ngModel)]="item.observacoes" [ngModelOptions]="{standalone: true}" />
+                    </mat-form-field>
+                  }
+                </div>
+              </mat-card-content>
+            </mat-card>
+          }
+        </div>
+      }
+
+      @if (itens().length === 0) {
+        <div class="empty-message">
+          <p>Nenhum item adicionado. Clique em "Adicionar Item" para começar.</p>
+        </div>
       }
     </div>
 

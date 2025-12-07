@@ -606,7 +606,6 @@ public class TenantService : BaseService<ApplicationDbContext, TenantEntity, Ten
                 ""InstrucoesEmpratamento"" VARCHAR(2000),
                 ""Rendimento"" DECIMAL(18, 4) NOT NULL,
                 ""PesoPorPorcao"" DECIMAL(18, 4),
-                ""ToleranciaPeso"" DECIMAL(18, 4),
                 ""FatorRendimento"" DECIMAL(18, 4) NOT NULL DEFAULT 1.0,
                 ""TempoPreparo"" INTEGER,
                 ""Versao"" VARCHAR(20) DEFAULT '1.0',

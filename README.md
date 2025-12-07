@@ -1396,5 +1396,4 @@ O sistema utiliza uma estrutura de navegação hierárquica com submenus, organi
 - ✅ **Receitas**: Melhorias na padronização e controle de qualidade
   - Campo Versao para rastreabilidade de mudanças na receita
   - Campo PesoPorPorcao para controle de gramagem por porção
-  - Campo ToleranciaPeso para controle de qualidade (tolerância em %)
   - Campo InstrucoesEmpratamento separado das instruções de preparo
