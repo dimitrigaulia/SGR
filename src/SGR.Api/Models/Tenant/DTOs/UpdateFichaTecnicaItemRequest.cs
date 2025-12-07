@@ -27,3 +27,5 @@ public class UpdateFichaTecnicaItemRequest
     public string? Observacoes { get; set; }
 }
 
+
+

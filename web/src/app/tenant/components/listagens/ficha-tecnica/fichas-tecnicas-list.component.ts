@@ -19,6 +19,7 @@ import { ToastService } from "../../../../core/services/toast.service";
 import { ConfirmationService } from "../../../../core/services/confirmation.service";
 import { FichaTecnicaService, FichaTecnicaDto } from "../../../../features/tenant-receitas/services/ficha-tecnica.service";
 import { LoadingComponent } from "../../../../shared/components/loading/loading.component";
+import { environment } from "../../../../../environments/environment";
 
 @Component({
   standalone: true,
@@ -36,6 +37,9 @@ export class TenantFichasTecnicasListComponent {
   private breakpointObserver = inject(BreakpointObserver);
   private destroyRef = inject(DestroyRef);
   private cdr = inject(ChangeDetectorRef);
+  
+  protected environment = environment;
+  protected window = typeof window !== 'undefined' ? window : null;
 
   displayedColumns = ['nome', 'categoria', 'codigo', 'custoPorUnidade', 'precoSugerido', 'canais', 'ativo', 'acoes'];
   data = signal<FichaTecnicaDto[]>([]);
@@ -148,6 +152,12 @@ export class TenantFichasTecnicasListComponent {
     this.sortActive.set(ev.active);
     this.sortDirection.set((ev.direction || 'asc') as any);
     this.load();
+  }
+
+  printPdf(e: FichaTecnicaDto) {
+    if (this.window) {
+      this.window.open(`${this.environment.apiUrl}/tenant/fichas-tecnicas/${e.id}/pdf`, '_blank');
+    }
   }
 }
 

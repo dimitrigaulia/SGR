@@ -44,3 +44,5 @@ END $$;
 -- Para executar em um schema específico, use:
 -- ALTER TABLE "nome_do_schema"."Insumo" RENAME COLUMN "CategoriaInsumoId" TO "CategoriaId";
 
+
+

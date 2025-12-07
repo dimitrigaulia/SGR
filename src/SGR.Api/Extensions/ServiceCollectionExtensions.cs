@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using SGR.Api.Data;
 using SGR.Api.Services.Backoffice.Implementations;
 using SGR.Api.Services.Backoffice.Interfaces;
+using SGR.Api.Services.Common;
 using SGR.Api.Services.Implementations;
 using SGR.Api.Services.Interfaces;
 using SGR.Api.Services.Tenant.Implementations;
@@ -39,6 +40,7 @@ public static class ServiceCollectionExtensions
         
         // Common Services
         services.AddScoped<ITenantService, TenantService>();
+        services.AddScoped<PdfService>();
         
         // HTTP Client para validação de CPF/CNPJ
         services.AddHttpClient<ICpfCnpjValidationService, CpfCnpjValidationService>();

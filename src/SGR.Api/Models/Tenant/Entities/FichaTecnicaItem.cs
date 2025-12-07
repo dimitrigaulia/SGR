@@ -60,3 +60,5 @@ public class FichaTecnicaItem
     public UnidadeMedida UnidadeMedida { get; set; } = null!;
 }
 
+
+

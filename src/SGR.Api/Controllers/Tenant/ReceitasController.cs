@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SGR.Api.Models.Tenant.DTOs;
+using SGR.Api.Services.Common;
 using SGR.Api.Services.Tenant.Interfaces;
 
 namespace SGR.Api.Controllers.Tenant;
@@ -14,11 +15,13 @@ namespace SGR.Api.Controllers.Tenant;
 public class ReceitasController : ControllerBase
 {
     private readonly IReceitaService _service;
+    private readonly PdfService _pdfService;
     private readonly ILogger<ReceitasController> _logger;
 
-    public ReceitasController(IReceitaService service, ILogger<ReceitasController> logger)
+    public ReceitasController(IReceitaService service, PdfService pdfService, ILogger<ReceitasController> logger)
     {
         _service = service;
+        _pdfService = pdfService;
         _logger = logger;
     }
 
@@ -126,9 +129,16 @@ public class ReceitasController : ControllerBase
         var receita = await _service.GetByIdAsync(id);
         if (receita == null) return NotFound();
 
-        // Por enquanto, retorna HTML (pode ser convertido para PDF no frontend ou adicionar biblioteca de PDF depois)
-        // TODO: Implementar geração de PDF real usando QuestPDF ou iTextSharp
-        return await Print(id);
+        try
+        {
+            var pdfBytes = _pdfService.GenerateReceitaPdf(receita);
+            return File(pdfBytes, "application/pdf", $"receita-{receita.Nome.Replace(" ", "-")}-{id}.pdf");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao gerar PDF da receita {Id}", id);
+            return StatusCode(500, new { message = "Erro ao gerar PDF" });
+        }
     }
 
     /// <summary>

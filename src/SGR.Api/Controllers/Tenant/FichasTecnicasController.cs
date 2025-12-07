@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SGR.Api.Models.Tenant.DTOs;
+using SGR.Api.Services.Common;
 using SGR.Api.Services.Tenant.Interfaces;
 
 namespace SGR.Api.Controllers.Tenant;
@@ -14,11 +15,13 @@ namespace SGR.Api.Controllers.Tenant;
 public class FichasTecnicasController : ControllerBase
 {
     private readonly IFichaTecnicaService _service;
+    private readonly PdfService _pdfService;
     private readonly ILogger<FichasTecnicasController> _logger;
 
-    public FichasTecnicasController(IFichaTecnicaService service, ILogger<FichasTecnicasController> logger)
+    public FichasTecnicasController(IFichaTecnicaService service, PdfService pdfService, ILogger<FichasTecnicasController> logger)
     {
         _service = service;
+        _pdfService = pdfService;
         _logger = logger;
     }
 
@@ -123,9 +126,16 @@ public class FichasTecnicasController : ControllerBase
         var ficha = await _service.GetByIdAsync(id);
         if (ficha == null) return NotFound();
 
-        // Por enquanto, retorna HTML (pode ser convertido para PDF no frontend ou adicionar biblioteca de PDF depois)
-        // TODO: Implementar geração de PDF real usando QuestPDF ou iTextSharp
-        return await Print(id);
+        try
+        {
+            var pdfBytes = _pdfService.GenerateFichaTecnicaPdf(ficha);
+            return File(pdfBytes, "application/pdf", $"ficha-tecnica-{ficha.Nome.Replace(" ", "-")}-{id}.pdf");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao gerar PDF da ficha técnica {Id}", id);
+            return StatusCode(500, new { message = "Erro ao gerar PDF" });
+        }
     }
 
     [HttpPost]
