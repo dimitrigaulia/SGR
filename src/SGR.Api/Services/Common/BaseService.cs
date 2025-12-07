@@ -143,8 +143,9 @@ public abstract class BaseService<TDbContext, TEntity, TDto, TCreateRequest, TUp
             
             await BeforeUpdateAsync(entity, request, usuarioAtualizacao);
             
-            // NÃ£o Ã© necessÃ¡rio marcar como Modified explicitamente quando a entidade jÃ¡ estÃ¡ tracked
-            // O EF Core detecta automaticamente as mudanÃ§as
+            // Marcar explicitamente como Modified para garantir que o EF Core gere o UPDATE correto
+            // Isso previne problemas de concorrência quando o tracking perde a referência ao ID original
+            _context.Entry(entity).State = EntityState.Modified;
             await _context.SaveChangesAsync();
 
             _logger.LogInformation("{EntityType} atualizado com sucesso - ID: {Id}", typeof(TEntity).Name, id);

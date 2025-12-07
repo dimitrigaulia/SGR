@@ -222,7 +222,9 @@ public class TenantUsuarioService : BaseService<TenantDbContext, TenantUsuario, 
             
             await BeforeUpdateAsync(entity, request, usuarioAtualizacao);
             
-            // NÃ£o Ã© necessÃ¡rio marcar como Modified explicitamente quando a entidade jÃ¡ estÃ¡ tracked
+            // Marcar explicitamente como Modified para garantir que o EF Core gere o UPDATE correto
+            // Isso previne problemas de concorrência quando o tracking perde a referência ao ID original
+            _context.Entry(entity).State = EntityState.Modified;
             await _context.SaveChangesAsync();
 
             _logger.LogInformation("{EntityType} atualizado com sucesso - ID: {Id}", typeof(TenantUsuario).Name, id);

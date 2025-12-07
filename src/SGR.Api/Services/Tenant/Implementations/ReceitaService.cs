@@ -344,6 +344,9 @@ public class ReceitaService : IReceitaService
             // Recalcular custos
             CalcularCustos(receita, insumos);
 
+            // Marcar explicitamente como Modified para garantir que o EF Core gere o UPDATE correto
+            // Isso previne problemas de concorrência quando o tracking perde a referência ao ID original
+            _context.Entry(receita).State = EntityState.Modified;
             await _context.SaveChangesAsync();
 
             _logger.LogInformation("Receita atualizada com sucesso - ID: {Id}", id);
