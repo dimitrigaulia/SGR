@@ -1,10 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
 using SGR.Api.Models.Tenant.DTOs;
 using SGR.Api.Services.Common;
 using SGR.Api.Services.Tenant.Interfaces;
-using System.Linq;
 
 namespace SGR.Api.Controllers.Tenant;
 
@@ -151,21 +149,7 @@ public class ReceitasController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Create([FromBody] CreateReceitaRequest request)
     {
-        if (!ModelState.IsValid)
-        {
-            _logger.LogWarning("ReceitasController.Create - ModelState inválido. Erros: {Erros}", 
-                string.Join(", ", ModelState.SelectMany(x => x.Value?.Errors ?? Enumerable.Empty<Microsoft.AspNetCore.Mvc.ModelBinding.ModelError>()).Select(e => e.ErrorMessage)));
-            return BadRequest(ModelState);
-        }
-
-        _logger.LogInformation("ReceitasController.Create - Request recebido. Nome: {Nome}, Quantidade de itens: {QuantidadeItens}", 
-            request.Nome, request.Itens?.Count ?? 0);
-        
-        if (request.Itens != null)
-        {
-            _logger.LogDebug("ReceitasController.Create - Detalhes dos itens no request: {Itens}", 
-                string.Join(", ", request.Itens.Select((i, idx) => $"Item[{idx}]: InsumoId={i.InsumoId}, Quantidade={i.Quantidade}, Ordem={i.Ordem}")));
-        }
+        if (!ModelState.IsValid) return BadRequest(ModelState);
 
         var dto = await _service.CreateAsync(request, User?.Identity?.Name);
         return CreatedAtAction(nameof(GetById), new { id = dto.Id }, dto);
@@ -180,21 +164,7 @@ public class ReceitasController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Update(long id, [FromBody] UpdateReceitaRequest request)
     {
-        if (!ModelState.IsValid)
-        {
-            _logger.LogWarning("ReceitasController.Update - ModelState inválido. Erros: {Erros}", 
-                string.Join(", ", ModelState.SelectMany(x => x.Value?.Errors ?? Enumerable.Empty<Microsoft.AspNetCore.Mvc.ModelBinding.ModelError>()).Select(e => e.ErrorMessage)));
-            return BadRequest(ModelState);
-        }
-
-        _logger.LogInformation("ReceitasController.Update - Request recebido. ID: {Id}, Nome: {Nome}, Quantidade de itens: {QuantidadeItens}", 
-            id, request.Nome, request.Itens?.Count ?? 0);
-        
-        if (request.Itens != null)
-        {
-            _logger.LogDebug("ReceitasController.Update - Detalhes dos itens no request: {Itens}", 
-                string.Join(", ", request.Itens.Select((i, idx) => $"Item[{idx}]: InsumoId={i.InsumoId}, Quantidade={i.Quantidade}, Ordem={i.Ordem}")));
-        }
+        if (!ModelState.IsValid) return BadRequest(ModelState);
 
         var dto = await _service.UpdateAsync(id, request, User?.Identity?.Name);
         if (dto == null) return NotFound();
