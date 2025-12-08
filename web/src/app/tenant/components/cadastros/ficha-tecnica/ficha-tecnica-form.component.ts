@@ -101,10 +101,112 @@ export class TenantFichaTecnicaFormComponent {
   window = typeof window !== 'undefined' ? window : null;
   environment = environment;
 
-  custoTotal = signal<number>(0);
-  custoPorUnidade = signal<number>(0);
-  rendimentoFinal = signal<number | null>(null);
-  precoSugeridoVenda = signal<number | null>(null);
+  // Métodos auxiliares de cálculo
+  private calcularCustoPorUnidadeUso(insumo: InsumoDto): number {
+    if (insumo.quantidadePorEmbalagem <= 0) {
+      return 0;
+    }
+    return (insumo.custoUnitario / insumo.quantidadePorEmbalagem) * insumo.fatorCorrecao;
+  }
+
+  private calcularCustoItem(item: FichaTecnicaItemFormModel): number {
+    if (item.quantidade <= 0) return 0;
+
+    if (item.tipoItem === 'Insumo' && item.insumoId) {
+      const insumo = this.insumos().find(i => i.id === item.insumoId);
+      if (insumo) {
+        const custoPorUnidadeUso = this.calcularCustoPorUnidadeUso(insumo);
+        return item.quantidade * custoPorUnidadeUso;
+      }
+    } else if (item.tipoItem === 'Receita' && item.receitaId) {
+      const receita = this.receitas().find(r => r.id === item.receitaId);
+      if (receita && receita.custoPorPorcao) {
+        return item.quantidade * receita.custoPorPorcao;
+      }
+    }
+    return 0;
+  }
+
+  // Getters computed para cálculos em tempo real
+  get custoTotalCalculado(): number {
+    let custoTotal = 0;
+    for (const item of this.itens()) {
+      if (
+        (item.tipoItem === 'Receita' && item.receitaId) ||
+        (item.tipoItem === 'Insumo' && item.insumoId)
+      ) {
+        custoTotal += this.calcularCustoItem(item);
+      }
+    }
+    return Math.round(custoTotal * 10000) / 10000; // Arredondar para 4 casas decimais
+  }
+
+  get rendimentoFinalCalculado(): number | null {
+    // Considerar apenas itens cuja UnidadeMedida.Sigla seja "GR"
+    let quantidadeTotalBase = 0;
+
+    for (const item of this.itens()) {
+      if (!item.unidadeMedidaId || item.quantidade <= 0) continue;
+
+      const unidade = this.unidades().find(u => u.id === item.unidadeMedidaId);
+      if (!unidade || unidade.sigla.toUpperCase() !== 'GR') continue;
+
+      if (item.tipoItem === 'Receita' && item.receitaId) {
+        // Para receitas: quantidade = número de porções, multiplicar por PesoPorPorcao
+        const receita = this.receitas().find(r => r.id === item.receitaId);
+        if (receita && receita.pesoPorPorcao && receita.pesoPorPorcao > 0) {
+          quantidadeTotalBase += item.quantidade * receita.pesoPorPorcao;
+        }
+      } else if (item.tipoItem === 'Insumo') {
+        // Para insumos: somar quantidade diretamente
+        quantidadeTotalBase += item.quantidade;
+      }
+    }
+
+    // Aplicar IC (Índice de Cocção)
+    let pesoAposCoccao = quantidadeTotalBase;
+    if (this.model.icOperador && this.model.icValor !== null) {
+      const icValor = Math.max(0, Math.min(9999, this.model.icValor));
+      const icPercentual = icValor / 100;
+
+      if (this.model.icOperador === '+') {
+        pesoAposCoccao = quantidadeTotalBase * (1 + icPercentual);
+      } else if (this.model.icOperador === '-') {
+        pesoAposCoccao = quantidadeTotalBase * (1 - icPercentual);
+      }
+    }
+
+    // Aplicar IPC (Índice de Partes Comestíveis)
+    let pesoComestivel = pesoAposCoccao;
+    if (this.model.ipcValor !== null) {
+      const ipcValor = Math.max(0, Math.min(999, this.model.ipcValor));
+      const ipcPercentual = ipcValor / 100;
+      pesoComestivel = pesoAposCoccao * ipcPercentual;
+    }
+
+    return pesoComestivel > 0 ? pesoComestivel : null;
+  }
+
+  get custoPorUnidadeCalculado(): number {
+    const rendimentoFinal = this.rendimentoFinalCalculado;
+    if (rendimentoFinal !== null && rendimentoFinal > 0) {
+      return Math.round((this.custoTotalCalculado / rendimentoFinal) * 10000) / 10000;
+    }
+    return 0;
+  }
+
+  get precoSugeridoVendaCalculado(): number | null {
+    const rendimentoFinal = this.rendimentoFinalCalculado;
+    if (rendimentoFinal === null || rendimentoFinal <= 0) {
+      return null;
+    }
+
+    const custoPorUnidade = this.custoPorUnidadeCalculado;
+    if (this.model.indiceContabil && this.model.indiceContabil > 0 && custoPorUnidade > 0) {
+      return Math.round(custoPorUnidade * this.model.indiceContabil * 10000) / 10000;
+    }
+    return null;
+  }
 
   constructor() {
     // Detectar mobile
@@ -177,10 +279,6 @@ export class TenantFichaTecnicaFormComponent {
             margemAlvoPercentual: e.margemAlvoPercentual ?? null,
             isAtivo: e.isAtivo
           };
-          this.custoTotal.set(e.custoTotal);
-          this.custoPorUnidade.set(e.custoPorUnidade);
-          this.rendimentoFinal.set(e.rendimentoFinal ?? null);
-          this.precoSugeridoVenda.set(e.precoSugeridoVenda ?? null);
           this.itens.set(e.itens.map(i => ({
             id: i.id,
             tipoItem: i.tipoItem as 'Receita' | 'Insumo',
@@ -239,12 +337,59 @@ export class TenantFichaTecnicaFormComponent {
     this.cdr.markForCheck();
   }
 
+  setUnidadeGramas(item: FichaTecnicaItemFormModel) {
+    const unidadeGr = this.unidades().find(u => u.sigla.toUpperCase() === 'GR');
+    if (unidadeGr) {
+      item.unidadeMedidaId = unidadeGr.id;
+    }
+  }
+
+  onSelectInsumo(item: FichaTecnicaItemFormModel, insumoId: number | null) {
+    item.insumoId = insumoId;
+    if (insumoId) {
+      const insumo = this.insumos().find(i => i.id === insumoId);
+      if (insumo?.unidadeUsoId) {
+        item.unidadeMedidaId = insumo.unidadeUsoId;
+      }
+    } else {
+      item.unidadeMedidaId = null;
+    }
+    // Atualizar signal para forçar recálculo dos getters
+    this.itens.set([...this.itens()]);
+    this.cdr.markForCheck();
+  }
+
+  onSelectReceita(item: FichaTecnicaItemFormModel) {
+    this.setUnidadeGramas(item);
+    // Atualizar signal para forçar recálculo dos getters
+    this.itens.set([...this.itens()]);
+    this.cdr.markForCheck();
+  }
+
   onItemTipoChange(item: FichaTecnicaItemFormModel) {
     if (item.tipoItem === 'Receita') {
       item.insumoId = null;
+      this.setUnidadeGramas(item);
     } else {
       item.receitaId = null;
+      item.unidadeMedidaId = null; // Será preenchida ao selecionar insumo
     }
+    // Atualizar signal para forçar recálculo dos getters
+    this.itens.set([...this.itens()]);
+    this.cdr.markForCheck();
+  }
+
+  onQuantidadeChange(item: FichaTecnicaItemFormModel) {
+    // Atualizar signal para forçar recálculo dos getters
+    this.itens.set([...this.itens()]);
+    this.cdr.markForCheck();
+  }
+
+  onICChange() {
+    this.cdr.markForCheck();
+  }
+
+  onIndiceContabilChange() {
     this.cdr.markForCheck();
   }
 
@@ -263,6 +408,19 @@ export class TenantFichaTecnicaFormComponent {
     if (!unidadeMedidaId) return '-';
     const unidade = this.unidades().find(u => u.id === unidadeMedidaId);
     return unidade ? unidade.sigla : '-';
+  }
+
+  isUnidadeTravada(item: FichaTecnicaItemFormModel): boolean {
+    // Unidade está travada se:
+    // - Item é do tipo Receita (sempre GR)
+    // - Item é do tipo Insumo e já tem insumo selecionado (usa unidadeUsoId do insumo)
+    if (item.tipoItem === 'Receita') {
+      return true;
+    }
+    if (item.tipoItem === 'Insumo' && item.insumoId != null) {
+      return true;
+    }
+    return false;
   }
 
   addCanal() {

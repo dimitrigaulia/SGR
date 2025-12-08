@@ -384,6 +384,35 @@ public class FichaTecnicaService : IFichaTecnicaService
             throw new BusinessException("Uma ou mais unidades de medida sÃ£o invÃ¡lidas ou estÃ£o inativas");
         }
 
+        // Validar unidades de medida dos itens
+        foreach (var item in request.Itens)
+        {
+            if (item.TipoItem == "Insumo" && item.InsumoId.HasValue)
+            {
+                var insumo = insumos.FirstOrDefault(i => i.Id == item.InsumoId.Value);
+                if (insumo == null)
+                {
+                    throw new BusinessException($"Insumo com ID {item.InsumoId.Value} não encontrado.");
+                }
+                if (item.UnidadeMedidaId != insumo.UnidadeUsoId)
+                {
+                    throw new BusinessException($"Unidade do item deve ser igual à unidade de uso do insumo '{insumo.Nome}'.");
+                }
+            }
+            else if (item.TipoItem == "Receita")
+            {
+                var unidade = unidadesMedida.FirstOrDefault(u => u.Id == item.UnidadeMedidaId);
+                if (unidade == null)
+                {
+                    throw new BusinessException($"Unidade de medida com ID {item.UnidadeMedidaId} não encontrada.");
+                }
+                if (!string.Equals(unidade.Sigla, "GR", StringComparison.OrdinalIgnoreCase))
+                {
+                    throw new BusinessException("Itens do tipo Receita na ficha técnica devem usar unidade de medida em GR (gramas).");
+                }
+            }
+        }
+
         var ficha = new FichaTecnica
         {
             CategoriaId = request.CategoriaId,
@@ -401,9 +430,14 @@ public class FichaTecnicaService : IFichaTecnicaService
         };
 
         // Criar itens
+        _logger.LogInformation("Criando {Count} itens para a ficha técnica", request.Itens.Count);
+        
         var ordem = 1;
         foreach (var itemRequest in request.Itens.OrderBy(i => i.Ordem))
         {
+            _logger.LogDebug("Adicionando item: Tipo={Tipo}, Ordem={Ordem}, ReceitaId={ReceitaId}, InsumoId={InsumoId}", 
+                itemRequest.TipoItem, ordem, itemRequest.ReceitaId, itemRequest.InsumoId);
+            
             ficha.Itens.Add(new FichaTecnicaItem
             {
                 TipoItem = itemRequest.TipoItem,
@@ -418,6 +452,8 @@ public class FichaTecnicaService : IFichaTecnicaService
                 DataCriacao = DateTime.UtcNow
             });
         }
+        
+        _logger.LogInformation("Total de {Count} itens adicionados à ficha técnica", ficha.Itens.Count);
 
         // Calcular rendimento final
         CalcularRendimentoFinal(ficha, unidadesMedida, receitas);
@@ -540,6 +576,35 @@ public class FichaTecnicaService : IFichaTecnicaService
                 throw new BusinessException("Uma ou mais unidades de medida sÃ£o invÃ¡lidas ou estÃ£o inativas");
             }
 
+            // Validar unidades de medida dos itens
+            foreach (var item in request.Itens)
+            {
+                if (item.TipoItem == "Insumo" && item.InsumoId.HasValue)
+                {
+                    var insumo = insumos.FirstOrDefault(i => i.Id == item.InsumoId.Value);
+                    if (insumo == null)
+                    {
+                        throw new BusinessException($"Insumo com ID {item.InsumoId.Value} não encontrado.");
+                    }
+                    if (item.UnidadeMedidaId != insumo.UnidadeUsoId)
+                    {
+                        throw new BusinessException($"Unidade do item deve ser igual à unidade de uso do insumo '{insumo.Nome}'.");
+                    }
+                }
+                else if (item.TipoItem == "Receita")
+                {
+                    var unidade = unidadesMedida.FirstOrDefault(u => u.Id == item.UnidadeMedidaId);
+                    if (unidade == null)
+                    {
+                        throw new BusinessException($"Unidade de medida com ID {item.UnidadeMedidaId} não encontrada.");
+                    }
+                    if (!string.Equals(unidade.Sigla, "GR", StringComparison.OrdinalIgnoreCase))
+                    {
+                        throw new BusinessException("Itens do tipo Receita na ficha técnica devem usar unidade de medida em GR (gramas).");
+                    }
+                }
+            }
+
             // Atualizar ficha
             ficha.CategoriaId = request.CategoriaId;
             ficha.Nome = request.Nome;
@@ -564,9 +629,14 @@ public class FichaTecnicaService : IFichaTecnicaService
             ficha.Itens.Clear();
 
             // Adicionar novos itens
+            _logger.LogInformation("Atualizando ficha técnica - Criando {Count} itens", request.Itens.Count);
+            
             var ordem = 1;
             foreach (var itemRequest in request.Itens.OrderBy(i => i.Ordem))
             {
+                _logger.LogDebug("Adicionando item: Tipo={Tipo}, Ordem={Ordem}, ReceitaId={ReceitaId}, InsumoId={InsumoId}", 
+                    itemRequest.TipoItem, ordem, itemRequest.ReceitaId, itemRequest.InsumoId);
+                
                 ficha.Itens.Add(new FichaTecnicaItem
                 {
                     TipoItem = itemRequest.TipoItem,
@@ -581,6 +651,8 @@ public class FichaTecnicaService : IFichaTecnicaService
                     DataAtualizacao = DateTime.UtcNow
                 });
             }
+            
+            _logger.LogInformation("Total de {Count} itens adicionados à ficha técnica", ficha.Itens.Count);
 
             // Calcular rendimento final
             CalcularRendimentoFinal(ficha, unidadesMedida, receitas);
