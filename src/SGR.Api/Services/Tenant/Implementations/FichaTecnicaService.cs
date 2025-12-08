@@ -556,8 +556,12 @@ public class FichaTecnicaService : IFichaTecnicaService
 
             // Remover itens antigos
             // NÃ£o usar Clear() pois RemoveRange jÃ¡ remove do contexto
+            // Apenas remover do contexto, a coleÃ§Ã£o serÃ¡ atualizada automaticamente
             var itensParaRemover = ficha.Itens.ToList();
             _context.FichaTecnicaItens.RemoveRange(itensParaRemover);
+            
+            // Limpar a coleÃ§Ã£o em memÃ³ria para garantir que novos itens sejam adicionados corretamente
+            ficha.Itens.Clear();
 
             // Adicionar novos itens
             var ordem = 1;
