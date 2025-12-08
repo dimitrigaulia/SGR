@@ -403,9 +403,16 @@
               @if (isView()) {
                 {{ formatCurrency(item.precoVenda) }}
               } @else {
-                <mat-form-field appearance="outline" style="width: 100%;">
-                  <input matInput type="number" [(ngModel)]="item.precoVenda" [ngModelOptions]="{standalone: true}" min="0" step="0.01" />
-                </mat-form-field>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <mat-form-field appearance="outline" style="flex: 1;">
+                    <input matInput type="number" [(ngModel)]="item.precoVenda" [ngModelOptions]="{standalone: true}" min="0" step="0.01" placeholder="0 = calcular automaticamente" />
+                  </mat-form-field>
+                  @if (item.precoVenda > 0) {
+                    <span class="badge-manual" style="font-size: 11px; padding: 2px 6px; background: #e3f2fd; color: #1976d2; border-radius: 4px;">Manual</span>
+                  } @else {
+                    <span class="badge-auto" style="font-size: 11px; padding: 2px 6px; background: #f3e5f5; color: #7b1fa2; border-radius: 4px;">Auto</span>
+                  }
+                </div>
               }
             </td>
           </ng-container>

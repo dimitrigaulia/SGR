@@ -230,7 +230,12 @@ export class TenantFichaTecnicaFormComponent {
 
   removeItem(index: number) {
     const current = this.itens();
-    this.itens.set(current.filter((_, i) => i !== index));
+    const newItens = current.filter((_, i) => i !== index);
+    // Reordenar itens para evitar buracos na ordem (1, 3, 4...)
+    newItens.forEach((item, idx) => {
+      item.ordem = idx + 1;
+    });
+    this.itens.set(newItens);
     this.cdr.markForCheck();
   }
 

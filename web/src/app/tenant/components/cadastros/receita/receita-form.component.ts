@@ -401,21 +401,23 @@ export class TenantReceitaFormComponent {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
   }
 
+  // Preview para UI; fonte da verdade = backend
   calcularCustoPorUnidadeUso(insumo: InsumoDto): number {
     if (insumo.quantidadePorEmbalagem <= 0) return 0;
     return (insumo.custoUnitario / insumo.quantidadePorEmbalagem) * insumo.fatorCorrecao;
   }
 
+  // Preview para UI; fonte da verdade = backend
   calcularCustoItem(item: ReceitaItemFormModel): number {
     if (!item.insumoId || item.quantidade <= 0) return 0;
     const insumo = this.insumos().find(i => i.id === item.insumoId);
     if (!insumo) return 0;
-    
-    const quantidadeBruta = item.quantidade * insumo.fatorCorrecao;
+
     const custoPorUnidadeUso = this.calcularCustoPorUnidadeUso(insumo);
-    return quantidadeBruta * custoPorUnidadeUso;
+    return item.quantidade * custoPorUnidadeUso;
   }
 
+  // Preview para UI; fonte da verdade = backend
   get custoTotalCalculado(): number | null {
     let custoTotalBruto = 0;
     let temItensValidos = false;
@@ -434,6 +436,7 @@ export class TenantReceitaFormComponent {
     return custoTotalBruto / fatorRendimento;
   }
 
+  // Preview para UI; fonte da verdade = backend
   get custoPorPorcaoCalculado(): number | null {
     const custoTotal = this.custoTotalCalculado;
     const rendimento = this.model.rendimento;
@@ -553,7 +556,7 @@ export class TenantReceitaFormComponent {
         instrucoesEmpratamento: v.instrucoesEmpratamento || undefined,
         rendimento: v.rendimento,
         pesoPorPorcao: v.pesoPorPorcao || undefined,
-        fatorRendimento: this.fatorRendimentoCalculado || 1.0,
+        fatorRendimento: 1.0, // Backend calcula a partir de icSinal/icValor, sempre enviar 1.0
         icSinal: v.icSinal || undefined,
         icValor: v.icValor ?? undefined,
         tempoPreparo: v.tempoPreparo || undefined,
@@ -584,7 +587,7 @@ export class TenantReceitaFormComponent {
         instrucoesEmpratamento: v.instrucoesEmpratamento || undefined,
         rendimento: v.rendimento,
         pesoPorPorcao: v.pesoPorPorcao || undefined,
-        fatorRendimento: this.fatorRendimentoCalculado || 1.0,
+        fatorRendimento: 1.0, // Backend calcula a partir de icSinal/icValor, sempre enviar 1.0
         icSinal: v.icSinal || undefined,
         icValor: v.icValor ?? undefined,
         tempoPreparo: v.tempoPreparo || undefined,

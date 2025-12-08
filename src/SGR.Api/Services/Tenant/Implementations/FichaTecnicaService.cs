@@ -84,8 +84,10 @@ public class FichaTecnicaService : IFichaTecnicaService
 
     /// <summary>
     /// Calcula o rendimento final da ficha tÃ©cnica considerando apenas itens em GR (gramas)
+    /// Para itens do tipo Receita: quantidade representa porções, então multiplica por PesoPorPorcao
+    /// Para itens do tipo Insumo: soma quantidade diretamente
     /// </summary>
-    private void CalcularRendimentoFinal(FichaTecnica ficha, List<UnidadeMedida> unidadesMedida)
+    private void CalcularRendimentoFinal(FichaTecnica ficha, List<UnidadeMedida> unidadesMedida, List<Receita> receitas)
     {
         // Considerar apenas itens cuja UnidadeMedida.Sigla seja "GR"
         var quantidadeTotalBase = 0m;
@@ -96,7 +98,22 @@ public class FichaTecnicaService : IFichaTecnicaService
             if (unidadeMedida != null && unidadeMedida.Sigla.ToUpper() == "GR")
             {
                 // IMPORTANTE: ExibirComoQB Ã© apenas visual, sempre usar Quantidade numÃ©rica
-                quantidadeTotalBase += item.Quantidade;
+                
+                if (item.TipoItem == "Receita" && item.ReceitaId.HasValue)
+                {
+                    // Para receitas: quantidade = número de porções, multiplicar por PesoPorPorcao
+                    var receita = receitas.FirstOrDefault(r => r.Id == item.ReceitaId.Value);
+                    if (receita != null && receita.PesoPorPorcao.HasValue && receita.PesoPorPorcao.Value > 0)
+                    {
+                        quantidadeTotalBase += item.Quantidade * receita.PesoPorPorcao.Value;
+                    }
+                    // Se PesoPorPorcao for null ou <= 0, ignorar essa linha (não somar)
+                }
+                else if (item.TipoItem == "Insumo")
+                {
+                    // Para insumos: somar quantidade diretamente
+                    quantidadeTotalBase += item.Quantidade;
+                }
             }
         }
 
@@ -154,7 +171,37 @@ public class FichaTecnicaService : IFichaTecnicaService
     }
 
     /// <summary>
-    /// Calcula os preÃ§os dos canais
+    /// Cria canais padrão para a ficha tÃ©cnica (ifood-1 e ifood-2)
+    /// </summary>
+    private void CriarCanaisPadrao(FichaTecnica ficha)
+    {
+        ficha.Canais.Add(new FichaTecnicaCanal
+        {
+            Canal = "ifood-1",
+            NomeExibicao = "Ifood 1",
+            PrecoVenda = 0,
+            TaxaPercentual = 13,
+            ComissaoPercentual = null,
+            Observacoes = null,
+            IsAtivo = true
+        });
+
+        ficha.Canais.Add(new FichaTecnicaCanal
+        {
+            Canal = "ifood-2",
+            NomeExibicao = "Ifood 2",
+            PrecoVenda = 0,
+            TaxaPercentual = 25,
+            ComissaoPercentual = null,
+            Observacoes = null,
+            IsAtivo = true
+        });
+    }
+
+    /// <summary>
+    /// Calcula os preÃ§os dos canais (lógica híbrida)
+    /// - Se PrecoVenda for 0 ou null: calcular automaticamente a partir de PrecoSugeridoVenda
+    /// - Se PrecoVenda > 0: respeitar o valor e apenas recalcular margem
     /// </summary>
     private void CalcularPrecosCanais(FichaTecnica ficha)
     {
@@ -162,20 +209,28 @@ public class FichaTecnicaService : IFichaTecnicaService
 
         foreach (var canal in ficha.Canais)
         {
-            // Se PrecoSugeridoVenda nÃ£o for vÃ¡lido, zerar preÃ§o e margem para nÃ£o ficar com valor antigo
-            if (precoBase <= 0)
+            // Proteção crítica: se PrecoSugeridoVenda ou CustoPorUnidade forem inválidos, zerar tudo
+            if (precoBase <= 0 || ficha.CustoPorUnidade <= 0)
             {
                 canal.PrecoVenda = 0m;
                 canal.MargemCalculadaPercentual = null;
                 continue;
             }
 
-            // Tratar TaxaPercentual null como 0% (vende pelo preÃ§o base)
-            var taxaPercentual = canal.TaxaPercentual ?? 0m;
-            var taxa = taxaPercentual / 100m;
-            canal.PrecoVenda = Math.Round(precoBase * (1 + taxa), 4);
+            // Lógica híbrida: verificar se PrecoVenda já foi definido manualmente
+            var precoVendaOriginal = canal.PrecoVenda;
+            var modoAutomatico = precoVendaOriginal <= 0;
 
-            // Calcular margem
+            if (modoAutomatico)
+            {
+                // Modo automático: calcular PrecoVenda a partir de PrecoSugeridoVenda e taxa
+                var taxaPercentual = canal.TaxaPercentual ?? 0m;
+                var taxa = taxaPercentual / 100m;
+                canal.PrecoVenda = Math.Round(precoBase * (1 + taxa), 4);
+            }
+            // Se modo manual (precoVendaOriginal > 0), manter o valor e apenas recalcular margem
+
+            // Calcular margem (sempre recalcular, mesmo em modo manual)
             if (canal.PrecoVenda > 0 && ficha.CustoPorUnidade > 0)
             {
                 var taxaMargem = (canal.TaxaPercentual ?? 0m) / 100m;
@@ -365,7 +420,7 @@ public class FichaTecnicaService : IFichaTecnicaService
         }
 
         // Calcular rendimento final
-        CalcularRendimentoFinal(ficha, unidadesMedida);
+        CalcularRendimentoFinal(ficha, unidadesMedida, receitas);
 
         // Calcular custos
         CalcularCustosFichaTecnica(ficha, insumos, receitas);
@@ -373,9 +428,10 @@ public class FichaTecnicaService : IFichaTecnicaService
         // Calcular preÃ§o sugerido
         CalcularPrecoSugerido(ficha);
 
-        // Criar canais da requisição
+        // Criar canais: usar canais do request se presentes, senão criar canais padrão
         if (request.Canais != null && request.Canais.Any())
         {
+            // Usar exatamente os canais do request
             foreach (var canalReq in request.Canais)
             {
                 ficha.Canais.Add(new FichaTecnicaCanal
@@ -390,12 +446,14 @@ public class FichaTecnicaService : IFichaTecnicaService
                 });
             }
         }
-
-        // Calcular preÃ§os dos canais (apenas se houver canais)
-        if (ficha.Canais.Any())
+        else
         {
-            CalcularPrecosCanais(ficha);
+            // Criar canais padrão quando request.Canais estiver vazio ou null
+            CriarCanaisPadrao(ficha);
         }
+
+        // Calcular preÃ§os dos canais (sempre haverá canais: do request ou padrão)
+        CalcularPrecosCanais(ficha);
 
         _context.FichasTecnicas.Add(ficha);
         await _context.SaveChangesAsync();
@@ -521,7 +579,7 @@ public class FichaTecnicaService : IFichaTecnicaService
             }
 
             // Calcular rendimento final
-            CalcularRendimentoFinal(ficha, unidadesMedida);
+            CalcularRendimentoFinal(ficha, unidadesMedida, receitas);
 
             // Calcular custos
             CalcularCustosFichaTecnica(ficha, insumos, receitas);
