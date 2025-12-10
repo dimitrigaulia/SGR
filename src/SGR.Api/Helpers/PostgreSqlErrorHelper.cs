@@ -59,3 +59,5 @@ public static class PostgreSqlErrorHelper
         return "Ocorreu um erro ao processar a operação no banco de dados. Tente novamente.";
     }
 }
+
+

@@ -266,3 +266,5 @@ public class PdfService
         return $"R$ {valor:N2}";
     }
 }
+
+

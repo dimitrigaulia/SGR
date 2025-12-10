@@ -112,3 +112,5 @@ if ($successCount -gt 0) {
     & (Join-Path $rootPath "scripts\check-encoding.ps1")
 }
 
+
+

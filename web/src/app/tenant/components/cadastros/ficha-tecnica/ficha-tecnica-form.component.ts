@@ -163,9 +163,14 @@ export class TenantFichaTecnicaFormComponent {
       }
     }
 
+    // Se não houver itens válidos, retornar null
+    if (quantidadeTotalBase <= 0) {
+      return null;
+    }
+
     // Aplicar IC (Índice de Cocção)
     let pesoAposCoccao = quantidadeTotalBase;
-    if (this.model.icOperador && this.model.icValor !== null) {
+    if (this.model.icOperador && this.model.icValor !== null && this.model.icValor > 0) {
       const icValor = Math.max(0, Math.min(9999, this.model.icValor));
       const icPercentual = icValor / 100;
 
@@ -177,12 +182,14 @@ export class TenantFichaTecnicaFormComponent {
     }
 
     // Aplicar IPC (Índice de Partes Comestíveis)
+    // Aplicar apenas se ipcValor for > 0 (não aplicar se for 0 ou null)
     let pesoComestivel = pesoAposCoccao;
-    if (this.model.ipcValor !== null) {
+    if (this.model.ipcValor !== null && this.model.ipcValor > 0) {
       const ipcValor = Math.max(0, Math.min(999, this.model.ipcValor));
       const ipcPercentual = ipcValor / 100;
       pesoComestivel = pesoAposCoccao * ipcPercentual;
     }
+    // Se ipcValor for null ou 0, usar pesoAposCoccao diretamente (100% comestível)
 
     return pesoComestivel > 0 ? pesoComestivel : null;
   }

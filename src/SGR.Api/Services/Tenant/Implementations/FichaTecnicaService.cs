@@ -119,7 +119,7 @@ public class FichaTecnicaService : IFichaTecnicaService
 
         // Aplicar IC (Ãndice de CocÃ§Ã£o)
         decimal pesoAposCoccao = quantidadeTotalBase;
-        if (ficha.ICOperador.HasValue && ficha.ICValor.HasValue)
+        if (ficha.ICOperador.HasValue && ficha.ICValor.HasValue && ficha.ICValor.Value > 0)
         {
             var icValor = Math.Clamp(ficha.ICValor.Value, 0, 9999);
             var icPercentual = icValor / 100m;
@@ -135,8 +135,11 @@ public class FichaTecnicaService : IFichaTecnicaService
         }
 
         // Aplicar IPC (Ãndice de Partes ComestÃ­veis)
+        // Aplicar IPC (Índice de Partes Comestíveis)
+        // Aplicar apenas se ipcValor for > 0 (não aplicar se for 0 ou null)
+        // Se ipcValor for null ou 0, usar pesoAposCoccao diretamente (100% comestível)
         decimal pesoComestivel = pesoAposCoccao;
-        if (ficha.IPCValor.HasValue)
+        if (ficha.IPCValor.HasValue && ficha.IPCValor.Value > 0)
         {
             var ipcValor = Math.Clamp(ficha.IPCValor.Value, 0, 999);
             var ipcPercentual = ipcValor / 100m;
