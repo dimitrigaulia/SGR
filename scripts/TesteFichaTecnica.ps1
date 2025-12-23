@@ -135,6 +135,25 @@ if (unidadeGR == null)
     Console.WriteLine("   Unidade GR criada.");
 }
 
+var unidadeUN = await tenantContext.UnidadesMedida
+    .FirstOrDefaultAsync(u => u.Sigla.ToUpper() == "UN");
+
+if (unidadeUN == null)
+{
+    Console.WriteLine("   Criando unidade UN...");
+    unidadeUN = new UnidadeMedida
+    {
+        Nome = "Unidade",
+        Sigla = "UN",
+        IsAtivo = true,
+        UsuarioCriacao = "Sistema",
+        DataCriacao = DateTime.UtcNow
+    };
+    tenantContext.UnidadesMedida.Add(unidadeUN);
+    await tenantContext.SaveChangesAsync();
+    Console.WriteLine("   Unidade UN criada.");
+}
+
 var categoriaInsumo = await tenantContext.CategoriaInsumos
     .Where(c => c.IsAtivo)
     .FirstOrDefaultAsync();
@@ -218,7 +237,7 @@ var createReceitaRequest = new CreateReceitaRequest
     Nome = "BASE FAROFA",
     CategoriaId = categoriaReceita.Id,
     Rendimento = 1m, // 1 porção
-    PesoPorPorcao = 552m, // Peso total da receita (500g Farinha + 2g Sal + 50g Manteiga)
+    PesoPorPorcao = 777m, // Peso total da receita (soma de todos os 8 insumos: 500+2+150+10+20+20+50+25 = 777g)
     FatorRendimento = 1.0m,
     Itens = new List<CreateReceitaItemRequest>
     {
@@ -238,10 +257,45 @@ var createReceitaRequest = new CreateReceitaRequest
         },
         new CreateReceitaItemRequest
         {
+            InsumoId = insumosIds["Calabresa"],
+            Quantidade = 150m,
+            UnidadeMedidaId = unidadeGR.Id,
+            Ordem = 3
+        },
+        new CreateReceitaItemRequest
+        {
+            InsumoId = insumosIds["Salsa"],
+            Quantidade = 10m,
+            UnidadeMedidaId = unidadeGR.Id,
+            Ordem = 4
+        },
+        new CreateReceitaItemRequest
+        {
+            InsumoId = insumosIds["Cenoura"],
+            Quantidade = 20m,
+            UnidadeMedidaId = unidadeGR.Id,
+            Ordem = 5
+        },
+        new CreateReceitaItemRequest
+        {
+            InsumoId = insumosIds["Pimentão"],
+            Quantidade = 20m,
+            UnidadeMedidaId = unidadeGR.Id,
+            Ordem = 6
+        },
+        new CreateReceitaItemRequest
+        {
             InsumoId = insumosIds["Manteiga"],
             Quantidade = 50m,
             UnidadeMedidaId = unidadeGR.Id,
-            Ordem = 3
+            Ordem = 7
+        },
+        new CreateReceitaItemRequest
+        {
+            InsumoId = insumosIds["Cebola"],
+            Quantidade = 25m,
+            UnidadeMedidaId = unidadeGR.Id,
+            Ordem = 8
         }
     },
     IsAtivo = true
@@ -277,55 +331,14 @@ var createRequest = new CreateFichaTecnicaRequest
     IndiceContabil = 3m,
     Itens = new List<CreateFichaTecnicaItemRequest>
     {
-        // Usar receita como primeiro item
+        // Usar apenas a receita completa (todos os insumos já estão na receita)
         new CreateFichaTecnicaItemRequest
         {
             TipoItem = "Receita",
             ReceitaId = receitaDto.Id,
             Quantidade = 1m, // 1 porção da receita
-            UnidadeMedidaId = unidadeGR.Id,
+            UnidadeMedidaId = unidadeUN.Id, // Usar UN para Receita (não GR)
             Ordem = 1
-        },
-        // Adicionar insumos adicionais
-        new CreateFichaTecnicaItemRequest
-        {
-            TipoItem = "Insumo",
-            InsumoId = insumosIds["Calabresa"],
-            Quantidade = 150m,
-            UnidadeMedidaId = unidadeGR.Id,
-            Ordem = 2
-        },
-        new CreateFichaTecnicaItemRequest
-        {
-            TipoItem = "Insumo",
-            InsumoId = insumosIds["Salsa"],
-            Quantidade = 10m,
-            UnidadeMedidaId = unidadeGR.Id,
-            Ordem = 3
-        },
-        new CreateFichaTecnicaItemRequest
-        {
-            TipoItem = "Insumo",
-            InsumoId = insumosIds["Cenoura"],
-            Quantidade = 20m,
-            UnidadeMedidaId = unidadeGR.Id,
-            Ordem = 4
-        },
-        new CreateFichaTecnicaItemRequest
-        {
-            TipoItem = "Insumo",
-            InsumoId = insumosIds["Pimentão"],
-            Quantidade = 20m,
-            UnidadeMedidaId = unidadeGR.Id,
-            Ordem = 5
-        },
-        new CreateFichaTecnicaItemRequest
-        {
-            TipoItem = "Insumo",
-            InsumoId = insumosIds["Cebola"],
-            Quantidade = 25m,
-            UnidadeMedidaId = unidadeGR.Id,
-            Ordem = 6
         }
     }
 };
@@ -477,11 +490,12 @@ if (reprovados > 0)
 
 // Resumo adicional sobre receitas
 Console.WriteLine("\n=== RESUMO DO FLUXO TESTADO ===");
-Console.WriteLine("✓ Insumos criados e persistidos");
-Console.WriteLine("✓ Receita (produção) criada e persistida");
-Console.WriteLine("✓ Ficha técnica criada usando Receita + Insumos");
+Console.WriteLine("✓ Insumos criados e persistidos (8 insumos)");
+Console.WriteLine("✓ Receita (produção) criada e persistida com todos os 8 insumos");
+Console.WriteLine("✓ Ficha técnica criada usando apenas Receita (1 item do tipo Receita)");
 Console.WriteLine("✓ Receita vinculada como ReceitaPrincipalId na ficha técnica");
 Console.WriteLine("✓ Cálculos validados (custo, preço mesa, canais)");
+Console.WriteLine("✓ Cenário limpo: sem duplicação de insumos entre receita e ficha");
 
 Console.WriteLine("\n=== TESTE CONCLUÍDO ===");
 '@

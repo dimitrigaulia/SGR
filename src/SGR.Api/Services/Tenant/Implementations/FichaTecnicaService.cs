@@ -95,25 +95,23 @@ public class FichaTecnicaService : IFichaTecnicaService
         foreach (var item in ficha.Itens)
         {
             var unidadeMedida = unidadesMedida.FirstOrDefault(u => u.Id == item.UnidadeMedidaId);
-            if (unidadeMedida != null && (unidadeMedida.Sigla.ToUpper() == "GR" || unidadeMedida.Sigla.ToUpper() == "ML"))
+            
+            // IMPORTANTE: ExibirComoQB é apenas visual, sempre usar Quantidade numérica
+            
+            if (item.TipoItem == "Receita" && item.ReceitaId.HasValue)
             {
-                // IMPORTANTE: ExibirComoQB Ã© apenas visual, sempre usar Quantidade numÃ©rica
-                
-                if (item.TipoItem == "Receita" && item.ReceitaId.HasValue)
+                // Para receitas: sempre usar PesoPorPorcao, independente da unidade (GR ou UN)
+                var receita = receitas.FirstOrDefault(r => r.Id == item.ReceitaId.Value);
+                if (receita != null && receita.PesoPorPorcao.HasValue && receita.PesoPorPorcao.Value > 0)
                 {
-                    // Para receitas: quantidade = número de porções, multiplicar por PesoPorPorcao
-                    var receita = receitas.FirstOrDefault(r => r.Id == item.ReceitaId.Value);
-                    if (receita != null && receita.PesoPorPorcao.HasValue && receita.PesoPorPorcao.Value > 0)
-                    {
-                        quantidadeTotalBase += item.Quantidade * receita.PesoPorPorcao.Value;
-                    }
-                    // Se PesoPorPorcao for null ou <= 0, ignorar essa linha (não somar)
+                    quantidadeTotalBase += item.Quantidade * receita.PesoPorPorcao.Value;
                 }
-                else if (item.TipoItem == "Insumo")
-                {
-                    // Para insumos: somar quantidade diretamente
-                    quantidadeTotalBase += item.Quantidade;
-                }
+                // Se PesoPorPorcao for null ou <= 0, ignorar essa linha (não somar)
+            }
+            else if (item.TipoItem == "Insumo" && unidadeMedida != null && (unidadeMedida.Sigla.ToUpper() == "GR" || unidadeMedida.Sigla.ToUpper() == "ML"))
+            {
+                // Para insumos: somar quantidade diretamente apenas se unidade for GR ou ML
+                quantidadeTotalBase += item.Quantidade;
             }
         }
 
@@ -481,9 +479,11 @@ public class FichaTecnicaService : IFichaTecnicaService
                 {
                     throw new BusinessException($"Unidade de medida com ID {item.UnidadeMedidaId} não encontrada.");
                 }
-                if (!string.Equals(unidade.Sigla, "GR", StringComparison.OrdinalIgnoreCase))
+                // Permitir GR (legado) ou UN (recomendado para melhor UX e integridade de dados)
+                var sigla = unidade.Sigla.ToUpper();
+                if (sigla != "GR" && sigla != "UN")
                 {
-                    throw new BusinessException("Itens do tipo Receita na ficha técnica devem usar unidade de medida em GR (gramas).");
+                    throw new BusinessException("Itens do tipo Receita na ficha técnica devem usar unidade de medida GR (gramas) ou UN (unidade).");
                 }
             }
         }
@@ -728,9 +728,11 @@ public class FichaTecnicaService : IFichaTecnicaService
                     {
                         throw new BusinessException($"Unidade de medida com ID {item.UnidadeMedidaId} não encontrada.");
                     }
-                    if (!string.Equals(unidade.Sigla, "GR", StringComparison.OrdinalIgnoreCase))
+                    // Permitir GR (legado) ou UN (recomendado para melhor UX e integridade de dados)
+                    var sigla = unidade.Sigla.ToUpper();
+                    if (sigla != "GR" && sigla != "UN")
                     {
-                        throw new BusinessException("Itens do tipo Receita na ficha técnica devem usar unidade de medida em GR (gramas).");
+                        throw new BusinessException("Itens do tipo Receita na ficha técnica devem usar unidade de medida GR (gramas) ou UN (unidade).");
                     }
                 }
             }
@@ -922,20 +924,20 @@ public class FichaTecnicaService : IFichaTecnicaService
             foreach (var item in itens)
             {
                 var unidadeMedida = item.UnidadeMedida;
-                if (unidadeMedida != null && (unidadeMedida.Sigla.ToUpper() == "GR" || unidadeMedida.Sigla.ToUpper() == "ML"))
+                
+                if (item.TipoItem == "Receita" && item.ReceitaId.HasValue)
                 {
-                    if (item.TipoItem == "Receita" && item.ReceitaId.HasValue)
+                    // Para receitas: sempre usar PesoPorPorcao, independente da unidade (GR ou UN)
+                    var receita = receitas.FirstOrDefault(r => r.Id == item.ReceitaId.Value);
+                    if (receita != null && receita.PesoPorPorcao.HasValue && receita.PesoPorPorcao.Value > 0)
                     {
-                        var receita = receitas.FirstOrDefault(r => r.Id == item.ReceitaId.Value);
-                        if (receita != null && receita.PesoPorPorcao.HasValue && receita.PesoPorPorcao.Value > 0)
-                        {
-                            quantidadeTotalBase += item.Quantidade * receita.PesoPorPorcao.Value;
-                        }
+                        quantidadeTotalBase += item.Quantidade * receita.PesoPorPorcao.Value;
                     }
-                    else if (item.TipoItem == "Insumo")
-                    {
-                        quantidadeTotalBase += item.Quantidade;
-                    }
+                }
+                else if (item.TipoItem == "Insumo" && unidadeMedida != null && (unidadeMedida.Sigla.ToUpper() == "GR" || unidadeMedida.Sigla.ToUpper() == "ML"))
+                {
+                    // Para insumos: somar quantidade diretamente apenas se unidade for GR ou ML
+                    quantidadeTotalBase += item.Quantidade;
                 }
             }
             pesoTotalBase = quantidadeTotalBase;
