@@ -37,23 +37,51 @@
                 <div class="grid">
                   <div>
                     <div class="label">Tempo preparo</div>
-                    <div class="value">{{ formatTime(receita()?.tempoPreparo) }}</div>
+                    <div class="value">
+                      @if (receita()?.tempoPreparo) {
+                        {{ formatTime(receita()!.tempoPreparo) }}
+                      } @else if (ficha()?.tempoPreparo) {
+                        {{ formatTime(ficha()!.tempoPreparo) }}
+                      } @else {
+                        -
+                      }
+                    </div>
                   </div>
                   <div>
                     <div class="label">Rendimento</div>
                     <div class="value">
-                      @if (receita()) { {{ receita()!.rendimento }} porções } @else { - }
+                      @if (receita()) {
+                        {{ receita()!.rendimento }} porções
+                      } @else if (ficha()?.rendimentoPorcoes) {
+                        {{ ficha()!.rendimentoPorcoes }} porções
+                      } @else {
+                        -
+                      }
                     </div>
                   </div>
                   <div>
                     <div class="label">Porção sugerida</div>
                     <div class="value">
-                      @if (receita()?.pesoPorPorcao) { {{ receita()!.pesoPorPorcao }} g } @else { - }
+                      @if (receita()?.pesoPorPorcao) {
+                        {{ receita()!.pesoPorPorcao }} g
+                      } @else if (ficha()?.porcaoVendaQuantidade && ficha()?.porcaoVendaUnidadeMedidaSigla) {
+                        {{ ficha()!.porcaoVendaQuantidade }} {{ ficha()!.porcaoVendaUnidadeMedidaSigla?.toLowerCase() }}
+                      } @else {
+                        -
+                      }
                     </div>
                   </div>
                   <div>
                     <div class="label">Custo/porção (receita)</div>
-                    <div class="value">{{ formatCurrency(receita()?.custoPorPorcao) }}</div>
+                    <div class="value">
+                      @if (receita()?.custoPorPorcao) {
+                        {{ formatCurrency(receita()!.custoPorPorcao) }}
+                      } @else if (ficha()?.custoPorPorcaoVenda) {
+                        {{ formatCurrency(ficha()!.custoPorPorcaoVenda) }} <span style="font-size: 11px; color: #666;">(ficha)</span>
+                      } @else {
+                        -
+                      }
+                    </div>
                   </div>
                   <div>
                     <div class="label">Preço sugerido (ficha)</div>
@@ -172,13 +200,65 @@
       <mat-tab label="Produção">
         <div class="tab-content">
           @if (!receita()) {
-            <mat-card class="section">
-              <mat-card-content>
-                <div class="muted">
-                  Defina a <strong>receita principal</strong> na ficha técnica para exibir modo de preparo e conservação.
-                </div>
-              </mat-card-content>
-            </mat-card>
+            @if (ficha()?.itens && ficha()!.itens.length > 0) {
+              <mat-card class="section">
+                <mat-card-content>
+                  <div class="section-title">Composição (Itens da Ficha Técnica)</div>
+                  <div class="table-container">
+                    <table mat-table [dataSource]="itensFichaTecnica" class="mat-elevation-z1 full-width">
+                      <ng-container matColumnDef="ordem">
+                        <th mat-header-cell *matHeaderCellDef>#</th>
+                        <td mat-cell *matCellDef="let item">{{ item.ordem }}</td>
+                      </ng-container>
+
+                      <ng-container matColumnDef="insumo">
+                        <th mat-header-cell *matHeaderCellDef>Item</th>
+                        <td mat-cell *matCellDef="let item">{{ getItemNomeFicha(item) }}</td>
+                      </ng-container>
+
+                      <ng-container matColumnDef="quantidadeTotal">
+                        <th mat-header-cell *matHeaderCellDef>Qtde (total)</th>
+                        <td mat-cell *matCellDef="let item">{{ quantidadeDisplayFicha(item) }}</td>
+                      </ng-container>
+
+                      <ng-container matColumnDef="quantidadePorPorcao">
+                        <th mat-header-cell *matHeaderCellDef>Qtde/porção</th>
+                        <td mat-cell *matCellDef="let item">
+                          @if (quantidadePorPorcaoFicha(item) !== null) {
+                            {{ quantidadePorPorcaoFicha(item) | number:'1.0-4' }} {{ item.unidadeMedidaSigla || '' }}
+                          } @else {
+                            -
+                          }
+                        </td>
+                      </ng-container>
+
+                      <ng-container matColumnDef="custoTotal">
+                        <th mat-header-cell *matHeaderCellDef>Custo (total)</th>
+                        <td mat-cell *matCellDef="let item">{{ formatCurrency(item.custoItem) }}</td>
+                      </ng-container>
+
+                      <ng-container matColumnDef="custoPorPorcao">
+                        <th mat-header-cell *matHeaderCellDef>Custo/porção</th>
+                        <td mat-cell *matCellDef="let item">
+                          @if (custoPorPorcaoFicha(item) !== null) { {{ formatCurrency(custoPorPorcaoFicha(item)) }} } @else { - }
+                        </td>
+                      </ng-container>
+
+                      <tr mat-header-row *matHeaderRowDef="displayedColumnsItens"></tr>
+                      <tr mat-row *matRowDef="let row; columns: displayedColumnsItens"></tr>
+                    </table>
+                  </div>
+                </mat-card-content>
+              </mat-card>
+            } @else {
+              <mat-card class="section">
+                <mat-card-content>
+                  <div class="muted">
+                    Defina a <strong>receita principal</strong> na ficha técnica para exibir modo de preparo e conservação.
+                  </div>
+                </mat-card-content>
+              </mat-card>
+            }
           } @else {
             <mat-card class="section">
               <mat-card-content>

@@ -586,6 +586,23 @@ public class TenantService : BaseService<ApplicationDbContext, TenantEntity, Ten
                         ADD CONSTRAINT ""FK_FichaTecnica_Receita_ReceitaPrincipalId""
                         FOREIGN KEY (""ReceitaPrincipalId"") REFERENCES ""{schemaName}"".""Receita""(""Id"") ON DELETE RESTRICT;
                     END IF;
+
+                    -- FichaTecnica.TempoPreparo
+                    IF EXISTS (
+                        SELECT 1
+                        FROM information_schema.tables
+                        WHERE table_schema = '{schemaName}'
+                        AND table_name = 'FichaTecnica'
+                    ) AND NOT EXISTS (
+                        SELECT 1
+                        FROM information_schema.columns
+                        WHERE table_schema = '{schemaName}'
+                        AND table_name = 'FichaTecnica'
+                        AND column_name = 'TempoPreparo'
+                    ) THEN
+                        ALTER TABLE ""{schemaName}"".""FichaTecnica""
+                        ADD COLUMN ""TempoPreparo"" INTEGER;
+                    END IF;
                 END $$;
 
                 -- Índice (idempotente)
@@ -759,6 +776,7 @@ public class TenantService : BaseService<ApplicationDbContext, TenantEntity, Ten
                 ""PorcaoVendaQuantidade"" DECIMAL(18, 4),
                 ""PorcaoVendaUnidadeMedidaId"" BIGINT,
                 ""RendimentoPorcoes"" DECIMAL(18, 2),
+                ""TempoPreparo"" INTEGER,
                 ""IsAtivo"" BOOLEAN NOT NULL DEFAULT true,
                 ""UsuarioCriacao"" VARCHAR(100),
                 ""UsuarioAtualizacao"" VARCHAR(100),

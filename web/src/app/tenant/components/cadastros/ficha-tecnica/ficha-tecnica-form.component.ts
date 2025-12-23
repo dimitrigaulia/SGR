@@ -92,13 +92,15 @@ export class TenantFichaTecnicaFormComponent {
     nome: '',
     codigo: '',
     descricaoComercial: '',
-    indiceContabil: null as number | null,
+    indiceContabil: 1.0 as number | null,
     icOperador: null as string | null,
     icValor: null as number | null,
     ipcValor: null as number | null,
     margemAlvoPercentual: null as number | null,
     porcaoVendaQuantidade: null as number | null,
     porcaoVendaUnidadeMedidaId: null as number | null,
+    rendimentoPorcoes: null as number | null,
+    tempoPreparo: null as number | null,
     isAtivo: true
   };
 
@@ -152,23 +154,28 @@ export class TenantFichaTecnicaFormComponent {
   }
 
   get rendimentoFinalCalculado(): number | null {
-    // Considerar apenas itens cuja UnidadeMedida.Sigla seja "GR"
+    // Considerar itens cuja UnidadeMedida.Sigla seja "GR" ou "ML" (igual ao backend)
     let quantidadeTotalBase = 0;
 
     for (const item of this.itens()) {
       if (!item.unidadeMedidaId || item.quantidade <= 0) continue;
 
       const unidade = this.unidades().find(u => u.id === item.unidadeMedidaId);
-      if (!unidade || unidade.sigla.toUpperCase() !== 'GR') continue;
+      if (!unidade) continue;
+
+      const siglaUnidade = unidade.sigla.toUpperCase();
+      
+      // Considerar apenas GR ou ML para cálculo do rendimento final
+      if (siglaUnidade !== 'GR' && siglaUnidade !== 'ML') continue;
 
       if (item.tipoItem === 'Receita' && item.receitaId) {
-        // Para receitas: quantidade = número de porções, multiplicar por PesoPorPorcao
+        // Para receitas: sempre usar PesoPorPorcao, independente da unidade (GR ou UN)
         const receita = this.receitas().find(r => r.id === item.receitaId);
         if (receita && receita.pesoPorPorcao && receita.pesoPorPorcao > 0) {
           quantidadeTotalBase += item.quantidade * receita.pesoPorPorcao;
         }
       } else if (item.tipoItem === 'Insumo') {
-        // Para insumos: somar quantidade diretamente
+        // Para insumos: somar quantidade diretamente apenas se unidade for GR ou ML
         quantidadeTotalBase += item.quantidade;
       }
     }
@@ -540,6 +547,12 @@ export class TenantFichaTecnicaFormComponent {
       return;
     }
 
+    // Validação: indiceContabil é obrigatório e deve ser maior que zero
+    if (!v.indiceContabil || v.indiceContabil <= 0) {
+      this.toast.error('Informe o Markup Mesa (deve ser maior que zero)');
+      return;
+    }
+
     // Validação: se porcaoVendaQuantidade > 0, então porcaoVendaUnidadeMedidaId deve estar preenchido
     if (v.porcaoVendaQuantidade && v.porcaoVendaQuantidade > 0 && !v.porcaoVendaUnidadeMedidaId) {
       this.toast.error('Selecione a unidade da porção de venda');
@@ -572,13 +585,15 @@ export class TenantFichaTecnicaFormComponent {
         nome: v.nome,
         codigo: v.codigo || undefined,
         descricaoComercial: v.descricaoComercial || undefined,
-        indiceContabil: v.indiceContabil ?? undefined,
+        indiceContabil: v.indiceContabil!,
         icOperador: v.icOperador || undefined,
         icValor: v.icValor ?? undefined,
         ipcValor: v.ipcValor ?? undefined,
         margemAlvoPercentual: v.margemAlvoPercentual ?? undefined,
         porcaoVendaQuantidade: v.porcaoVendaQuantidade ?? undefined,
         porcaoVendaUnidadeMedidaId: v.porcaoVendaUnidadeMedidaId ?? undefined,
+        rendimentoPorcoes: v.rendimentoPorcoes ?? undefined,
+        tempoPreparo: v.tempoPreparo ?? undefined,
         isAtivo: !!v.isAtivo,
         itens: itensValidos.map(i => ({
           tipoItem: i.tipoItem,
@@ -626,13 +641,15 @@ export class TenantFichaTecnicaFormComponent {
         nome: v.nome,
         codigo: v.codigo || undefined,
         descricaoComercial: v.descricaoComercial || undefined,
-        indiceContabil: v.indiceContabil ?? undefined,
+        indiceContabil: v.indiceContabil!,
         icOperador: v.icOperador || undefined,
         icValor: v.icValor ?? undefined,
         ipcValor: v.ipcValor ?? undefined,
         margemAlvoPercentual: v.margemAlvoPercentual ?? undefined,
         porcaoVendaQuantidade: v.porcaoVendaQuantidade ?? undefined,
         porcaoVendaUnidadeMedidaId: v.porcaoVendaUnidadeMedidaId ?? undefined,
+        rendimentoPorcoes: v.rendimentoPorcoes ?? undefined,
+        tempoPreparo: v.tempoPreparo ?? undefined,
         isAtivo: !!v.isAtivo,
         itens: itensValidos.map(i => ({
           id: i.id ?? undefined,
@@ -729,13 +746,15 @@ export class TenantFichaTecnicaFormComponent {
             nome: e.nome,
             codigo: e.codigo || '',
             descricaoComercial: e.descricaoComercial || '',
-            indiceContabil: e.indiceContabil ?? null,
+            indiceContabil: e.indiceContabil ?? 1.0,
             icOperador: e.icOperador ?? null,
             icValor: e.icValor ?? null,
             ipcValor: e.ipcValor ?? null,
             margemAlvoPercentual: e.margemAlvoPercentual ?? null,
             porcaoVendaQuantidade: e.porcaoVendaQuantidade ?? null,
             porcaoVendaUnidadeMedidaId: e.porcaoVendaUnidadeMedidaId ?? null,
+            rendimentoPorcoes: e.rendimentoPorcoes ?? null,
+            tempoPreparo: e.tempoPreparo ?? null,
             isAtivo: e.isAtivo
           };
           this.itens.set(e.itens.map(i => ({

@@ -10,7 +10,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ToastService } from '../../../../core/services/toast.service';
 import { LoadingComponent } from '../../../../shared/components/loading/loading.component';
-import { FichaTecnicaDto, FichaTecnicaService } from '../../../../features/tenant-receitas/services/ficha-tecnica.service';
+import { FichaTecnicaDto, FichaTecnicaItemDto, FichaTecnicaService } from '../../../../features/tenant-receitas/services/ficha-tecnica.service';
 import { ReceitaDto, ReceitaItemDto, ReceitaService } from '../../../../features/tenant-receitas/services/receita.service';
 
 @Component({
@@ -156,6 +156,61 @@ export class TenantFichaTecnicaOperacaoComponent {
     if (item.exibirComoQB) return 'QB';
     const unidade = item.unidadeMedidaSigla || '';
     return `${(item.quantidade ?? 0).toFixed(4)} ${unidade}`.trim();
+  }
+
+  // Métodos para trabalhar com itens da ficha técnica (quando não há receita principal)
+  get itensFichaTecnica(): FichaTecnicaItemDto[] {
+    return (this.ficha()?.itens ?? []).slice().sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0));
+  }
+
+  quantidadePorPorcaoFicha(item: FichaTecnicaItemDto): number | null {
+    const f = this.ficha();
+    if (item.exibirComoQB) return null;
+    
+    // Para receitas na ficha técnica, a quantidade já é em porções
+    if (item.tipoItem === 'Receita') {
+      return item.quantidade;
+    }
+    
+    // Para insumos, calcular baseado na porção de venda ou rendimento final
+    if (f?.porcaoVendaQuantidade && f.porcaoVendaQuantidade > 0 && f.rendimentoFinal && f.rendimentoFinal > 0) {
+      // Se há porção de venda definida, calcular proporcionalmente
+      const proporcao = f.porcaoVendaQuantidade / f.rendimentoFinal;
+      return item.quantidade * proporcao;
+    } else if (f?.rendimentoFinal && f.rendimentoFinal > 0) {
+      // Se não há porção definida, usar rendimento final como base (1 porção = rendimento final)
+      return item.quantidade / f.rendimentoFinal;
+    }
+    
+    return null;
+  }
+
+  custoPorPorcaoFicha(item: FichaTecnicaItemDto): number | null {
+    const f = this.ficha();
+    
+    // Se há porção de venda definida, calcular proporcionalmente
+    if (f?.porcaoVendaQuantidade && f.porcaoVendaQuantidade > 0 && f.rendimentoFinal && f.rendimentoFinal > 0) {
+      const proporcao = f.porcaoVendaQuantidade / f.rendimentoFinal;
+      return (item.custoItem ?? 0) * proporcao;
+    } else if (f?.rendimentoFinal && f.rendimentoFinal > 0) {
+      // Se não há porção definida, usar rendimento final como base (1 porção = rendimento final)
+      return (item.custoItem ?? 0) / f.rendimentoFinal;
+    }
+    
+    return null;
+  }
+
+  quantidadeDisplayFicha(item: FichaTecnicaItemDto): string {
+    if (item.exibirComoQB) return 'QB';
+    if (item.tipoItem === 'Receita') {
+      return `${item.quantidade}x`;
+    }
+    const unidade = item.unidadeMedidaSigla || '';
+    return `${(item.quantidade ?? 0).toFixed(4)} ${unidade}`.trim();
+  }
+
+  getItemNomeFicha(item: FichaTecnicaItemDto): string {
+    return item.insumoNome || item.receitaNome || '-';
   }
 }
 

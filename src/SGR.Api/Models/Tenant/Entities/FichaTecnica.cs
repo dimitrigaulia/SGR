@@ -73,6 +73,11 @@ public class FichaTecnica
     /// </summary>
     public decimal? RendimentoPorcoes { get; set; }
 
+    /// <summary>
+    /// Tempo de preparo em minutos (apenas informativo)
+    /// </summary>
+    public int? TempoPreparo { get; set; }
+
     public bool IsAtivo { get; set; }
 
     public string? UsuarioCriacao { get; set; }

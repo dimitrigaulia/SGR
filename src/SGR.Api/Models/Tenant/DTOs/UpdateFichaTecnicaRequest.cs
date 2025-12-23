@@ -4,19 +4,19 @@ namespace SGR.Api.Models.Tenant.DTOs;
 
 public class UpdateFichaTecnicaRequest
 {
-    [Required(ErrorMessage = "CategoriaId Ã© obrigatÃ³rio")]
+    [Required(ErrorMessage = "CategoriaId é obrigatório")]
     public long CategoriaId { get; set; }
 
     public long? ReceitaPrincipalId { get; set; }
 
-    [Required(ErrorMessage = "Nome Ã© obrigatÃ³rio")]
-    [MaxLength(200, ErrorMessage = "Nome deve ter no mÃ¡ximo 200 caracteres")]
+    [Required(ErrorMessage = "Nome é obrigatório")]
+    [MaxLength(200, ErrorMessage = "Nome deve ter no máximo 200 caracteres")]
     public string Nome { get; set; } = string.Empty;
 
-    [MaxLength(50, ErrorMessage = "CÃ³digo deve ter no mÃ¡ximo 50 caracteres")]
+    [MaxLength(50, ErrorMessage = "Código deve ter no máximo 50 caracteres")]
     public string? Codigo { get; set; }
 
-    [MaxLength(5000, ErrorMessage = "DescriÃ§Ã£o comercial deve ter no mÃ¡ximo 5000 caracteres")]
+    [MaxLength(5000, ErrorMessage = "Descrição comercial deve ter no máximo 5000 caracteres")]
     public string? DescricaoComercial { get; set; }
 
     public decimal? RendimentoFinal { get; set; }
@@ -36,9 +36,10 @@ public class UpdateFichaTecnicaRequest
     public decimal? PorcaoVendaQuantidade { get; set; }
     public long? PorcaoVendaUnidadeMedidaId { get; set; }
     public decimal? RendimentoPorcoes { get; set; }
+    public int? TempoPreparo { get; set; }
 
-    [Required(ErrorMessage = "Itens sÃ£o obrigatÃ³rios")]
-    [MinLength(1, ErrorMessage = "A ficha tÃ©cnica deve ter pelo menos um item")]
+    [Required(ErrorMessage = "Itens são obrigatórios")]
+    [MinLength(1, ErrorMessage = "A ficha técnica deve ter pelo menos um item")]
     public List<UpdateFichaTecnicaItemRequest> Itens { get; set; } = new();
 
     public bool IsAtivo { get; set; }
