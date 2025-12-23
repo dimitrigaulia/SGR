@@ -38,6 +38,8 @@ export interface FichaTecnicaDto {
   id: number;
   categoriaId: number;
   categoriaNome?: string | null;
+  receitaPrincipalId?: number | null;
+  receitaPrincipalNome?: string | null;
   nome: string;
   codigo?: string | null;
   descricaoComercial?: string | null;
@@ -98,6 +100,7 @@ export interface UpdateFichaTecnicaItemRequest {
 
 export interface CreateFichaTecnicaRequest {
   categoriaId: number;
+  receitaPrincipalId?: number | null;
   nome: string;
   codigo?: string | null;
   descricaoComercial?: string | null;
@@ -113,6 +116,7 @@ export interface CreateFichaTecnicaRequest {
 
 export interface UpdateFichaTecnicaRequest {
   categoriaId: number;
+  receitaPrincipalId?: number | null;
   nome: string;
   codigo?: string | null;
   descricaoComercial?: string | null;

@@ -257,6 +257,7 @@ public class FichaTecnicaService : IFichaTecnicaService
         var query = _context.FichasTecnicas
             .AsNoTracking()
             .Include(f => f.Categoria)
+            .Include(f => f.ReceitaPrincipal)
             .AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(search))
@@ -283,6 +284,7 @@ public class FichaTecnicaService : IFichaTecnicaService
             .Skip(Math.Max(0, (page - 1) * pageSize))
             .Take(pageSize)
             .Include(f => f.Categoria)
+            .Include(f => f.ReceitaPrincipal)
             .Include(f => f.Canais)
             .ToListAsync();
 
@@ -303,6 +305,7 @@ public class FichaTecnicaService : IFichaTecnicaService
         var ficha = await _context.FichasTecnicas
             .AsNoTracking()
             .Include(f => f.Categoria)
+            .Include(f => f.ReceitaPrincipal)
             .Include(f => f.Itens)
                 .ThenInclude(i => i.Receita)
             .Include(f => f.Itens)
@@ -357,12 +360,22 @@ public class FichaTecnicaService : IFichaTecnicaService
 
         // Validar receitas e insumos
         var receitaIds = request.Itens.Where(i => i.TipoItem == "Receita" && i.ReceitaId.HasValue).Select(i => i.ReceitaId!.Value).Distinct().ToList();
+        if (request.ReceitaPrincipalId.HasValue)
+        {
+            receitaIds.Add(request.ReceitaPrincipalId.Value);
+            receitaIds = receitaIds.Distinct().ToList();
+        }
         var insumoIds = request.Itens.Where(i => i.TipoItem == "Insumo" && i.InsumoId.HasValue).Select(i => i.InsumoId!.Value).Distinct().ToList();
         var unidadeMedidaIds = request.Itens.Select(i => i.UnidadeMedidaId).Distinct().ToList();
 
         var receitas = await _context.Receitas
             .Where(r => receitaIds.Contains(r.Id) && r.IsAtivo)
             .ToListAsync();
+
+        if (request.ReceitaPrincipalId.HasValue && !receitas.Any(r => r.Id == request.ReceitaPrincipalId.Value))
+        {
+            throw new BusinessException("Receita principal invalida ou inativa");
+        }
 
         if (receitas.Count != receitaIds.Count)
         {
@@ -419,6 +432,7 @@ public class FichaTecnicaService : IFichaTecnicaService
         var ficha = new FichaTecnica
         {
             CategoriaId = request.CategoriaId,
+            ReceitaPrincipalId = request.ReceitaPrincipalId,
             Nome = request.Nome,
             Codigo = request.Codigo,
             DescricaoComercial = request.DescricaoComercial,
@@ -549,12 +563,22 @@ public class FichaTecnicaService : IFichaTecnicaService
 
             // Validar receitas e insumos
             var receitaIds = request.Itens.Where(i => i.TipoItem == "Receita" && i.ReceitaId.HasValue).Select(i => i.ReceitaId!.Value).Distinct().ToList();
+            if (request.ReceitaPrincipalId.HasValue)
+            {
+                receitaIds.Add(request.ReceitaPrincipalId.Value);
+                receitaIds = receitaIds.Distinct().ToList();
+            }
             var insumoIds = request.Itens.Where(i => i.TipoItem == "Insumo" && i.InsumoId.HasValue).Select(i => i.InsumoId!.Value).Distinct().ToList();
             var unidadeMedidaIds = request.Itens.Select(i => i.UnidadeMedidaId).Distinct().ToList();
 
             var receitas = await _context.Receitas
                 .Where(r => receitaIds.Contains(r.Id) && r.IsAtivo)
                 .ToListAsync();
+
+            if (request.ReceitaPrincipalId.HasValue && !receitas.Any(r => r.Id == request.ReceitaPrincipalId.Value))
+            {
+                throw new BusinessException("Receita principal invalida ou inativa");
+            }
 
             if (receitas.Count != receitaIds.Count)
             {
@@ -610,6 +634,7 @@ public class FichaTecnicaService : IFichaTecnicaService
 
             // Atualizar ficha
             ficha.CategoriaId = request.CategoriaId;
+            ficha.ReceitaPrincipalId = request.ReceitaPrincipalId;
             ficha.Nome = request.Nome;
             ficha.Codigo = request.Codigo;
             ficha.DescricaoComercial = request.DescricaoComercial;
@@ -727,6 +752,8 @@ public class FichaTecnicaService : IFichaTecnicaService
             Id = ficha.Id,
             CategoriaId = ficha.CategoriaId,
             CategoriaNome = ficha.Categoria?.Nome,
+            ReceitaPrincipalId = ficha.ReceitaPrincipalId,
+            ReceitaPrincipalNome = ficha.ReceitaPrincipal?.Nome,
             Nome = ficha.Nome,
             Codigo = ficha.Codigo,
             DescricaoComercial = ficha.DescricaoComercial,

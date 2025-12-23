@@ -1,0 +1,215 @@
+<div class="container">
+  <div class="header">
+    <h2>{{ titulo() }}</h2>
+    <div class="header-actions">
+      <a mat-stroked-button routerLink="/tenant/fichas-tecnicas">
+        <mat-icon>arrow_back</mat-icon>
+        Voltar
+      </a>
+    </div>
+  </div>
+
+  @if (isLoading()) {
+    <app-loading></app-loading>
+  }
+
+  @if (error()) {
+    <div class="error">{{ error() }}</div>
+  }
+
+  @if (!isLoading() && !error()) {
+    <mat-tab-group class="tabs" [selectedIndex]="selectedTab()" (selectedIndexChange)="onTabChange($event)">
+      <mat-tab label="Comercial">
+        <div class="tab-content">
+          <mat-card class="hero">
+            <mat-card-content class="hero-content">
+              <div class="hero-image">
+                @if (receita()?.pathImagem) {
+                  <img [src]="receita()?.pathImagem" alt="produto" />
+                } @else {
+                  <div class="hero-placeholder">
+                    <mat-icon>restaurant</mat-icon>
+                  </div>
+                }
+              </div>
+
+              <div class="hero-info">
+                <div class="grid">
+                  <div>
+                    <div class="label">Tempo preparo</div>
+                    <div class="value">{{ formatTime(receita()?.tempoPreparo) }}</div>
+                  </div>
+                  <div>
+                    <div class="label">Rendimento</div>
+                    <div class="value">
+                      @if (receita()) { {{ receita()!.rendimento }} porções } @else { - }
+                    </div>
+                  </div>
+                  <div>
+                    <div class="label">Porção sugerida</div>
+                    <div class="value">
+                      @if (receita()?.pesoPorPorcao) { {{ receita()!.pesoPorPorcao }} g } @else { - }
+                    </div>
+                  </div>
+                  <div>
+                    <div class="label">Custo/porção (receita)</div>
+                    <div class="value">{{ formatCurrency(receita()?.custoPorPorcao) }}</div>
+                  </div>
+                  <div>
+                    <div class="label">Preço sugerido (ficha)</div>
+                    <div class="value">
+                      @if (ficha()?.precoSugeridoVenda) { {{ formatCurrency(ficha()!.precoSugeridoVenda) }} } @else { - }
+                    </div>
+                  </div>
+                  <div>
+                    <div class="label">Custo total (ficha)</div>
+                    <div class="value">{{ formatCurrency(ficha()?.custoTotal) }}</div>
+                  </div>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <mat-card class="section">
+            <mat-card-content>
+              <div class="section-title">Mise en place (ingredientes)</div>
+
+              @if (!receita()) {
+                <div class="muted">
+                  Defina a <strong>receita principal</strong> na ficha técnica para exibir ingredientes e produção.
+                </div>
+              } @else {
+                <div class="table-container">
+                  <table mat-table [dataSource]="itensMiseEnPlace" class="mat-elevation-z1 full-width">
+                    <ng-container matColumnDef="ordem">
+                      <th mat-header-cell *matHeaderCellDef>#</th>
+                      <td mat-cell *matCellDef="let item">{{ item.ordem }}</td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="insumo">
+                      <th mat-header-cell *matHeaderCellDef>Ingrediente</th>
+                      <td mat-cell *matCellDef="let item">{{ item.insumoNome }}</td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="quantidadeTotal">
+                      <th mat-header-cell *matHeaderCellDef>Qtde (total)</th>
+                      <td mat-cell *matCellDef="let item">{{ quantidadeDisplay(item) }}</td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="quantidadePorPorcao">
+                      <th mat-header-cell *matHeaderCellDef>Qtde/porção</th>
+                      <td mat-cell *matCellDef="let item">
+                        @if (quantidadePorPorcao(item) !== null) {
+                          {{ quantidadePorPorcao(item) | number:'1.0-4' }} {{ item.unidadeMedidaSigla || '' }}
+                        } @else {
+                          -
+                        }
+                      </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="custoTotal">
+                      <th mat-header-cell *matHeaderCellDef>Custo (total)</th>
+                      <td mat-cell *matCellDef="let item">{{ formatCurrency(item.custoItem) }}</td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="custoPorPorcao">
+                      <th mat-header-cell *matHeaderCellDef>Custo/porção</th>
+                      <td mat-cell *matCellDef="let item">
+                        @if (custoPorPorcao(item) !== null) { {{ formatCurrency(custoPorPorcao(item)) }} } @else { - }
+                      </td>
+                    </ng-container>
+
+                    <tr mat-header-row *matHeaderRowDef="displayedColumnsItens"></tr>
+                    <tr mat-row *matRowDef="let row; columns: displayedColumnsItens"></tr>
+                  </table>
+                </div>
+              }
+            </mat-card-content>
+          </mat-card>
+
+          <mat-card class="section">
+            <mat-card-content>
+              <div class="section-title">Preços por canal</div>
+              <div class="table-container">
+                <table mat-table [dataSource]="(ficha()?.canais || [])" class="mat-elevation-z1 full-width">
+                  <ng-container matColumnDef="canal">
+                    <th mat-header-cell *matHeaderCellDef>Canal</th>
+                    <td mat-cell *matCellDef="let c">{{ c.nomeExibicao || c.canal }}</td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="precoVenda">
+                    <th mat-header-cell *matHeaderCellDef>Preço</th>
+                    <td mat-cell *matCellDef="let c">{{ formatCurrency(c.precoVenda) }}</td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="taxas">
+                    <th mat-header-cell *matHeaderCellDef>Taxas</th>
+                    <td mat-cell *matCellDef="let c">
+                      {{ (c.taxaPercentual ?? 0) | number:'1.0-2' }}% / {{ (c.comissaoPercentual ?? 0) | number:'1.0-2' }}%
+                    </td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="margem">
+                    <th mat-header-cell *matHeaderCellDef>Margem</th>
+                    <td mat-cell *matCellDef="let c">
+                      @if (c.margemCalculadaPercentual !== null && c.margemCalculadaPercentual !== undefined) {
+                        {{ c.margemCalculadaPercentual | number:'1.0-2' }}%
+                      } @else {
+                        -
+                      }
+                    </td>
+                  </ng-container>
+
+                  <tr mat-header-row *matHeaderRowDef="displayedColumnsCanais"></tr>
+                  <tr mat-row *matRowDef="let row; columns: displayedColumnsCanais"></tr>
+                </table>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      </mat-tab>
+
+      <mat-tab label="Produção">
+        <div class="tab-content">
+          @if (!receita()) {
+            <mat-card class="section">
+              <mat-card-content>
+                <div class="muted">
+                  Defina a <strong>receita principal</strong> na ficha técnica para exibir modo de preparo e conservação.
+                </div>
+              </mat-card-content>
+            </mat-card>
+          } @else {
+            <mat-card class="section">
+              <mat-card-content>
+                <div class="section-title">Modo de preparo</div>
+                <div class="text-block" style="white-space: pre-line;">
+                  {{ receita()!.descricao || '-' }}
+                </div>
+              </mat-card-content>
+            </mat-card>
+
+            <mat-card class="section">
+              <mat-card-content>
+                <div class="section-title">Conservação</div>
+                <div class="text-block" style="white-space: pre-line;">
+                  {{ receita()!.conservacao || '-' }}
+                </div>
+              </mat-card-content>
+            </mat-card>
+
+            <mat-card class="section">
+              <mat-card-content>
+                <div class="section-title">Empratamento</div>
+                <div class="text-block" style="white-space: pre-line;">
+                  {{ receita()!.instrucoesEmpratamento || '-' }}
+                </div>
+              </mat-card-content>
+            </mat-card>
+          }
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  }
+</div>
+

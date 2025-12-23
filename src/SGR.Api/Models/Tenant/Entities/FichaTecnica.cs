@@ -7,6 +7,7 @@ public class FichaTecnica
 {
     public long Id { get; set; }
     public long CategoriaId { get; set; }
+    public long? ReceitaPrincipalId { get; set; }
 
     public string Nome { get; set; } = string.Empty;
     public string? Codigo { get; set; }
@@ -66,7 +67,7 @@ public class FichaTecnica
 
     // NavegaÃ§Ã£o
     public CategoriaReceita Categoria { get; set; } = null!;
+    public Receita? ReceitaPrincipal { get; set; }
     public ICollection<FichaTecnicaItem> Itens { get; set; } = new List<FichaTecnicaItem>();
     public ICollection<FichaTecnicaCanal> Canais { get; set; } = new List<FichaTecnicaCanal>();
 }
-

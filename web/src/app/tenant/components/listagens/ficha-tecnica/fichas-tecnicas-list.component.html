@@ -77,6 +77,9 @@
           <button mat-icon-button (click)="edit(row)" matTooltip="Editar">
             <mat-icon>edit</mat-icon>
           </button>
+          <button mat-icon-button (click)="operacao(row)" matTooltip="Operação (Comercial/Produção)">
+            <mat-icon>view_carousel</mat-icon>
+          </button>
           <button mat-icon-button (click)="printPdf(row)" matTooltip="Imprimir / PDF">
             <mat-icon>print</mat-icon>
           </button>
@@ -136,6 +139,9 @@
                 <button mat-icon-button (click)="edit(row)" matTooltip="Editar">
                   <mat-icon>edit</mat-icon>
                 </button>
+                <button mat-icon-button (click)="operacao(row)" matTooltip="Operação (Comercial/Produção)">
+                  <mat-icon>view_carousel</mat-icon>
+                </button>
                 <button mat-icon-button (click)="printPdf(row)" matTooltip="Imprimir / PDF">
                   <mat-icon>print</mat-icon>
                 </button>
@@ -156,4 +162,3 @@
     <mat-paginator [length]="total()" [pageIndex]="pageIndex()" [pageSize]="pageSize()" [pageSizeOptions]="[5,10,25,50]" (page)="pageChanged($event)"></mat-paginator>
   }
 </div>
-

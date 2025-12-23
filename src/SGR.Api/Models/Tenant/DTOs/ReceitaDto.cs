@@ -6,6 +6,7 @@ public class ReceitaDto
     public string Nome { get; set; } = string.Empty;
     public long CategoriaId { get; set; }
     public string? CategoriaNome { get; set; }
+    public string? Conservacao { get; set; }
     public string? Descricao { get; set; }
     public string? InstrucoesEmpratamento { get; set; }
     public decimal Rendimento { get; set; }
@@ -25,4 +26,3 @@ public class ReceitaDto
     public DateTime? DataAtualizacao { get; set; }
     public List<ReceitaItemDto> Itens { get; set; } = new List<ReceitaItemDto>();
 }
-

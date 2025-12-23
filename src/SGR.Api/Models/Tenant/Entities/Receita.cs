@@ -8,6 +8,7 @@ public class Receita
     public long Id { get; set; }
     public string Nome { get; set; } = string.Empty;
     public long CategoriaId { get; set; }
+    public string? Conservacao { get; set; } // Instruções de conservação/armazenamento
     public string? Descricao { get; set; } // InstruÃ§Ãµes de preparo
     public string? InstrucoesEmpratamento { get; set; } // InstruÃ§Ãµes de como servir/empratar
     public decimal Rendimento { get; set; } // Quantas porÃ§Ãµes rende
@@ -28,4 +29,3 @@ public class Receita
     public CategoriaReceita Categoria { get; set; } = null!;
     public ICollection<ReceitaItem> Itens { get; set; } = new List<ReceitaItem>();
 }
-

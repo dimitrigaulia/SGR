@@ -14,6 +14,9 @@ public class CreateReceitaRequest
     [MaxLength(5000, ErrorMessage = "Descriï¿½ï¿½Çœo deve ter no mÇ­ximo 5000 caracteres")]
     public string? Descricao { get; set; }
 
+    [MaxLength(5000)]
+    public string? Conservacao { get; set; }
+
     [MaxLength(2000, ErrorMessage = "Instruï¿½ï¿½ï¿½ï¿½es de empratamento devem ter no mÇ­ximo 2000 caracteres")]
     public string? InstrucoesEmpratamento { get; set; }
 
@@ -57,4 +60,3 @@ public class CreateReceitaRequest
 
     public bool IsAtivo { get; set; } = true;
 }
-

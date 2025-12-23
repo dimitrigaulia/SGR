@@ -507,10 +507,92 @@ public class TenantService : BaseService<ApplicationDbContext, TenantEntity, Ten
                     ELSE
                         RAISE NOTICE 'Coluna CategoriaInsumoId nÃ£o encontrada no schema % (schema pode ser novo ou jÃ¡ migrado)', '{schemaName}';
                     END IF;
+
+                    -- Indice (idempotente) somente se a coluna existir
+                    IF EXISTS (
+                        SELECT 1
+                        FROM information_schema.columns
+                        WHERE table_schema = '{schemaName}'
+                        AND table_name = 'FichaTecnica'
+                        AND column_name = 'ReceitaPrincipalId'
+                    ) THEN
+                        EXECUTE 'CREATE INDEX IF NOT EXISTS ""IX_FichaTecnica_ReceitaPrincipalId_{schemaName}"" ON ""{schemaName}"".""FichaTecnica""(""ReceitaPrincipalId"")';
+                    END IF;
                 END $$;
             ";
             
             await _tenantContext.Database.ExecuteSqlRawAsync(renameColumnSql);
+
+            // Adicionar/ajustar colunas novas (idempotente) para schemas existentes
+            var addColumnsSql = $@"
+                DO $$
+                BEGIN
+                    -- Receita.Conservacao
+                    IF EXISTS (
+                        SELECT 1
+                        FROM information_schema.tables
+                        WHERE table_schema = '{schemaName}'
+                        AND table_name = 'Receita'
+                    ) AND NOT EXISTS (
+                        SELECT 1
+                        FROM information_schema.columns
+                        WHERE table_schema = '{schemaName}'
+                        AND table_name = 'Receita'
+                        AND column_name = 'Conservacao'
+                    ) THEN
+                        ALTER TABLE ""{schemaName}"".""Receita""
+                        ADD COLUMN ""Conservacao"" TEXT;
+                    END IF;
+
+                    -- FichaTecnica.ReceitaPrincipalId
+                    IF EXISTS (
+                        SELECT 1
+                        FROM information_schema.tables
+                        WHERE table_schema = '{schemaName}'
+                        AND table_name = 'FichaTecnica'
+                    ) AND NOT EXISTS (
+                        SELECT 1
+                        FROM information_schema.columns
+                        WHERE table_schema = '{schemaName}'
+                        AND table_name = 'FichaTecnica'
+                        AND column_name = 'ReceitaPrincipalId'
+                    ) THEN
+                        ALTER TABLE ""{schemaName}"".""FichaTecnica""
+                        ADD COLUMN ""ReceitaPrincipalId"" BIGINT;
+                    END IF;
+
+                    -- FK FichaTecnica -> Receita (somente se tabelas existirem, coluna existir e constraint não existir)
+                    IF EXISTS (
+                        SELECT 1
+                        FROM information_schema.columns
+                        WHERE table_schema = '{schemaName}'
+                        AND table_name = 'FichaTecnica'
+                        AND column_name = 'ReceitaPrincipalId'
+                    ) AND EXISTS (
+                        SELECT 1
+                        FROM information_schema.tables
+                        WHERE table_schema = '{schemaName}'
+                        AND table_name = 'Receita'
+                    ) AND NOT EXISTS (
+                        SELECT 1
+                        FROM pg_constraint c
+                        JOIN pg_class t ON t.oid = c.conrelid
+                        JOIN pg_namespace n ON n.oid = t.relnamespace
+                        WHERE n.nspname = '{schemaName}'
+                        AND t.relname = 'FichaTecnica'
+                        AND c.conname = 'FK_FichaTecnica_Receita_ReceitaPrincipalId'
+                    ) THEN
+                        ALTER TABLE ""{schemaName}"".""FichaTecnica""
+                        ADD CONSTRAINT ""FK_FichaTecnica_Receita_ReceitaPrincipalId""
+                        FOREIGN KEY (""ReceitaPrincipalId"") REFERENCES ""{schemaName}"".""Receita""(""Id"") ON DELETE RESTRICT;
+                    END IF;
+                END $$;
+
+                -- Índice (idempotente)
+                -- (Índice movido para dentro do bloco DO para evitar erro quando a tabela ainda não existe)
+            ";
+
+            await _tenantContext.Database.ExecuteSqlRawAsync(addColumnsSql);
             _logger.LogInformation("MigraÃ§Ã£o de estrutura antiga concluÃ­da no schema {Schema}", schemaName);
         }
         catch (Exception ex)
@@ -623,6 +705,7 @@ public class TenantService : BaseService<ApplicationDbContext, TenantEntity, Ten
                 ""Nome"" VARCHAR(200) NOT NULL,
                 ""CategoriaId"" BIGINT NOT NULL,
                 ""Descricao"" TEXT,
+                ""Conservacao"" TEXT,
                 ""InstrucoesEmpratamento"" VARCHAR(2000),
                 ""Rendimento"" DECIMAL(18, 4) NOT NULL,
                 ""PesoPorPorcao"" DECIMAL(18, 4),
@@ -660,6 +743,7 @@ public class TenantService : BaseService<ApplicationDbContext, TenantEntity, Ten
             CREATE TABLE IF NOT EXISTS ""{schemaName}"".""FichaTecnica"" (
                 ""Id"" BIGSERIAL PRIMARY KEY,
                 ""CategoriaId"" BIGINT NOT NULL,
+                ""ReceitaPrincipalId"" BIGINT,
                 ""Nome"" VARCHAR(200) NOT NULL,
                 ""Codigo"" VARCHAR(50),
                 ""DescricaoComercial"" TEXT,
@@ -677,8 +761,10 @@ public class TenantService : BaseService<ApplicationDbContext, TenantEntity, Ten
                 ""UsuarioAtualizacao"" VARCHAR(100),
                 ""DataCriacao"" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT (NOW() AT TIME ZONE 'utc'),
                 ""DataAtualizacao"" TIMESTAMP WITH TIME ZONE,
-                CONSTRAINT ""FK_FichaTecnica_CategoriaReceita_{schemaName}"" FOREIGN KEY (""CategoriaId"") REFERENCES ""{schemaName}"".""CategoriaReceita""(""Id"") ON DELETE RESTRICT
+                CONSTRAINT ""FK_FichaTecnica_CategoriaReceita_{schemaName}"" FOREIGN KEY (""CategoriaId"") REFERENCES ""{schemaName}"".""CategoriaReceita""(""Id"") ON DELETE RESTRICT,
+                CONSTRAINT ""FK_FichaTecnica_Receita_ReceitaPrincipalId"" FOREIGN KEY (""ReceitaPrincipalId"") REFERENCES ""{schemaName}"".""Receita""(""Id"") ON DELETE RESTRICT
             );
+            CREATE INDEX IF NOT EXISTS ""IX_FichaTecnica_ReceitaPrincipalId_{schemaName}"" ON ""{schemaName}"".""FichaTecnica""(""ReceitaPrincipalId"");
 
             -- Tabela FichaTecnicaItem
             CREATE TABLE IF NOT EXISTS ""{schemaName}"".""FichaTecnicaItem"" (
@@ -852,4 +938,3 @@ public class TenantService : BaseService<ApplicationDbContext, TenantEntity, Ten
         }
     }
 }
-

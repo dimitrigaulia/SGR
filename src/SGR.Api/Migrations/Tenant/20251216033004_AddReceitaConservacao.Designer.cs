@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using SGR.Api.Data;
@@ -11,9 +12,11 @@ using SGR.Api.Data;
 namespace SGR.Api.Migrations.Tenant
 {
     [DbContext(typeof(TenantDbContext))]
-    partial class TenantDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251216033004_AddReceitaConservacao")]
+    partial class AddReceitaConservacao
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -143,9 +146,6 @@ namespace SGR.Api.Migrations.Tenant
                     b.Property<decimal?>("PrecoSugeridoVenda")
                         .HasColumnType("numeric");
 
-                    b.Property<long?>("ReceitaPrincipalId")
-                        .HasColumnType("bigint");
-
                     b.Property<decimal?>("RendimentoFinal")
                         .HasColumnType("numeric");
 
@@ -158,8 +158,6 @@ namespace SGR.Api.Migrations.Tenant
                     b.HasKey("Id");
 
                     b.HasIndex("CategoriaId");
-
-                    b.HasIndex("ReceitaPrincipalId");
 
                     b.ToTable("FichaTecnica", (string)null);
                 });
@@ -576,14 +574,7 @@ namespace SGR.Api.Migrations.Tenant
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("SGR.Api.Models.Tenant.Entities.Receita", "ReceitaPrincipal")
-                        .WithMany()
-                        .HasForeignKey("ReceitaPrincipalId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.Navigation("Categoria");
-
-                    b.Navigation("ReceitaPrincipal");
                 });
 
             modelBuilder.Entity("SGR.Api.Models.Tenant.Entities.FichaTecnicaCanal", b =>

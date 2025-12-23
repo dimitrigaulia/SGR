@@ -7,6 +7,8 @@ public class CreateFichaTecnicaRequest
     [Required(ErrorMessage = "CategoriaId Ã© obrigatÃ³rio")]
     public long CategoriaId { get; set; }
 
+    public long? ReceitaPrincipalId { get; set; }
+
     [Required(ErrorMessage = "Nome Ã© obrigatÃ³rio")]
     [MaxLength(200, ErrorMessage = "Nome deve ter no mÃ¡ximo 200 caracteres")]
     public string Nome { get; set; } = string.Empty;
@@ -58,4 +60,3 @@ public class CreateFichaTecnicaCanalRequest
 
     public bool IsAtivo { get; set; } = true;
 }
-

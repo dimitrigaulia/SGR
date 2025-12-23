@@ -71,6 +71,7 @@ export class TenantReceitaFormComponent {
     nome: '',
     categoriaId: null as number | null,
     descricao: '',
+    conservacao: '',
     instrucoesEmpratamento: '',
     rendimento: 1,
     pesoPorPorcao: null as number | null,
@@ -152,6 +153,7 @@ export class TenantReceitaFormComponent {
             nome: e.nome,
             categoriaId: e.categoriaId,
             descricao: e.descricao || '',
+            conservacao: e.conservacao || '',
             instrucoesEmpratamento: e.instrucoesEmpratamento || '',
             rendimento: e.rendimento,
             pesoPorPorcao: e.pesoPorPorcao ?? null,
@@ -552,6 +554,7 @@ export class TenantReceitaFormComponent {
       const req: CreateReceitaRequest = {
         nome: v.nome,
         categoriaId: v.categoriaId!,
+        conservacao: v.conservacao || undefined,
         descricao: v.descricao || undefined,
         instrucoesEmpratamento: v.instrucoesEmpratamento || undefined,
         rendimento: v.rendimento,
@@ -583,6 +586,7 @@ export class TenantReceitaFormComponent {
       const req: UpdateReceitaRequest = {
         nome: v.nome,
         categoriaId: v.categoriaId!,
+        conservacao: v.conservacao || undefined,
         descricao: v.descricao || undefined,
         instrucoesEmpratamento: v.instrucoesEmpratamento || undefined,
         rendimento: v.rendimento,
@@ -635,4 +639,3 @@ export class TenantReceitaFormComponent {
       });
   }
 }
-

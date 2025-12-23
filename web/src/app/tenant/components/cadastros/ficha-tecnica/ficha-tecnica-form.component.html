@@ -22,6 +22,17 @@
       }
     </mat-form-field>
 
+    <mat-form-field appearance="outline" class="form-field-spacing">
+      <mat-label>Receita principal (produção)</mat-label>
+      <mat-select name="receitaPrincipalId" [(ngModel)]="model.receitaPrincipalId" [disabled]="isView()">
+        <mat-option [value]="null">Nenhuma</mat-option>
+        @for (r of receitas(); track r.id) {
+          <mat-option [value]="r.id">{{ r.nome }}</mat-option>
+        }
+      </mat-select>
+      <mat-hint>Usada na tela Operação (Comercial/Produção)</mat-hint>
+    </mat-form-field>
+
     <div class="form-row">
       <mat-form-field appearance="outline" class="form-field-spacing">
         <mat-label>Código</mat-label>
@@ -490,6 +501,7 @@
     <div class="form-actions">
       <button mat-stroked-button type="button" routerLink="/tenant/fichas-tecnicas">Voltar</button>
       @if (isView()) {
+        <button mat-stroked-button type="button" (click)="openOperacao()">Operação</button>
         <button mat-stroked-button type="button" (click)="printPdf()">Imprimir / PDF</button>
       } @else {
         <button mat-raised-button color="primary" type="submit">Salvar</button>

@@ -214,6 +214,7 @@ public class ReceitaService : IReceitaService
                 Nome = request.Nome,
                 CategoriaId = request.CategoriaId,
                 Descricao = request.Descricao,
+                Conservacao = request.Conservacao,
                 InstrucoesEmpratamento = request.InstrucoesEmpratamento,
                 Rendimento = request.Rendimento,
                 PesoPorPorcao = request.PesoPorPorcao,
@@ -309,6 +310,7 @@ public class ReceitaService : IReceitaService
             receita.Nome = request.Nome;
             receita.CategoriaId = request.CategoriaId;
             receita.Descricao = request.Descricao;
+            receita.Conservacao = request.Conservacao;
             receita.InstrucoesEmpratamento = request.InstrucoesEmpratamento;
             receita.Rendimento = request.Rendimento;
             receita.PesoPorPorcao = request.PesoPorPorcao;
@@ -389,6 +391,7 @@ public class ReceitaService : IReceitaService
                 Nome = novoNome,
                 CategoriaId = receitaOriginal.CategoriaId,
                 Descricao = receitaOriginal.Descricao,
+                Conservacao = receitaOriginal.Conservacao,
                 InstrucoesEmpratamento = receitaOriginal.InstrucoesEmpratamento,
                 Rendimento = receitaOriginal.Rendimento,
                 PesoPorPorcao = receitaOriginal.PesoPorPorcao,
@@ -496,6 +499,7 @@ public class ReceitaService : IReceitaService
             Nome = receita.Nome,
             CategoriaId = receita.CategoriaId,
             CategoriaNome = receita.Categoria?.Nome,
+            Conservacao = receita.Conservacao,
             Descricao = receita.Descricao,
             InstrucoesEmpratamento = receita.InstrucoesEmpratamento,
             Rendimento = receita.Rendimento,
@@ -555,4 +559,3 @@ public class ReceitaService : IReceitaService
         };
     }
 }
-

@@ -103,6 +103,16 @@ public class PdfService
                                 prepColumn.Item().PaddingTop(5).Text(receita.Descricao);
                             });
                         }
+
+                        // Conservação
+                        if (!string.IsNullOrWhiteSpace(receita.Conservacao))
+                        {
+                            column.Item().PaddingTop(10).Column(consColumn =>
+                            {
+                                consColumn.Item().Text("Conservação").SemiBold().FontSize(12);
+                                consColumn.Item().PaddingTop(5).Text(receita.Conservacao);
+                            });
+                        }
                     });
 
                 page.Footer()
@@ -266,5 +276,7 @@ public class PdfService
         return $"R$ {valor:N2}";
     }
 }
+
+
 
 

@@ -144,6 +144,19 @@ export class TenantFichasTecnicasListComponent {
     this.router.navigate(['/tenant/fichas-tecnicas/cadastro'], { state: { id: e.id, view: true } });
   }
 
+  operacao(e: FichaTecnicaDto, tab: 'comercial' | 'producao' = 'comercial') {
+    const url = this.router.serializeUrl(this.router.createUrlTree(
+      ['/tenant/fichas-tecnicas', e.id, 'operacao'],
+      { queryParams: { tab } }
+    ));
+
+    if (this.window) {
+      this.window.open(url, '_blank');
+    } else {
+      this.router.navigate(['/tenant/fichas-tecnicas', e.id, 'operacao'], { queryParams: { tab } });
+    }
+  }
+
   pageChanged(ev: PageEvent) {
     this.pageIndex.set(ev.pageIndex);
     this.pageSize.set(ev.pageSize);
@@ -175,4 +188,3 @@ export class TenantFichasTecnicasListComponent {
       });
   }
 }
-

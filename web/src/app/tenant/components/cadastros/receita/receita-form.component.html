@@ -160,6 +160,11 @@
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="form-field-spacing">
+        <mat-label>Conservação (armazenamento / validade)</mat-label>
+        <textarea matInput name="conservacao" rows="4" [(ngModel)]="model.conservacao" [disabled]="isView()" maxlength="5000"></textarea>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="form-field-spacing">
         <mat-label>Instruções de Empratamento</mat-label>
         <textarea matInput name="instrucoesEmpratamento" rows="4" [(ngModel)]="model.instrucoesEmpratamento" [disabled]="isView()" maxlength="2000"></textarea>
       </mat-form-field>

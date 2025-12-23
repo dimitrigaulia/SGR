@@ -81,6 +81,7 @@ export class TenantFichaTecnicaFormComponent {
 
   model = {
     categoriaId: null as number | null,
+    receitaPrincipalId: null as number | null,
     nome: '',
     codigo: '',
     descricaoComercial: '',
@@ -276,6 +277,7 @@ export class TenantFichaTecnicaFormComponent {
         .subscribe(e => {
           this.model = {
             categoriaId: e.categoriaId,
+            receitaPrincipalId: e.receitaPrincipalId ?? null,
             nome: e.nome,
             codigo: e.codigo || '',
             descricaoComercial: e.descricaoComercial || '',
@@ -506,6 +508,7 @@ export class TenantFichaTecnicaFormComponent {
     if (this.id() === null) {
       const req: CreateFichaTecnicaRequest = {
         categoriaId: v.categoriaId,
+        receitaPrincipalId: v.receitaPrincipalId ?? undefined,
         nome: v.nome,
         codigo: v.codigo || undefined,
         descricaoComercial: v.descricaoComercial || undefined,
@@ -553,6 +556,7 @@ export class TenantFichaTecnicaFormComponent {
     } else {
       const req: UpdateFichaTecnicaRequest = {
         categoriaId: v.categoriaId,
+        receitaPrincipalId: v.receitaPrincipalId ?? undefined,
         nome: v.nome,
         codigo: v.codigo || undefined,
         descricaoComercial: v.descricaoComercial || undefined,
@@ -622,5 +626,21 @@ export class TenantFichaTecnicaFormComponent {
           this.toast.error('Erro ao gerar PDF');
         }
       });
+  }
+
+  openOperacao(tab: 'comercial' | 'producao' = 'comercial') {
+    const currentId = this.id();
+    if (!currentId) return;
+
+    const url = this.router.serializeUrl(this.router.createUrlTree(
+      ['/tenant/fichas-tecnicas', currentId, 'operacao'],
+      { queryParams: { tab } }
+    ));
+
+    if (this.window) {
+      this.window.open(url, '_blank');
+    } else {
+      this.router.navigate(['/tenant/fichas-tecnicas', currentId, 'operacao'], { queryParams: { tab } });
+    }
   }
 }

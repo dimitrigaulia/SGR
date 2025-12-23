@@ -27,6 +27,7 @@ export interface ReceitaDto {
   nome: string;
   categoriaId: number;
   categoriaNome?: string | null;
+  conservacao?: string | null;
   descricao?: string | null;
   instrucoesEmpratamento?: string | null;
   rendimento: number;
@@ -68,6 +69,7 @@ export interface UpdateReceitaItemRequest {
 export interface CreateReceitaRequest {
   nome: string;
   categoriaId: number;
+  conservacao?: string | null;
   descricao?: string | null;
   instrucoesEmpratamento?: string | null;
   rendimento: number;
@@ -85,6 +87,7 @@ export interface CreateReceitaRequest {
 export interface UpdateReceitaRequest {
   nome: string;
   categoriaId: number;
+  conservacao?: string | null;
   descricao?: string | null;
   instrucoesEmpratamento?: string | null;
   rendimento: number;
@@ -160,4 +163,3 @@ export class ReceitaService {
     return this.http.post<ReceitaDto>(`${this.base}/${id}/duplicar`, { novoNome });
   }
 }
-
