@@ -16,6 +16,7 @@ public class FichaTecnicaItemDto
     public bool ExibirComoQB { get; set; }
     public int Ordem { get; set; }
     public string? Observacoes { get; set; }
+    public decimal CustoItem { get; set; }
     public string? UsuarioCriacao { get; set; }
     public string? UsuarioAtualizacao { get; set; }
     public DateTime DataCriacao { get; set; }

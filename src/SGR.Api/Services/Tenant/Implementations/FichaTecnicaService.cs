@@ -993,26 +993,42 @@ public class FichaTecnicaService : IFichaTecnicaService
             DataAtualizacao = ficha.DataAtualizacao,
             Itens = (ficha.Itens ?? new List<FichaTecnicaItem>())
                 .OrderBy(i => i.Ordem)
-                .Select(i => new FichaTecnicaItemDto
+                .Select(i =>
                 {
-                    Id = i.Id,
-                    FichaTecnicaId = i.FichaTecnicaId,
-                    TipoItem = i.TipoItem,
-                    ReceitaId = i.ReceitaId,
-                    ReceitaNome = i.Receita?.Nome,
-                    InsumoId = i.InsumoId,
-                    InsumoNome = i.Insumo?.Nome,
-                    Quantidade = i.Quantidade,
-                    UnidadeMedidaId = i.UnidadeMedidaId,
-                    UnidadeMedidaNome = i.UnidadeMedida?.Nome,
-                    UnidadeMedidaSigla = i.UnidadeMedida?.Sigla,
-                    ExibirComoQB = i.ExibirComoQB,
-                    Ordem = i.Ordem,
-                    Observacoes = i.Observacoes,
-                    UsuarioCriacao = i.UsuarioCriacao,
-                    UsuarioAtualizacao = i.UsuarioAtualizacao,
-                    DataCriacao = i.DataCriacao,
-                    DataAtualizacao = i.DataAtualizacao
+                    decimal custoItem = 0m;
+                    
+                    if (i.TipoItem == "Insumo" && i.InsumoId.HasValue && i.Insumo != null)
+                    {
+                        var custoPorUnidadeUso = CalcularCustoPorUnidadeUso(i.Insumo);
+                        custoItem = Math.Round(i.Quantidade * custoPorUnidadeUso, 4);
+                    }
+                    else if (i.TipoItem == "Receita" && i.ReceitaId.HasValue && i.Receita != null)
+                    {
+                        custoItem = Math.Round(i.Quantidade * i.Receita.CustoPorPorcao, 4);
+                    }
+                    
+                    return new FichaTecnicaItemDto
+                    {
+                        Id = i.Id,
+                        FichaTecnicaId = i.FichaTecnicaId,
+                        TipoItem = i.TipoItem,
+                        ReceitaId = i.ReceitaId,
+                        ReceitaNome = i.Receita?.Nome,
+                        InsumoId = i.InsumoId,
+                        InsumoNome = i.Insumo?.Nome,
+                        Quantidade = i.Quantidade,
+                        UnidadeMedidaId = i.UnidadeMedidaId,
+                        UnidadeMedidaNome = i.UnidadeMedida?.Nome,
+                        UnidadeMedidaSigla = i.UnidadeMedida?.Sigla,
+                        ExibirComoQB = i.ExibirComoQB,
+                        Ordem = i.Ordem,
+                        Observacoes = i.Observacoes,
+                        CustoItem = custoItem,
+                        UsuarioCriacao = i.UsuarioCriacao,
+                        UsuarioAtualizacao = i.UsuarioAtualizacao,
+                        DataCriacao = i.DataCriacao,
+                        DataAtualizacao = i.DataAtualizacao
+                    };
                 })
                 .ToList(),
             Canais = (ficha.Canais ?? new List<FichaTecnicaCanal>())

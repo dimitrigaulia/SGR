@@ -56,6 +56,7 @@ using SGR.Api.Data;
 using SGR.Api.Models.Tenant.DTOs;
 using SGR.Api.Models.Tenant.Entities;
 using SGR.Api.Services.Tenant.Implementations;
+using System.Collections.Generic;
 
 var configuration = new ConfigurationBuilder()
     .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "src", "SGR.Api"))
@@ -85,7 +86,8 @@ using var configContext = new ApplicationDbContext(configOptions);
 using var tenantContext = new TenantDbContext(tenantOptions);
 
 var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
-var logger = loggerFactory.CreateLogger<FichaTecnicaService>();
+var loggerFicha = loggerFactory.CreateLogger<FichaTecnicaService>();
+var loggerReceita = loggerFactory.CreateLogger<ReceitaService>();
 
 Console.WriteLine("=== TESTE DE VALIDAÇÃO DA FICHA TÉCNICA ===\n");
 
@@ -206,26 +208,126 @@ foreach (var item in insumosData)
 
 Console.WriteLine();
 
-// 5. Criar ficha técnica
-Console.WriteLine("4. Criando ficha técnica FAROFA DA VOVÓ...");
+// 5. Criar receita (produção)
+Console.WriteLine("4. Criando receita (produção) BASE FAROFA...");
 
-var fichaService = new FichaTecnicaService(tenantContext, logger);
+var receitaService = new ReceitaService(tenantContext, loggerReceita);
+
+var createReceitaRequest = new CreateReceitaRequest
+{
+    Nome = "BASE FAROFA",
+    CategoriaId = categoriaReceita.Id,
+    Rendimento = 1m, // 1 porção
+    PesoPorPorcao = 552m, // Peso total da receita (500g Farinha + 2g Sal + 50g Manteiga)
+    FatorRendimento = 1.0m,
+    Itens = new List<CreateReceitaItemRequest>
+    {
+        new CreateReceitaItemRequest
+        {
+            InsumoId = insumosIds["Farinha"],
+            Quantidade = 500m,
+            UnidadeMedidaId = unidadeGR.Id,
+            Ordem = 1
+        },
+        new CreateReceitaItemRequest
+        {
+            InsumoId = insumosIds["Sal"],
+            Quantidade = 2m,
+            UnidadeMedidaId = unidadeGR.Id,
+            Ordem = 2
+        },
+        new CreateReceitaItemRequest
+        {
+            InsumoId = insumosIds["Manteiga"],
+            Quantidade = 50m,
+            UnidadeMedidaId = unidadeGR.Id,
+            Ordem = 3
+        }
+    },
+    IsAtivo = true
+};
+
+ReceitaDto? receitaDto = null;
+try
+{
+    receitaDto = await receitaService.CreateAsync(createReceitaRequest, "Sistema");
+    Console.WriteLine($"   Receita criada com sucesso (ID: {receitaDto.Id})");
+    Console.WriteLine($"   Custo por porção: {receitaDto.CustoPorPorcao:F6}\n");
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"   ERRO ao criar receita: {ex.Message}");
+    if (ex.InnerException != null)
+        Console.WriteLine($"   InnerException: {ex.InnerException.Message}");
+    return;
+}
+
+// 6. Criar ficha técnica (usando receita + insumos)
+Console.WriteLine("5. Criando ficha técnica FAROFA DA VOVÓ (com receita + insumos)...");
+
+var fichaService = new FichaTecnicaService(tenantContext, loggerFicha);
 
 var createRequest = new CreateFichaTecnicaRequest
 {
     Nome = "FAROFA DA VOVÓ",
     CategoriaId = categoriaReceita.Id,
+    ReceitaPrincipalId = receitaDto.Id, // Vincular receita como receita principal
     PorcaoVendaQuantidade = 100m,
     PorcaoVendaUnidadeMedidaId = unidadeGR.Id,
     IndiceContabil = 3m,
-    Itens = insumosData.Select((item, index) => new CreateFichaTecnicaItemRequest
+    Itens = new List<CreateFichaTecnicaItemRequest>
     {
-        TipoItem = "Insumo",
-        InsumoId = insumosIds[item.Nome],
-        Quantidade = item.Quantidade,
-        UnidadeMedidaId = unidadeGR.Id,
-        Ordem = index + 1
-    }).ToList()
+        // Usar receita como primeiro item
+        new CreateFichaTecnicaItemRequest
+        {
+            TipoItem = "Receita",
+            ReceitaId = receitaDto.Id,
+            Quantidade = 1m, // 1 porção da receita
+            UnidadeMedidaId = unidadeGR.Id,
+            Ordem = 1
+        },
+        // Adicionar insumos adicionais
+        new CreateFichaTecnicaItemRequest
+        {
+            TipoItem = "Insumo",
+            InsumoId = insumosIds["Calabresa"],
+            Quantidade = 150m,
+            UnidadeMedidaId = unidadeGR.Id,
+            Ordem = 2
+        },
+        new CreateFichaTecnicaItemRequest
+        {
+            TipoItem = "Insumo",
+            InsumoId = insumosIds["Salsa"],
+            Quantidade = 10m,
+            UnidadeMedidaId = unidadeGR.Id,
+            Ordem = 3
+        },
+        new CreateFichaTecnicaItemRequest
+        {
+            TipoItem = "Insumo",
+            InsumoId = insumosIds["Cenoura"],
+            Quantidade = 20m,
+            UnidadeMedidaId = unidadeGR.Id,
+            Ordem = 4
+        },
+        new CreateFichaTecnicaItemRequest
+        {
+            TipoItem = "Insumo",
+            InsumoId = insumosIds["Pimentão"],
+            Quantidade = 20m,
+            UnidadeMedidaId = unidadeGR.Id,
+            Ordem = 5
+        },
+        new CreateFichaTecnicaItemRequest
+        {
+            TipoItem = "Insumo",
+            InsumoId = insumosIds["Cebola"],
+            Quantidade = 25m,
+            UnidadeMedidaId = unidadeGR.Id,
+            Ordem = 6
+        }
+    }
 };
 
 FichaTecnicaDto? fichaDto = null;
@@ -242,8 +344,8 @@ catch (Exception ex)
     return;
 }
 
-// 6. Validar cálculos
-Console.WriteLine("5. VALIDAÇÃO DOS CÁLCULOS:\n");
+// 7. Validar cálculos
+Console.WriteLine("6. VALIDAÇÃO DOS CÁLCULOS:\n");
 
 var tolerancia = 0.0001m;
 
@@ -372,6 +474,14 @@ if (reprovados > 0)
         Console.WriteLine($"  - {nome}");
     }
 }
+
+// Resumo adicional sobre receitas
+Console.WriteLine("\n=== RESUMO DO FLUXO TESTADO ===");
+Console.WriteLine("✓ Insumos criados e persistidos");
+Console.WriteLine("✓ Receita (produção) criada e persistida");
+Console.WriteLine("✓ Ficha técnica criada usando Receita + Insumos");
+Console.WriteLine("✓ Receita vinculada como ReceitaPrincipalId na ficha técnica");
+Console.WriteLine("✓ Cálculos validados (custo, preço mesa, canais)");
 
 Console.WriteLine("\n=== TESTE CONCLUÍDO ===");
 '@

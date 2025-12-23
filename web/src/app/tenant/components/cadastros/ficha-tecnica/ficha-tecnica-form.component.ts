@@ -1,7 +1,7 @@
 import { Component, ChangeDetectionStrategy, ChangeDetectorRef, DestroyRef, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HttpClient } from '@angular/common/http';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
@@ -16,13 +16,15 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatTabsModule } from '@angular/material/tabs';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ToastService } from '../../../../core/services/toast.service';
 import { environment } from '../../../../../environments/environment';
 import { CategoriaReceitaService, CategoriaReceitaDto } from '../../../../features/tenant-categorias-receita/services/categoria-receita.service';
 import { ReceitaService, ReceitaDto } from '../../../../features/tenant-receitas/services/receita.service';
 import { InsumoService, InsumoDto } from '../../../../features/tenant-insumos/services/insumo.service';
 import { UnidadeMedidaService, UnidadeMedidaDto } from '../../../../features/tenant-unidades-medida/services/unidade-medida.service';
-import { FichaTecnicaService, CreateFichaTecnicaRequest, UpdateFichaTecnicaRequest, FichaTecnicaItemDto } from '../../../../features/tenant-receitas/services/ficha-tecnica.service';
+import { FichaTecnicaService, CreateFichaTecnicaRequest, UpdateFichaTecnicaRequest, FichaTecnicaItemDto, FichaTecnicaDto } from '../../../../features/tenant-receitas/services/ficha-tecnica.service';
 
 type FichaTecnicaCanalFormModel = {
   id?: number | null;
@@ -31,6 +33,7 @@ type FichaTecnicaCanalFormModel = {
   precoVenda: number;
   taxaPercentual?: number | null;
   comissaoPercentual?: number | null;
+  multiplicador?: number | null;
   margemCalculadaPercentual?: number | null;
   observacoes?: string;
   isAtivo: boolean;
@@ -51,13 +54,14 @@ type FichaTecnicaItemFormModel = {
 @Component({
   standalone: true,
   selector: 'app-tenant-ficha-tecnica-form',
-  imports: [CommonModule, FormsModule, RouterLink, MatFormFieldModule, MatInputModule, MatButtonModule, MatSelectModule, MatSlideToggleModule, MatSnackBarModule, MatTableModule, MatIconModule, MatCardModule, MatCheckboxModule, MatTooltipModule],
+  imports: [CommonModule, FormsModule, RouterLink, MatFormFieldModule, MatInputModule, MatButtonModule, MatSelectModule, MatSlideToggleModule, MatSnackBarModule, MatTableModule, MatIconModule, MatCardModule, MatCheckboxModule, MatTooltipModule, MatTabsModule, MatProgressSpinnerModule],
   templateUrl: './ficha-tecnica-form.component.html',
   styleUrls: ['./ficha-tecnica-form.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class TenantFichaTecnicaFormComponent {
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private categoriaService = inject(CategoriaReceitaService);
   private receitaService = inject(ReceitaService);
   private insumoService = inject(InsumoService);
@@ -78,6 +82,9 @@ export class TenantFichaTecnicaFormComponent {
   isView = signal<boolean>(false);
   isMobile = signal(false);
   error = signal<string>('');
+  selectedTabIndex = signal<number>(0);
+  fichaDtoCompleto = signal<FichaTecnicaDto | null>(null);
+  isLoadingDetalhe = signal<boolean>(false);
 
   model = {
     categoriaId: null as number | null,
@@ -90,13 +97,15 @@ export class TenantFichaTecnicaFormComponent {
     icValor: null as number | null,
     ipcValor: null as number | null,
     margemAlvoPercentual: null as number | null,
+    porcaoVendaQuantidade: null as number | null,
+    porcaoVendaUnidadeMedidaId: null as number | null,
     isAtivo: true
   };
 
   itens = signal<FichaTecnicaItemFormModel[]>([]);
   canais = signal<FichaTecnicaCanalFormModel[]>([]);
   displayedColumnsItens = ['ordem', 'tipo', 'item', 'quantidade', 'unidade', 'qb', 'observacoes', 'acoes'];
-  displayedColumns = ['canal', 'nomeExibicao', 'precoVenda', 'taxas', 'margem', 'acoes'];
+  displayedColumns = ['canal', 'nomeExibicao', 'precoVenda', 'taxas', 'multiplicador', 'margem', 'acoes'];
   
   // Propriedades para uso no template
   window = typeof window !== 'undefined' ? window : null;
@@ -203,7 +212,22 @@ export class TenantFichaTecnicaFormComponent {
     return 0;
   }
 
-  get precoSugeridoVendaCalculado(): number | null {
+  get hasPorcao(): boolean {
+    const dto = this.fichaDtoCompleto();
+    return (this.model.porcaoVendaQuantidade !== null && this.model.porcaoVendaQuantidade > 0) || 
+           (dto !== null && dto.porcaoVendaQuantidade !== null && dto.porcaoVendaQuantidade !== undefined && dto.porcaoVendaQuantidade > 0);
+  }
+
+  get precoMesaCalculado(): number | null {
+    const dto = this.fichaDtoCompleto();
+    
+    // Ordem determinística: se porção definida → NUNCA calcular no frontend, só usar DTO
+    if (this.hasPorcao) {
+      // Se porção definida → retornar valor do DTO ou null (exibir "—")
+      return dto?.precoMesaSugerido ?? null;
+    }
+    
+    // Se sem porção → legado (pode calcular no frontend)
     const rendimentoFinal = this.rendimentoFinalCalculado;
     if (rendimentoFinal === null || rendimentoFinal <= 0) {
       return null;
@@ -214,6 +238,11 @@ export class TenantFichaTecnicaFormComponent {
       return Math.round(custoPorUnidade * this.model.indiceContabil * 10000) / 10000;
     }
     return null;
+  }
+
+  get precoSugeridoVendaCalculado(): number | null {
+    // Manter compatibilidade com código existente, mas usar precoMesaCalculado
+    return this.precoMesaCalculado;
   }
 
   constructor() {
@@ -270,48 +299,19 @@ export class TenantFichaTecnicaFormComponent {
     const view = !!st?.view;
     this.isView.set(view);
 
+    // Verificar queryParams para tab
+    const tabParam = this.route.snapshot.queryParams['tab'];
+    let initialTab = 0;
+    if (view) {
+      initialTab = 1; // View sempre abre no Resumo
+    } else if (tabParam === 'resumo') {
+      initialTab = 1; // QueryParam resumo abre na Tab Resumo
+    }
+    this.selectedTabIndex.set(initialTab);
+
     if (id) {
       this.id.set(id);
-      this.fichaService.get(id)
-        .pipe(takeUntilDestroyed(this.destroyRef))
-        .subscribe(e => {
-          this.model = {
-            categoriaId: e.categoriaId,
-            receitaPrincipalId: e.receitaPrincipalId ?? null,
-            nome: e.nome,
-            codigo: e.codigo || '',
-            descricaoComercial: e.descricaoComercial || '',
-            indiceContabil: e.indiceContabil ?? null,
-            icOperador: e.icOperador ?? null,
-            icValor: e.icValor ?? null,
-            ipcValor: e.ipcValor ?? null,
-            margemAlvoPercentual: e.margemAlvoPercentual ?? null,
-            isAtivo: e.isAtivo
-          };
-          this.itens.set(e.itens.map(i => ({
-            id: i.id,
-            tipoItem: i.tipoItem as 'Receita' | 'Insumo',
-            receitaId: i.receitaId ?? null,
-            insumoId: i.insumoId ?? null,
-            quantidade: i.quantidade,
-            unidadeMedidaId: i.unidadeMedidaId,
-            exibirComoQB: i.exibirComoQB,
-            ordem: i.ordem,
-            observacoes: i.observacoes || ''
-          })));
-          this.canais.set(e.canais.map(c => ({
-            id: c.id,
-            canal: c.canal,
-            nomeExibicao: c.nomeExibicao || '',
-            precoVenda: c.precoVenda,
-            taxaPercentual: c.taxaPercentual ?? null,
-            comissaoPercentual: c.comissaoPercentual ?? null,
-            margemCalculadaPercentual: c.margemCalculadaPercentual ?? null,
-            observacoes: c.observacoes || '',
-            isAtivo: c.isAtivo
-          })));
-          this.cdr.markForCheck();
-        });
+      this.loadFichaDetalhe(id);
     }
   }
 
@@ -419,6 +419,58 @@ export class TenantFichaTecnicaFormComponent {
     return unidade ? unidade.sigla : '-';
   }
 
+  formatQuantidadeItem(item: { tipoItem: string; quantidade: number; unidadeMedidaSigla?: string | null }): string {
+    // Se for Receita, exibir como "1x" ou "1 receita" sem unidade
+    if (item.tipoItem === 'Receita') {
+      return `${item.quantidade}x`;
+    }
+    // Para Insumo, exibir quantidade + unidade normalmente
+    return `${item.quantidade.toFixed(4)} ${item.unidadeMedidaSigla || '-'}`;
+  }
+
+  getUnidadePorcao(): { unidade: string; unidadePreco: string } {
+    // Fonte única com prioridade definida
+    let unidadeId: number | null = null;
+    
+    // Prioridade 1: model.porcaoVendaUnidadeMedidaId (o que o usuário está editando)
+    if (this.model.porcaoVendaUnidadeMedidaId) {
+      unidadeId = this.model.porcaoVendaUnidadeMedidaId;
+    }
+    // Fallback 1: fichaDtoCompleto()?.porcaoVendaUnidadeMedidaId
+    else {
+      const dto = this.fichaDtoCompleto();
+      if (dto?.porcaoVendaUnidadeMedidaId !== null && dto?.porcaoVendaUnidadeMedidaId !== undefined) {
+        unidadeId = dto.porcaoVendaUnidadeMedidaId;
+      }
+    }
+    
+    // Fallback final: se não encontrou ID, retornar genérico
+    if (!unidadeId) {
+      return { unidade: 'GR/ML', unidadePreco: 'R$/kg ou L' };
+    }
+    
+    // Se unidades() ainda não carregou, retornar fallback
+    if (this.unidades().length === 0) {
+      return { unidade: 'GR/ML', unidadePreco: 'R$/kg ou L' };
+    }
+    
+    // Buscar a unidade na lista unidades() e obter a sigla
+    const unidade = this.unidades().find(u => u.id === unidadeId);
+    if (!unidade) {
+      return { unidade: 'GR/ML', unidadePreco: 'R$/kg ou L' };
+    }
+    
+    const sigla = unidade.sigla.toUpperCase();
+    if (sigla === 'GR') {
+      return { unidade: 'g', unidadePreco: 'R$/kg' };
+    } else if (sigla === 'ML') {
+      return { unidade: 'mL', unidadePreco: 'R$/L' };
+    }
+    
+    // Fallback final
+    return { unidade: 'GR/ML', unidadePreco: 'R$/kg ou L' };
+  }
+
   isUnidadeTravada(item: FichaTecnicaItemFormModel): boolean {
     // Unidade está travada se:
     // - Item é do tipo Receita (sempre GR)
@@ -440,6 +492,7 @@ export class TenantFichaTecnicaFormComponent {
       precoVenda: 0,
       taxaPercentual: null,
       comissaoPercentual: null,
+      multiplicador: null,
       margemCalculadaPercentual: null,
       observacoes: '',
       isAtivo: true
@@ -448,11 +501,11 @@ export class TenantFichaTecnicaFormComponent {
   }
 
   addCanalPreset(tipo: 'IFOOD1' | 'IFOOD2' | 'BALCAO' | 'DELIVERY') {
-    const presets: Record<string, { canal: string; nomeExibicao: string; taxaPercentual?: number | null; comissaoPercentual?: number | null }> = {
-      IFOOD1: { canal: 'ifood-1', nomeExibicao: 'Ifood 1', taxaPercentual: 13, comissaoPercentual: null },
-      IFOOD2: { canal: 'ifood-2', nomeExibicao: 'Ifood 2', taxaPercentual: 25, comissaoPercentual: null },
-      BALCAO: { canal: 'BALCAO', nomeExibicao: 'BalcÃ£o', taxaPercentual: 0, comissaoPercentual: null },
-      DELIVERY: { canal: 'DELIVERY', nomeExibicao: 'Delivery PrÃ³prio', taxaPercentual: 0, comissaoPercentual: null }
+    const presets: Record<string, { canal: string; nomeExibicao: string; taxaPercentual?: number | null; comissaoPercentual?: number | null; multiplicador?: number | null }> = {
+      IFOOD1: { canal: 'ifood-1', nomeExibicao: 'Ifood 1', taxaPercentual: 13, comissaoPercentual: null, multiplicador: 1.138 },
+      IFOOD2: { canal: 'ifood-2', nomeExibicao: 'Ifood 2', taxaPercentual: 25, comissaoPercentual: null, multiplicador: 1.3 },
+      BALCAO: { canal: 'BALCAO', nomeExibicao: 'Balcão', taxaPercentual: 0, comissaoPercentual: null, multiplicador: null },
+      DELIVERY: { canal: 'DELIVERY', nomeExibicao: 'Delivery Próprio', taxaPercentual: 0, comissaoPercentual: null, multiplicador: null }
     };
 
     const preset = presets[tipo];
@@ -463,6 +516,7 @@ export class TenantFichaTecnicaFormComponent {
       precoVenda: 0,
       taxaPercentual: preset.taxaPercentual ?? null,
       comissaoPercentual: preset.comissaoPercentual ?? null,
+      multiplicador: preset.multiplicador ?? null,
       margemCalculadaPercentual: null,
       observacoes: '',
       isAtivo: true
@@ -483,6 +537,12 @@ export class TenantFichaTecnicaFormComponent {
     const v = this.model;
     if (!v.categoriaId || !v.nome) {
       this.toast.error('Selecione uma categoria e informe o nome');
+      return;
+    }
+
+    // Validação: se porcaoVendaQuantidade > 0, então porcaoVendaUnidadeMedidaId deve estar preenchido
+    if (v.porcaoVendaQuantidade && v.porcaoVendaQuantidade > 0 && !v.porcaoVendaUnidadeMedidaId) {
+      this.toast.error('Selecione a unidade da porção de venda');
       return;
     }
 
@@ -517,6 +577,8 @@ export class TenantFichaTecnicaFormComponent {
         icValor: v.icValor ?? undefined,
         ipcValor: v.ipcValor ?? undefined,
         margemAlvoPercentual: v.margemAlvoPercentual ?? undefined,
+        porcaoVendaQuantidade: v.porcaoVendaQuantidade ?? undefined,
+        porcaoVendaUnidadeMedidaId: v.porcaoVendaUnidadeMedidaId ?? undefined,
         isAtivo: !!v.isAtivo,
         itens: itensValidos.map(i => ({
           tipoItem: i.tipoItem,
@@ -534,6 +596,7 @@ export class TenantFichaTecnicaFormComponent {
           precoVenda: c.precoVenda,
           taxaPercentual: c.taxaPercentual ?? undefined,
           comissaoPercentual: c.comissaoPercentual ?? undefined,
+          multiplicador: c.multiplicador ?? undefined,
           observacoes: c.observacoes || undefined,
           isAtivo: !!c.isAtivo
         }))
@@ -542,9 +605,12 @@ export class TenantFichaTecnicaFormComponent {
       this.fichaService.create(req)
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
-          next: () => {
-            this.toast.success('Ficha tÃ©cnica criada');
-            this.router.navigate(['/tenant/fichas-tecnicas']);
+          next: (created) => {
+            this.toast.success('Ficha técnica criada');
+            // Regra operacional: após salvar, navegar para detalhe (GetById) e abrir tab Resumo
+            this.id.set(created.id);
+            this.selectedTabIndex.set(1); // Abrir tab Resumo
+            this.loadFichaDetalhe(created.id); // Recarregar dados completos
           },
           error: err => {
             const msg = err.error?.message || 'Erro ao salvar ficha tÃ©cnica';
@@ -565,6 +631,8 @@ export class TenantFichaTecnicaFormComponent {
         icValor: v.icValor ?? undefined,
         ipcValor: v.ipcValor ?? undefined,
         margemAlvoPercentual: v.margemAlvoPercentual ?? undefined,
+        porcaoVendaQuantidade: v.porcaoVendaQuantidade ?? undefined,
+        porcaoVendaUnidadeMedidaId: v.porcaoVendaUnidadeMedidaId ?? undefined,
         isAtivo: !!v.isAtivo,
         itens: itensValidos.map(i => ({
           id: i.id ?? undefined,
@@ -584,6 +652,7 @@ export class TenantFichaTecnicaFormComponent {
           precoVenda: c.precoVenda,
           taxaPercentual: c.taxaPercentual ?? undefined,
           comissaoPercentual: c.comissaoPercentual ?? undefined,
+          multiplicador: c.multiplicador ?? undefined,
           observacoes: c.observacoes || undefined,
           isAtivo: !!c.isAtivo
         }))
@@ -593,8 +662,11 @@ export class TenantFichaTecnicaFormComponent {
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
           next: () => {
-            this.toast.success('Ficha tÃ©cnica atualizada');
-            this.router.navigate(['/tenant/fichas-tecnicas']);
+            this.toast.success('Ficha técnica atualizada');
+            // Regra operacional: após salvar, navegar para detalhe (GetById) e abrir tab Resumo
+            const currentId = this.id()!;
+            this.selectedTabIndex.set(1); // Abrir tab Resumo
+            this.loadFichaDetalhe(currentId); // Recarregar dados completos
           },
           error: err => {
             const msg = err.error?.message || 'Erro ao salvar ficha tÃ©cnica';
@@ -642,5 +714,100 @@ export class TenantFichaTecnicaFormComponent {
     } else {
       this.router.navigate(['/tenant/fichas-tecnicas', currentId, 'operacao'], { queryParams: { tab } });
     }
+  }
+
+  loadFichaDetalhe(id: number) {
+    this.isLoadingDetalhe.set(true);
+    this.fichaService.get(id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: e => {
+          this.fichaDtoCompleto.set(e);
+          this.model = {
+            categoriaId: e.categoriaId,
+            receitaPrincipalId: e.receitaPrincipalId ?? null,
+            nome: e.nome,
+            codigo: e.codigo || '',
+            descricaoComercial: e.descricaoComercial || '',
+            indiceContabil: e.indiceContabil ?? null,
+            icOperador: e.icOperador ?? null,
+            icValor: e.icValor ?? null,
+            ipcValor: e.ipcValor ?? null,
+            margemAlvoPercentual: e.margemAlvoPercentual ?? null,
+            porcaoVendaQuantidade: e.porcaoVendaQuantidade ?? null,
+            porcaoVendaUnidadeMedidaId: e.porcaoVendaUnidadeMedidaId ?? null,
+            isAtivo: e.isAtivo
+          };
+          this.itens.set(e.itens.map(i => ({
+            id: i.id,
+            tipoItem: i.tipoItem as 'Receita' | 'Insumo',
+            receitaId: i.receitaId ?? null,
+            insumoId: i.insumoId ?? null,
+            quantidade: i.quantidade,
+            unidadeMedidaId: i.unidadeMedidaId,
+            exibirComoQB: i.exibirComoQB,
+            ordem: i.ordem,
+            observacoes: i.observacoes || ''
+          })));
+          this.canais.set(e.canais.map(c => ({
+            id: c.id,
+            canal: c.canal,
+            nomeExibicao: c.nomeExibicao || '',
+            precoVenda: c.precoVenda,
+            taxaPercentual: c.taxaPercentual ?? null,
+            comissaoPercentual: c.comissaoPercentual ?? null,
+            multiplicador: c.multiplicador ?? null,
+            margemCalculadaPercentual: c.margemCalculadaPercentual ?? null,
+            observacoes: c.observacoes || '',
+            isAtivo: c.isAtivo
+          })));
+          this.isLoadingDetalhe.set(false);
+          this.cdr.markForCheck();
+        },
+        error: () => {
+          this.isLoadingDetalhe.set(false);
+          this.cdr.markForCheck();
+        }
+      });
+  }
+
+  onTabChange(index: number) {
+    this.selectedTabIndex.set(index);
+    
+    // Se mudou para Tab 2 (Resumo Planilha) e não tem dados completos, carregar
+    if (index === 1) {
+      const currentId = this.id();
+      const fichaDto = this.fichaDtoCompleto();
+      
+      // Verificar se precisa carregar detalhe completo
+      if (currentId && (!fichaDto || !fichaDto.itens || fichaDto.itens.length === 0 || 
+          fichaDto.pesoTotalBase === null || fichaDto.pesoTotalBase === undefined)) {
+        this.loadFichaDetalhe(currentId);
+      }
+    }
+    
+    this.cdr.markForCheck();
+  }
+
+  goToPlanilhaTab() {
+    this.selectedTabIndex.set(1);
+    this.onTabChange(1);
+  }
+
+  getModoCanal(canal: FichaTecnicaCanalFormModel | any): 'Preço definido' | 'Auto (Multiplicador)' | 'Auto (Gross-up)' | '-' {
+    // Hierarquia: multiplicador > gross-up > preço definido
+    // Se existem taxa/comissão ou multiplicador, o modo é Auto (mesmo que precoVenda já esteja preenchido)
+    if (canal.multiplicador && canal.multiplicador > 0) {
+      return 'Auto (Multiplicador)';
+    }
+    if ((canal.taxaPercentual ?? 0) + (canal.comissaoPercentual ?? 0) > 0) {
+      return 'Auto (Gross-up)';
+    }
+    // Simplificado: como já retornou antes em multiplicador e gross-up, basta checar precoVenda
+    // A hierarquia já garante que "Preço definido" só ocorre quando não é Auto
+    if (canal.precoVenda > 0) {
+      return 'Preço definido';
+    }
+    return '-';
   }
 }

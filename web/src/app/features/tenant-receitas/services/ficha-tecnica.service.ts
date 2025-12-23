@@ -11,6 +11,7 @@ export interface FichaTecnicaCanalDto {
   precoVenda: number;
   taxaPercentual?: number | null;
   comissaoPercentual?: number | null;
+  multiplicador?: number | null;
   margemCalculadaPercentual?: number | null;
   observacoes?: string | null;
   isAtivo: boolean;
@@ -52,6 +53,15 @@ export interface FichaTecnicaDto {
   icValor?: number | null;
   ipcValor?: number | null;
   margemAlvoPercentual?: number | null;
+  porcaoVendaQuantidade?: number | null;
+  porcaoVendaUnidadeMedidaId?: number | null;
+  porcaoVendaUnidadeMedidaNome?: string | null;
+  porcaoVendaUnidadeMedidaSigla?: string | null;
+  rendimentoPorcoes?: number | null;
+  pesoTotalBase?: number | null;
+  custoKgL?: number | null;
+  custoPorPorcaoVenda?: number | null;
+  precoMesaSugerido?: number | null;
   isAtivo: boolean;
   usuarioCriacao?: string | null;
   usuarioAtualizacao?: string | null;
@@ -67,6 +77,7 @@ export interface CreateFichaTecnicaCanalRequest {
   precoVenda: number;
   taxaPercentual?: number | null;
   comissaoPercentual?: number | null;
+  multiplicador?: number | null;
   observacoes?: string | null;
   isAtivo: boolean;
 }
@@ -109,6 +120,8 @@ export interface CreateFichaTecnicaRequest {
   icValor?: number | null;
   ipcValor?: number | null;
   margemAlvoPercentual?: number | null;
+  porcaoVendaQuantidade?: number | null;
+  porcaoVendaUnidadeMedidaId?: number | null;
   isAtivo: boolean;
   itens: CreateFichaTecnicaItemRequest[];
   canais: CreateFichaTecnicaCanalRequest[];
@@ -125,6 +138,8 @@ export interface UpdateFichaTecnicaRequest {
   icValor?: number | null;
   ipcValor?: number | null;
   margemAlvoPercentual?: number | null;
+  porcaoVendaQuantidade?: number | null;
+  porcaoVendaUnidadeMedidaId?: number | null;
   isAtivo: boolean;
   itens: UpdateFichaTecnicaItemRequest[];
   canais: UpdateFichaTecnicaCanalRequest[];
