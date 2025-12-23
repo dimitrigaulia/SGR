@@ -33,6 +33,10 @@ public class UpdateFichaTecnicaRequest
     
     public decimal? MargemAlvoPercentual { get; set; }
 
+    public decimal? PorcaoVendaQuantidade { get; set; }
+    public long? PorcaoVendaUnidadeMedidaId { get; set; }
+    public decimal? RendimentoPorcoes { get; set; }
+
     [Required(ErrorMessage = "Itens sÃ£o obrigatÃ³rios")]
     [MinLength(1, ErrorMessage = "A ficha tÃ©cnica deve ter pelo menos um item")]
     public List<UpdateFichaTecnicaItemRequest> Itens { get; set; } = new();
@@ -58,6 +62,7 @@ public class UpdateFichaTecnicaCanalRequest
 
     public decimal? TaxaPercentual { get; set; }
     public decimal? ComissaoPercentual { get; set; }
+    public decimal? Multiplicador { get; set; }
     public string? Observacoes { get; set; }
 
     public bool IsAtivo { get; set; } = true;

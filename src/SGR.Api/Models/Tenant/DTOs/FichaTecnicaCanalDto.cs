@@ -9,6 +9,7 @@ public class FichaTecnicaCanalDto
     public decimal PrecoVenda { get; set; }
     public decimal? TaxaPercentual { get; set; }
     public decimal? ComissaoPercentual { get; set; }
+    public decimal? Multiplicador { get; set; }
     public decimal? MargemCalculadaPercentual { get; set; }
     public string? Observacoes { get; set; }
     public bool IsAtivo { get; set; }

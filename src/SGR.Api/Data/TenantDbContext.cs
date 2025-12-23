@@ -179,6 +179,11 @@ namespace SGR.Api.Data
                       .HasForeignKey(e => e.ReceitaPrincipalId)
                       .OnDelete(DeleteBehavior.Restrict);
 
+                entity.HasOne(e => e.PorcaoVendaUnidadeMedida)
+                      .WithMany()
+                      .HasForeignKey(e => e.PorcaoVendaUnidadeMedidaId)
+                      .OnDelete(DeleteBehavior.Restrict);
+
                 entity.HasMany(e => e.Itens)
                       .WithOne(i => i.FichaTecnica)
                       .HasForeignKey(i => i.FichaTecnicaId)

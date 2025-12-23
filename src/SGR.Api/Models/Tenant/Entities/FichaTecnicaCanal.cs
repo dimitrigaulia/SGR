@@ -16,6 +16,11 @@ public class FichaTecnicaCanal
     public decimal? ComissaoPercentual { get; set; }
 
     /// <summary>
+    /// Multiplicador fixo para cálculo de preço (prioridade sobre gross-up por fee)
+    /// </summary>
+    public decimal? Multiplicador { get; set; }
+
+    /// <summary>
     /// Margem calculada em percentual, considerando custo tÃ©cnico e taxas
     /// </summary>
     public decimal? MargemCalculadaPercentual { get; set; }

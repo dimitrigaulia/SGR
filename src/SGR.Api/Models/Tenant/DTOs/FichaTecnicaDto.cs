@@ -22,6 +22,18 @@ public class FichaTecnicaDto
     public int? IPCValor { get; set; }
     public decimal? MargemAlvoPercentual { get; set; }
 
+    public decimal? PorcaoVendaQuantidade { get; set; }
+    public long? PorcaoVendaUnidadeMedidaId { get; set; }
+    public string? PorcaoVendaUnidadeMedidaNome { get; set; }
+    public string? PorcaoVendaUnidadeMedidaSigla { get; set; }
+    public decimal? RendimentoPorcoes { get; set; }
+
+    // Campos calculados (preenchidos somente no GetById quando Itens estiverem carregados)
+    public decimal? PesoTotalBase { get; set; }
+    public decimal? CustoKgL { get; set; }
+    public decimal? CustoPorPorcaoVenda { get; set; }
+    public decimal? PrecoMesaSugerido { get; set; }
+
     public bool IsAtivo { get; set; }
 
     public string? UsuarioCriacao { get; set; }

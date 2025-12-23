@@ -83,19 +83,19 @@ public class FichaTecnicaService : IFichaTecnicaService
     }
 
     /// <summary>
-    /// Calcula o rendimento final da ficha tÃ©cnica considerando apenas itens em GR (gramas)
+    /// Calcula o rendimento final da ficha tÃ©cnica considerando itens em GR (gramas) ou ML (mililitros)
     /// Para itens do tipo Receita: quantidade representa porções, então multiplica por PesoPorPorcao
     /// Para itens do tipo Insumo: soma quantidade diretamente
     /// </summary>
     private void CalcularRendimentoFinal(FichaTecnica ficha, List<UnidadeMedida> unidadesMedida, List<Receita> receitas)
     {
-        // Considerar apenas itens cuja UnidadeMedida.Sigla seja "GR"
+        // Considerar itens cuja UnidadeMedida.Sigla seja "GR" ou "ML"
         var quantidadeTotalBase = 0m;
 
         foreach (var item in ficha.Itens)
         {
             var unidadeMedida = unidadesMedida.FirstOrDefault(u => u.Id == item.UnidadeMedidaId);
-            if (unidadeMedida != null && unidadeMedida.Sigla.ToUpper() == "GR")
+            if (unidadeMedida != null && (unidadeMedida.Sigla.ToUpper() == "GR" || unidadeMedida.Sigla.ToUpper() == "ML"))
             {
                 // IMPORTANTE: ExibirComoQB Ã© apenas visual, sempre usar Quantidade numÃ©rica
                 
@@ -151,40 +151,55 @@ public class FichaTecnicaService : IFichaTecnicaService
 
     /// <summary>
     /// Calcula o preÃ§o sugerido de venda
-    /// PrecoSugeridoVenda = CustoPorUnidade * IndiceContabil
+    /// Se PorcaoVendaQuantidade informado: PrecoSugeridoVenda = custo por porção * IndiceContabil (preço mesa por porção)
+    /// Se PorcaoVendaQuantidade não informado: PrecoSugeridoVenda = CustoPorUnidade * IndiceContabil (comportamento legado por unidade base)
     /// SÃ³ calcula se CustoPorUnidade for vÃ¡lido (RendimentoFinal > 0)
     /// </summary>
     private void CalcularPrecoSugerido(FichaTecnica ficha)
     {
-        // NÃ£o calcular se RendimentoFinal nÃ£o estiver disponÃ­vel (CustoPorUnidade seria invÃ¡lido)
+        // NÃ£o calcular se RendimentoFinal nÃ£o estiver disponÃ­vel ou IndiceContabil inválido ou CustoPorUnidade <= 0
         if (!ficha.RendimentoFinal.HasValue || ficha.RendimentoFinal.Value <= 0)
         {
             ficha.PrecoSugeridoVenda = null;
             return;
         }
 
-        if (ficha.IndiceContabil.HasValue && ficha.IndiceContabil.Value > 0 && ficha.CustoPorUnidade > 0)
+        if (!ficha.IndiceContabil.HasValue || ficha.IndiceContabil.Value <= 0 || ficha.CustoPorUnidade <= 0)
         {
-            ficha.PrecoSugeridoVenda = Math.Round(ficha.CustoPorUnidade * ficha.IndiceContabil.Value, 4);
+            ficha.PrecoSugeridoVenda = null;
+            return;
+        }
+
+        // Calcular custo unitário preciso (não usar CustoPorUnidade arredondado)
+        var custoUnitPreciso = ficha.CustoTotal / ficha.RendimentoFinal.Value;
+
+        // Se PorcaoVendaQuantidade informado (> 0): novo cálculo por porção
+        if (ficha.PorcaoVendaQuantidade.HasValue && ficha.PorcaoVendaQuantidade.Value > 0)
+        {
+            var custoPorPorcao = custoUnitPreciso * ficha.PorcaoVendaQuantidade.Value;
+            var precoMesa = custoPorPorcao * ficha.IndiceContabil.Value;
+            ficha.PrecoSugeridoVenda = Math.Round(precoMesa, 4);
         }
         else
         {
-            ficha.PrecoSugeridoVenda = null;
+            // Comportamento legado: por unidade base (ex.: por grama)
+            ficha.PrecoSugeridoVenda = Math.Round(custoUnitPreciso * ficha.IndiceContabil.Value, 4);
         }
     }
 
     /// <summary>
-    /// Cria canais padrão para a ficha tÃ©cnica (ifood-1 e ifood-2)
+    /// Cria canais padrão para a ficha tÃ©cnica (Plano 12% e Plano 23%)
     /// </summary>
     private void CriarCanaisPadrao(FichaTecnica ficha)
     {
         ficha.Canais.Add(new FichaTecnicaCanal
         {
             Canal = "ifood-1",
-            NomeExibicao = "Ifood 1",
+            NomeExibicao = "Plano 12%",
             PrecoVenda = 0,
-            TaxaPercentual = 13,
+            TaxaPercentual = 12,
             ComissaoPercentual = null,
+            Multiplicador = 1.138m,
             Observacoes = null,
             IsAtivo = true
         });
@@ -192,10 +207,11 @@ public class FichaTecnicaService : IFichaTecnicaService
         ficha.Canais.Add(new FichaTecnicaCanal
         {
             Canal = "ifood-2",
-            NomeExibicao = "Ifood 2",
+            NomeExibicao = "Plano 23%",
             PrecoVenda = 0,
-            TaxaPercentual = 25,
+            TaxaPercentual = 23,
             ComissaoPercentual = null,
+            Multiplicador = 1.3m,
             Observacoes = null,
             IsAtivo = true
         });
@@ -204,11 +220,31 @@ public class FichaTecnicaService : IFichaTecnicaService
     /// <summary>
     /// Calcula os preÃ§os dos canais (lógica híbrida)
     /// - Se PrecoVenda for 0 ou null: calcular automaticamente a partir de PrecoSugeridoVenda
+    ///   - Se Multiplicador > 0: usar multiplicador fixo
+    ///   - Senão: usar gross-up por fee (precoBase / (1 - fee))
     /// - Se PrecoVenda > 0: respeitar o valor e apenas recalcular margem
+    /// Margem calculada com fee sobre receita (não sobre custo)
     /// </summary>
     private void CalcularPrecosCanais(FichaTecnica ficha)
     {
         var precoBase = ficha.PrecoSugeridoVenda ?? 0m;
+
+        // Calcular custo unitário preciso (não usar CustoPorUnidade arredondado)
+        var custoUnitPreciso = ficha.RendimentoFinal.HasValue && ficha.RendimentoFinal.Value > 0
+            ? (ficha.CustoTotal / ficha.RendimentoFinal.Value)
+            : 0m;
+
+        // Calcular custo por porção para uso no cálculo de margem
+        decimal custoPorPorcao = 0m;
+        if (ficha.PorcaoVendaQuantidade.HasValue && ficha.PorcaoVendaQuantidade.Value > 0)
+        {
+            custoPorPorcao = custoUnitPreciso * ficha.PorcaoVendaQuantidade.Value;
+        }
+        else
+        {
+            // Se não há porção definida, usar custo unitário preciso como base (comportamento legado)
+            custoPorPorcao = custoUnitPreciso;
+        }
 
         foreach (var canal in ficha.Canais)
         {
@@ -226,20 +262,42 @@ public class FichaTecnicaService : IFichaTecnicaService
 
             if (modoAutomatico)
             {
-                // Modo automático: calcular PrecoVenda a partir de PrecoSugeridoVenda e taxa
-                var taxaPercentual = canal.TaxaPercentual ?? 0m;
-                var taxa = taxaPercentual / 100m;
-                canal.PrecoVenda = Math.Round(precoBase * (1 + taxa), 4);
+                // Modo automático: calcular PrecoVenda
+                if (canal.Multiplicador.HasValue && canal.Multiplicador.Value > 0)
+                {
+                    // Usar multiplicador fixo (prioridade)
+                    canal.PrecoVenda = Math.Round(precoBase * canal.Multiplicador.Value, 4);
+                }
+                else
+                {
+                    // Usar gross-up por fee
+                    var taxaPercentual = canal.TaxaPercentual ?? 0m;
+                    var comissaoPercentual = canal.ComissaoPercentual ?? 0m;
+                    var fee = (taxaPercentual + comissaoPercentual) / 100m;
+                    
+                    if (fee >= 1)
+                    {
+                        // Fee inválido (>= 100%), não calcular
+                        canal.PrecoVenda = 0m;
+                        canal.MargemCalculadaPercentual = null;
+                        continue;
+                    }
+                    
+                    canal.PrecoVenda = Math.Round(precoBase / (1 - fee), 4);
+                }
             }
             // Se modo manual (precoVendaOriginal > 0), manter o valor e apenas recalcular margem
 
-            // Calcular margem (sempre recalcular, mesmo em modo manual)
-            if (canal.PrecoVenda > 0 && ficha.CustoPorUnidade > 0)
+            // Calcular margem (fee sobre receita, não sobre custo)
+            if (canal.PrecoVenda > 0 && custoPorPorcao > 0)
             {
-                var taxaMargem = (canal.TaxaPercentual ?? 0m) / 100m;
-                var comissao = (canal.ComissaoPercentual ?? 0m) / 100m;
-                var custoComTaxas = ficha.CustoPorUnidade * (1 + taxaMargem + comissao);
-                var margem = (canal.PrecoVenda - custoComTaxas) / canal.PrecoVenda * 100m;
+                var taxaPercentual = canal.TaxaPercentual ?? 0m;
+                var comissaoPercentual = canal.ComissaoPercentual ?? 0m;
+                var feePercent = (taxaPercentual + comissaoPercentual) / 100m;
+                
+                var receitaLiquida = canal.PrecoVenda * (1 - feePercent);
+                var lucro = receitaLiquida - custoPorPorcao;
+                var margem = (lucro / canal.PrecoVenda) * 100m;
                 canal.MargemCalculadaPercentual = Math.Round(margem, 2);
             }
             else
@@ -306,6 +364,7 @@ public class FichaTecnicaService : IFichaTecnicaService
             .AsNoTracking()
             .Include(f => f.Categoria)
             .Include(f => f.ReceitaPrincipal)
+            .Include(f => f.PorcaoVendaUnidadeMedida)
             .Include(f => f.Itens)
                 .ThenInclude(i => i.Receita)
             .Include(f => f.Itens)
@@ -429,6 +488,47 @@ public class FichaTecnicaService : IFichaTecnicaService
             }
         }
 
+        // Validar porção de venda
+        if (request.PorcaoVendaQuantidade.HasValue && request.PorcaoVendaQuantidade.Value > 0)
+        {
+            if (!request.PorcaoVendaUnidadeMedidaId.HasValue)
+            {
+                throw new BusinessException("PorcaoVendaUnidadeMedidaId é obrigatório quando PorcaoVendaQuantidade está preenchido.");
+            }
+
+            var porcaoUnidadeMedida = await _context.UnidadesMedida
+                .FirstOrDefaultAsync(u => u.Id == request.PorcaoVendaUnidadeMedidaId.Value);
+
+            if (porcaoUnidadeMedida == null || !porcaoUnidadeMedida.IsAtivo)
+            {
+                throw new BusinessException("Unidade de medida da porção de venda inválida ou inativa.");
+            }
+
+            var siglaPorcao = porcaoUnidadeMedida.Sigla.ToUpper();
+            if (siglaPorcao != "GR" && siglaPorcao != "ML")
+            {
+                throw new BusinessException("Unidade de medida da porção de venda deve ser GR (gramas) ou ML (mililitros).");
+            }
+        }
+
+        // Se PorcaoVendaUnidadeMedidaId informado, validar mesmo sem PorcaoVendaQuantidade
+        if (request.PorcaoVendaUnidadeMedidaId.HasValue)
+        {
+            var porcaoUnidadeMedida = await _context.UnidadesMedida
+                .FirstOrDefaultAsync(u => u.Id == request.PorcaoVendaUnidadeMedidaId.Value);
+
+            if (porcaoUnidadeMedida == null || !porcaoUnidadeMedida.IsAtivo)
+            {
+                throw new BusinessException("Unidade de medida da porção de venda inválida ou inativa.");
+            }
+
+            var siglaPorcao = porcaoUnidadeMedida.Sigla.ToUpper();
+            if (siglaPorcao != "GR" && siglaPorcao != "ML")
+            {
+                throw new BusinessException("Unidade de medida da porção de venda deve ser GR (gramas) ou ML (mililitros).");
+            }
+        }
+
         var ficha = new FichaTecnica
         {
             CategoriaId = request.CategoriaId,
@@ -441,6 +541,9 @@ public class FichaTecnicaService : IFichaTecnicaService
             ICValor = request.ICValor,
             IPCValor = request.IPCValor,
             MargemAlvoPercentual = request.MargemAlvoPercentual,
+            PorcaoVendaQuantidade = request.PorcaoVendaQuantidade,
+            PorcaoVendaUnidadeMedidaId = request.PorcaoVendaUnidadeMedidaId,
+            RendimentoPorcoes = request.RendimentoPorcoes,
             IsAtivo = request.IsAtivo,
             UsuarioCriacao = usuarioCriacao ?? "Sistema",
             DataCriacao = DateTime.UtcNow
@@ -632,6 +735,47 @@ public class FichaTecnicaService : IFichaTecnicaService
                 }
             }
 
+            // Validar porção de venda
+            if (request.PorcaoVendaQuantidade.HasValue && request.PorcaoVendaQuantidade.Value > 0)
+            {
+                if (!request.PorcaoVendaUnidadeMedidaId.HasValue)
+                {
+                    throw new BusinessException("PorcaoVendaUnidadeMedidaId é obrigatório quando PorcaoVendaQuantidade está preenchido.");
+                }
+
+                var porcaoUnidadeMedida = await _context.UnidadesMedida
+                    .FirstOrDefaultAsync(u => u.Id == request.PorcaoVendaUnidadeMedidaId.Value);
+
+                if (porcaoUnidadeMedida == null || !porcaoUnidadeMedida.IsAtivo)
+                {
+                    throw new BusinessException("Unidade de medida da porção de venda inválida ou inativa.");
+                }
+
+                var siglaPorcao = porcaoUnidadeMedida.Sigla.ToUpper();
+                if (siglaPorcao != "GR" && siglaPorcao != "ML")
+                {
+                    throw new BusinessException("Unidade de medida da porção de venda deve ser GR (gramas) ou ML (mililitros).");
+                }
+            }
+
+            // Se PorcaoVendaUnidadeMedidaId informado, validar mesmo sem PorcaoVendaQuantidade
+            if (request.PorcaoVendaUnidadeMedidaId.HasValue)
+            {
+                var porcaoUnidadeMedida = await _context.UnidadesMedida
+                    .FirstOrDefaultAsync(u => u.Id == request.PorcaoVendaUnidadeMedidaId.Value);
+
+                if (porcaoUnidadeMedida == null || !porcaoUnidadeMedida.IsAtivo)
+                {
+                    throw new BusinessException("Unidade de medida da porção de venda inválida ou inativa.");
+                }
+
+                var siglaPorcao = porcaoUnidadeMedida.Sigla.ToUpper();
+                if (siglaPorcao != "GR" && siglaPorcao != "ML")
+                {
+                    throw new BusinessException("Unidade de medida da porção de venda deve ser GR (gramas) ou ML (mililitros).");
+                }
+            }
+
             // Atualizar ficha
             ficha.CategoriaId = request.CategoriaId;
             ficha.ReceitaPrincipalId = request.ReceitaPrincipalId;
@@ -643,6 +787,9 @@ public class FichaTecnicaService : IFichaTecnicaService
             ficha.ICValor = request.ICValor;
             ficha.IPCValor = request.IPCValor;
             ficha.MargemAlvoPercentual = request.MargemAlvoPercentual;
+            ficha.PorcaoVendaQuantidade = request.PorcaoVendaQuantidade;
+            ficha.PorcaoVendaUnidadeMedidaId = request.PorcaoVendaUnidadeMedidaId;
+            ficha.RendimentoPorcoes = request.RendimentoPorcoes;
             ficha.IsAtivo = request.IsAtivo;
             ficha.UsuarioAtualizacao = usuarioAtualizacao;
             ficha.DataAtualizacao = DateTime.UtcNow;
@@ -707,6 +854,7 @@ public class FichaTecnicaService : IFichaTecnicaService
                         PrecoVenda = canalReq.PrecoVenda,
                         TaxaPercentual = canalReq.TaxaPercentual,
                         ComissaoPercentual = canalReq.ComissaoPercentual,
+                        Multiplicador = canalReq.Multiplicador,
                         Observacoes = canalReq.Observacoes,
                         IsAtivo = canalReq.IsAtivo
                     });
@@ -747,6 +895,69 @@ public class FichaTecnicaService : IFichaTecnicaService
 
     private FichaTecnicaDto MapToDto(FichaTecnica ficha)
     {
+        // Calcular campos calculados apenas se Itens estiverem carregados (GetById)
+        decimal? pesoTotalBase = null;
+        decimal? custoKgL = null;
+        decimal? custoPorPorcaoVenda = null;
+
+        var itens = ficha.Itens ?? new List<FichaTecnicaItem>();
+        if (itens.Any())
+        {
+            // Calcular PesoTotalBase: soma GR/ML antes de IC/IPC
+            var unidadesMedida = itens
+                .Where(i => i.UnidadeMedida != null)
+                .Select(i => i.UnidadeMedida!)
+                .GroupBy(u => u.Id)
+                .Select(g => g.First())
+                .ToList();
+
+            var receitas = itens
+                .Where(i => i.Receita != null)
+                .Select(i => i.Receita!)
+                .GroupBy(r => r.Id)
+                .Select(g => g.First())
+                .ToList();
+
+            var quantidadeTotalBase = 0m;
+            foreach (var item in itens)
+            {
+                var unidadeMedida = item.UnidadeMedida;
+                if (unidadeMedida != null && (unidadeMedida.Sigla.ToUpper() == "GR" || unidadeMedida.Sigla.ToUpper() == "ML"))
+                {
+                    if (item.TipoItem == "Receita" && item.ReceitaId.HasValue)
+                    {
+                        var receita = receitas.FirstOrDefault(r => r.Id == item.ReceitaId.Value);
+                        if (receita != null && receita.PesoPorPorcao.HasValue && receita.PesoPorPorcao.Value > 0)
+                        {
+                            quantidadeTotalBase += item.Quantidade * receita.PesoPorPorcao.Value;
+                        }
+                    }
+                    else if (item.TipoItem == "Insumo")
+                    {
+                        quantidadeTotalBase += item.Quantidade;
+                    }
+                }
+            }
+            pesoTotalBase = quantidadeTotalBase;
+
+            // Calcular CustoKgL: (CustoTotal / RendimentoFinal) * 1000
+            // Se unidade base for GR => custo/kg; se ML => custo/L (multiplicar por 1000 converte g→kg ou ml→L)
+            if (ficha.RendimentoFinal.HasValue && ficha.RendimentoFinal.Value > 0)
+            {
+                custoKgL = (ficha.CustoTotal / ficha.RendimentoFinal.Value) * 1000m;
+            }
+
+            // Calcular CustoPorPorcaoVenda usando custo unitário preciso
+            if (ficha.PorcaoVendaQuantidade.HasValue && ficha.PorcaoVendaQuantidade.Value > 0)
+            {
+                if (ficha.RendimentoFinal.HasValue && ficha.RendimentoFinal.Value > 0)
+                {
+                    var custoUnitPreciso = ficha.CustoTotal / ficha.RendimentoFinal.Value;
+                    custoPorPorcaoVenda = custoUnitPreciso * ficha.PorcaoVendaQuantidade.Value;
+                }
+            }
+        }
+
         return new FichaTecnicaDto
         {
             Id = ficha.Id,
@@ -766,12 +977,21 @@ public class FichaTecnicaService : IFichaTecnicaService
             ICValor = ficha.ICValor,
             IPCValor = ficha.IPCValor,
             MargemAlvoPercentual = ficha.MargemAlvoPercentual,
+            PorcaoVendaQuantidade = ficha.PorcaoVendaQuantidade,
+            PorcaoVendaUnidadeMedidaId = ficha.PorcaoVendaUnidadeMedidaId,
+            PorcaoVendaUnidadeMedidaNome = ficha.PorcaoVendaUnidadeMedida?.Nome,
+            PorcaoVendaUnidadeMedidaSigla = ficha.PorcaoVendaUnidadeMedida?.Sigla,
+            RendimentoPorcoes = ficha.RendimentoPorcoes,
+            PesoTotalBase = pesoTotalBase,
+            CustoKgL = custoKgL,
+            CustoPorPorcaoVenda = custoPorPorcaoVenda,
+            PrecoMesaSugerido = ficha.PrecoSugeridoVenda,
             IsAtivo = ficha.IsAtivo,
             UsuarioCriacao = ficha.UsuarioCriacao,
             UsuarioAtualizacao = ficha.UsuarioAtualizacao,
             DataCriacao = ficha.DataCriacao,
             DataAtualizacao = ficha.DataAtualizacao,
-            Itens = ficha.Itens
+            Itens = (ficha.Itens ?? new List<FichaTecnicaItem>())
                 .OrderBy(i => i.Ordem)
                 .Select(i => new FichaTecnicaItemDto
                 {
@@ -795,7 +1015,7 @@ public class FichaTecnicaService : IFichaTecnicaService
                     DataAtualizacao = i.DataAtualizacao
                 })
                 .ToList(),
-            Canais = ficha.Canais
+            Canais = (ficha.Canais ?? new List<FichaTecnicaCanal>())
                 .OrderBy(c => c.Canal)
                 .Select(c => new FichaTecnicaCanalDto
                 {
@@ -806,6 +1026,7 @@ public class FichaTecnicaService : IFichaTecnicaService
                     PrecoVenda = c.PrecoVenda,
                     TaxaPercentual = c.TaxaPercentual,
                     ComissaoPercentual = c.ComissaoPercentual,
+                    Multiplicador = c.Multiplicador,
                     MargemCalculadaPercentual = c.MargemCalculadaPercentual,
                     Observacoes = c.Observacoes,
                     IsAtivo = c.IsAtivo

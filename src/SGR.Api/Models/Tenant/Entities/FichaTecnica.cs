@@ -58,6 +58,21 @@ public class FichaTecnica
     /// </summary>
     public decimal? MargemAlvoPercentual { get; set; }
 
+    /// <summary>
+    /// Quantidade da porção de venda (ex.: 100)
+    /// </summary>
+    public decimal? PorcaoVendaQuantidade { get; set; }
+
+    /// <summary>
+    /// Unidade de medida da porção de venda (aceita GR ou ML)
+    /// </summary>
+    public long? PorcaoVendaUnidadeMedidaId { get; set; }
+
+    /// <summary>
+    /// Rendimento em porções (apenas informativo, não interfere no cálculo)
+    /// </summary>
+    public decimal? RendimentoPorcoes { get; set; }
+
     public bool IsAtivo { get; set; }
 
     public string? UsuarioCriacao { get; set; }
@@ -68,6 +83,7 @@ public class FichaTecnica
     // NavegaÃ§Ã£o
     public CategoriaReceita Categoria { get; set; } = null!;
     public Receita? ReceitaPrincipal { get; set; }
+    public UnidadeMedida? PorcaoVendaUnidadeMedida { get; set; }
     public ICollection<FichaTecnicaItem> Itens { get; set; } = new List<FichaTecnicaItem>();
     public ICollection<FichaTecnicaCanal> Canais { get; set; } = new List<FichaTecnicaCanal>();
 }

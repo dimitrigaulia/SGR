@@ -60,14 +60,16 @@ public class ReceitaService : IReceitaService
     private decimal CalcularCustoItem(ReceitaItem item, Insumo insumo)
     {
         // Quantidade bruta = Quantidade Ã— FatorCorrecao (perdas no preparo do insumo)
+        // IMPORTANTE: quantidadeBruta é apenas para exibição no DTO, NÃO usar no cálculo de custo
         var quantidadeBruta = CalcularQuantidadeBruta(item, insumo);
         
-        // Custo por unidade de uso
+        // Custo por unidade de uso (já inclui FatorCorrecao)
         var custoPorUnidadeUso = CalcularCustoPorUnidadeUso(insumo);
         
-        // Custo do item = QuantidadeBruta Ã— CustoPorUnidadeUso
+        // Custo do item = Quantidade (não quantidadeBruta) Ã— CustoPorUnidadeUso
+        // Isso evita aplicar FatorCorrecao duas vezes (já está em custoPorUnidadeUso)
         // IMPORTANTE: ExibirComoQB Ã© apenas visual, sempre usar Quantidade numÃ©rica para cÃ¡lculos
-        return quantidadeBruta * custoPorUnidadeUso;
+        return item.Quantidade * custoPorUnidadeUso;
     }
 
     public async Task<PagedResult<ReceitaDto>> GetAllAsync(string? search, int page, int pageSize, string? sort, string? order)
@@ -445,9 +447,11 @@ public class ReceitaService : IReceitaService
             var insumo = insumos.First(i => i.Id == item.InsumoId);
             
             // Quantidade bruta = Quantidade Ã— FatorCorrecao (perdas no preparo do insumo)
+            // IMPORTANTE: quantidadeBruta é apenas para exibição no DTO, NÃO usar no cálculo de custo
             var quantidadeBruta = item.Quantidade * insumo.FatorCorrecao;
             
-            // Custo do item = (QuantidadeBruta / QuantidadePorEmbalagem) Ã— CustoUnitario
+            // Custo do item = Quantidade * CustoPorUnidadeUso (não usar quantidadeBruta)
+            // CalcularCustoItem já usa item.Quantidade (não quantidadeBruta) para evitar FatorCorrecao²
             var custoItem = CalcularCustoItem(item, insumo);
             
             custoTotal += custoItem;
