@@ -69,9 +69,9 @@ public class FichaTecnica
     public long? PorcaoVendaUnidadeMedidaId { get; set; }
 
     /// <summary>
-    /// Rendimento em porções (apenas informativo, não interfere no cálculo)
+    /// Descrição do rendimento (ex: "Porção para 3 pessoas", "4 palitos", "8 bolinhos")
     /// </summary>
-    public decimal? RendimentoPorcoes { get; set; }
+    public string? RendimentoPorcoes { get; set; }
 
     /// <summary>
     /// Tempo de preparo em minutos (apenas informativo)

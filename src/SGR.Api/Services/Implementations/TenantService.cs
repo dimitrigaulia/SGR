@@ -603,6 +603,20 @@ public class TenantService : BaseService<ApplicationDbContext, TenantEntity, Ten
                         ALTER TABLE ""{schemaName}"".""FichaTecnica""
                         ADD COLUMN ""TempoPreparo"" INTEGER;
                     END IF;
+
+                    -- FichaTecnica.RendimentoPorcoes: alterar de DECIMAL para VARCHAR(200) se necessário
+                    IF EXISTS (
+                        SELECT 1
+                        FROM information_schema.columns
+                        WHERE table_schema = '{schemaName}'
+                        AND table_name = 'FichaTecnica'
+                        AND column_name = 'RendimentoPorcoes'
+                        AND data_type = 'numeric'
+                    ) THEN
+                        ALTER TABLE ""{schemaName}"".""FichaTecnica""
+                        ALTER COLUMN ""RendimentoPorcoes"" TYPE VARCHAR(200) USING ""RendimentoPorcoes""::
+text;
+                    END IF;
                 END $$;
 
                 -- Índice (idempotente)
@@ -775,7 +789,7 @@ public class TenantService : BaseService<ApplicationDbContext, TenantEntity, Ten
                 ""MargemAlvoPercentual"" DECIMAL(18, 4),
                 ""PorcaoVendaQuantidade"" DECIMAL(18, 4),
                 ""PorcaoVendaUnidadeMedidaId"" BIGINT,
-                ""RendimentoPorcoes"" DECIMAL(18, 2),
+                ""RendimentoPorcoes"" VARCHAR(200),
                 ""TempoPreparo"" INTEGER,
                 ""IsAtivo"" BOOLEAN NOT NULL DEFAULT true,
                 ""UsuarioCriacao"" VARCHAR(100),

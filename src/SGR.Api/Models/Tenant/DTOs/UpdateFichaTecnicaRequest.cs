@@ -35,7 +35,9 @@ public class UpdateFichaTecnicaRequest
 
     public decimal? PorcaoVendaQuantidade { get; set; }
     public long? PorcaoVendaUnidadeMedidaId { get; set; }
-    public decimal? RendimentoPorcoes { get; set; }
+    
+    [MaxLength(200, ErrorMessage = "Rendimento deve ter no máximo 200 caracteres")]
+    public string? RendimentoPorcoes { get; set; }
     public int? TempoPreparo { get; set; }
 
     [Required(ErrorMessage = "Itens são obrigatórios")]

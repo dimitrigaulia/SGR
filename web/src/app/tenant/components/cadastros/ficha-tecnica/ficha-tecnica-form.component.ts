@@ -99,7 +99,7 @@ export class TenantFichaTecnicaFormComponent {
     margemAlvoPercentual: null as number | null,
     porcaoVendaQuantidade: null as number | null,
     porcaoVendaUnidadeMedidaId: null as number | null,
-    rendimentoPorcoes: null as number | null,
+    rendimentoPorcoes: null as string | null,
     tempoPreparo: null as number | null,
     isAtivo: true
   };

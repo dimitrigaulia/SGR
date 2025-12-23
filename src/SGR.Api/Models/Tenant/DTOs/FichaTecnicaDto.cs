@@ -26,7 +26,7 @@ public class FichaTecnicaDto
     public long? PorcaoVendaUnidadeMedidaId { get; set; }
     public string? PorcaoVendaUnidadeMedidaNome { get; set; }
     public string? PorcaoVendaUnidadeMedidaSigla { get; set; }
-    public decimal? RendimentoPorcoes { get; set; }
+    public string? RendimentoPorcoes { get; set; }
     public int? TempoPreparo { get; set; }
 
     // Campos calculados (preenchidos somente no GetById quando Itens estiverem carregados)
