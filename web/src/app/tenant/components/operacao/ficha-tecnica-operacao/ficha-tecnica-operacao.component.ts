@@ -48,8 +48,8 @@ export class TenantFichaTecnicaOperacaoComponent {
 
   selectedTab = signal(0); // 0=comercial, 1=producao
 
-  displayedColumnsItens = ['ordem', 'insumo', 'quantidadeTotal', 'quantidadePorPorcao', 'custoTotal', 'custoPorPorcao'];
-  displayedColumnsCanais = ['canal', 'precoVenda', 'taxas', 'margem'];
+  displayedColumnsItens = ['ordem', 'insumo', 'quantidadePorPorcao', 'custoPorPorcao'];
+  displayedColumnsCanais = ['canal', 'precoVenda', 'taxas', 'porcentagem'];
 
   titulo = computed(() => {
     const f = this.ficha();

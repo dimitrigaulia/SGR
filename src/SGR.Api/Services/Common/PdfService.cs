@@ -364,7 +364,7 @@ public class PdfService
                                         columns.RelativeColumn(1f); // Modo
                                         columns.RelativeColumn(1f); // Base (Preço Mesa)
                                         columns.RelativeColumn(1f); // Preço Canal
-                                        columns.RelativeColumn(1f); // Margem (%)
+                                        columns.RelativeColumn(1f); // Porcentagem (%)
                                     });
 
                                     // Cabeçalho
@@ -375,7 +375,7 @@ public class PdfService
                                         header.Cell().Element(CellStyle).Text("Modo").SemiBold();
                                         header.Cell().Element(CellStyle).Text("Base (Preço Mesa)").SemiBold();
                                         header.Cell().Element(CellStyle).Text("Preço Canal").SemiBold();
-                                        header.Cell().Element(CellStyle).Text("Margem (%)").SemiBold();
+                                        header.Cell().Element(CellStyle).Text("Porcentagem (%)").SemiBold();
                                     });
 
                                     // Linhas de dados
@@ -385,13 +385,14 @@ public class PdfService
                                         var basePrecoMesa = ficha.PrecoMesaSugerido.HasValue 
                                             ? FormatarMoeda(ficha.PrecoMesaSugerido.Value)
                                             : "-";
+                                        var porcentagem = (canal.TaxaPercentual ?? 0m) + (canal.ComissaoPercentual ?? 0m);
 
                                         table.Cell().Element(CellStyle).Text(canal.Canal);
                                         table.Cell().Element(CellStyle).Text(canal.NomeExibicao ?? "-");
                                         table.Cell().Element(CellStyle).Text(modo);
                                         table.Cell().Element(CellStyle).Text(basePrecoMesa);
                                         table.Cell().Element(CellStyle).Text(FormatarMoeda(canal.PrecoVenda));
-                                        table.Cell().Element(CellStyle).Text(canal.MargemCalculadaPercentual?.ToString("F2") ?? "-");
+                                        table.Cell().Element(CellStyle).Text(porcentagem.ToString("F2") + "%");
                                     }
                                 });
                             });

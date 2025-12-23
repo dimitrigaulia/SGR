@@ -149,7 +149,7 @@ export class ShellComponent implements AfterViewInit {
   readonly isCollapsed = signal(false);
 
   // Dados
-  readonly brand = 'SGR';
+  readonly brand = 'Cozintel';
   readonly currentYear = new Date().getFullYear();
   readonly themeIcon = computed(() => (this.layout.isDarkTheme() ? 'light_mode' : 'dark_mode'));
   readonly usuario = computed(() => this.auth.getUsuario());
