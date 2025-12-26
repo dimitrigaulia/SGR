@@ -1,4 +1,4 @@
-# SGR - Sistema de Gerenciamento de Restaurantes
+# FichaPro - Sistema de Gerenciamento de Restaurantes
 
 Sistema completo de gerenciamento multi-tenant desenvolvido com **Angular 20** (frontend) e **ASP.NET Core 9** (backend), implementando arquitetura **Schema per Tenant** no PostgreSQL.
 
@@ -21,7 +21,7 @@ Sistema completo de gerenciamento multi-tenant desenvolvido com **Angular 20** (
 
 ## ðŸŽ¯ VisÃ£o Geral
 
-O **SGR** Ã© uma plataforma completa de gerenciamento que permite:
+O **FichaPro** Ã© uma plataforma completa de gerenciamento que permite:
 
 - **Backoffice**: Sistema administrativo para gerenciar tenants, usuÃ¡rios administrativos e perfis do backoffice
 - **Multi-Tenancy**: Cada tenant (restaurante/empresa) possui seu prÃ³prio schema no banco de dados, garantindo isolamento completo de dados
@@ -1308,7 +1308,7 @@ ng build --configuration production
 
 ## ðŸŽ¯ Resumo
 
-O **SGR** Ã© um sistema completo de gerenciamento multi-tenant que permite:
+O **FichaPro** Ã© um sistema completo de gerenciamento multi-tenant que permite:
 
 1. **Gerenciar mÃºltiplos tenants** (restaurantes/empresas) de forma isolada
 2. **Criar e gerenciar usuÃ¡rios e perfis** separadamente no backoffice e em cada tenant

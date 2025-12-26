@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "SGR.Frontend": {
+    "FichaPro.Frontend": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -61,10 +61,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "SGR.Frontend:build:production"
+              "buildTarget": "FichaPro.Frontend:build:production"
             },
             "development": {
-              "buildTarget": "SGR.Frontend:build:development"
+              "buildTarget": "FichaPro.Frontend:build:development"
             }
           },
           "defaultConfiguration": "development"
