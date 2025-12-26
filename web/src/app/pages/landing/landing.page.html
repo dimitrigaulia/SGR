@@ -1,0 +1,181 @@
+<!-- Header Fixo -->
+<header class="header" role="banner">
+  <div class="header-container">
+    <div class="logo">
+      <h1>FichaPro</h1>
+    </div>
+    
+    <nav class="nav" [class.nav-open]="isMenuOpen" role="navigation" aria-label="Navegação principal">
+      <button 
+        class="menu-toggle" 
+        (click)="toggleMenu()" 
+        [attr.aria-expanded]="isMenuOpen"
+        aria-label="Toggle menu"
+        aria-controls="main-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      
+      <ul class="nav-links" id="main-nav" [class.nav-links-open]="isMenuOpen">
+        <li><a (click)="scrollToSection('como-funciona')" (keydown.enter)="scrollToSection('como-funciona')" role="button" tabindex="0">Como funciona</a></li>
+        <li><a (click)="scrollToSection('disciplinas')" (keydown.enter)="scrollToSection('disciplinas')" role="button" tabindex="0">Disciplinas</a></li>
+        <li><a (click)="scrollToSection('nossa-historia')" (keydown.enter)="scrollToSection('nossa-historia')" role="button" tabindex="0">Nossa história</a></li>
+        <li><a (click)="scrollToSection('resultados')" (keydown.enter)="scrollToSection('resultados')" role="button" tabindex="0">Resultados</a></li>
+        <li class="nav-cta">
+          <a routerLink="/backoffice/login" class="btn btn-primary">Acessar Backoffice</a>
+        </li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<!-- Hero Section -->
+<section class="hero" id="hero">
+  <div class="container">
+    <h2 class="hero-title">FichaPro – Gestão Autônoma para restaurantes</h2>
+    <p class="hero-subtitle">
+      Gerenciamento remoto eficiente do seu cardápio, fichas técnicas e custos. 
+      Você foca na experiência do cliente. Nós cuidamos do operacional.
+    </p>
+    
+    <ul class="hero-bullets" role="list">
+      <li>Fichas técnicas padronizadas por setor</li>
+      <li>Custos e precificação consistentes</li>
+      <li>Atualização contínua sem impressão e sem retrabalho</li>
+    </ul>
+    
+    <div class="hero-actions">
+      <a routerLink="/backoffice/login" class="btn btn-primary btn-large">Acessar Backoffice</a>
+      <a href="mailto:contato@fichapro.ia.br" class="btn btn-secondary btn-large">Quero conversar</a>
+    </div>
+  </div>
+</section>
+
+<!-- Seção: O que é o FichaPro -->
+<section class="section" id="como-funciona">
+  <div class="container">
+    <h2 class="section-title">O que é o FichaPro</h2>
+    <div class="cards-grid cards-grid-3">
+      <article class="card">
+        <h3 class="card-title">Fichas Técnicas</h3>
+        <p class="card-text">
+          Criação e padronização detalhada para produção consistente em quantidade, sabor e apresentação.
+        </p>
+      </article>
+      
+      <article class="card">
+        <h3 class="card-title">Atualização e controle</h3>
+        <p class="card-text">
+          Revisões periódicas e atualização de custos para reduzir erros e manter o preço de venda correto.
+        </p>
+      </article>
+      
+      <article class="card">
+        <h3 class="card-title">Segurança operacional</h3>
+        <p class="card-text">
+          Sem precisar liberar equipamentos e rotinas sensíveis para alimentação manual do sistema.
+        </p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- Seção: Disciplinas -->
+<section class="section section-alt" id="disciplinas">
+  <div class="container">
+    <h2 class="section-title">Disciplinas</h2>
+    <div class="cards-grid cards-grid-2">
+      <article class="card">
+        <h3 class="card-title">Fichas Técnicas</h3>
+        <p class="card-text">
+          Desenvolvimento, padronização e revisão por amostragem.
+        </p>
+      </article>
+      
+      <article class="card">
+        <h3 class="card-title">Treinamentos</h3>
+        <p class="card-text">
+          Capacitação técnica/prática e onboarding de novos colaboradores.
+        </p>
+      </article>
+      
+      <article class="card">
+        <h3 class="card-title">Compras de Insumos</h3>
+        <p class="card-text">
+          Varredura de preços e apoio na gestão de fornecedores.
+        </p>
+      </article>
+      
+      <article class="card">
+        <h3 class="card-title">Entrevistas</h3>
+        <p class="card-text">
+          Definição de perfis e avaliações técnicas por função.
+        </p>
+      </article>
+      
+      <article class="card">
+        <h3 class="card-title">Consultoria e Processos</h3>
+        <p class="card-text">
+          Otimização e acompanhamento regular para eficiência operacional.
+        </p>
+      </article>
+      
+      <article class="card">
+        <h3 class="card-title">Cliente Oculto</h3>
+        <p class="card-text">
+          Avaliação técnica do atendimento e jornada, com plano de melhorias.
+        </p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- Seção: Resultados -->
+<section class="section" id="resultados">
+  <div class="container">
+    <h2 class="section-title">Resultados do dia a dia</h2>
+    <ul class="results-list" role="list">
+      <li>Menos desperdício e mais previsibilidade de custo</li>
+      <li>Precificação alinhada ao custo real da operação</li>
+      <li>Padronização que fideliza o cliente</li>
+      <li>Mais tempo do gestor no salão e menos tempo no operacional</li>
+    </ul>
+  </div>
+</section>
+
+<!-- Seção: Nossa história -->
+<section class="section section-alt" id="nossa-historia">
+  <div class="container">
+    <h2 class="section-title">Nossa história</h2>
+    <div class="history-content">
+      <p>
+        Uma história real que começou na cozinha de casa e evoluiu para a cozinha profissional. 
+        A ficha técnica nasceu na prática — para comprar sem erro, produzir com padrão e controlar custos. 
+        O FichaPro surge para garantir que esse investimento não se perca quando o cardápio muda ou a equipe troca.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- CTA Final -->
+<section class="section cta-section">
+  <div class="container">
+    <h2 class="cta-title">Pronto para profissionalizar a operação?</h2>
+    <p class="cta-subtitle">
+      Deixe o FichaPro cuidar das fichas técnicas e do controle. Você cuida do seu cliente.
+    </p>
+    <div class="cta-actions">
+      <a routerLink="/backoffice/login" class="btn btn-primary btn-large">Acessar Backoffice</a>
+      <a href="mailto:contato@fichapro.ia.br" class="btn btn-secondary btn-large">Quero conversar</a>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="footer" role="contentinfo">
+  <div class="container">
+    <p class="footer-text">&copy; {{ currentYear }} FichaPro. Todos os direitos reservados.</p>
+  </div>
+</footer>
+

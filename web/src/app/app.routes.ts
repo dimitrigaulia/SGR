@@ -4,6 +4,12 @@ import { stateGuard } from "./core/guards/state.guard";
 import { ShellComponent } from "./shell/shell.component";
 
 export const routes: Routes = [
+  // Landing page pública
+  { 
+    path: "", 
+    loadComponent: () => import("./pages/landing/landing.page").then(m => m.LandingPageComponent) 
+  },
+  
   // Rotas públicas de login
   { 
     path: "backoffice/login", 
@@ -59,7 +65,6 @@ export const routes: Routes = [
     ]
   },
   
-  // Redirecionamento padrão
-  { path: "", redirectTo: "backoffice/login", pathMatch: "full" },
-  { path: "**", redirectTo: "backoffice/login" }
+  // Redirecionamento padrão para rotas não encontradas
+  { path: "**", redirectTo: "" }
 ];

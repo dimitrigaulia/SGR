@@ -1,0 +1,576 @@
+// Paleta de cores
+$color-bg: #FFFFFF;
+$color-text-primary: #0F172A;
+$color-text-secondary: #334155;
+$color-border: #E2E8F0;
+$color-primary: #0B1F3B;
+$color-accent: #14B8A6;
+
+// Breakpoints
+$breakpoint-mobile: 599px;
+$breakpoint-tablet: 959px;
+$breakpoint-desktop: 1200px;
+
+// Reset e base
+* {
+  box-sizing: border-box;
+}
+
+:host {
+  display: block;
+  width: 100%;
+  background-color: $color-bg;
+  color: $color-text-primary;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+  line-height: 1.6;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+  
+  @media (max-width: $breakpoint-mobile) {
+    padding: 0 16px;
+  }
+}
+
+// Header
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background-color: $color-bg;
+  border-bottom: 1px solid $color-border;
+  z-index: 1000;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.header-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 72px;
+  
+  @media (max-width: $breakpoint-mobile) {
+    padding: 0 16px;
+    height: 64px;
+  }
+}
+
+.logo h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: $color-primary;
+  
+  @media (max-width: $breakpoint-mobile) {
+    font-size: 1.25rem;
+  }
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+}
+
+.menu-toggle {
+  display: none;
+  flex-direction: column;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  gap: 4px;
+  
+  @media (max-width: $breakpoint-tablet) {
+    display: flex;
+  }
+  
+  span {
+    width: 24px;
+    height: 2px;
+    background-color: $color-text-primary;
+    transition: all 0.3s ease;
+    border-radius: 2px;
+  }
+  
+  &[aria-expanded="true"] {
+    span:nth-child(1) {
+      transform: rotate(45deg) translate(6px, 6px);
+    }
+    span:nth-child(2) {
+      opacity: 0;
+    }
+    span:nth-child(3) {
+      transform: rotate(-45deg) translate(6px, -6px);
+    }
+  }
+  
+  &:focus {
+    outline: 2px solid $color-primary;
+    outline-offset: 2px;
+  }
+}
+
+.nav-links {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: 32px;
+  align-items: center;
+  
+  @media (max-width: $breakpoint-tablet) {
+    position: fixed;
+    top: 64px;
+    left: 0;
+    right: 0;
+    background-color: $color-bg;
+    flex-direction: column;
+    padding: 24px;
+    gap: 16px;
+    border-bottom: 1px solid $color-border;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transform: translateY(-100%);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    
+    &.nav-links-open {
+      transform: translateY(0);
+      opacity: 1;
+      visibility: visible;
+    }
+  }
+  
+  li {
+    margin: 0;
+  }
+  
+  a {
+    color: $color-text-primary;
+    text-decoration: none;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    transition: color 0.2s ease;
+    cursor: pointer;
+    
+    &:hover,
+    &:focus {
+      color: $color-primary;
+      outline: none;
+    }
+    
+    @media (max-width: $breakpoint-tablet) {
+      display: block;
+      padding: 12px 0;
+      width: 100%;
+    }
+  }
+}
+
+.nav-cta {
+  @media (max-width: $breakpoint-tablet) {
+    width: 100%;
+    margin-top: 8px;
+  }
+  
+  .btn-primary {
+    color: #FFFFFF;
+  }
+}
+
+// Botões
+.btn {
+  display: inline-block;
+  padding: 12px 24px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.9375rem;
+  text-align: center;
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+  
+  &:focus {
+    outline: 2px solid $color-primary;
+    outline-offset: 2px;
+  }
+  
+  &.btn-primary {
+    background-color: $color-primary;
+    color: $color-bg;
+    
+    &:hover {
+      background-color: darken($color-primary, 5%);
+    }
+  }
+  
+  &.btn-secondary {
+    background-color: transparent;
+    color: $color-primary;
+    border: 2px solid $color-primary;
+    
+    &:hover {
+      background-color: $color-primary;
+      color: $color-bg;
+    }
+  }
+  
+  &.btn-large {
+    padding: 16px 32px;
+    font-size: 1rem;
+    
+    @media (max-width: $breakpoint-mobile) {
+      padding: 14px 24px;
+      font-size: 0.9375rem;
+    }
+  }
+}
+
+// Hero Section
+.hero {
+  padding: 160px 0 120px;
+  text-align: center;
+  background-color: $color-bg;
+  
+  @media (max-width: $breakpoint-mobile) {
+    padding: 120px 0 80px;
+  }
+  
+  .container {
+    max-width: 800px;
+  }
+}
+
+.hero-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin: 0 0 24px 0;
+  color: $color-text-primary;
+  line-height: 1.2;
+  
+  @media (max-width: $breakpoint-tablet) {
+    font-size: 2rem;
+  }
+  
+  @media (max-width: $breakpoint-mobile) {
+    font-size: 1.75rem;
+    margin-bottom: 20px;
+  }
+}
+
+.hero-subtitle {
+  font-size: 1.125rem;
+  color: $color-text-secondary;
+  margin: 0 0 40px 0;
+  line-height: 1.7;
+  
+  @media (max-width: $breakpoint-mobile) {
+    font-size: 1rem;
+    margin-bottom: 32px;
+  }
+}
+
+.hero-bullets {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 48px 0;
+  text-align: left;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+  
+  @media (max-width: $breakpoint-mobile) {
+    margin-bottom: 40px;
+  }
+  
+  li {
+    padding: 12px 0 12px 32px;
+    position: relative;
+    color: $color-text-secondary;
+    font-size: 1rem;
+    
+    &::before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      color: $color-accent;
+      font-weight: bold;
+      font-size: 1.25rem;
+    }
+  }
+}
+
+.hero-actions {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+  
+  @media (max-width: $breakpoint-mobile) {
+    flex-direction: column;
+    width: 100%;
+    
+    .btn {
+      width: 100%;
+    }
+  }
+}
+
+// Sections
+.section {
+  padding: 80px 0;
+  
+  @media (max-width: $breakpoint-tablet) {
+    padding: 64px 0;
+  }
+  
+  @media (max-width: $breakpoint-mobile) {
+    padding: 48px 0;
+  }
+  
+  &.section-alt {
+    background-color: #FAFBFC;
+  }
+}
+
+.section-title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0 0 48px 0;
+  color: $color-text-primary;
+  text-align: center;
+  
+  @media (max-width: $breakpoint-tablet) {
+    font-size: 1.75rem;
+    margin-bottom: 40px;
+  }
+  
+  @media (max-width: $breakpoint-mobile) {
+    font-size: 1.5rem;
+    margin-bottom: 32px;
+  }
+}
+
+// Cards Grid
+.cards-grid {
+  display: grid;
+  gap: 32px;
+  
+  @media (max-width: $breakpoint-mobile) {
+    gap: 24px;
+  }
+  
+  &.cards-grid-3 {
+    grid-template-columns: repeat(3, 1fr);
+    
+    @media (max-width: $breakpoint-tablet) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    
+    @media (max-width: $breakpoint-mobile) {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  &.cards-grid-2 {
+    grid-template-columns: repeat(2, 1fr);
+    
+    @media (max-width: $breakpoint-mobile) {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+.card {
+  background-color: $color-bg;
+  border: 1px solid $color-border;
+  border-radius: 8px;
+  padding: 32px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+  
+  @media (max-width: $breakpoint-mobile) {
+    padding: 24px;
+  }
+  
+  &:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+  }
+}
+
+.card-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0 0 16px 0;
+  color: $color-text-primary;
+  
+  @media (max-width: $breakpoint-mobile) {
+    font-size: 1.125rem;
+    margin-bottom: 12px;
+  }
+}
+
+.card-text {
+  font-size: 0.9375rem;
+  color: $color-text-secondary;
+  margin: 0;
+  line-height: 1.7;
+}
+
+// Results List
+.results-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+  
+  li {
+    padding: 20px 0 20px 40px;
+    position: relative;
+    font-size: 1.125rem;
+    color: $color-text-secondary;
+    border-bottom: 1px solid $color-border;
+    
+    @media (max-width: $breakpoint-mobile) {
+      font-size: 1rem;
+      padding-left: 32px;
+    }
+    
+    &:last-child {
+      border-bottom: none;
+    }
+    
+    &::before {
+      content: "→";
+      position: absolute;
+      left: 0;
+      color: $color-accent;
+      font-weight: bold;
+      font-size: 1.5rem;
+    }
+  }
+}
+
+// History Content
+.history-content {
+  max-width: 800px;
+  margin: 0 auto;
+  text-align: center;
+  
+  p {
+    font-size: 1.125rem;
+    color: $color-text-secondary;
+    line-height: 1.8;
+    margin: 0;
+    
+    @media (max-width: $breakpoint-mobile) {
+      font-size: 1rem;
+    }
+  }
+}
+
+// CTA Section
+.cta-section {
+  background-color: $color-primary;
+  color: $color-bg;
+  text-align: center;
+  
+  .section-title,
+  .cta-title {
+    color: $color-bg;
+  }
+  
+  .cta-subtitle {
+    color: rgba(255, 255, 255, 0.9);
+  }
+}
+
+.cta-title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0 0 16px 0;
+  
+  @media (max-width: $breakpoint-tablet) {
+    font-size: 1.75rem;
+  }
+  
+  @media (max-width: $breakpoint-mobile) {
+    font-size: 1.5rem;
+  }
+}
+
+.cta-subtitle {
+  font-size: 1.125rem;
+  margin: 0 0 40px 0;
+  line-height: 1.7;
+  
+  @media (max-width: $breakpoint-mobile) {
+    font-size: 1rem;
+    margin-bottom: 32px;
+  }
+}
+
+.cta-actions {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+  
+  @media (max-width: $breakpoint-mobile) {
+    flex-direction: column;
+    width: 100%;
+    
+    .btn {
+      width: 100%;
+    }
+  }
+  
+  .btn-primary {
+    background-color: $color-bg;
+    color: $color-primary;
+    
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.95);
+    }
+  }
+  
+  .btn-secondary {
+    background-color: transparent;
+    color: $color-bg;
+    border-color: $color-bg;
+    
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+  }
+}
+
+// Footer
+.footer {
+  background-color: $color-text-primary;
+  color: $color-bg;
+  padding: 32px 0;
+  text-align: center;
+  
+  @media (max-width: $breakpoint-mobile) {
+    padding: 24px 0;
+  }
+}
+
+.footer-text {
+  margin: 0;
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
