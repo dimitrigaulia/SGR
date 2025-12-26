@@ -68,6 +68,11 @@
         <td mat-cell *matCellDef="let e">{{ formatCurrency(e.custoUnitario) }}</td>
       </ng-container>
 
+      <ng-container matColumnDef="custoPorUnidadeUso">
+        <th mat-header-cell *matHeaderCellDef>Custo por Unidade de Uso</th>
+        <td mat-cell *matCellDef="let e">{{ formatarCustoPorUnidadeUso(e) }}</td>
+      </ng-container>
+
       <ng-container matColumnDef="ativo">
         <th mat-header-cell *matHeaderCellDef mat-sort-header="ativo">Ativo</th>
         <td mat-cell *matCellDef="let e">{{ e.isAtivo ? 'Sim' : 'Não' }}</td>
@@ -117,6 +122,9 @@
               {{ formatCurrency(e.custoUnitario) }} / {{ e.unidadeCompraSigla || e.unidadeCompraNome || '' }}
               • Uso: {{ e.unidadeUsoSigla || e.unidadeUsoNome || '' }}
               • Qtd/Embalagem: {{ e.quantidadePorEmbalagem }} {{ e.unidadeCompraSigla || e.unidadeCompraNome || '' }}
+            </p>
+            <p class="insumo-detalhes" style="margin-top: 4px;">
+              Custo por unidade de uso: {{ formatarCustoPorUnidadeUso(e) }}
             </p>
           </div>
         </div>

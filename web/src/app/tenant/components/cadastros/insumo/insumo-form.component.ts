@@ -16,7 +16,7 @@ import { UnidadeMedidaService, UnidadeMedidaDto } from '../../../../features/ten
 import { ToastService } from '../../../../core/services/toast.service';
 import { UploadService } from '../../../../features/usuarios/services/upload.service';
 
-type InsumoFormModel = Omit<InsumoDto, 'id' | 'categoriaNome' | 'unidadeCompraNome' | 'unidadeCompraSigla' | 'unidadeUsoNome' | 'unidadeUsoSigla'>;
+type InsumoFormModel = Omit<InsumoDto, 'id' | 'categoriaNome' | 'unidadeCompraNome' | 'unidadeCompraSigla' | 'unidadeUsoNome' | 'unidadeUsoSigla' | 'quantidadeAjustadaIPC' | 'custoPorUnidadeUsoAlternativo'>;
 
 @Component({
   standalone: true,
@@ -130,15 +130,27 @@ export class TenantInsumoFormComponent {
     }
 
     // Com unidades simplificadas, nÃ£o hÃ¡ mais conversÃ£o automÃ¡tica por tipo
-    return `AtenÃ§Ã£o: a Quantidade por Embalagem deve estar na mesma unidade de uso (${uso.sigla}) para que o custo fique correto.`;
+    return `Atenção: a Quantidade por Embalagem deve estar na mesma unidade de uso (${uso.sigla}) para que o custo fique correto.`;
   }
 
   get resumoCustoPorUnidadeCompra(): string {
     const unidadeCompra = this.findUnidade(this.model.unidadeCompraId);
+    const unidadeUso = this.findUnidade(this.model.unidadeUsoId);
+    const quantidadePorEmbalagem = this.model.quantidadePorEmbalagem;
     const custo = this.model.custoUnitario || 0;
+    
     if (!unidadeCompra || custo <= 0) {
       return '-';
     }
+
+    // Se unidade de compra = unidade de uso, mostrar custo da embalagem completa
+    // Ex: "R$ 10,00 / 1000 g" ao invés de "R$ 10,00 / GR"
+    if (unidadeCompra.id === unidadeUso?.id && quantidadePorEmbalagem > 0) {
+      const valor = custo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      return `${valor} / ${quantidadePorEmbalagem.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 4 })} ${unidadeCompra.sigla}`;
+    }
+
+    // Caso contrário, manter comportamento original
     const valor = custo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     return `${valor} / ${unidadeCompra.sigla}`;
   }
@@ -148,14 +160,19 @@ export class TenantInsumoFormComponent {
     const unidadeUso = this.findUnidade(this.model.unidadeUsoId);
     const quantidadePorEmbalagem = this.model.quantidadePorEmbalagem;
     const custo = this.model.custoUnitario || 0;
+    const ipcValor = this.model.ipcValor || 0;
 
     if (!unidadeCompra || !unidadeUso || quantidadePorEmbalagem <= 0 || custo <= 0) {
       return '-';
     }
 
-    // Custo por unidade de uso = (CustoUnitario / QuantidadePorEmbalagem) * FatorCorrecao
-    // O FatorCorrecao Ã© aplicado na receita, entÃ£o aqui mostramos apenas o custo bÃ¡sico
-    const custoPorUnidadeUso = custo / quantidadePorEmbalagem;
+    // Fórmula alternativa: CustoUnitario * (QuantidadePorEmbalagem / IPCValor)
+    let quantidadeAjustada = quantidadePorEmbalagem;
+    if (ipcValor > 0) {
+      quantidadeAjustada = quantidadePorEmbalagem / ipcValor;
+    }
+
+    const custoPorUnidadeUso = custo * quantidadeAjustada;
     const valor = custoPorUnidadeUso.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     return `${valor} / ${unidadeUso.sigla}`;
   }
@@ -179,6 +196,7 @@ export class TenantInsumoFormComponent {
         quantidadePorEmbalagem: v.quantidadePorEmbalagem,
         custoUnitario: v.custoUnitario || 0,
         fatorCorrecao: v.fatorCorrecao || 1.0,
+        ipcValor: v.ipcValor && v.ipcValor > 0 ? v.ipcValor : undefined,
         descricao: v.descricao || undefined,
         pathImagem: v.pathImagem || undefined,
         isAtivo: !!v.isAtivo
@@ -203,6 +221,7 @@ export class TenantInsumoFormComponent {
         quantidadePorEmbalagem: v.quantidadePorEmbalagem,
         custoUnitario: v.custoUnitario || 0,
         fatorCorrecao: v.fatorCorrecao || 1.0,
+        ipcValor: v.ipcValor && v.ipcValor > 0 ? v.ipcValor : undefined,
         descricao: v.descricao || undefined,
         pathImagem: v.pathImagem || undefined,
         isAtivo: !!v.isAtivo

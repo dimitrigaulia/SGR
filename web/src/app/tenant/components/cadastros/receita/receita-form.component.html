@@ -256,6 +256,13 @@
               </td>
             </ng-container>
 
+            <ng-container matColumnDef="custoPorUnidadeUso">
+              <th mat-header-cell *matHeaderCellDef>Custo por Unidade de Uso</th>
+              <td mat-cell *matCellDef="let item">
+                {{ formatarCustoPorUnidadeUso(item) }}
+              </td>
+            </ng-container>
+
             <ng-container matColumnDef="custo">
               <th mat-header-cell *matHeaderCellDef>Custo</th>
               <td mat-cell *matCellDef="let item">
@@ -346,6 +353,10 @@
                         <span class="item-value">{{ item.observacoes }}</span>
                       </div>
                     }
+                    <div class="item-field">
+                      <span class="item-label">Custo por unidade de uso:</span>
+                      <span class="item-value">{{ formatarCustoPorUnidadeUso(item) }}</span>
+                    </div>
                     <div class="item-field">
                       <span class="item-label">Custo:</span>
                       <span class="item-value item-custo">{{ formatCurrency(item.custoItem) }}</span>

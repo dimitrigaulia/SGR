@@ -88,7 +88,7 @@ export class TenantReceitaFormComponent {
   };
 
   itens = signal<ReceitaItemFormModel[]>([]);
-  displayedColumns = ['ordem', 'insumo', 'quantidade', 'unidade', 'qb', 'custo', 'observacoes', 'acoes'];
+  displayedColumns = ['ordem', 'insumo', 'quantidade', 'unidade', 'qb', 'custoPorUnidadeUso', 'custo', 'observacoes', 'acoes'];
   
   // Propriedades para uso no template
   window = typeof window !== 'undefined' ? window : null;
@@ -405,8 +405,37 @@ export class TenantReceitaFormComponent {
 
   // Preview para UI; fonte da verdade = backend
   calcularCustoPorUnidadeUso(insumo: InsumoDto): number {
-    if (insumo.quantidadePorEmbalagem <= 0) return 0;
-    return (insumo.custoUnitario / insumo.quantidadePorEmbalagem) * insumo.fatorCorrecao;
+    const quantidadePorEmbalagem = insumo.quantidadePorEmbalagem;
+    const custo = insumo.custoUnitario || 0;
+    const ipcValor = insumo.ipcValor || 0;
+
+    if (quantidadePorEmbalagem <= 0 || custo <= 0) {
+      return 0;
+    }
+
+    // Fórmula: CustoUnitario * (QuantidadePorEmbalagem / IPCValor)
+    let quantidadeAjustada = quantidadePorEmbalagem;
+    if (ipcValor > 0) {
+      quantidadeAjustada = quantidadePorEmbalagem / ipcValor;
+    }
+
+    return custo * quantidadeAjustada;
+  }
+
+  formatarCustoPorUnidadeUso(item: ReceitaItemFormModel): string {
+    if (!item.insumoId) return '-';
+    const insumo = this.insumos().find(i => i.id === item.insumoId);
+    if (!insumo) return '-';
+    
+    const custo = this.calcularCustoPorUnidadeUso(insumo);
+    const unidadeUso = this.getUnidadeSigla(insumo.unidadeUsoId);
+    
+    if (custo <= 0 || !unidadeUso) {
+      return '-';
+    }
+
+    const valor = this.formatCurrency(custo);
+    return `${valor} / ${unidadeUso}`;
   }
 
   // Preview para UI; fonte da verdade = backend

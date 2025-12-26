@@ -16,6 +16,8 @@ public class InsumoDto
     public decimal CustoUnitario { get; set; }
     public decimal FatorCorrecao { get; set; }
     public int? IpcValor { get; set; }
+    public decimal QuantidadeAjustadaIPC { get; set; }
+    public decimal CustoPorUnidadeUsoAlternativo { get; set; }
     public string? Descricao { get; set; }
     public string? PathImagem { get; set; }
     public bool IsAtivo { get; set; }

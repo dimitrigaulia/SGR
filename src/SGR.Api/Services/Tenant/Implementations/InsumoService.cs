@@ -18,17 +18,6 @@ public class InsumoService : BaseService<TenantDbContext, Insumo, InsumoDto, Cre
     {
     }
 
-    private static decimal CalcularFatorCorrecao(decimal fatorCorrecaoRequest, int? ipcValor)
-    {
-        if (ipcValor.HasValue)
-        {
-            var v = Math.Clamp(ipcValor.Value, 0, 999);
-            return 1m + (v / 100m);
-        }
-
-        return fatorCorrecaoRequest <= 0 ? 1.0m : fatorCorrecaoRequest;
-    }
-
     protected override IQueryable<Insumo> ApplySearch(IQueryable<Insumo> query, string? search)
     {
         if (string.IsNullOrWhiteSpace(search)) return query;
@@ -120,7 +109,9 @@ public class InsumoService : BaseService<TenantDbContext, Insumo, InsumoDto, Cre
             QuantidadePorEmbalagem = i.QuantidadePorEmbalagem,
             CustoUnitario = i.CustoUnitario,
             FatorCorrecao = i.FatorCorrecao,
-            IpcValor = i.FatorCorrecao >= 1m ? (int?)Math.Round((i.FatorCorrecao - 1m) * 100m) : null,
+            IpcValor = i.IPCValor,
+            QuantidadeAjustadaIPC = i.QuantidadeAjustadaIPC,
+            CustoPorUnidadeUsoAlternativo = i.CustoPorUnidadeUsoAlternativo,
             Descricao = i.Descricao,
             PathImagem = i.PathImagem,
             IsAtivo = i.IsAtivo,
@@ -131,7 +122,12 @@ public class InsumoService : BaseService<TenantDbContext, Insumo, InsumoDto, Cre
 
     protected override Insumo MapToEntity(CreateInsumoRequest request)
     {
-        var fatorCorrecao = CalcularFatorCorrecao(request.FatorCorrecao, request.IpcValor);
+        // Validar e limitar IPCValor se fornecido
+        int? ipcValor = null;
+        if (request.IpcValor.HasValue)
+        {
+            ipcValor = Math.Clamp(request.IpcValor.Value, 0, 999);
+        }
 
         return new Insumo
         {
@@ -141,7 +137,8 @@ public class InsumoService : BaseService<TenantDbContext, Insumo, InsumoDto, Cre
             UnidadeUsoId = request.UnidadeUsoId,
             QuantidadePorEmbalagem = request.QuantidadePorEmbalagem,
             CustoUnitario = request.CustoUnitario,
-            FatorCorrecao = fatorCorrecao,
+            FatorCorrecao = request.FatorCorrecao <= 0 ? 1.0m : request.FatorCorrecao, // Manter para compatibilidade
+            IPCValor = ipcValor,
             Descricao = request.Descricao,
             PathImagem = request.PathImagem,
             IsAtivo = request.IsAtivo
@@ -150,7 +147,12 @@ public class InsumoService : BaseService<TenantDbContext, Insumo, InsumoDto, Cre
 
     protected override void UpdateEntity(Insumo entity, UpdateInsumoRequest request)
     {
-        var fatorCorrecao = CalcularFatorCorrecao(request.FatorCorrecao, request.IpcValor);
+        // Validar e limitar IPCValor se fornecido
+        int? ipcValor = null;
+        if (request.IpcValor.HasValue)
+        {
+            ipcValor = Math.Clamp(request.IpcValor.Value, 0, 999);
+        }
 
         entity.Nome = request.Nome;
         entity.CategoriaId = request.CategoriaId;
@@ -158,7 +160,8 @@ public class InsumoService : BaseService<TenantDbContext, Insumo, InsumoDto, Cre
         entity.UnidadeUsoId = request.UnidadeUsoId;
         entity.QuantidadePorEmbalagem = request.QuantidadePorEmbalagem;
         entity.CustoUnitario = request.CustoUnitario;
-        entity.FatorCorrecao = fatorCorrecao;
+        entity.FatorCorrecao = request.FatorCorrecao <= 0 ? 1.0m : request.FatorCorrecao; // Manter para compatibilidade
+        entity.IPCValor = ipcValor;
         entity.Descricao = request.Descricao;
         entity.PathImagem = request.PathImagem;
         entity.IsAtivo = request.IsAtivo;

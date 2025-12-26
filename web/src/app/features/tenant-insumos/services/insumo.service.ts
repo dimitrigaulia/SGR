@@ -19,6 +19,8 @@ export interface InsumoDto {
   custoUnitario: number;
   fatorCorrecao: number;
   ipcValor?: number | null;
+  quantidadeAjustadaIPC: number;
+  custoPorUnidadeUsoAlternativo: number;
   descricao?: string | null;
   pathImagem?: string | null;
   isAtivo: boolean;

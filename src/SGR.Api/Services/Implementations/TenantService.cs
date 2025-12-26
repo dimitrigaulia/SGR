@@ -604,6 +604,23 @@ public class TenantService : BaseService<ApplicationDbContext, TenantEntity, Ten
                         ADD COLUMN ""TempoPreparo"" INTEGER;
                     END IF;
 
+                    -- Insumo.IPCValor
+                    IF EXISTS (
+                        SELECT 1
+                        FROM information_schema.tables
+                        WHERE table_schema = '{schemaName}'
+                        AND table_name = 'Insumo'
+                    ) AND NOT EXISTS (
+                        SELECT 1
+                        FROM information_schema.columns
+                        WHERE table_schema = '{schemaName}'
+                        AND table_name = 'Insumo'
+                        AND column_name = 'IPCValor'
+                    ) THEN
+                        ALTER TABLE ""{schemaName}"".""Insumo""
+                        ADD COLUMN ""IPCValor"" INTEGER;
+                    END IF;
+
                     -- FichaTecnica.RendimentoPorcoes: alterar de DECIMAL para VARCHAR(200) se necessário
                     IF EXISTS (
                         SELECT 1

@@ -45,7 +45,8 @@ public class ReceitaService : IReceitaService
 
     /// <summary>
     /// Calcula o custo por unidade de uso de um insumo
-    /// FÃ³rmula: (CustoUnitario / QuantidadePorEmbalagem) * FatorCorrecao
+    /// Fórmula: (CustoUnitario / QuantidadePorEmbalagem) / (IPCValor / 100)
+    /// Se IPCValor for null ou 0, usa custo base sem ajuste (assume 100% comestível)
     /// </summary>
     private static decimal CalcularCustoPorUnidadeUso(Insumo insumo)
     {
@@ -54,7 +55,19 @@ public class ReceitaService : IReceitaService
             return 0;
         }
 
-        return (insumo.CustoUnitario / insumo.QuantidadePorEmbalagem) * insumo.FatorCorrecao;
+        var custoBase = insumo.CustoUnitario / insumo.QuantidadePorEmbalagem;
+
+        // Aplicar IPC se informado e maior que 0
+        // IPC representa a porcentagem comestível (ex: 45% = apenas 45% é utilizável)
+        if (insumo.IPCValor.HasValue && insumo.IPCValor.Value > 0)
+        {
+            var ipcPercentual = insumo.IPCValor.Value / 100m;
+            // Se apenas 45% é comestível, o custo real por unidade utilizável é maior
+            return custoBase / ipcPercentual;
+        }
+
+        // Se IPC não informado ou 0, assumir 100% comestível (sem ajuste)
+        return custoBase;
     }
 
     private decimal CalcularCustoItem(ReceitaItem item, Insumo insumo)

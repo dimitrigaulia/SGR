@@ -37,7 +37,7 @@ export class TenantInsumosListComponent implements OnDestroy {
   private destroyRef = inject(DestroyRef);
   private cdr = inject(ChangeDetectorRef);
   
-  displayedColumns = ['imagem', 'nome', 'categoria', 'unidadeCompra', 'unidadeUso', 'quantidadeEmbalagem', 'custo', 'ativo', 'acoes'];
+  displayedColumns = ['imagem', 'nome', 'categoria', 'unidadeCompra', 'unidadeUso', 'quantidadeEmbalagem', 'custo', 'custoPorUnidadeUso', 'ativo', 'acoes'];
   data = signal<InsumoDto[]>([]);
   total = signal(0);
   pageIndex = signal(0);
@@ -148,6 +148,36 @@ export class TenantInsumosListComponent implements OnDestroy {
 
   formatCurrency(value: number): string {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+  }
+
+  calcularCustoPorUnidadeUso(insumo: InsumoDto): number {
+    const quantidadePorEmbalagem = insumo.quantidadePorEmbalagem;
+    const custo = insumo.custoUnitario || 0;
+    const ipcValor = insumo.ipcValor || 0;
+
+    if (quantidadePorEmbalagem <= 0 || custo <= 0) {
+      return 0;
+    }
+
+    // Fórmula: CustoUnitario * (QuantidadePorEmbalagem / IPCValor)
+    let quantidadeAjustada = quantidadePorEmbalagem;
+    if (ipcValor > 0) {
+      quantidadeAjustada = quantidadePorEmbalagem / ipcValor;
+    }
+
+    return custo * quantidadeAjustada;
+  }
+
+  formatarCustoPorUnidadeUso(insumo: InsumoDto): string {
+    const custo = this.calcularCustoPorUnidadeUso(insumo);
+    const unidadeUso = insumo.unidadeUsoSigla || insumo.unidadeUsoNome || '';
+    
+    if (custo <= 0 || !unidadeUso) {
+      return '-';
+    }
+
+    const valor = this.formatCurrency(custo);
+    return `${valor} / ${unidadeUso}`;
   }
 
   ngOnDestroy() {

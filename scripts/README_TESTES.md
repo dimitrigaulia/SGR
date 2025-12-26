@@ -119,3 +119,5 @@ Após validar o teste principal, você pode executar manualmente:
    - Validar que `QuantidadeBruta` = `Quantidade × FatorCorrecao` (apenas visual)
    - Validar que `CustoItem` não aplica FatorCorrecao duas vezes
 
+
+

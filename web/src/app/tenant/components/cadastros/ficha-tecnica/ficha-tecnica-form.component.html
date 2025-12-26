@@ -80,6 +80,7 @@
             <mat-form-field appearance="outline" class="form-field-spacing">
               <mat-label>IPC Valor (%)</mat-label>
               <input matInput type="number" name="ipcValor" [(ngModel)]="model.ipcValor" (ngModelChange)="onICChange()" [disabled]="isView()" min="0" max="999" step="1" />
+              <mat-hint>100 = sem perda; 90 = 10% de perda (parte aproveitável)</mat-hint>
             </mat-form-field>
           </div>
         </div>
