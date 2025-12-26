@@ -62,6 +62,24 @@ $breakpoint-desktop: 1200px;
   }
 }
 
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo-img {
+  height: 40px;
+  width: 40px;
+  object-fit: contain;
+  
+  @media (max-width: $breakpoint-mobile) {
+    height: 32px;
+    width: 32px;
+  }
+}
+
+
 .logo h1 {
   margin: 0;
   font-size: 1.5rem;
@@ -246,6 +264,27 @@ $breakpoint-desktop: 1200px;
   
   .container {
     max-width: 800px;
+  }
+}
+
+.hero-logo {
+  margin-bottom: 32px;
+  display: flex;
+  justify-content: center;
+  
+  @media (max-width: $breakpoint-mobile) {
+    margin-bottom: 24px;
+  }
+}
+
+.hero-logo-img {
+  height: 120px;
+  width: 120px;
+  object-fit: contain;
+  
+  @media (max-width: $breakpoint-mobile) {
+    height: 80px;
+    width: 80px;
   }
 }
 
@@ -565,6 +604,27 @@ $breakpoint-desktop: 1200px;
   
   @media (max-width: $breakpoint-mobile) {
     padding: 24px 0;
+  }
+}
+
+.footer-logo {
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: center;
+  
+  @media (max-width: $breakpoint-mobile) {
+    margin-bottom: 12px;
+  }
+}
+
+.footer-logo-img {
+  height: 60px;
+  width: 60px;
+  object-fit: contain;
+  
+  @media (max-width: $breakpoint-mobile) {
+    height: 48px;
+    width: 48px;
   }
 }
 

@@ -2,12 +2,20 @@
   <mat-card class="login-card">
     <mat-card-header>
       <div class="header-content">
+        <div class="login-logo">
+          <img src="/logo_preto.png" alt="FichaPro Logo" class="login-logo-img logo-dark">
+          <img src="/logo_branco.png" alt="FichaPro Logo" class="login-logo-img logo-light">
+        </div>
         <h2>FichaPro - Backoffice</h2>
-        <p>Login Administrativo</p>
       </div>
     </mat-card-header>
 
     <mat-card-content>
+      <div class="theme-toggle-container">
+        <button mat-icon-button (click)="toggleTheme()" [attr.aria-label]="'Alternar tema ' + (isDarkTheme() ? 'claro' : 'escuro')" class="theme-toggle-btn">
+          <mat-icon>{{ isDarkTheme() ? 'light_mode' : 'dark_mode' }}</mat-icon>
+        </button>
+      </div>
       <form #loginForm="ngForm" (ngSubmit)="onSubmit(loginForm)">
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Email</mat-label>

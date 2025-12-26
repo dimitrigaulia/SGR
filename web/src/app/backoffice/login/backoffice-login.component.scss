@@ -29,12 +29,42 @@
   font-size: 0.875rem;
 }
 
+.theme-toggle-container {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 16px;
+}
+
+.theme-toggle-btn {
+  color: var(--mat-icon-color);
+}
+
 mat-card-header {
   text-align: center;
   margin-bottom: 24px;
 
   .header-content {
     width: 100%;
+
+    .login-logo {
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .login-logo-img {
+      height: 80px;
+      width: 80px;
+      object-fit: contain;
+      
+      &.logo-dark {
+        display: block;
+      }
+      
+      &.logo-light {
+        display: none;
+      }
+    }
 
     h2 {
       margin: 0 0 8px 0;
@@ -48,6 +78,24 @@ mat-card-header {
       opacity: 0.7;
     }
   }
+}
+
+// Quando o tema é escuro, mostrar logo branco
+:host.dark-theme .login-logo-img.logo-dark {
+  display: none !important;
+}
+
+:host.dark-theme .login-logo-img.logo-light {
+  display: block !important;
+}
+
+// Quando o tema é claro, mostrar logo preto
+:host.light-theme .login-logo-img.logo-dark {
+  display: block !important;
+}
+
+:host.light-theme .login-logo-img.logo-light {
+  display: none !important;
 }
 
 // Responsividade
@@ -64,6 +112,11 @@ mat-card-header {
 
   mat-card-header {
     .header-content {
+      .login-logo-img {
+        height: 64px;
+        width: 64px;
+      }
+
       h2 {
         font-size: 1.25rem;
       }
