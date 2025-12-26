@@ -1,0 +1,56 @@
+# Build outputs
+**/bin/
+**/obj/
+**/dist/
+**/node_modules/
+**/.angular/
+
+# IDE
+**/.vs/
+**/.vscode/
+**/.idea/
+**/*.swp
+**/*.swo
+**/*.swn
+
+# Git
+**/.git/
+**/.gitignore
+**/.gitattributes
+
+# Docker
+**/Dockerfile*
+**/docker-compose*.yml
+**/.dockerignore
+
+# Logs
+**/*.log
+**/logs/
+
+# OS
+**/.DS_Store
+**/Thumbs.db
+
+# Environment
+**/.env
+**/.env.local
+**/.env.*.local
+
+# Test
+**/coverage/
+**/.nyc_output/
+**/*.spec.ts
+**/*.test.ts
+
+# Documentation
+**/README.md
+**/docs/
+
+# Scripts
+**/scripts/
+
+# Temporary files
+**/tmp/
+**/temp/
+**/*.tmp
+

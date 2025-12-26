@@ -1,0 +1,39 @@
+# Stage 1: Build
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+WORKDIR /src
+
+# Copiar arquivos de projeto
+COPY ["src/SGR.Api/SGR.Api.csproj", "src/SGR.Api/"]
+RUN dotnet restore "src/SGR.Api/SGR.Api.csproj"
+
+# Copiar todo o código fonte
+COPY . .
+
+# Build da aplicação
+WORKDIR "/src/src/SGR.Api"
+RUN dotnet build "SGR.Api.csproj" -c Release -o /app/build
+
+# Stage 2: Publish
+FROM build AS publish
+RUN dotnet publish "SGR.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
+
+# Stage 3: Runtime
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS final
+WORKDIR /app
+
+# Instalar curl para healthcheck
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
+# Copiar arquivos publicados
+COPY --from=publish /app/publish .
+
+# Expor porta
+EXPOSE 5000
+
+# Variável de ambiente para ASP.NET Core
+ENV ASPNETCORE_URLS=http://+:5000
+ENV ASPNETCORE_ENVIRONMENT=Production
+
+# Comando de inicialização
+ENTRYPOINT ["dotnet", "SGR.Api.dll"]
+
