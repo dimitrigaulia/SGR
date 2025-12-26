@@ -7,7 +7,7 @@ using System.Linq.Expressions;
 namespace SGR.Api.Services.Common;
 
 /// <summary>
-/// Service base genÃ©rico que funciona com qualquer DbContext
+/// Service base genérico que funciona com qualquer DbContext
 /// </summary>
 public abstract class BaseService<TDbContext, TEntity, TDto, TCreateRequest, TUpdateRequest> 
     : IBaseService<TEntity, TDto, TCreateRequest, TUpdateRequest>
@@ -28,7 +28,7 @@ public abstract class BaseService<TDbContext, TEntity, TDto, TCreateRequest, TUp
         _logger = logger;
     }
 
-    // MÃ©todos virtuais para customizaÃ§Ã£o
+    // Métodos virtuais para customização
     protected virtual IQueryable<TEntity> ApplySearch(IQueryable<TEntity> query, string? search) => query;
     protected virtual IQueryable<TEntity> ApplySorting(IQueryable<TEntity> query, string? sort, string? order) => query;
     protected abstract Expression<Func<TEntity, TDto>> MapToDto();
@@ -40,7 +40,7 @@ public abstract class BaseService<TDbContext, TEntity, TDto, TCreateRequest, TUp
 
     public virtual async Task<PagedResult<TDto>> GetAllAsync(string? search, int page, int pageSize, string? sort, string? order)
     {
-        _logger.LogInformation("Buscando {EntityType} - PÃ¡gina: {Page}, Tamanho: {PageSize}, Busca: {Search}", 
+        _logger.LogInformation("Buscando {EntityType} - Página: {Page}, Tamanho: {PageSize}, Busca: {Search}", 
             typeof(TEntity).Name, page, pageSize, search ?? "N/A");
 
         // Usar AsNoTracking para queries de leitura (melhor performance)
@@ -52,7 +52,7 @@ public abstract class BaseService<TDbContext, TEntity, TDto, TCreateRequest, TUp
             query = ApplySearch(query, search);
         }
 
-        // Aplicar ordenaÃ§Ã£o
+        // Aplicar ordenação
         query = ApplySorting(query, sort, order);
 
         var total = await query.CountAsync();
@@ -76,7 +76,7 @@ public abstract class BaseService<TDbContext, TEntity, TDto, TCreateRequest, TUp
         var entity = await _dbSet.AsNoTracking().FirstOrDefaultAsync(e => EF.Property<long>(e, "Id") == id);
         if (entity == null)
         {
-            _logger.LogWarning("{EntityType} com ID {Id} nÃ£o encontrado", typeof(TEntity).Name, id);
+            _logger.LogWarning("{EntityType} com ID {Id} não encontrado", typeof(TEntity).Name, id);
             return null;
         }
 
@@ -86,7 +86,7 @@ public abstract class BaseService<TDbContext, TEntity, TDto, TCreateRequest, TUp
 
     public virtual async Task<TDto> CreateAsync(TCreateRequest request, string? usuarioCriacao)
     {
-        _logger.LogInformation("Criando novo {EntityType} - UsuÃ¡rio: {Usuario}", typeof(TEntity).Name, usuarioCriacao ?? "Sistema");
+        _logger.LogInformation("Criando novo {EntityType} - Usuário: {Usuario}", typeof(TEntity).Name, usuarioCriacao ?? "Sistema");
 
         try
         {
@@ -103,14 +103,14 @@ public abstract class BaseService<TDbContext, TEntity, TDto, TCreateRequest, TUp
             var entityId = GetEntityId(entity);
             _logger.LogInformation("{EntityType} criado com sucesso - ID: {Id}", typeof(TEntity).Name, entityId);
 
-            // Usar a entidade jÃ¡ tracked ao invÃ©s de fazer uma nova query
-            // A entidade jÃ¡ tem o ID gerado apÃ³s SaveChanges
+            // Usar a entidade já tracked ao invés de fazer uma nova query
+            // A entidade já tem o ID gerado após SaveChanges
             var mapper = MapToDto().Compile();
             return mapper(entity);
         }
         catch (DbUpdateException ex)
         {
-            _logger.LogError(ex, "Erro ao criar {EntityType} - ViolaÃ§Ã£o de constraint", typeof(TEntity).Name);
+            _logger.LogError(ex, "Erro ao criar {EntityType} - Violação de constraint", typeof(TEntity).Name);
             throw;
         }
         catch (Exception ex)
@@ -122,17 +122,17 @@ public abstract class BaseService<TDbContext, TEntity, TDto, TCreateRequest, TUp
 
     public virtual async Task<TDto?> UpdateAsync(long id, TUpdateRequest request, string? usuarioAtualizacao)
     {
-        _logger.LogInformation("Atualizando {EntityType} - ID: {Id}, UsuÃ¡rio: {Usuario}", 
+        _logger.LogInformation("Atualizando {EntityType} - ID: {Id}, Usuário: {Usuario}", 
             typeof(TEntity).Name, id, usuarioAtualizacao ?? "Sistema");
 
         try
         {
-            // Usar FirstOrDefaultAsync ao invÃ©s de FindAsync para garantir que respeita o schema do tenant
-            // NÃ£o usar AsNoTracking aqui pois precisamos do tracking para update
+            // Usar FirstOrDefaultAsync ao invés de FindAsync para garantir que respeita o schema do tenant
+            // Não usar AsNoTracking aqui pois precisamos do tracking para update
             var entity = await _dbSet.FirstOrDefaultAsync(e => EF.Property<long>(e, "Id") == id);
             if (entity == null)
             {
-                _logger.LogWarning("{EntityType} com ID {Id} nÃ£o encontrado para atualizaÃ§Ã£o", typeof(TEntity).Name, id);
+                _logger.LogWarning("{EntityType} com ID {Id} não encontrado para atualização", typeof(TEntity).Name, id);
                 return null;
             }
 
@@ -143,24 +143,24 @@ public abstract class BaseService<TDbContext, TEntity, TDto, TCreateRequest, TUp
             
             await BeforeUpdateAsync(entity, request, usuarioAtualizacao);
             
-            // NÃ£o Ã© necessÃ¡rio marcar como Modified explicitamente quando a entidade jÃ¡ estÃ¡ tracked
-            // O EF Core detecta automaticamente as mudanÃ§as
+            // Não é necessário marcar como Modified explicitamente quando a entidade já está tracked
+            // O EF Core detecta automaticamente as mudanças
             await _context.SaveChangesAsync();
 
             _logger.LogInformation("{EntityType} atualizado com sucesso - ID: {Id}", typeof(TEntity).Name, id);
 
-            // Usar a entidade jÃ¡ tracked ao invÃ©s de fazer uma nova query
+            // Usar a entidade já tracked ao invés de fazer uma nova query
             var mapper = MapToDto().Compile();
             return mapper(entity);
         }
         catch (DbUpdateConcurrencyException ex)
         {
-            _logger.LogWarning(ex, "ConcorrÃªncia detectada ao atualizar {EntityType} - ID: {Id}", typeof(TEntity).Name, id);
+            _logger.LogWarning(ex, "Concorrência detectada ao atualizar {EntityType} - ID: {Id}", typeof(TEntity).Name, id);
             throw;
         }
         catch (DbUpdateException ex)
         {
-            _logger.LogError(ex, "Erro ao atualizar {EntityType} - ID: {Id} - ViolaÃ§Ã£o de constraint", typeof(TEntity).Name, id);
+            _logger.LogError(ex, "Erro ao atualizar {EntityType} - ID: {Id} - Violação de constraint", typeof(TEntity).Name, id);
             throw;
         }
         catch (Exception ex)
@@ -176,11 +176,11 @@ public abstract class BaseService<TDbContext, TEntity, TDto, TCreateRequest, TUp
 
         try
         {
-            // Usar FirstOrDefaultAsync ao invÃ©s de FindAsync para garantir que respeita o schema do tenant
+            // Usar FirstOrDefaultAsync ao invés de FindAsync para garantir que respeita o schema do tenant
             var entity = await _dbSet.FirstOrDefaultAsync(e => EF.Property<long>(e, "Id") == id);
             if (entity == null)
             {
-                _logger.LogWarning("{EntityType} com ID {Id} nÃ£o encontrado para exclusÃ£o", typeof(TEntity).Name, id);
+                _logger.LogWarning("{EntityType} com ID {Id} não encontrado para exclusão", typeof(TEntity).Name, id);
                 return false;
             }
 
@@ -189,7 +189,7 @@ public abstract class BaseService<TDbContext, TEntity, TDto, TCreateRequest, TUp
             _dbSet.Remove(entity);
             await _context.SaveChangesAsync();
 
-            _logger.LogInformation("{EntityType} excluÃ­do com sucesso - ID: {Id}", typeof(TEntity).Name, id);
+            _logger.LogInformation("{EntityType} excluído com sucesso - ID: {Id}", typeof(TEntity).Name, id);
             return true;
         }
         catch (Exception ex)
@@ -227,7 +227,7 @@ public abstract class BaseService<TDbContext, TEntity, TDto, TCreateRequest, TUp
         var idProperty = entity.GetType().GetProperty("Id");
         if (idProperty != null)
             return Convert.ToInt64(idProperty.GetValue(entity));
-        throw new InvalidOperationException("Entidade nÃ£o possui propriedade Id");
+        throw new InvalidOperationException("Entidade não possui propriedade Id");
     }
 }
 

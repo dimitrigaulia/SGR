@@ -4,7 +4,7 @@ using SGR.Api.Services.Interfaces;
 namespace SGR.Api.Middleware;
 
 /// <summary>
-/// Middleware para identificar o tenant baseado no subdomÃ­nio (produÃ§Ã£o) ou header (desenvolvimento)
+/// Middleware para identificar o tenant baseado no subdomínio (produção) ou header (desenvolvimento)
 /// </summary>
 public class TenantIdentificationMiddleware
 {
@@ -36,7 +36,7 @@ public class TenantIdentificationMiddleware
 
         string? subdomain = null;
 
-        // Em produÃ§Ã£o: extrair subdomÃ­nio do header Host
+        // Em produção: extrair subdomínio do header Host
         // Em desenvolvimento: ler do header X-Tenant-Subdomain
         if (context.Request.Headers.TryGetValue("X-Tenant-Subdomain", out var headerSubdomain))
         {
@@ -45,7 +45,7 @@ public class TenantIdentificationMiddleware
         }
         else
         {
-            // Tentar extrair do Host (produÃ§Ã£o)
+            // Tentar extrair do Host (produção)
             var host = context.Request.Host.Host;
             if (!string.IsNullOrEmpty(host))
             {
@@ -59,8 +59,8 @@ public class TenantIdentificationMiddleware
             }
         }
 
-        // Para login do tenant, permitir continuar mesmo sem subdomain (o controller tratarÃ¡ o erro)
-        // Para outras rotas, bloquear se nÃ£o tiver subdomain
+        // Para login do tenant, permitir continuar mesmo sem subdomain (o controller tratará o erro)
+        // Para outras rotas, bloquear se não tiver subdomain
         if (string.IsNullOrEmpty(subdomain))
         {
             if (path.StartsWith("/api/tenant/auth/login"))
@@ -70,9 +70,9 @@ public class TenantIdentificationMiddleware
                 return;
             }
             
-            _logger.LogWarning("NÃ£o foi possÃ­vel identificar o tenant. Path: {Path}", path);
+            _logger.LogWarning("Não foi possível identificar o tenant. Path: {Path}", path);
             context.Response.StatusCode = 400;
-            await context.Response.WriteAsync("Tenant nÃ£o identificado. ForneÃ§a o header X-Tenant-Subdomain ou acesse via subdomÃ­nio.");
+            await context.Response.WriteAsync("Tenant não identificado. Forneça o header X-Tenant-Subdomain ou acesse via subdomínio.");
             return;
         }
 
@@ -80,16 +80,16 @@ public class TenantIdentificationMiddleware
         var tenant = await tenantService.GetBySubdomainAsync(subdomain);
         if (tenant == null || !tenant.IsAtivo)
         {
-            _logger.LogWarning("Tenant nÃ£o encontrado ou inativo: {Subdomain}", subdomain);
+            _logger.LogWarning("Tenant não encontrado ou inativo: {Subdomain}", subdomain);
             context.Response.StatusCode = 404;
-            await context.Response.WriteAsync($"Tenant '{subdomain}' nÃ£o encontrado ou inativo.");
+            await context.Response.WriteAsync($"Tenant '{subdomain}' não encontrado ou inativo.");
             return;
         }
 
         // Configurar o TenantDbContext para usar o schema do tenant
         tenantContext.SetSchema(tenant.NomeSchema);
         
-        // Armazenar informaÃ§Ãµes do tenant no HttpContext para uso posterior
+        // Armazenar informações do tenant no HttpContext para uso posterior
         context.Items["Tenant"] = tenant;
         context.Items["TenantSchema"] = tenant.NomeSchema;
 

@@ -6,7 +6,7 @@ using SGR.Api.Services.Interfaces;
 namespace SGR.Api.Controllers.Tenant;
 
 /// <summary>
-/// Controller para autenticaÃ§Ã£o de tenants
+/// Controller para autenticação de tenants
 /// </summary>
 [ApiController]
 [Route("api/tenant/[controller]")]
@@ -22,10 +22,10 @@ public class AuthController : ControllerBase
     }
 
     /// <summary>
-    /// Realiza login do usuÃ¡rio do tenant
+    /// Realiza login do usuário do tenant
     /// </summary>
     /// <param name="request">Credenciais de login</param>
-    /// <returns>Token JWT e dados do usuÃ¡rio</returns>
+    /// <returns>Token JWT e dados do usuário</returns>
     [HttpPost("login")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -41,8 +41,8 @@ public class AuthController : ControllerBase
         var tenant = HttpContext.Items["Tenant"] as TenantDto;
         if (tenant == null)
         {
-            _logger.LogWarning("Tentativa de login do tenant sem identificaÃ§Ã£o do tenant");
-            return BadRequest(new { message = "Tenant nÃ£o identificado. ForneÃ§a o header X-Tenant-Subdomain." });
+            _logger.LogWarning("Tentativa de login do tenant sem identificação do tenant");
+            return BadRequest(new { message = "Tenant não identificado. Forneça o header X-Tenant-Subdomain." });
         }
 
         var response = await _authService.LoginAsync(request);
@@ -50,7 +50,7 @@ public class AuthController : ControllerBase
         if (response == null)
         {
             _logger.LogWarning("Tentativa de login do tenant falhou para: {Email}", request.Email);
-            return Unauthorized(new { message = "Email ou senha invÃ¡lidos" });
+            return Unauthorized(new { message = "Email ou senha inválidos" });
         }
 
         return Ok(response);

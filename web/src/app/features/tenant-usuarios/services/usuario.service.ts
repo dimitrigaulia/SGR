@@ -42,7 +42,7 @@ export class TenantUsuarioService {
   private base = `${environment.apiUrl}/tenant/usuarios`;
 
   /**
-   * Lista usuÃ¡rios com paginaÃ§Ã£o, busca e ordenaÃ§Ã£o
+   * Lista usuários com paginação, busca e ordenação
    */
   list(opts?: { search?: string; page?: number; pageSize?: number; sort?: string; order?: 'asc'|'desc' }): Observable<Paged<TenantUsuarioDto>> {
     const { search, page = 1, pageSize = 10, sort, order } = opts ?? {};

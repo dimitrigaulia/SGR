@@ -70,7 +70,7 @@ $toolbar-height: 64px;
     }
   }
 
-  // NavegaÃ§Ã£o
+  // Navegação
   .sidenav-nav {
     flex: 1;
     overflow-y: auto;
@@ -80,7 +80,7 @@ $toolbar-height: 64px;
     flex-direction: column;
     gap: 4px;
 
-    // Container para itens de navegaÃ§Ã£o
+    // Container para itens de navegação
     .nav-items-container {
       display: flex;
       flex-direction: column;
@@ -88,7 +88,7 @@ $toolbar-height: 64px;
       width: 100%;
     }
 
-    // Itens de navegaÃ§Ã£o
+    // Itens de navegação
     a[mat-list-item] {
       border-radius: 12px;
       margin: 0;
@@ -249,7 +249,7 @@ $toolbar-height: 64px;
           margin: 0 8px;
           min-height: 40px;
           height: 40px;
-          padding: 0 12px 0 40px; // IndentaÃ§Ã£o para submenu
+          padding: 0 12px 0 40px; // Indentação para submenu
           transition: background-color 0.2s;
 
           &:hover {

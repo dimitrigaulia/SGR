@@ -542,7 +542,7 @@ export class TenantReceitaFormComponent {
     
     const v = this.model;
     if (!v.nome || !v.categoriaId || v.rendimento <= 0) {
-      this.toast.error('Preencha os campos obrigatÃ³rios corretamente');
+      this.toast.error('Preencha os campos obrigatórios corretamente');
       return;
     }
 

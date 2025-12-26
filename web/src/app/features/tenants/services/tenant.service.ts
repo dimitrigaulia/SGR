@@ -99,7 +99,7 @@ export class TenantService {
   }
 
   /**
-   * Lista todos os tenants com paginaÃ§Ã£o
+   * Lista todos os tenants com paginação
    */
   getAll(search?: string, page: number = 1, pageSize: number = 10, sort?: string, order?: string): Observable<PagedResult<TenantDto>> {
     const params: any = { page, pageSize };

@@ -117,7 +117,7 @@ export class ReceitaService {
   private base = `${environment.apiUrl}/tenant/receitas`;
 
   /**
-   * Lista receitas com paginaÃ§Ã£o, busca e ordenaÃ§Ã£o
+   * Lista receitas com paginação, busca e ordenação
    */
   list(opts?: { search?: string; page?: number; pageSize?: number; sort?: string; order?: 'asc'|'desc' }): Observable<Paged<ReceitaDto>> {
     const { search, page = 1, pageSize = 10, sort, order } = opts ?? {};

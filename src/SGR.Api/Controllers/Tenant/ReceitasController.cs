@@ -26,7 +26,7 @@ public class ReceitasController : ControllerBase
     }
 
     /// <summary>
-    /// Lista todas as receitas com paginaÃ§Ã£o, busca e ordenaÃ§Ã£o
+    /// Lista todas as receitas com paginação, busca e ordenação
     /// </summary>
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -196,7 +196,7 @@ public class ReceitasController : ControllerBase
         if (!ModelState.IsValid) return BadRequest(ModelState);
         if (string.IsNullOrWhiteSpace(request.NovoNome))
         {
-            return BadRequest(new { message = "Novo nome Ã© obrigatÃ³rio" });
+            return BadRequest(new { message = "Novo nome é obrigatório" });
         }
 
         try

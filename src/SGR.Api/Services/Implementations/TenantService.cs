@@ -40,7 +40,7 @@ public class TenantService : BaseService<ApplicationDbContext, TenantEntity, Ten
             RazaoSocial = t.RazaoSocial,
             NomeFantasia = t.NomeFantasia,
             TipoPessoaId = t.TipoPessoaId,
-            TipoPessoaNome = t.TipoPessoaId == 1 ? "Pessoa FÃ­sica" : "Pessoa JurÃ­dica", // 1 = PF, 2 = PJ
+            TipoPessoaNome = t.TipoPessoaId == 1 ? "Pessoa Física" : "Pessoa Jurídica", // 1 = PF, 2 = PJ
             CpfCnpj = t.CpfCnpj,
             Subdominio = t.Subdominio,
             NomeSchema = t.NomeSchema,
@@ -55,7 +55,7 @@ public class TenantService : BaseService<ApplicationDbContext, TenantEntity, Ten
 
     protected override TenantEntity MapToEntity(CreateTenantRequest request)
     {
-        // Este mÃ©todo nÃ£o deve ser usado diretamente - use CreateTenantAsync
+        // Este método não deve ser usado diretamente - use CreateTenantAsync
         // Implementado apenas para satisfazer a classe abstrata
         return new TenantEntity
         {
@@ -72,7 +72,7 @@ public class TenantService : BaseService<ApplicationDbContext, TenantEntity, Ten
 
     public override async Task<TenantDto> CreateAsync(CreateTenantRequest request, string? usuarioCriacao)
     {
-        // Redireciona para CreateTenantAsync que tem toda a lÃ³gica
+        // Redireciona para CreateTenantAsync que tem toda a lógica
         return await CreateTenantAsync(request, usuarioCriacao);
     }
 
@@ -112,7 +112,7 @@ public class TenantService : BaseService<ApplicationDbContext, TenantEntity, Ten
             query = ApplySearch(query, search);
         }
 
-        // Aplicar ordenaÃ§Ã£o
+        // Aplicar ordenação
         query = ApplySorting(query, sort, order);
 
         var total = await query.CountAsync();
@@ -134,7 +134,7 @@ public class TenantService : BaseService<ApplicationDbContext, TenantEntity, Ten
         var entity = await _dbSet.Include(t => t.Categoria).FirstOrDefaultAsync(t => t.Id == id);
         if (entity == null)
         {
-            _logger.LogWarning("{EntityType} com ID {Id} nÃ£o encontrado", typeof(TenantEntity).Name, id);
+            _logger.LogWarning("{EntityType} com ID {Id} não encontrado", typeof(TenantEntity).Name, id);
             return null;
         }
 
@@ -157,12 +157,12 @@ public class TenantService : BaseService<ApplicationDbContext, TenantEntity, Ten
 
     public async Task<TenantDto> CreateTenantAsync(CreateTenantRequest request, string? usuarioCriacao)
     {
-        _logger.LogInformation("Iniciando criaÃ§Ã£o de tenant: {Subdominio}", request.Subdominio);
+        _logger.LogInformation("Iniciando criação de tenant: {Subdominio}", request.Subdominio);
 
-        // 1. ValidaÃ§Ãµes
+        // 1. Validações
         await ValidateTenantRequestAsync(request);
 
-        // 2. Criar banco sgr_tenants se nÃ£o existir
+        // 2. Criar banco sgr_tenants se não existir
         await EnsureTenantsDatabaseExistsAsync();
 
         // 3. Criar registro do Tenant no banco sgr_config
@@ -197,7 +197,7 @@ public class TenantService : BaseService<ApplicationDbContext, TenantEntity, Ten
         // 7. Inicializar dados do tenant (Perfil Administrador)
         await InitializeTenantDataAsync(tenant.NomeSchema, usuarioCriacao);
 
-        // 8. Criar usuÃ¡rio administrador
+        // 8. Criar usuário administrador
         await CreateAdminUserAsync(tenant.NomeSchema, request.Admin, usuarioCriacao);
 
         _logger.LogInformation("Tenant {Subdominio} criado com sucesso", request.Subdominio);
@@ -241,14 +241,14 @@ public class TenantService : BaseService<ApplicationDbContext, TenantEntity, Ten
             var tenant = await _dbSet.FindAsync(id);
             if (tenant == null)
             {
-                _logger.LogWarning("Tenant com ID {Id} nÃ£o encontrado para inativaÃ§Ã£o", id);
+                _logger.LogWarning("Tenant com ID {Id} não encontrado para inativação", id);
                 return false;
             }
 
-            // Verificar se jÃ¡ estÃ¡ inativo
+            // Verificar se já está inativo
             if (!tenant.IsAtivo)
             {
-                _logger.LogWarning("Tenant com ID {Id} jÃ¡ estÃ¡ inativo", id);
+                _logger.LogWarning("Tenant com ID {Id} já está inativo", id);
                 return false;
             }
 
@@ -290,7 +290,7 @@ public class TenantService : BaseService<ApplicationDbContext, TenantEntity, Ten
             var tenant = await _dbSet.FindAsync(id);
             if (tenant == null)
             {
-                _logger.LogWarning("Tenant com ID {Id} nÃ£o encontrado", id);
+                _logger.LogWarning("Tenant com ID {Id} não encontrado", id);
                 return false;
             }
 
@@ -322,41 +322,41 @@ public class TenantService : BaseService<ApplicationDbContext, TenantEntity, Ten
 
     private async Task ValidateTenantRequestAsync(CreateTenantRequest request)
     {
-        // Validar subdomÃ­nio Ãºnico
+        // Validar subdomínio único
         var subdomainExists = await _dbSet.AnyAsync(t => t.Subdominio == request.Subdominio.ToLower());
         if (subdomainExists)
         {
-            throw new BusinessException($"O subdomÃ­nio '{request.Subdominio}' jÃ¡ estÃ¡ em uso");
+            throw new BusinessException($"O subdomínio '{request.Subdominio}' já está em uso");
         }
 
-        // Validar formato do subdomÃ­nio (apenas letras minÃºsculas e nÃºmeros)
+        // Validar formato do subdomínio (apenas letras minúsculas e números)
         if (!Regex.IsMatch(request.Subdominio, @"^[a-z0-9]+$"))
         {
-            throw new BusinessException("O subdomÃ­nio deve conter apenas letras minÃºsculas e nÃºmeros");
+            throw new BusinessException("O subdomínio deve conter apenas letras minúsculas e números");
         }
 
-        // Validar CPF/CNPJ Ãºnico
+        // Validar CPF/CNPJ único
         var cpfCnpjClean = Regex.Replace(request.CpfCnpj, @"[^\d]", "");
         var cpfCnpjExists = await _dbSet.AnyAsync(t => t.CpfCnpj == cpfCnpjClean);
         if (cpfCnpjExists)
         {
-            throw new BusinessException("CPF/CNPJ jÃ¡ cadastrado");
+            throw new BusinessException("CPF/CNPJ já cadastrado");
         }
 
         // Validar CPF/CNPJ via BrasilApi
         var isValid = await _cpfCnpjValidationService.ValidarAsync(request.CpfCnpj);
         if (!isValid)
         {
-            throw new BusinessException("CPF/CNPJ invÃ¡lido");
+            throw new BusinessException("CPF/CNPJ inválido");
         }
 
-        // Validar tipo de pessoa (1 = Pessoa FÃ­sica, 2 = Pessoa JurÃ­dica)
+        // Validar tipo de pessoa (1 = Pessoa Física, 2 = Pessoa Jurídica)
         if (request.TipoPessoaId != 1 && request.TipoPessoaId != 2)
         {
-            throw new BusinessException("Tipo de pessoa deve ser 1 (Pessoa FÃ­sica) ou 2 (Pessoa JurÃ­dica)");
+            throw new BusinessException("Tipo de pessoa deve ser 1 (Pessoa Física) ou 2 (Pessoa Jurídica)");
         }
 
-        // Validar categoria existe e estÃ¡ ativa
+        // Validar categoria existe e está ativa
         var categoriaExists = await _context.Set<CategoriaTenant>()
             .AnyAsync(c => c.Id == request.CategoriaId && c.IsAtivo);
         if (!categoriaExists)
@@ -369,12 +369,12 @@ public class TenantService : BaseService<ApplicationDbContext, TenantEntity, Ten
     {
         var connectionString = _configuration.GetConnectionString("TenantsConnection");
         if (string.IsNullOrEmpty(connectionString))
-            throw new InvalidOperationException("ConnectionString 'TenantsConnection' nÃ£o configurada");
+            throw new InvalidOperationException("ConnectionString 'TenantsConnection' não configurada");
 
         var builder = new NpgsqlConnectionStringBuilder(connectionString);
         var databaseName = builder.Database;
 
-        // Conectar ao banco postgres para criar o banco se nÃ£o existir
+        // Conectar ao banco postgres para criar o banco se não existir
         builder.Database = "postgres";
         var masterConnectionString = builder.ConnectionString;
 
@@ -430,10 +430,10 @@ public class TenantService : BaseService<ApplicationDbContext, TenantEntity, Ten
             // Configurar o schema no contexto
             _tenantContext.SetSchema(schemaName);
             
-            // Executar migraÃ§Ãµes de estrutura antiga (se necessÃ¡rio)
+            // Executar migrações de estrutura antiga (se necessário)
             await MigrateOldSchemaAsync(schemaName);
             
-            // Criar as tabelas diretamente via SQL (jÃ¡ que nÃ£o temos migrations especÃ­ficas ainda)
+            // Criar as tabelas diretamente via SQL (já que não temos migrations específicas ainda)
             await CreateTenantTablesAsync(schemaName);
             
             _logger.LogInformation("Migrations executadas com sucesso no schema {Schema}", schemaName);
@@ -452,14 +452,14 @@ public class TenantService : BaseService<ApplicationDbContext, TenantEntity, Ten
     {
         try
         {
-            _logger.LogInformation("Iniciando migraÃ§Ã£o de todos os schemas de tenant...");
+            _logger.LogInformation("Iniciando migração de todos os schemas de tenant...");
             
             // Buscar todos os tenants ativos
             var tenants = await _dbSet
                 .Where(t => t.IsAtivo && !string.IsNullOrEmpty(t.NomeSchema))
                 .ToListAsync();
             
-            _logger.LogInformation("Encontrados {Count} tenant(s) para migraÃ§Ã£o", tenants.Count);
+            _logger.LogInformation("Encontrados {Count} tenant(s) para migração", tenants.Count);
             
             foreach (var tenant in tenants)
             {
@@ -475,11 +475,11 @@ public class TenantService : BaseService<ApplicationDbContext, TenantEntity, Ten
                 }
             }
             
-            _logger.LogInformation("MigraÃ§Ã£o de todos os schemas concluÃ­da");
+            _logger.LogInformation("Migração de todos os schemas concluída");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erro ao executar migraÃ§Ã£o de todos os schemas de tenant");
+            _logger.LogError(ex, "Erro ao executar migração de todos os schemas de tenant");
             throw;
         }
     }
@@ -488,7 +488,7 @@ public class TenantService : BaseService<ApplicationDbContext, TenantEntity, Ten
     {
         try
         {
-            _logger.LogInformation("Verificando migraÃ§Ãµes de estrutura antiga no schema {Schema}", schemaName);
+            _logger.LogInformation("Verificando migrações de estrutura antiga no schema {Schema}", schemaName);
             
             // Usar uma abordagem direta: tentar renomear se existir
             var renameColumnSql = $@"
@@ -505,7 +505,7 @@ public class TenantService : BaseService<ApplicationDbContext, TenantEntity, Ten
                         RENAME COLUMN ""CategoriaInsumoId"" TO ""CategoriaId"";
                         RAISE NOTICE 'Coluna CategoriaInsumoId renomeada para CategoriaId no schema %', '{schemaName}';
                     ELSE
-                        RAISE NOTICE 'Coluna CategoriaInsumoId nÃ£o encontrada no schema % (schema pode ser novo ou jÃ¡ migrado)', '{schemaName}';
+                        RAISE NOTICE 'Coluna CategoriaInsumoId não encontrada no schema % (schema pode ser novo ou já migrado)', '{schemaName}';
                     END IF;
 
                     -- Indice (idempotente) somente se a coluna existir
@@ -641,12 +641,12 @@ text;
             ";
 
             await _tenantContext.Database.ExecuteSqlRawAsync(addColumnsSql);
-            _logger.LogInformation("MigraÃ§Ã£o de estrutura antiga concluÃ­da no schema {Schema}", schemaName);
+            _logger.LogInformation("Migração de estrutura antiga concluída no schema {Schema}", schemaName);
         }
         catch (Exception ex)
         {
-            // Log mas nÃ£o falha - pode ser que a coluna nÃ£o exista (schema novo)
-            _logger.LogWarning(ex, "Erro ao executar migraÃ§Ã£o de estrutura antiga no schema {Schema} (pode ser normal se o schema for novo)", schemaName);
+            // Log mas não falha - pode ser que a coluna não exista (schema novo)
+            _logger.LogWarning(ex, "Erro ao executar migração de estrutura antiga no schema {Schema} (pode ser normal se o schema for novo)", schemaName);
         }
     }
 
@@ -929,9 +929,9 @@ text;
 
     private async Task CreateAdminUserAsync(string schemaName, CreateAdminRequest adminRequest, string? usuarioCriacao)
     {
-        _logger.LogInformation("Criando usuÃ¡rio administrador no schema {Schema}", schemaName);
+        _logger.LogInformation("Criando usuário administrador no schema {Schema}", schemaName);
         
-        // Buscar o perfil Administrador via SQL usando parÃ¢metros
+        // Buscar o perfil Administrador via SQL usando parâmetros
         var perfilIdSql = $@"SELECT ""Id"" FROM ""{schemaName}"".""Perfil"" WHERE ""Nome"" = 'Administrador' LIMIT 1";
         var connection = _tenantContext.Database.GetDbConnection();
         await connection.OpenAsync();
@@ -944,12 +944,12 @@ text;
             
             if (perfilIdResult == null || perfilIdResult == DBNull.Value)
             {
-                throw new InvalidOperationException("Perfil Administrador nÃ£o encontrado");
+                throw new InvalidOperationException("Perfil Administrador não encontrado");
             }
 
             var perfilIdValue = Convert.ToInt64(perfilIdResult);
 
-            // Verificar se o email jÃ¡ existe usando parÃ¢metros
+            // Verificar se o email já existe usando parâmetros
             var emailCheckSql = $@"SELECT COUNT(*) FROM ""{schemaName}"".""Usuario"" WHERE ""Email"" = @email";
             command.CommandText = emailCheckSql;
             var emailParam = command.CreateParameter();
@@ -961,10 +961,10 @@ text;
             
             if (emailCount > 0)
             {
-                throw new BusinessException("Email do administrador jÃ¡ estÃ¡ em uso");
+                throw new BusinessException("Email do administrador já está em uso");
             }
 
-            // Inserir usuÃ¡rio administrador usando parÃ¢metros
+            // Inserir usuário administrador usando parâmetros
             var senhaHash = BCrypt.Net.BCrypt.HashPassword(adminRequest.Senha);
             var usuarioCriacaoValue = usuarioCriacao ?? "Sistema";
             var insertSql = $@"
@@ -983,7 +983,7 @@ text;
             command.Parameters.Add(new Npgsql.NpgsqlParameter("@usuarioCriacao", usuarioCriacaoValue));
             await command.ExecuteNonQueryAsync();
             
-            _logger.LogInformation("UsuÃ¡rio administrador criado com sucesso no schema {Schema}", schemaName);
+            _logger.LogInformation("Usuário administrador criado com sucesso no schema {Schema}", schemaName);
         }
         finally
         {

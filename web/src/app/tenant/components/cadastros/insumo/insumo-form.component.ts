@@ -129,7 +129,7 @@ export class TenantInsumoFormComponent {
       return 'Escolha primeiro as unidades de compra e de uso para ver como o sistema farÃ¡ a conversÃ£o automÃ¡tica.';
     }
 
-    // Com unidades simplificadas, nÃ£o hÃ¡ mais conversÃ£o automÃ¡tica por tipo
+    // Com unidades simplificadas, não há mais conversão automática por tipo
     return `Atenção: a Quantidade por Embalagem deve estar na mesma unidade de uso (${uso.sigla}) para que o custo fique correto.`;
   }
 
@@ -181,9 +181,9 @@ export class TenantInsumoFormComponent {
     this.error.set('');
     if (this.isView()) return;
     const v = this.model;
-    // ValidaÃ§Ã£o simples
+    // Validação simples
     if (!v.nome || !v.categoriaId || !v.unidadeCompraId || !v.unidadeUsoId || !v.quantidadePorEmbalagem) {
-      this.toast.error('Preencha os campos obrigatÃ³rios corretamente');
+      this.toast.error('Preencha os campos obrigatórios corretamente');
       return;
     }
 

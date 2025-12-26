@@ -74,8 +74,8 @@ export class TenantFormComponent {
   categorias = signal<CategoriaTenantDto[]>([]);
 
   tipoPessoaOptions = [
-    { id: 1, nome: 'Pessoa FÃ­sica' },
-    { id: 2, nome: 'Pessoa JurÃ­dica' }
+    { id: 1, nome: 'Pessoa Física' },
+    { id: 2, nome: 'Pessoa Jurídica' }
   ];
 
   model: TenantFormModel = {
@@ -164,7 +164,7 @@ export class TenantFormComponent {
     const masked = applyCpfCnpjMask(value, this.model.tipoPessoaId);
     this.model.cpfCnpj = masked;
     
-    // Se for CNPJ (Pessoa JurÃ­dica) e tiver 18 caracteres (mÃ¡scara completa), buscar dados
+    // Se for CNPJ (Pessoa Jurídica) e tiver 18 caracteres (máscara completa), buscar dados
     if (this.model.tipoPessoaId === 2 && masked.length === 18) {
       this.buscarDadosCnpj(masked);
     }
@@ -195,7 +195,7 @@ export class TenantFormComponent {
             // Isso garante que as mudanÃ§as sejam detectadas pelo Angular
             this.ngZone.run(() => {
               // Verificar ambos os formatos (snake_case e camelCase) para compatibilidade
-              // O backend pode retornar em snake_case mesmo com configuraÃ§Ã£o camelCase
+              // O backend pode retornar em snake_case mesmo com configuração camelCase
               const razaoSocial = (dados as any).razaoSocial || (dados as any).razao_social;
               const nomeFantasia = (dados as any).nomeFantasia || (dados as any).nome_fantasia;
               
@@ -204,14 +204,14 @@ export class TenantFormComponent {
                 this.model.razaoSocial = razaoSocial;
               }
               
-              // Se nÃ£o houver nome fantasia, usar a razÃ£o social
+              // Se não houver nome fantasia, usar a razão social
               if (nomeFantasia) {
                 this.model.nomeFantasia = nomeFantasia;
               } else if (razaoSocial) {
                 this.model.nomeFantasia = razaoSocial;
               }
               
-              // Gerar subdomÃ­nio automaticamente se nÃ£o estiver editando
+              // Gerar subdomínio automaticamente se não estiver editando
               if (!this.isEdit() && !this.model.subdominio) {
                 const nomeParaSubdominio = nomeFantasia || razaoSocial;
                 if (nomeParaSubdominio) {
@@ -237,7 +237,7 @@ export class TenantFormComponent {
   }
 
   onNomeFantasiaChange(): void {
-    // Gerar subdomÃ­nio automaticamente apenas na criaÃ§Ã£o
+    // Gerar subdomínio automaticamente apenas na criação
     if (!this.isEdit() && this.model.nomeFantasia && !this.model.subdominio) {
       this.model.subdominio = generateSubdomain(this.model.nomeFantasia);
       this.cdr.markForCheck();
@@ -254,10 +254,10 @@ export class TenantFormComponent {
     this.error.set('');
     if (this.isView()) return;
 
-    // ValidaÃ§Ãµes
+    // Validações
     if (!this.model.razaoSocial || !this.model.nomeFantasia || !this.model.tipoPessoaId || 
         !this.model.cpfCnpj || !this.model.subdominio || !this.model.categoriaId) {
-      this.toast.error('Preencha todos os campos obrigatÃ³rios');
+      this.toast.error('Preencha todos os campos obrigatórios');
       return;
     }
 
@@ -268,12 +268,12 @@ export class TenantFormComponent {
     }
 
     if (!this.isEdit() && this.model.admin.senha !== this.model.admin.confirmarSenha) {
-      this.toast.error('As senhas nÃ£o coincidem');
+      this.toast.error('As senhas não coincidem');
       return;
     }
 
     if (!this.isEdit() && this.model.admin.senha.length < 6) {
-      this.toast.error('A senha deve ter no mÃ­nimo 6 caracteres');
+      this.toast.error('A senha deve ter no mínimo 6 caracteres');
       return;
     }
 
