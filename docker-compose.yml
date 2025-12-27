@@ -70,11 +70,10 @@ services:
     ports:
       - "80:80"
       - "443:443"
-    environment:
-      - DOMAIN=fichapro.ia.br
-    volumes:
-      - letsencrypt:/etc/letsencrypt
-      - certbot_www:/var/www/certbot
+    # Para habilitar HTTPS, monte certificados em /etc/nginx/certs/
+    # volumes:
+    #   - ./certs:/etc/nginx/certs:ro
+    #   - ./certbot-www:/var/www/certbot:ro
     depends_on:
       - api
       - web
@@ -87,34 +86,11 @@ services:
       timeout: 10s
       retries: 3
 
-  # Certbot para gerenciamento de certificados SSL/TLS
-  # Emissão inicial e renovação automática via HTTP-01
-  certbot:
-    image: certbot/certbot:latest
-    container_name: sgr_certbot
-    environment:
-      - DOMAIN=fichapro.ia.br
-      - EMAIL=admin@fichapro.ia.br
-    volumes:
-      - letsencrypt:/etc/letsencrypt
-      - certbot_www:/var/www/certbot
-      - ./scripts/certbot-auto.sh:/certbot-auto.sh:ro
-    entrypoint: ["/bin/sh", "/certbot-auto.sh"]
-    depends_on:
-      - nginx
-    networks:
-      - sgr_network
-    restart: unless-stopped
-
 networks:
   sgr_network:
     driver: bridge
 
 volumes:
   postgres_data:
-    driver: local
-  letsencrypt:
-    driver: local
-  certbot_www:
     driver: local
 

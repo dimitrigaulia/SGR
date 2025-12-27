@@ -46,8 +46,9 @@
 **/README.md
 **/docs/
 
-# Scripts
-**/scripts/
+# Scripts (exceto init-db.sql que é necessário)
+**/scripts/*
+!**/scripts/init-db.sql
 
 # Temporary files
 **/tmp/
