@@ -63,14 +63,16 @@ services:
 
   # Nginx Reverse Proxy
   nginx:
-    image: nginx:alpine
+    build:
+      context: .
+      dockerfile: Dockerfile.nginx
     container_name: sgr_nginx
     ports:
       - "80:80"
       - "443:443"
+    environment:
+      - DOMAIN=fichapro.ia.br
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
       - letsencrypt:/etc/letsencrypt
       - certbot_www:/var/www/certbot
     depends_on:
@@ -86,14 +88,20 @@ services:
       retries: 3
 
   # Certbot para gerenciamento de certificados SSL/TLS
-  # Usa 'sleep infinity' pois wildcard DNS-01 requer renovação manual via script
+  # Emissão inicial e renovação automática via HTTP-01
   certbot:
     image: certbot/certbot:latest
     container_name: sgr_certbot
+    environment:
+      - DOMAIN=fichapro.ia.br
+      - EMAIL=admin@fichapro.ia.br
     volumes:
       - letsencrypt:/etc/letsencrypt
       - certbot_www:/var/www/certbot
-    entrypoint: sh -c "sleep infinity"
+      - ./scripts/certbot-auto.sh:/certbot-auto.sh:ro
+    entrypoint: ["/bin/sh", "/certbot-auto.sh"]
+    depends_on:
+      - nginx
     networks:
       - sgr_network
     restart: unless-stopped
