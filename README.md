@@ -1304,6 +1304,58 @@ cd web
 ng build --configuration production
 ```
 
+### Deploy com Docker e Caddy
+
+O sistema utiliza **Caddy** como reverse proxy com HTTPS automático via Let's Encrypt.
+
+#### Pré-requisitos
+
+- Docker e Docker Compose instalados
+- DNS configurado apontando para o IP da VPS:
+  - `fichapro.ia.br` → IP da VPS
+  - `www.fichapro.ia.br` → IP da VPS
+  - `*.fichapro.ia.br` → IP da VPS (para tenants)
+- Portas 80 e 443 acessíveis na VPS
+
+#### Deploy
+
+```bash
+# Na VPS, fazer pull das alterações
+git pull
+
+# Subir os containers
+docker compose up -d --build
+```
+
+#### Logs
+
+```bash
+# Ver logs do Caddy
+docker compose logs -f caddy
+
+# Ver logs de todos os serviços
+docker compose logs -f
+
+# Ver logs de um serviço específico
+docker compose logs -f api
+docker compose logs -f web
+```
+
+#### HTTPS Automático
+
+O Caddy obtém e renova automaticamente os certificados SSL/TLS via Let's Encrypt para:
+- `https://fichapro.ia.br`
+- `https://www.fichapro.ia.br`
+- `https://<tenant>.fichapro.ia.br` (quando o A record do tenant estiver configurado no DNS)
+
+**Importante**: O Let's Encrypt requer que o DNS esteja configurado antes do primeiro deploy. Certificados são armazenados no volume `caddy_data`.
+
+#### Identificação de Tenant
+
+O Caddy extrai automaticamente o subdomínio do hostname e injeta o header `X-Tenant-Subdomain` nas requisições para a API:
+- `https://vangoghbar.fichapro.ia.br` → header `X-Tenant-Subdomain: vangoghbar`
+- `https://fichapro.ia.br` → sem header (landing page)
+
 ---
 
 ## ðŸŽ¯ Resumo

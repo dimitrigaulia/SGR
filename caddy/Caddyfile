@@ -1,0 +1,66 @@
+{
+  # E-mail usado pelo Let's Encrypt (ACME)
+  email admin@fichapro.ia.br
+
+  # On-Demand TLS: permite emitir certificados automaticamente para novos subdomínios
+  # O Caddy chama o endpoint de validação antes de emitir o certificado
+  # interval e burst protegem contra abuso e rate limit do Let's Encrypt
+  on_demand_tls {
+    ask http://api:5000/api/caddy/validate-domain
+    interval 2m
+    burst 5
+  }
+
+  # Opcional (debug durante ajustes):
+  # debug
+}
+
+# Domínio raiz e www (sem tenant)
+fichapro.ia.br, www.fichapro.ia.br {
+
+  # API health (sem tenant)
+  @health path /health
+  handle @health {
+    reverse_proxy api:5000
+  }
+
+  # API (raiz/www normalmente é só landing; não injeta tenant)
+  @api path /api/*
+  handle @api {
+    reverse_proxy api:5000
+  }
+
+  # Frontend (landing)
+  handle {
+    reverse_proxy web:80
+  }
+}
+
+# Tenants por subdomínio: <tenant>.fichapro.ia.br
+*.fichapro.ia.br {
+
+  # HABILITA emissão sob demanda para novos subdomínios
+  tls {
+    on_demand
+  }
+
+  # Health sem tenant
+  @health path /health
+  handle @health {
+    reverse_proxy api:5000
+  }
+
+  # API com tenant extraído do host
+  @api path /api/*
+  handle @api {
+    # {labels.0} = primeiro label do host (ex: "vangogh")
+    header_up X-Tenant-Subdomain {labels.0}
+    reverse_proxy api:5000
+  }
+
+  # Frontend (mesmo app, mas host muda)
+  handle {
+    reverse_proxy web:80
+  }
+}
+

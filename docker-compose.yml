@@ -61,30 +61,23 @@ services:
       timeout: 10s
       retries: 3
 
-  # Nginx Reverse Proxy
-  nginx:
-    build:
-      context: .
-      dockerfile: Dockerfile.nginx
-    container_name: sgr_nginx
+  # Caddy Reverse Proxy com HTTPS automático
+  caddy:
+    image: caddy:2-alpine
+    container_name: sgr_caddy
     ports:
       - "80:80"
       - "443:443"
-    # Para habilitar HTTPS, monte certificados em /etc/nginx/certs/
-    # volumes:
-    #   - ./certs:/etc/nginx/certs:ro
-    #   - ./certbot-www:/var/www/certbot:ro
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
     depends_on:
       - api
       - web
     networks:
       - sgr_network
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
 
 networks:
   sgr_network:
@@ -92,5 +85,9 @@ networks:
 
 volumes:
   postgres_data:
+    driver: local
+  caddy_data:
+    driver: local
+  caddy_config:
     driver: local
 
