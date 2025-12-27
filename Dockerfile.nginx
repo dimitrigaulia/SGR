@@ -1,12 +1,6 @@
 FROM nginx:alpine
 
-RUN apk add --no-cache openssl
-
 # Config do nginx
 COPY nginx/nginx.conf /etc/nginx/nginx.conf
 COPY nginx/default.conf /etc/nginx/conf.d/default.conf
-
-# Script que garante cert (self-signed primeiro, depois LE) + reload automático
-COPY scripts/nginx-cert-switch.sh /docker-entrypoint.d/10-nginx-cert-switch.sh
-RUN chmod +x /docker-entrypoint.d/10-nginx-cert-switch.sh
 
