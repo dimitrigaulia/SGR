@@ -51,8 +51,9 @@ fichapro.ia.br, www.fichapro.ia.br {
   @api path /api/*
   handle @api {
     # {labels.0} = primeiro label do host (ex: "vangogh")
-    header_up X-Tenant-Subdomain {labels.0}
-    reverse_proxy api:5000
+    reverse_proxy api:5000 {
+      header_up X-Tenant-Subdomain {labels.0}
+    }
   }
 
   # Frontend (mesmo app, mas host muda)
