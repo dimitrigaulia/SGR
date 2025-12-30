@@ -22,3 +22,4 @@ volumes:
 
 O PostgreSQL executa automaticamente todos os scripts em `/docker-entrypoint-initdb.d/` na primeira inicialização.
 
+
