@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using SGR.Api.Data;
@@ -11,9 +12,11 @@ using SGR.Api.Data;
 namespace SGR.Api.Migrations.Tenant
 {
     [DbContext(typeof(TenantDbContext))]
-    partial class TenantDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260102170834_AddCanalVenda")]
+    partial class AddCanalVenda
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -30,17 +33,33 @@ namespace SGR.Api.Migrations.Tenant
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
+                    b.Property<string>("Codigo")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<decimal?>("ComissaoPercentualPadrao")
+                        .HasColumnType("numeric");
+
                     b.Property<DateTime?>("DataAtualizacao")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime>("DataCriacao")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("Descricao")
+                        .HasColumnType("text");
+
                     b.Property<bool>("IsAtivo")
                         .HasColumnType("boolean");
 
+                    b.Property<decimal?>("MultiplicadorPadrao")
+                        .HasColumnType("numeric");
+
                     b.Property<string>("Nome")
                         .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Observacoes")
                         .HasColumnType("text");
 
                     b.Property<decimal?>("TaxaPercentualPadrao")
@@ -54,7 +73,7 @@ namespace SGR.Api.Migrations.Tenant
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Nome")
+                    b.HasIndex("Codigo")
                         .IsUnique();
 
                     b.ToTable("CanalVenda", (string)null);

@@ -8,7 +8,16 @@ public class FichaTecnicaCanal
     public long Id { get; set; }
     public long FichaTecnicaId { get; set; }
 
+    /// <summary>
+    /// Código/nome do canal (mantido para compatibilidade durante migração)
+    /// </summary>
     public string Canal { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// ID do canal de venda (referência à entidade CanalVenda)
+    /// </summary>
+    public long? CanalVendaId { get; set; }
+    
     public string? NomeExibicao { get; set; }
 
     public decimal PrecoVenda { get; set; }
@@ -30,5 +39,6 @@ public class FichaTecnicaCanal
 
     // NavegaÃ§Ã£o
     public FichaTecnica FichaTecnica { get; set; } = null!;
+    public CanalVenda? CanalVenda { get; set; }
 }
 

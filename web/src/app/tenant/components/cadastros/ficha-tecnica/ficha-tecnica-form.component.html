@@ -451,8 +451,19 @@
                     {{ item.canal }}
                   } @else {
                     <mat-form-field appearance="outline" style="width: 100%;">
-                      <input matInput [(ngModel)]="item.canal" [ngModelOptions]="{standalone: true}" placeholder="Ex: ifood-1, ifood-2, BALCAO" />
+                      <mat-label>Selecione o canal</mat-label>
+                      <mat-select [(ngModel)]="item.canalVendaId" [ngModelOptions]="{standalone: true}" (selectionChange)="onCanalVendaSelected(i, item.canalVendaId ?? null)">
+                        <mat-option [value]="null">-- Digite manualmente --</mat-option>
+                        @for (canal of canaisVenda(); track canal.id) {
+                          <mat-option [value]="canal.id">{{ canal.nome }}@if (canal.taxaPercentualPadrao) { ({{ canal.taxaPercentualPadrao }}%)}</mat-option>
+                        }
+                      </mat-select>
                     </mat-form-field>
+                    @if (!item.canalVendaId) {
+                      <mat-form-field appearance="outline" style="width: 100%; margin-top: 8px;">
+                        <input matInput [(ngModel)]="item.canal" [ngModelOptions]="{standalone: true}" placeholder="Ex: ifood-1, ifood-2, BALCAO" />
+                      </mat-form-field>
+                    }
                   }
                 </td>
               </ng-container>

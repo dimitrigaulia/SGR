@@ -4,6 +4,7 @@ public class FichaTecnicaCanalDto
 {
     public long Id { get; set; }
     public long FichaTecnicaId { get; set; }
+    public long? CanalVendaId { get; set; }
     public string Canal { get; set; } = string.Empty;
     public string? NomeExibicao { get; set; }
     public decimal PrecoVenda { get; set; }

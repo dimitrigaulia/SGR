@@ -51,6 +51,8 @@ public class CreateFichaTecnicaRequest
 
 public class CreateFichaTecnicaCanalRequest
 {
+    public long? CanalVendaId { get; set; }
+
     [Required]
     [MaxLength(50)]
     public string Canal { get; set; } = string.Empty;

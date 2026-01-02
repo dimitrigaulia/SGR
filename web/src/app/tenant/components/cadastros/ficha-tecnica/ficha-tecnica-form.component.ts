@@ -25,9 +25,11 @@ import { ReceitaService, ReceitaDto } from '../../../../features/tenant-receitas
 import { InsumoService, InsumoDto } from '../../../../features/tenant-insumos/services/insumo.service';
 import { UnidadeMedidaService, UnidadeMedidaDto } from '../../../../features/tenant-unidades-medida/services/unidade-medida.service';
 import { FichaTecnicaService, CreateFichaTecnicaRequest, UpdateFichaTecnicaRequest, FichaTecnicaItemDto, FichaTecnicaDto } from '../../../../features/tenant-receitas/services/ficha-tecnica.service';
+import { CanalVendaService, CanalVendaDto } from '../../../../features/tenant-canais-venda/services/canal-venda.service';
 
 type FichaTecnicaCanalFormModel = {
   id?: number | null;
+  canalVendaId?: number | null;
   canal: string;
   nomeExibicao: string;
   precoVenda: number;
@@ -67,6 +69,7 @@ export class TenantFichaTecnicaFormComponent {
   private insumoService = inject(InsumoService);
   private unidadeService = inject(UnidadeMedidaService);
   private fichaService = inject(FichaTecnicaService);
+  private canalVendaService = inject(CanalVendaService);
   private toast = inject(ToastService);
   private cdr = inject(ChangeDetectorRef);
   private destroyRef = inject(DestroyRef);
@@ -78,6 +81,7 @@ export class TenantFichaTecnicaFormComponent {
   receitas = signal<ReceitaDto[]>([]);
   insumos = signal<InsumoDto[]>([]);
   unidades = signal<UnidadeMedidaDto[]>([]);
+  canaisVenda = signal<CanalVendaDto[]>([]);
   isEdit = computed(() => this.id() !== null);
   isView = signal<boolean>(false);
   isMobile = signal(false);
@@ -301,6 +305,16 @@ export class TenantFichaTecnicaFormComponent {
         }
       });
 
+    // Carregar canais de venda
+    this.canalVendaService.list({ pageSize: 1000 })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: res => {
+          this.canaisVenda.set(res.items.filter(c => c.isAtivo));
+          this.cdr.markForCheck();
+        }
+      });
+
     const st: any = this.router.getCurrentNavigation()?.extras.state ?? (typeof window !== 'undefined' ? (window as any).history?.state : undefined);
     const id = st?.id as number | undefined;
     const view = !!st?.view;
@@ -494,6 +508,7 @@ export class TenantFichaTecnicaFormComponent {
   addCanal() {
     const current = this.canais();
     this.canais.set([...current, {
+      canalVendaId: null,
       canal: '',
       nomeExibicao: '',
       precoVenda: 0,
@@ -507,27 +522,76 @@ export class TenantFichaTecnicaFormComponent {
     this.cdr.markForCheck();
   }
 
-  addCanalPreset(tipo: 'IFOOD1' | 'IFOOD2' | 'BALCAO' | 'DELIVERY') {
-    const presets: Record<string, { canal: string; nomeExibicao: string; taxaPercentual?: number | null; comissaoPercentual?: number | null; multiplicador?: number | null }> = {
-      IFOOD1: { canal: 'ifood-1', nomeExibicao: 'Ifood 1', taxaPercentual: 13, comissaoPercentual: null, multiplicador: 1.138 },
-      IFOOD2: { canal: 'ifood-2', nomeExibicao: 'Ifood 2', taxaPercentual: 25, comissaoPercentual: null, multiplicador: 1.3 },
-      BALCAO: { canal: 'BALCAO', nomeExibicao: 'Balcão', taxaPercentual: 0, comissaoPercentual: null, multiplicador: null },
-      DELIVERY: { canal: 'DELIVERY', nomeExibicao: 'Delivery Próprio', taxaPercentual: 0, comissaoPercentual: null, multiplicador: null }
-    };
+  onCanalVendaSelected(index: number, canalVendaId: number | null) {
+    if (!canalVendaId) return;
+    
+    const canalVenda = this.canaisVenda().find(c => c.id === canalVendaId);
+    if (!canalVenda) return;
 
-    const preset = presets[tipo];
     const current = this.canais();
-    this.canais.set([...current, {
-      canal: preset.canal,
-      nomeExibicao: preset.nomeExibicao,
-      precoVenda: 0,
-      taxaPercentual: preset.taxaPercentual ?? null,
-      comissaoPercentual: preset.comissaoPercentual ?? null,
-      multiplicador: preset.multiplicador ?? null,
-      margemCalculadaPercentual: null,
-      observacoes: '',
-      isAtivo: true
-    }]);
+    const updated = [...current];
+    updated[index] = {
+      ...updated[index],
+      canalVendaId: canalVenda.id,
+      canal: canalVenda.nome,
+      nomeExibicao: canalVenda.nome,
+      taxaPercentual: canalVenda.taxaPercentualPadrao ?? updated[index].taxaPercentual,
+      comissaoPercentual: null,
+      multiplicador: null
+    };
+    this.canais.set(updated);
+    this.cdr.markForCheck();
+  }
+
+  addCanalPreset(tipo: 'IFOOD1' | 'IFOOD2' | 'BALCAO' | 'DELIVERY') {
+    // Tentar encontrar canal de venda pelo nome
+    const nomeMap: Record<string, string> = {
+      IFOOD1: 'iFood 1',
+      IFOOD2: 'iFood 2',
+      BALCAO: 'Balcão',
+      DELIVERY: 'Delivery Próprio'
+    };
+    
+    const nome = nomeMap[tipo];
+    const canalVenda = this.canaisVenda().find(c => c.nome === nome);
+    
+    const current = this.canais();
+    if (canalVenda) {
+      // Usar canal de venda cadastrado
+      this.canais.set([...current, {
+        canalVendaId: canalVenda.id,
+        canal: canalVenda.nome,
+        nomeExibicao: canalVenda.nome,
+        precoVenda: 0,
+        taxaPercentual: canalVenda.taxaPercentualPadrao ?? null,
+        comissaoPercentual: null,
+        multiplicador: null,
+        margemCalculadaPercentual: null,
+        observacoes: '',
+        isAtivo: true
+      }]);
+    } else {
+      // Fallback para presets hardcoded se canal não encontrado
+      const presets: Record<string, { canal: string; nomeExibicao: string; taxaPercentual?: number | null }> = {
+        IFOOD1: { canal: 'iFood 1', nomeExibicao: 'iFood 1', taxaPercentual: 13 },
+        IFOOD2: { canal: 'iFood 2', nomeExibicao: 'iFood 2', taxaPercentual: 25 },
+        BALCAO: { canal: 'Balcão', nomeExibicao: 'Balcão', taxaPercentual: 0 },
+        DELIVERY: { canal: 'Delivery Próprio', nomeExibicao: 'Delivery Próprio', taxaPercentual: 0 }
+      };
+      const preset = presets[tipo];
+      this.canais.set([...current, {
+        canalVendaId: null,
+        canal: preset.canal,
+        nomeExibicao: preset.nomeExibicao,
+        precoVenda: 0,
+        taxaPercentual: preset.taxaPercentual ?? null,
+        comissaoPercentual: null,
+        multiplicador: null,
+        margemCalculadaPercentual: null,
+        observacoes: '',
+        isAtivo: true
+      }]);
+    }
     this.cdr.markForCheck();
   }
 
@@ -606,6 +670,8 @@ export class TenantFichaTecnicaFormComponent {
           observacoes: i.observacoes || undefined
         })),
         canais: this.canais().filter(c => c.canal && c.precoVenda >= 0).map(c => ({
+          id: c.id ?? undefined,
+          canalVendaId: c.canalVendaId ?? undefined,
           canal: c.canal,
           nomeExibicao: c.nomeExibicao || undefined,
           precoVenda: c.precoVenda,
@@ -664,6 +730,7 @@ export class TenantFichaTecnicaFormComponent {
         })),
         canais: this.canais().filter(c => c.canal && c.precoVenda >= 0).map(c => ({
           id: c.id ?? undefined,
+          canalVendaId: c.canalVendaId ?? undefined,
           canal: c.canal,
           nomeExibicao: c.nomeExibicao || undefined,
           precoVenda: c.precoVenda,
@@ -770,6 +837,7 @@ export class TenantFichaTecnicaFormComponent {
           })));
           this.canais.set(e.canais.map(c => ({
             id: c.id,
+            canalVendaId: c.canalVendaId ?? null,
             canal: c.canal,
             nomeExibicao: c.nomeExibicao || '',
             precoVenda: c.precoVenda,

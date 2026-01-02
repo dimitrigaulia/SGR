@@ -1,0 +1,35 @@
+<div class="form-container">
+  <h2 class="form-title">{{ id() === null ? 'Cadastro de canal de venda' : (isView() ? 'Visualizar canal de venda' : 'Editar canal de venda') }}</h2>
+
+  <form #f="ngForm" (ngSubmit)="save()">
+    <mat-form-field appearance="outline" class="form-field-spacing">
+      <mat-label>Nome</mat-label>
+      <input matInput name="nome" [(ngModel)]="model.nome" [disabled]="isView()" required maxlength="100" />
+      @if (f.controls['nome']?.errors?.['required']) {
+        <mat-error>Nome é obrigatório</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="form-field-spacing">
+      <mat-label>Taxa Percentual Padrão (%)</mat-label>
+      <input matInput type="number" name="taxaPercentualPadrao" [(ngModel)]="model.taxaPercentualPadrao" [disabled]="isView()" min="0" max="100" step="0.01" />
+      <mat-hint>Taxa padrão que será aplicada ao calcular o preço de venda (ex: 13 para 13%)</mat-hint>
+    </mat-form-field>
+
+    <!-- Wrapper para o toggle com espaçamento consistente -->
+    <div class="form-toggle-wrapper">
+      <mat-slide-toggle name="isAtivo" [(ngModel)]="model.isAtivo" [disabled]="isView()">Ativo</mat-slide-toggle>
+    </div>
+
+    @if (error()) {
+      <div class="form-error">{{ error() }}</div>
+    }
+    
+    <div class="form-actions">
+      <button mat-stroked-button type="button" routerLink="/tenant/canais-venda">Voltar</button>
+      @if (!isView()) {
+        <button mat-raised-button color="primary" type="submit">Salvar</button>
+      }
+    </div>
+  </form>
+</div>

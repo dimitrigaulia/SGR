@@ -94,19 +94,22 @@ export class ShellComponent implements AfterViewInit {
 
     // Itens específicos do tenant (quando é tenant OU quando está impersonando)
     if (shouldShowTenantMenu) {
+      const cadastrosChildren: NavItem[] = [
+        { icon: 'inventory_2', label: 'Insumos', route: `${baseUrl}/insumos` },
+        { icon: 'restaurant', label: 'Receitas', route: `${baseUrl}/receitas` },
+        { icon: 'description', label: 'Fichas Técnicas', route: `${baseUrl}/fichas-tecnicas` },
+        { icon: 'category', label: 'Categorias de Insumo', route: `${baseUrl}/categorias-insumo` },
+        { icon: 'category', label: 'Categorias de Receita', route: `${baseUrl}/categorias-receita` },
+        { icon: 'straighten', label: 'Unidades de Medida', route: `${baseUrl}/unidades-medida` },
+        { icon: 'store', label: 'Canais de Venda', route: `${baseUrl}/canais-venda` }
+      ];
+      
       items.push(
         {
           icon: 'inventory_2',
           label: 'Cadastros',
-          children: [
-            { icon: 'inventory_2', label: 'Insumos', route: `${baseUrl}/insumos` },
-            { icon: 'restaurant', label: 'Receitas', route: `${baseUrl}/receitas` },
-            { icon: 'description', label: 'Fichas Técnicas', route: `${baseUrl}/fichas-tecnicas` },
-            { icon: 'category', label: 'Categorias de Insumo', route: `${baseUrl}/categorias-insumo` },
-            { icon: 'category', label: 'Categorias de Receita', route: `${baseUrl}/categorias-receita` },
-            { icon: 'straighten', label: 'Unidades de Medida', route: `${baseUrl}/unidades-medida` }
-          ]
-        },
+          children: cadastrosChildren
+        } as NavItem,
         {
           icon: 'settings',
           label: 'Configurações',
@@ -201,6 +204,8 @@ export class ShellComponent implements AfterViewInit {
         // Aguardar próximo ciclo para garantir que os panels estejam disponíveis
         setTimeout(() => {
           this.updateExpandedMenus();
+          // Forçar atualização do computed quando a rota mudar (pode ter mudado impersonação)
+          this.cdr.markForCheck();
         }, 0);
       });
   }

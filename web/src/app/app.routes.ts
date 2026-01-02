@@ -62,6 +62,8 @@ export const routes: Routes = [
       { path: "fichas-tecnicas", loadComponent: () => import("./tenant/components/listagens/ficha-tecnica/fichas-tecnicas-list.component").then(m => m.TenantFichasTecnicasListComponent) },
       { path: "fichas-tecnicas/:id/operacao", loadComponent: () => import("./tenant/components/operacao/ficha-tecnica-operacao/ficha-tecnica-operacao.component").then(m => m.TenantFichaTecnicaOperacaoComponent) },
       { path: "fichas-tecnicas/cadastro", canActivate: [stateGuard], loadComponent: () => import("./tenant/components/cadastros/ficha-tecnica/ficha-tecnica-form.component").then(m => m.TenantFichaTecnicaFormComponent) },
+      { path: "canais-venda", loadComponent: () => import("./tenant/components/listagens/canal-venda/canais-venda-list.component").then(m => m.TenantCanaisVendaListComponent) },
+      { path: "canais-venda/cadastro", canActivate: [stateGuard], loadComponent: () => import("./tenant/components/cadastros/canal-venda/canal-venda-form.component").then(m => m.TenantCanalVendaFormComponent) },
     ]
   },
   

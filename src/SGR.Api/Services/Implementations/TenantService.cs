@@ -634,6 +634,159 @@ public class TenantService : BaseService<ApplicationDbContext, TenantEntity, Ten
                         ALTER COLUMN ""RendimentoPorcoes"" TYPE VARCHAR(200) USING ""RendimentoPorcoes""::
 text;
                     END IF;
+
+                    -- Criar tabela CanalVenda se não existir
+                    IF NOT EXISTS (
+                        SELECT 1
+                        FROM information_schema.tables
+                        WHERE table_schema = '{schemaName}'
+                        AND table_name = 'CanalVenda'
+                    ) THEN
+                        CREATE TABLE ""{schemaName}"".""CanalVenda"" (
+                            ""Id"" BIGSERIAL PRIMARY KEY,
+                            ""Nome"" VARCHAR(100) NOT NULL,
+                            ""TaxaPercentualPadrao"" DECIMAL(18, 4),
+                            ""IsAtivo"" BOOLEAN NOT NULL DEFAULT true,
+                            ""UsuarioCriacao"" VARCHAR(100),
+                            ""UsuarioAtualizacao"" VARCHAR(100),
+                            ""DataCriacao"" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT (NOW() AT TIME ZONE 'utc'),
+                            ""DataAtualizacao"" TIMESTAMP WITH TIME ZONE
+                        );
+                        CREATE UNIQUE INDEX ""IX_CanalVenda_Nome_{schemaName}"" ON ""{schemaName}"".""CanalVenda""(""Nome"");
+                        
+                        -- Migrar dados existentes de FichaTecnicaCanal para CanalVenda
+                        INSERT INTO ""{schemaName}"".""CanalVenda"" (""Nome"", ""IsAtivo"", ""UsuarioCriacao"", ""DataCriacao"")
+                        SELECT DISTINCT 
+                            COALESCE(""Canal"", 'Canal Desconhecido') as ""Nome"",
+                            true as ""IsAtivo"",
+                            'Sistema' as ""UsuarioCriacao"",
+                            NOW() as ""DataCriacao""
+                        FROM ""{schemaName}"".""FichaTecnicaCanal""
+                        WHERE ""Canal"" IS NOT NULL AND ""Canal"" != ''
+                        ON CONFLICT (""Nome"") DO NOTHING;
+                    END IF;
+                    
+                    -- Simplificar tabela CanalVenda se já existir (remover campos antigos)
+                    IF EXISTS (
+                        SELECT 1
+                        FROM information_schema.tables
+                        WHERE table_schema = '{schemaName}'
+                        AND table_name = 'CanalVenda'
+                    ) THEN
+                        -- Remover índice único de Codigo se existir
+                        IF EXISTS (
+                            SELECT 1
+                            FROM pg_indexes
+                            WHERE schemaname = '{schemaName}'
+                            AND tablename = 'CanalVenda'
+                            AND indexname = 'IX_CanalVenda_Codigo_{schemaName}'
+                        ) THEN
+                            DROP INDEX ""{schemaName}"".""IX_CanalVenda_Codigo_{schemaName}"";
+                        END IF;
+                        
+                        -- Remover colunas antigas se existirem
+                        IF EXISTS (
+                            SELECT 1
+                            FROM information_schema.columns
+                            WHERE table_schema = '{schemaName}'
+                            AND table_name = 'CanalVenda'
+                            AND column_name = 'Codigo'
+                        ) THEN
+                            ALTER TABLE ""{schemaName}"".""CanalVenda"" DROP COLUMN ""Codigo"";
+                        END IF;
+                        
+                        IF EXISTS (
+                            SELECT 1
+                            FROM information_schema.columns
+                            WHERE table_schema = '{schemaName}'
+                            AND table_name = 'CanalVenda'
+                            AND column_name = 'Descricao'
+                        ) THEN
+                            ALTER TABLE ""{schemaName}"".""CanalVenda"" DROP COLUMN ""Descricao"";
+                        END IF;
+                        
+                        IF EXISTS (
+                            SELECT 1
+                            FROM information_schema.columns
+                            WHERE table_schema = '{schemaName}'
+                            AND table_name = 'CanalVenda'
+                            AND column_name = 'ComissaoPercentualPadrao'
+                        ) THEN
+                            ALTER TABLE ""{schemaName}"".""CanalVenda"" DROP COLUMN ""ComissaoPercentualPadrao"";
+                        END IF;
+                        
+                        IF EXISTS (
+                            SELECT 1
+                            FROM information_schema.columns
+                            WHERE table_schema = '{schemaName}'
+                            AND table_name = 'CanalVenda'
+                            AND column_name = 'MultiplicadorPadrao'
+                        ) THEN
+                            ALTER TABLE ""{schemaName}"".""CanalVenda"" DROP COLUMN ""MultiplicadorPadrao"";
+                        END IF;
+                        
+                        IF EXISTS (
+                            SELECT 1
+                            FROM information_schema.columns
+                            WHERE table_schema = '{schemaName}'
+                            AND table_name = 'CanalVenda'
+                            AND column_name = 'Observacoes'
+                        ) THEN
+                            ALTER TABLE ""{schemaName}"".""CanalVenda"" DROP COLUMN ""Observacoes"";
+                        END IF;
+                        
+                        -- Criar índice único de Nome se não existir
+                        IF NOT EXISTS (
+                            SELECT 1
+                            FROM pg_indexes
+                            WHERE schemaname = '{schemaName}'
+                            AND tablename = 'CanalVenda'
+                            AND indexname = 'IX_CanalVenda_Nome_{schemaName}'
+                        ) THEN
+                            CREATE UNIQUE INDEX ""IX_CanalVenda_Nome_{schemaName}"" ON ""{schemaName}"".""CanalVenda""(""Nome"");
+                        END IF;
+                        
+                        -- Criar canais padrão se não existirem
+                        INSERT INTO ""{schemaName}"".""CanalVenda"" (""Nome"", ""TaxaPercentualPadrao"", ""IsAtivo"", ""UsuarioCriacao"", ""DataCriacao"")
+                        VALUES 
+                            ('iFood 1', 13, true, 'Sistema', NOW() AT TIME ZONE 'utc'),
+                            ('iFood 2', 25, true, 'Sistema', NOW() AT TIME ZONE 'utc'),
+                            ('Balcão', 0, true, 'Sistema', NOW() AT TIME ZONE 'utc'),
+                            ('Delivery Próprio', 0, true, 'Sistema', NOW() AT TIME ZONE 'utc')
+                        ON CONFLICT (""Nome"") DO NOTHING;
+                    END IF;
+
+                    -- Adicionar coluna CanalVendaId em FichaTecnicaCanal se não existir
+                    IF EXISTS (
+                        SELECT 1
+                        FROM information_schema.tables
+                        WHERE table_schema = '{schemaName}'
+                        AND table_name = 'FichaTecnicaCanal'
+                    ) AND NOT EXISTS (
+                        SELECT 1
+                        FROM information_schema.columns
+                        WHERE table_schema = '{schemaName}'
+                        AND table_name = 'FichaTecnicaCanal'
+                        AND column_name = 'CanalVendaId'
+                    ) THEN
+                        ALTER TABLE ""{schemaName}"".""FichaTecnicaCanal""
+                        ADD COLUMN ""CanalVendaId"" BIGINT;
+                        
+                        -- Criar índice
+                        CREATE INDEX ""IX_FichaTecnicaCanal_CanalVendaId_{schemaName}"" ON ""{schemaName}"".""FichaTecnicaCanal""(""CanalVendaId"");
+                        
+                        -- Adicionar foreign key
+                        ALTER TABLE ""{schemaName}"".""FichaTecnicaCanal""
+                        ADD CONSTRAINT ""FK_FichaTecnicaCanal_CanalVenda_{schemaName}""
+                        FOREIGN KEY (""CanalVendaId"") REFERENCES ""{schemaName}"".""CanalVenda""(""Id"") ON DELETE RESTRICT;
+                        
+                        -- Atualizar FichaTecnicaCanal para referenciar os canais criados
+                        UPDATE ""{schemaName}"".""FichaTecnicaCanal"" ftc
+                        SET ""CanalVendaId"" = cv.""Id""
+                        FROM ""{schemaName}"".""CanalVenda"" cv
+                        WHERE ftc.""Canal"" = cv.""Nome""
+                        AND ftc.""CanalVendaId"" IS NULL;
+                    END IF;
                 END $$;
 
                 -- Índice (idempotente)
@@ -842,10 +995,24 @@ text;
             );
             CREATE INDEX IF NOT EXISTS ""IX_FichaTecnicaItem_FichaTecnicaId_Ordem_{schemaName}"" ON ""{schemaName}"".""FichaTecnicaItem""(""FichaTecnicaId"", ""Ordem"");
 
+            -- Tabela CanalVenda
+            CREATE TABLE IF NOT EXISTS ""{schemaName}"".""CanalVenda"" (
+                ""Id"" BIGSERIAL PRIMARY KEY,
+                ""Nome"" VARCHAR(100) NOT NULL,
+                ""TaxaPercentualPadrao"" DECIMAL(18, 4),
+                ""IsAtivo"" BOOLEAN NOT NULL DEFAULT true,
+                ""UsuarioCriacao"" VARCHAR(100),
+                ""UsuarioAtualizacao"" VARCHAR(100),
+                ""DataCriacao"" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT (NOW() AT TIME ZONE 'utc'),
+                ""DataAtualizacao"" TIMESTAMP WITH TIME ZONE
+            );
+            CREATE UNIQUE INDEX IF NOT EXISTS ""IX_CanalVenda_Nome_{schemaName}"" ON ""{schemaName}"".""CanalVenda""(""Nome"");
+
             -- Tabela FichaTecnicaCanal
             CREATE TABLE IF NOT EXISTS ""{schemaName}"".""FichaTecnicaCanal"" (
                 ""Id"" BIGSERIAL PRIMARY KEY,
                 ""FichaTecnicaId"" BIGINT NOT NULL,
+                ""CanalVendaId"" BIGINT,
                 ""Canal"" VARCHAR(50) NOT NULL,
                 ""NomeExibicao"" VARCHAR(100),
                 ""PrecoVenda"" DECIMAL(18, 4) NOT NULL DEFAULT 0,
@@ -855,8 +1022,10 @@ text;
                 ""MargemCalculadaPercentual"" DECIMAL(18, 4),
                 ""Observacoes"" TEXT,
                 ""IsAtivo"" BOOLEAN NOT NULL DEFAULT true,
-                CONSTRAINT ""FK_FichaTecnicaCanal_FichaTecnica_{schemaName}"" FOREIGN KEY (""FichaTecnicaId"") REFERENCES ""{schemaName}"".""FichaTecnica""(""Id"") ON DELETE CASCADE
+                CONSTRAINT ""FK_FichaTecnicaCanal_FichaTecnica_{schemaName}"" FOREIGN KEY (""FichaTecnicaId"") REFERENCES ""{schemaName}"".""FichaTecnica""(""Id"") ON DELETE CASCADE,
+                CONSTRAINT ""FK_FichaTecnicaCanal_CanalVenda_{schemaName}"" FOREIGN KEY (""CanalVendaId"") REFERENCES ""{schemaName}"".""CanalVenda""(""Id"") ON DELETE RESTRICT
             );
+            CREATE INDEX IF NOT EXISTS ""IX_FichaTecnicaCanal_CanalVendaId_{schemaName}"" ON ""{schemaName}"".""FichaTecnicaCanal""(""CanalVendaId"");
         ";
 
         await _tenantContext.Database.ExecuteSqlRawAsync(sql);
@@ -921,6 +1090,15 @@ text;
                 ('Sopa', true, '{usuarioCriacaoValue}', {dataCriacao}),
                 ('Outros', true, '{usuarioCriacaoValue}', {dataCriacao})
             ON CONFLICT DO NOTHING;
+
+            -- Inserir Canais de Venda padrão
+            INSERT INTO ""{schemaName}"".""CanalVenda"" (""Nome"", ""TaxaPercentualPadrao"", ""IsAtivo"", ""UsuarioCriacao"", ""DataCriacao"")
+            VALUES 
+                ('iFood 1', 13, true, '{usuarioCriacaoValue}', {dataCriacao}),
+                ('iFood 2', 25, true, '{usuarioCriacaoValue}', {dataCriacao}),
+                ('Balcão', 0, true, '{usuarioCriacaoValue}', {dataCriacao}),
+                ('Delivery Próprio', 0, true, '{usuarioCriacaoValue}', {dataCriacao})
+            ON CONFLICT (""Nome"") DO NOTHING;
         ";
 
         await _tenantContext.Database.ExecuteSqlRawAsync(sql);

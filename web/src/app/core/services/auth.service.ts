@@ -27,6 +27,8 @@ export class AuthService {
           localStorage.setItem('perfil', JSON.stringify(response.perfil));
           localStorage.setItem('context', 'backoffice');
           localStorage.removeItem('tenantSubdomain');
+          // Limpar estado de impersonação ao fazer login
+          localStorage.removeItem('impersonatedTenant');
         }
       })
     );
@@ -49,6 +51,8 @@ export class AuthService {
           localStorage.setItem('perfil', JSON.stringify(response.perfil));
           localStorage.setItem('context', 'tenant');
           localStorage.setItem('tenantSubdomain', tenantSubdomain);
+          // Limpar estado de impersonação ao fazer login
+          localStorage.removeItem('impersonatedTenant');
         }
       })
     );

@@ -199,33 +199,61 @@ public class FichaTecnicaService : IFichaTecnicaService
     }
 
     /// <summary>
-    /// Cria canais padrão para a ficha técnica (Plano 12% e Plano 23%)
+    /// Cria canais padrão para a ficha técnica buscando do CanalVenda
     /// </summary>
-    private void CriarCanaisPadrao(FichaTecnica ficha)
+    private async Task CriarCanaisPadraoAsync(FichaTecnica ficha)
     {
-        ficha.Canais.Add(new FichaTecnicaCanal
-        {
-            Canal = "ifood-1",
-            NomeExibicao = "Plano 12%",
-            PrecoVenda = 0,
-            TaxaPercentual = 12,
-            ComissaoPercentual = null,
-            Multiplicador = 1.138m,
-            Observacoes = null,
-            IsAtivo = true
-        });
+        // Buscar canais padrão do CanalVenda
+        var canaisPadrao = await _context.CanaisVenda
+            .Where(c => c.IsAtivo && (c.Nome == "iFood 1" || c.Nome == "iFood 2" || c.Nome == "Balcão" || c.Nome == "Delivery Próprio"))
+            .ToListAsync();
 
-        ficha.Canais.Add(new FichaTecnicaCanal
+        // Se não encontrar canais cadastrados, usar valores padrão hardcoded
+        if (!canaisPadrao.Any())
         {
-            Canal = "ifood-2",
-            NomeExibicao = "Plano 23%",
-            PrecoVenda = 0,
-            TaxaPercentual = 23,
-            ComissaoPercentual = null,
-            Multiplicador = 1.3m,
-            Observacoes = null,
-            IsAtivo = true
-        });
+            ficha.Canais.Add(new FichaTecnicaCanal
+            {
+                Canal = "iFood 1",
+                NomeExibicao = "iFood 1",
+                PrecoVenda = 0,
+                TaxaPercentual = 13,
+                ComissaoPercentual = null,
+                Multiplicador = null,
+                Observacoes = null,
+                IsAtivo = true
+            });
+
+            ficha.Canais.Add(new FichaTecnicaCanal
+            {
+                Canal = "iFood 2",
+                NomeExibicao = "iFood 2",
+                PrecoVenda = 0,
+                TaxaPercentual = 25,
+                ComissaoPercentual = null,
+                Multiplicador = null,
+                Observacoes = null,
+                IsAtivo = true
+            });
+        }
+        else
+        {
+            // Usar canais do CanalVenda
+            foreach (var canalVenda in canaisPadrao)
+            {
+                ficha.Canais.Add(new FichaTecnicaCanal
+                {
+                    CanalVendaId = canalVenda.Id,
+                    Canal = canalVenda.Nome,
+                    NomeExibicao = canalVenda.Nome,
+                    PrecoVenda = 0,
+                    TaxaPercentual = canalVenda.TaxaPercentualPadrao,
+                    ComissaoPercentual = null,
+                    Multiplicador = null,
+                    Observacoes = null,
+                    IsAtivo = true
+                });
+            }
+        }
     }
 
     /// <summary>
@@ -626,11 +654,13 @@ public class FichaTecnicaService : IFichaTecnicaService
             {
                 ficha.Canais.Add(new FichaTecnicaCanal
                 {
+                    CanalVendaId = canalReq.CanalVendaId,
                     Canal = canalReq.Canal,
                     NomeExibicao = canalReq.NomeExibicao,
                     PrecoVenda = canalReq.PrecoVenda,
                     TaxaPercentual = canalReq.TaxaPercentual,
                     ComissaoPercentual = canalReq.ComissaoPercentual,
+                    Multiplicador = canalReq.Multiplicador,
                     Observacoes = canalReq.Observacoes,
                     IsAtivo = canalReq.IsAtivo
                 });
@@ -639,7 +669,7 @@ public class FichaTecnicaService : IFichaTecnicaService
         else
         {
             // Criar canais padrão quando request.Canais estiver vazio ou null
-            CriarCanaisPadrao(ficha);
+            await CriarCanaisPadraoAsync(ficha);
         }
 
         // Calcular preços dos canais (sempre haverá canais: do request ou padrão)
@@ -1075,6 +1105,7 @@ public class FichaTecnicaService : IFichaTecnicaService
                 {
                     Id = c.Id,
                     FichaTecnicaId = ficha.Id,
+                    CanalVendaId = c.CanalVendaId,
                     Canal = c.Canal,
                     NomeExibicao = c.NomeExibicao,
                     PrecoVenda = c.PrecoVenda,

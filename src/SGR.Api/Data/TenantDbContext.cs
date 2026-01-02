@@ -28,6 +28,7 @@ namespace SGR.Api.Data
         public DbSet<FichaTecnica> FichasTecnicas { get; set; }
         public DbSet<FichaTecnicaItem> FichaTecnicaItens { get; set; }
         public DbSet<FichaTecnicaCanal> FichaTecnicaCanais { get; set; }
+        public DbSet<CanalVenda> CanaisVenda { get; set; }
 
         /// <summary>
         /// Define o schema a ser usado para este contexto
@@ -224,6 +225,20 @@ namespace SGR.Api.Data
                 entity.ToTable(t => t.HasCheckConstraint(
                     "CK_FichaTecnicaItem_TipoItem",
                     @"(""TipoItem"" = 'Receita' AND ""ReceitaId"" IS NOT NULL AND ""InsumoId"" IS NULL) OR (""TipoItem"" = 'Insumo' AND ""InsumoId"" IS NOT NULL AND ""ReceitaId"" IS NULL)"));
+            });
+
+            // CanalVenda
+            modelBuilder.Entity<CanalVenda>(entity =>
+            {
+                entity.ToTable("CanalVenda", _schema);
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.Nome).IsUnique();
+
+                // Relacionamento CanalVenda (1) -> (N) FichaTecnicaCanais
+                entity.HasMany(c => c.FichaTecnicaCanais)
+                      .WithOne(f => f.CanalVenda)
+                      .HasForeignKey(f => f.CanalVendaId)
+                      .OnDelete(DeleteBehavior.Restrict);
             });
 
             // FichaTecnicaCanal

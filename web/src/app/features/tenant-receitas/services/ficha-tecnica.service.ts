@@ -6,6 +6,7 @@ import { environment } from '../../../../environments/environment';
 export interface FichaTecnicaCanalDto {
   id: number;
   fichaTecnicaId: number;
+  canalVendaId?: number | null;
   canal: string;
   nomeExibicao?: string | null;
   precoVenda: number;

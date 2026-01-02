@@ -53,6 +53,8 @@ public class UpdateFichaTecnicaCanalRequest
 {
     public long? Id { get; set; }
 
+    public long? CanalVendaId { get; set; }
+
     [Required]
     [MaxLength(50)]
     public string Canal { get; set; } = string.Empty;
