@@ -111,7 +111,7 @@ export class TenantFichaTecnicaFormComponent {
   itens = signal<FichaTecnicaItemFormModel[]>([]);
   canais = signal<FichaTecnicaCanalFormModel[]>([]);
   displayedColumnsItens = ['ordem', 'tipo', 'item', 'quantidade', 'unidade', 'qb', 'observacoes', 'acoes'];
-  displayedColumns = ['canal', 'nomeExibicao', 'precoVenda', 'taxas', 'multiplicador', 'porcentagem', 'acoes'];
+  displayedColumns = ['canal', 'nomeExibicao', 'precoVenda', 'taxas', 'porcentagem', 'acoes'];
   
   // Propriedades para uso no template
   window = typeof window !== 'undefined' ? window : null;
@@ -881,17 +881,12 @@ export class TenantFichaTecnicaFormComponent {
     this.onTabChange(1);
   }
 
-  getModoCanal(canal: FichaTecnicaCanalFormModel | any): 'Preço definido' | 'Auto (Multiplicador)' | 'Auto (Gross-up)' | '-' {
-    // Hierarquia: multiplicador > gross-up > preço definido
-    // Se existem taxa/comissão ou multiplicador, o modo é Auto (mesmo que precoVenda já esteja preenchido)
-    if (canal.multiplicador && canal.multiplicador > 0) {
-      return 'Auto (Multiplicador)';
-    }
-    if ((canal.taxaPercentual ?? 0) + (canal.comissaoPercentual ?? 0) > 0) {
+  getModoCanal(canal: FichaTecnicaCanalFormModel | any): 'Preço definido' | 'Auto (Gross-up)' | '-' {
+    // Se existe taxa percentual, usar gross-up
+    if (canal.taxaPercentual && canal.taxaPercentual > 0) {
       return 'Auto (Gross-up)';
     }
-    // Simplificado: como já retornou antes em multiplicador e gross-up, basta checar precoVenda
-    // A hierarquia já garante que "Preço definido" só ocorre quando não é Auto
+    // Se preço está definido manualmente
     if (canal.precoVenda > 0) {
       return 'Preço definido';
     }

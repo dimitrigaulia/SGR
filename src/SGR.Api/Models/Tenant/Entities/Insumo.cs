@@ -40,14 +40,26 @@ public class Insumo
     }
 
     /// <summary>
-    /// Custo por unidade de uso alternativo: CustoUnitario * (QuantidadePorEmbalagem / IPCValor)
-    /// Exemplo: R$ 10,00 * (1000 / 650) = R$ 15,38
+    /// Custo por unidade de uso alternativo: CustoUnitario / IPCValor
+    /// Exemplo: R$ 10,00 / 100 GR = R$ 0,10 / GR
+    /// Se IPC não informado, calcula custo por unidade de compra: CustoUnitario / QuantidadePorEmbalagem
     /// </summary>
     public decimal CustoPorUnidadeUsoAlternativo
     {
         get
         {
-            return CustoUnitario * QuantidadeAjustadaIPC;
+            if (QuantidadePorEmbalagem <= 0 || CustoUnitario <= 0)
+                return 0;
+            
+            // Se IPC informado, usar: CustoUnitario / IPCValor
+            // IPC representa quantidade aproveitável na mesma unidade de uso
+            if (IPCValor.HasValue && IPCValor.Value > 0)
+            {
+                return CustoUnitario / IPCValor.Value;
+            }
+            
+            // Se IPC não informado, calcular custo por unidade de compra
+            return CustoUnitario / QuantidadePorEmbalagem;
         }
     }
 

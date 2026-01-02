@@ -876,6 +876,7 @@ text;
                 ""QuantidadePorEmbalagem"" DECIMAL(18, 4) NOT NULL,
                 ""CustoUnitario"" DECIMAL(18, 4) NOT NULL DEFAULT 0,
                 ""FatorCorrecao"" DECIMAL(18, 4) NOT NULL DEFAULT 1.0,
+                ""IPCValor"" INTEGER,
                 ""Descricao"" TEXT,
                 ""PathImagem"" VARCHAR(500),
                 ""IsAtivo"" BOOLEAN NOT NULL DEFAULT true,

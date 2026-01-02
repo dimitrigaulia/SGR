@@ -22,29 +22,26 @@ public class FichaTecnicaService : IFichaTecnicaService
 
     /// <summary>
     /// Calcula o custo por unidade de uso de um insumo
-    /// Fórmula: (CustoUnitario / QuantidadePorEmbalagem) / (IPCValor / 100)
-    /// Se IPCValor for null ou 0, usa custo base sem ajuste (assume 100% comestível)
+    /// Fórmula: CustoUnitario / IPCValor (quando IPC informado)
+    /// IPC representa quantidade aproveitável na mesma unidade de uso (ex: 1000gr comprados, 650gr aproveitáveis = IPC 650)
+    /// Se IPCValor for null ou 0, calcula custo por unidade de compra: CustoUnitario / QuantidadePorEmbalagem
     /// </summary>
     private static decimal CalcularCustoPorUnidadeUso(Insumo insumo)
     {
-        if (insumo.QuantidadePorEmbalagem <= 0)
+        if (insumo.QuantidadePorEmbalagem <= 0 || insumo.CustoUnitario <= 0)
         {
             return 0;
         }
 
-        var custoBase = insumo.CustoUnitario / insumo.QuantidadePorEmbalagem;
-
-        // Aplicar IPC se informado e maior que 0
-        // IPC representa a porcentagem comestível (ex: 45% = apenas 45% é utilizável)
+        // Se IPC informado, usar: CustoUnitario / IPCValor
+        // IPC representa quantidade aproveitável na mesma unidade de uso
         if (insumo.IPCValor.HasValue && insumo.IPCValor.Value > 0)
         {
-            var ipcPercentual = insumo.IPCValor.Value / 100m;
-            // Se apenas 45% é comestível, o custo real por unidade utilizável é maior
-            return custoBase / ipcPercentual;
+            return insumo.CustoUnitario / insumo.IPCValor.Value;
         }
 
-        // Se IPC não informado ou 0, assumir 100% comestível (sem ajuste)
-        return custoBase;
+        // Se IPC não informado, calcular custo por unidade de compra
+        return insumo.CustoUnitario / insumo.QuantidadePorEmbalagem;
     }
 
     /// <summary>
@@ -445,6 +442,31 @@ public class FichaTecnicaService : IFichaTecnicaService
     public async Task<FichaTecnicaDto> CreateAsync(CreateFichaTecnicaRequest request, string? usuarioCriacao)
     {
         _logger.LogInformation("Criando nova Ficha Técnica - Usuário: {Usuario}", usuarioCriacao ?? "Sistema");
+
+        // Verificar dados básicos necessários
+        var hasInsumos = await _context.Insumos.AnyAsync(i => i.IsAtivo);
+        if (!hasInsumos)
+        {
+            throw new BusinessException("É necessário cadastrar pelo menos um insumo ativo antes de criar fichas técnicas. Acesse o menu 'Cadastros > Insumos' para cadastrar.");
+        }
+
+        var hasUnidadesMedida = await _context.UnidadesMedida.AnyAsync(u => u.IsAtivo);
+        if (!hasUnidadesMedida)
+        {
+            throw new BusinessException("É necessário cadastrar pelo menos uma unidade de medida ativa antes de criar fichas técnicas. Acesse o menu 'Cadastros > Unidades de Medida' para cadastrar.");
+        }
+
+        var hasCategoriasReceita = await _context.CategoriasReceita.AnyAsync(c => c.IsAtivo);
+        if (!hasCategoriasReceita)
+        {
+            throw new BusinessException("É necessário cadastrar pelo menos uma categoria de receita ativa antes de criar fichas técnicas. Acesse o menu 'Cadastros > Categorias de Receita' para cadastrar.");
+        }
+
+        var hasCategoriasInsumo = await _context.CategoriaInsumos.AnyAsync(c => c.IsAtivo);
+        if (!hasCategoriasInsumo)
+        {
+            throw new BusinessException("É necessário cadastrar pelo menos uma categoria de insumo ativa antes de criar fichas técnicas. Acesse o menu 'Cadastros > Categorias de Insumo' para cadastrar.");
+        }
 
         // Validar categoria
         var categoriaExists = await _context.CategoriasReceita.AnyAsync(c => c.Id == request.CategoriaId && c.IsAtivo);

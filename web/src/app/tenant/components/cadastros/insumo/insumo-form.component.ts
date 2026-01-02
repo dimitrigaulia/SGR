@@ -160,19 +160,21 @@ export class TenantInsumoFormComponent {
     const unidadeUso = this.findUnidade(this.model.unidadeUsoId);
     const quantidadePorEmbalagem = this.model.quantidadePorEmbalagem;
     const custo = this.model.custoUnitario || 0;
-    const ipcValor = this.model.ipcValor || 0;
+    const ipcValor = this.model.ipcValor;
 
     if (!unidadeCompra || !unidadeUso || quantidadePorEmbalagem <= 0 || custo <= 0) {
       return '-';
     }
 
-    // Fórmula alternativa: CustoUnitario * (QuantidadePorEmbalagem / IPCValor)
-    let quantidadeAjustada = quantidadePorEmbalagem;
-    if (ipcValor > 0) {
-      quantidadeAjustada = quantidadePorEmbalagem / ipcValor;
+    // Se IPC informado, usar: CustoUnitario / IPCValor
+    let custoPorUnidadeUso: number;
+    if (ipcValor && ipcValor > 0) {
+      custoPorUnidadeUso = custo / ipcValor;
+    } else {
+      // Se IPC não informado, calcular custo por unidade de compra
+      custoPorUnidadeUso = custo / quantidadePorEmbalagem;
     }
 
-    const custoPorUnidadeUso = custo * quantidadeAjustada;
     const valor = custoPorUnidadeUso.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     return `${valor} / ${unidadeUso.sigla}`;
   }

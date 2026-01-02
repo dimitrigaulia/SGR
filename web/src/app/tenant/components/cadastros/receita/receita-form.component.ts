@@ -407,19 +407,22 @@ export class TenantReceitaFormComponent {
   calcularCustoPorUnidadeUso(insumo: InsumoDto): number {
     const quantidadePorEmbalagem = insumo.quantidadePorEmbalagem;
     const custo = insumo.custoUnitario || 0;
-    const ipcValor = insumo.ipcValor || 0;
+    const ipcValor = insumo.ipcValor;
 
-    if (quantidadePorEmbalagem <= 0 || custo <= 0) {
+    if (custo <= 0) {
       return 0;
     }
 
-    // Fórmula: CustoUnitario * (QuantidadePorEmbalagem / IPCValor)
-    let quantidadeAjustada = quantidadePorEmbalagem;
-    if (ipcValor > 0) {
-      quantidadeAjustada = quantidadePorEmbalagem / ipcValor;
+    // Se IPC informado, usar: CustoUnitario / IPCValor
+    if (ipcValor && ipcValor > 0) {
+      return custo / ipcValor;
     }
 
-    return custo * quantidadeAjustada;
+    // Se IPC não informado, calcular custo por unidade de compra
+    if (quantidadePorEmbalagem <= 0) {
+      return 0;
+    }
+    return custo / quantidadePorEmbalagem;
   }
 
   formatarCustoPorUnidadeUso(item: ReceitaItemFormModel): string {
