@@ -106,7 +106,8 @@ public class AuthService : IAuthService
             new Claim(ClaimTypes.Email, usuario.Email),
             new Claim(ClaimTypes.Name, usuario.NomeCompleto),
             new Claim("PerfilId", usuario.PerfilId.ToString()),
-            new Claim("PerfilNome", usuario.Perfil.Nome)
+            new Claim("PerfilNome", usuario.Perfil.Nome),
+            new Claim("Context", "backoffice")
         };
 
         var token = new JwtSecurityToken(

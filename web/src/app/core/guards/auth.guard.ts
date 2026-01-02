@@ -13,15 +13,25 @@ export const authGuard: CanActivateFn = (route, state) => {
     // Verificar se o contexto da rota corresponde ao contexto do usuÃ¡rio
     const url = state.url;
     const context = authService.getContext();
+    const isImpersonating = authService.isImpersonating();
     
     if (url.startsWith('/backoffice') && context !== 'backoffice') {
       router.navigate(['/backoffice/login']);
       return false;
     }
     
-    if (url.startsWith('/tenant') && context !== 'tenant') {
-      router.navigate(['/tenant/login']);
-      return false;
+    // Permitir acesso às rotas do tenant se:
+    // 1. O contexto for 'tenant' (login normal do tenant), OU
+    // 2. O contexto for 'backoffice' e estiver impersonando um tenant
+    if (url.startsWith('/tenant')) {
+      if (context === 'tenant') {
+        return true;
+      } else if (context === 'backoffice' && isImpersonating) {
+        return true;
+      } else {
+        router.navigate(['/tenant/login']);
+        return false;
+      }
     }
     
     return true;

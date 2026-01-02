@@ -1,0 +1,56 @@
+.tenant-selector {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+
+  .tenant-select-field {
+    min-width: 200px;
+    max-width: 300px;
+  }
+
+  .impersonate-button,
+  .stop-impersonation-button {
+    height: 40px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .impersonation-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background-color: rgba(25, 118, 210, 0.1);
+    color: #1976d2;
+    font-size: 14px;
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+
+    strong {
+      font-weight: 600;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .tenant-selector {
+    flex-direction: column;
+    width: 100%;
+
+    .tenant-select-field {
+      width: 100%;
+      max-width: 100%;
+    }
+
+    .impersonate-button,
+    .stop-impersonation-button {
+      width: 100%;
+    }
+  }
+}

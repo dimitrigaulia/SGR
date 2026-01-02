@@ -110,7 +110,8 @@ public class TenantAuthService : ITenantAuthService
             new Claim(ClaimTypes.Email, usuario.Email),
             new Claim(ClaimTypes.Name, usuario.NomeCompleto),
             new Claim("PerfilId", usuario.PerfilId.ToString()),
-            new Claim("PerfilNome", usuario.Perfil.Nome)
+            new Claim("PerfilNome", usuario.Perfil.Nome),
+            new Claim("Context", "tenant")
         };
 
         var token = new JwtSecurityToken(

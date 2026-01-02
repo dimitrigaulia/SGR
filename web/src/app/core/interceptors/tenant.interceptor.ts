@@ -4,6 +4,7 @@ import { AuthService } from '../services/auth.service';
 
 /**
  * Interceptor para adicionar header X-Tenant-Subdomain nas requisiÃ§Ãµes do tenant
+ * Também adiciona headers de impersonação quando o backoffice está impersonando um tenant
  */
 export const tenantInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
@@ -11,12 +12,29 @@ export const tenantInterceptor: HttpInterceptorFn = (req, next) => {
   // Verificar se Ã© uma requisiÃ§Ã£o do tenant
   const context = authService.getContext();
   const tenantSubdomain = authService.getTenantSubdomain();
+  const impersonatedTenant = authService.getImpersonatedTenant();
+  const isImpersonating = authService.isImpersonating();
   
-  // Adicionar header apenas se for contexto tenant e nÃ£o for rota do backoffice
-  if (context === 'tenant' && tenantSubdomain && !req.url.includes('/api/backoffice/')) {
+  // Não adicionar headers para rotas do backoffice
+  if (req.url.includes('/api/backoffice/')) {
+    return next(req);
+  }
+
+  // Se for contexto tenant normal, adicionar header X-Tenant-Subdomain
+  if (context === 'tenant' && tenantSubdomain) {
     req = req.clone({
       setHeaders: {
         'X-Tenant-Subdomain': tenantSubdomain
+      }
+    });
+  }
+  
+  // Se for impersonação do backoffice, adicionar ambos os headers
+  if (isImpersonating && impersonatedTenant && context === 'backoffice') {
+    req = req.clone({
+      setHeaders: {
+        'X-Tenant-Subdomain': impersonatedTenant,
+        'X-Backoffice-Impersonation': 'true'
       }
     });
   }

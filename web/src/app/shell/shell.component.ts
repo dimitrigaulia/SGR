@@ -16,6 +16,7 @@ import { Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs';
 import { AuthService } from '../core/services/auth.service';
 import { LayoutService } from '../core/services/layout.service';
+import { TenantSelectorComponent } from '../backoffice/components/tenant-selector/tenant-selector.component';
 
 interface NavItem {
   icon: string;
@@ -41,6 +42,7 @@ interface NavItem {
     MatTooltipModule,
     MatDividerModule,
     MatExpansionModule,
+    TenantSelectorComponent,
   ],
   templateUrl: './shell.component.html',
   styleUrls: ['./shell.component.scss'],
@@ -59,17 +61,26 @@ export class ShellComponent implements AfterViewInit {
   // Estado de expansão dos submenus (apenas para controle inicial)
   private _expandedMenus = new Set<string>();
 
-  // Itens de navegação (será calculado baseado no contexto)
+  // Itens de navegação (será calculado baseado no contexto e impersonação)
   readonly navItems = computed<NavItem[]>(() => {
     const context = this.auth.getContext();
-    const baseUrl = context === 'backoffice' ? '/backoffice' : '/tenant';
+    const isImpersonating = this.auth.isImpersonating();
+    
+    // Se estiver impersonando, usar rotas do tenant mesmo que o contexto seja backoffice
+    const baseUrl = (context === 'backoffice' && isImpersonating) 
+      ? '/tenant' 
+      : (context === 'backoffice' ? '/backoffice' : '/tenant');
     
     const items: NavItem[] = [
       { icon: 'dashboard', label: 'Dashboard', route: `${baseUrl}/dashboard` },
     ];
 
-    // Itens específicos do backoffice
-    if (context === 'backoffice') {
+    // Determinar se deve exibir menu do tenant
+    // Exibe menu do tenant se: contexto é tenant OU (contexto é backoffice E está impersonando)
+    const shouldShowTenantMenu = context === 'tenant' || (context === 'backoffice' && isImpersonating);
+
+    // Itens específicos do backoffice (apenas quando NÃO está impersonando)
+    if (context === 'backoffice' && !isImpersonating) {
       items.push({
         icon: 'business',
         label: 'Gestão',
@@ -81,8 +92,8 @@ export class ShellComponent implements AfterViewInit {
       });
     }
 
-    // Itens específicos do tenant
-        if (context === 'tenant') {
+    // Itens específicos do tenant (quando é tenant OU quando está impersonando)
+    if (shouldShowTenantMenu) {
       items.push(
         {
           icon: 'inventory_2',
@@ -246,6 +257,9 @@ export class ShellComponent implements AfterViewInit {
     }
     return !this.isCollapsed(); // Desktop baseado no estado
   });
+
+  // Computed para verificar se é contexto backoffice
+  readonly isBackoffice = computed(() => this.auth.getContext() === 'backoffice');
 
   // Ações do topo
   toggleTheme() {

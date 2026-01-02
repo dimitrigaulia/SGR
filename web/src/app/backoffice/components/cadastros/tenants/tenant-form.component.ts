@@ -15,6 +15,7 @@ import { debounceTime, distinctUntilChanged, switchMap, catchError, of } from 'r
 import { TenantService, CreateTenantRequest, UpdateTenantRequest, TenantDto, CreateAdminRequest, CategoriaTenantDto, CnpjDataResponse } from '../../../../features/tenants/services/tenant.service';
 import { CategoriaTenantService } from '../../../../features/tenants/services/categoria-tenant.service';
 import { ToastService } from '../../../../core/services/toast.service';
+import { TenantRefreshService } from '../../../../core/services/tenant-refresh.service';
 import { applyCpfCnpjMask, removeMask } from '../../../../core/utils/mask.utils';
 import { generateSubdomain } from '../../../../core/utils/subdomain.utils';
 
@@ -60,6 +61,7 @@ export class TenantFormComponent {
   private service = inject(TenantService);
   private categoriaService = inject(CategoriaTenantService);
   private toast = inject(ToastService);
+  private tenantRefreshService = inject(TenantRefreshService);
   private cdr = inject(ChangeDetectorRef);
   private destroyRef = inject(DestroyRef);
   private ngZone = inject(NgZone);
@@ -293,6 +295,8 @@ export class TenantFormComponent {
         .subscribe({
           next: () => {
             this.toast.success('Tenant atualizado com sucesso');
+            // Notificar TenantSelector para atualizar a lista
+            this.tenantRefreshService.notifyRefresh();
             this.router.navigate(['/backoffice/tenants']);
           },
           error: (err) => {
@@ -324,6 +328,8 @@ export class TenantFormComponent {
         .subscribe({
           next: () => {
             this.toast.success('Tenant criado com sucesso');
+            // Notificar TenantSelector para atualizar a lista
+            this.tenantRefreshService.notifyRefresh();
             this.router.navigate(['/backoffice/tenants']);
           },
           error: (err) => {

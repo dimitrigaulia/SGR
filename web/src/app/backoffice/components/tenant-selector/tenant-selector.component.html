@@ -1,0 +1,39 @@
+<div class="tenant-selector">
+  <ng-container *ngIf="!isImpersonating()">
+    <mat-form-field appearance="outline" class="tenant-select-field">
+      <mat-label>Selecionar Tenant</mat-label>
+      <mat-select [value]="selectedTenant()" (selectionChange)="selectedTenant.set($event.value)">
+        <mat-option *ngFor="let tenant of tenants()" [value]="tenant.subdominio">
+          {{ tenant.nomeFantasia }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+    
+    <button 
+      mat-raised-button 
+      color="primary" 
+      [disabled]="!selectedTenant() || isLoading()"
+      (click)="startImpersonation()"
+      class="impersonate-button">
+      <mat-icon>login</mat-icon>
+      Entrar no Tenant
+    </button>
+  </ng-container>
+
+  <ng-container *ngIf="isImpersonating()">
+    <mat-chip class="impersonation-chip">
+      <mat-icon>account_switch</mat-icon>
+      <span>Impersonando: <strong>{{ impersonatedTenantName() || selectedTenant() }}</strong></span>
+    </mat-chip>
+    
+    <button 
+      mat-raised-button 
+      color="warn" 
+      (click)="stopImpersonation()"
+      class="stop-impersonation-button"
+      matTooltip="Sair da impersonação e voltar ao backoffice">
+      <mat-icon>logout</mat-icon>
+      Sair
+    </button>
+  </ng-container>
+</div>

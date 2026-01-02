@@ -70,6 +70,37 @@ export class AuthService {
     localStorage.removeItem('perfil');
     localStorage.removeItem('context');
     localStorage.removeItem('tenantSubdomain');
+    localStorage.removeItem('impersonatedTenant');
+  }
+
+  /**
+   * Define o tenant sendo impersonado pelo backoffice
+   */
+  setImpersonatedTenant(tenantSubdomain: string): void {
+    if (this.getContext() === 'backoffice') {
+      localStorage.setItem('impersonatedTenant', tenantSubdomain);
+    }
+  }
+
+  /**
+   * Obtém o tenant sendo impersonado
+   */
+  getImpersonatedTenant(): string | null {
+    return localStorage.getItem('impersonatedTenant');
+  }
+
+  /**
+   * Limpa a impersonação
+   */
+  clearImpersonation(): void {
+    localStorage.removeItem('impersonatedTenant');
+  }
+
+  /**
+   * Verifica se está em modo de impersonação
+   */
+  isImpersonating(): boolean {
+    return this.getContext() === 'backoffice' && !!this.getImpersonatedTenant();
   }
 
   /**

@@ -19,6 +19,7 @@ import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { ToastService } from "../../../../core/services/toast.service";
 import { ConfirmationService } from "../../../../core/services/confirmation.service";
 import { TenantService, TenantDto } from "../../../../features/tenants/services/tenant.service";
+import { TenantRefreshService } from "../../../../core/services/tenant-refresh.service";
 import { LoadingComponent } from "../../../../shared/components/loading/loading.component";
 
 @Component({
@@ -54,6 +55,7 @@ export class TenantsListComponent {
   private breakpointObserver = inject(BreakpointObserver);
   private destroyRef = inject(DestroyRef);
   private cdr = inject(ChangeDetectorRef);
+  private tenantRefreshService = inject(TenantRefreshService);
   
   displayedColumns = ['nomeFantasia', 'razaoSocial', 'categoria', 'tipoPessoa', 'ativo', 'acoes'];
   data = signal<TenantDto[]>([]);
@@ -159,6 +161,8 @@ export class TenantsListComponent {
             next: () => {
               this.toast.success(`Tenant ${action === 'inativar' ? 'inativado' : 'ativado'} com sucesso`);
               this.load();
+              // Notificar TenantSelector para atualizar a lista
+              this.tenantRefreshService.notifyRefresh();
             },
             error: (err) => {
               this.toast.error(err.error?.message || `Erro ao ${action} tenant`);

@@ -34,6 +34,10 @@ public class TenantIdentificationMiddleware
             return;
         }
 
+        // Verificar se é uma requisição de impersonação do backoffice
+        bool isBackofficeImpersonation = context.Request.Headers.TryGetValue("X-Backoffice-Impersonation", out var impersonationHeader) &&
+                                         impersonationHeader.ToString().ToLower() == "true";
+
         string? subdomain = null;
 
         // Em produção: extrair subdomínio do header Host
@@ -60,12 +64,20 @@ public class TenantIdentificationMiddleware
         }
 
         // Para login do tenant, permitir continuar mesmo sem subdomain (o controller tratará o erro)
-        // Para outras rotas, bloquear se não tiver subdomain
+        // Para outras rotas, bloquear se não tiver subdomain (exceto se for impersonação do backoffice)
         if (string.IsNullOrEmpty(subdomain))
         {
             if (path.StartsWith("/api/tenant/auth/login"))
             {
                 // Login do tenant sem subdomain - deixar o controller tratar
+                await _next(context);
+                return;
+            }
+            
+            // Se for impersonação do backoffice, permitir continuar (o controller validará o token)
+            if (isBackofficeImpersonation)
+            {
+                _logger.LogDebug("Requisição de impersonação do backoffice sem subdomain - será validada no controller");
                 await _next(context);
                 return;
             }
@@ -92,6 +104,13 @@ public class TenantIdentificationMiddleware
         // Armazenar informações do tenant no HttpContext para uso posterior
         context.Items["Tenant"] = tenant;
         context.Items["TenantSchema"] = tenant.NomeSchema;
+        
+        // Marcar se é impersonação do backoffice
+        if (isBackofficeImpersonation)
+        {
+            context.Items["IsBackofficeImpersonation"] = true;
+            _logger.LogInformation("Impersonação do backoffice detectada para tenant: {Subdomain}", subdomain);
+        }
 
         _logger.LogDebug("Tenant configurado: {Subdomain} -> Schema: {Schema}", subdomain, tenant.NomeSchema);
 

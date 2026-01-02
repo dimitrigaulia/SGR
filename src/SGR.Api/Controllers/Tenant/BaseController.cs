@@ -14,7 +14,7 @@ namespace SGR.Api.Controllers.Tenant;
 /// <typeparam name="TUpdateRequest">Tipo do DTO de atualização</typeparam>
 [ApiController]
 [Route("api/tenant/[controller]")]
-[Authorize]
+[Authorize(Policy = "TenantOrBackofficeImpersonation")] // Permite tokens do tenant OU tokens do backoffice com impersonação
 public abstract class BaseController<TService, TDto, TCreateRequest, TUpdateRequest> : ControllerBase
     where TService : class, IBaseServiceController<TDto, TCreateRequest, TUpdateRequest>
     where TDto : class

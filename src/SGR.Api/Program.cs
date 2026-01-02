@@ -1,8 +1,10 @@
 using System.Linq;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using SGR.Api.Authorization;
 using SGR.Api.Data;
 using SGR.Api.Extensions;
 
@@ -43,6 +45,27 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey))
     };
 });
+
+// Adicionar HttpContextAccessor para uso nos handlers de autorização
+builder.Services.AddHttpContextAccessor();
+
+// Configurar políticas de autorização
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("BackofficeImpersonation", policy =>
+    {
+        policy.Requirements.Add(new BackofficeImpersonationRequirement());
+    });
+    
+    options.AddPolicy("TenantOrBackofficeImpersonation", policy =>
+    {
+        policy.Requirements.Add(new TenantOrBackofficeImpersonationRequirement());
+    });
+});
+
+// Registrar handlers de autorização
+builder.Services.AddSingleton<IAuthorizationHandler, BackofficeImpersonationHandler>();
+builder.Services.AddSingleton<IAuthorizationHandler, TenantOrBackofficeImpersonationHandler>();
 
 // Register Application Services
 builder.Services.AddApplicationServices();

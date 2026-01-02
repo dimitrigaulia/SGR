@@ -71,20 +71,38 @@ public static class DbInitializer
         context.BackofficePerfis.Add(perfilAdmin);
         context.SaveChanges();
 
-        // Criar usuÃ¡rio padrÃ£o do backoffice
-        var senhaHash = BCrypt.Net.BCrypt.HashPassword("Dimi@1997");
-        var usuario = new BackofficeUsuario
+        // Criar usuários padrão do backoffice
+        var usuarios = new[]
         {
-            NomeCompleto = "Dimitri Gaulia",
-            Email = "dimitrifgaulia@gmail.com",
-            SenhaHash = senhaHash,
-            PerfilId = perfilAdmin.Id,
-            IsAtivo = true,
-            UsuarioCriacao = "Sistema",
-            DataCriacao = DateTime.UtcNow
+            new BackofficeUsuario
+            {
+                NomeCompleto = "Dimitri Gaulia",
+                Email = "dimitrifgaulia@gmail.com",
+                SenhaHash = BCrypt.Net.BCrypt.HashPassword("Dimi@1997"),
+                PerfilId = perfilAdmin.Id,
+                IsAtivo = true,
+                UsuarioCriacao = "Sistema",
+                DataCriacao = DateTime.UtcNow
+            },
+            new BackofficeUsuario
+            {
+                NomeCompleto = "Adriano Freitas",
+                Email = "adrianofreisan@gmail.com",
+                SenhaHash = BCrypt.Net.BCrypt.HashPassword("masterfichapro"),
+                PerfilId = perfilAdmin.Id,
+                IsAtivo = true,
+                UsuarioCriacao = "Sistema",
+                DataCriacao = DateTime.UtcNow
+            }
         };
 
-        context.BackofficeUsuarios.Add(usuario);
+        foreach (var usuario in usuarios)
+        {
+            if (!context.BackofficeUsuarios.Any(u => u.Email == usuario.Email))
+            {
+                context.BackofficeUsuarios.Add(usuario);
+            }
+        }
         context.SaveChanges();
     }
 }

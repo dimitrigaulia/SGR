@@ -11,7 +11,7 @@ namespace SGR.Api.Controllers.Tenant;
 /// </summary>
 [ApiController]
 [Route("api/tenant/receitas")]
-[Authorize]
+[Authorize(Policy = "TenantOrBackofficeImpersonation")]
 public class ReceitasController : ControllerBase
 {
     private readonly IReceitaService _service;

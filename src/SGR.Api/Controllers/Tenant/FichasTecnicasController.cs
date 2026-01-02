@@ -11,7 +11,7 @@ namespace SGR.Api.Controllers.Tenant;
 /// </summary>
 [ApiController]
 [Route("api/tenant/fichas-tecnicas")]
-[Authorize]
+[Authorize(Policy = "TenantOrBackofficeImpersonation")]
 public class FichasTecnicasController : ControllerBase
 {
     private readonly IFichaTecnicaService _service;
