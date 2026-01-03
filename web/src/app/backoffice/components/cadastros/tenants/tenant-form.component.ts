@@ -141,6 +141,17 @@ export class TenantFormComponent {
       .subscribe({
         next: (cats) => {
           this.categorias.set(cats);
+          // Pré-selecionar "Alimentos" por padrão apenas em modo de criação
+          if (!this.isEdit() && !this.model.categoriaId) {
+            const alimentos = cats.find(c => 
+              c.nome.toLowerCase() === 'alimentos' || 
+              c.nome.toLowerCase().includes('alimento')
+            );
+            if (alimentos) {
+              this.model.categoriaId = alimentos.id;
+              this.cdr.markForCheck();
+            }
+          }
           this.cdr.markForCheck();
         },
         error: (err) => {
