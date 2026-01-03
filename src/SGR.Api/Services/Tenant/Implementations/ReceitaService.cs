@@ -467,15 +467,10 @@ public class ReceitaService : IReceitaService
             custoTotal += custoItem;
         }
 
-        // Aplicar FatorRendimento (perdas no preparo da receita)
-        // Se FatorRendimento < 1: hÃ¡ perdas (ex: 0.95 = 5% de perda)
-        // Se FatorRendimento > 1: hÃ¡ ganho (raro, mas possÃ­vel)
-        // Proteger divisÃ£o por zero
-        var fatorRendimento = receita.FatorRendimento > 0 ? receita.FatorRendimento : 1.0m;
-        var custoTotalComRendimento = custoTotal / fatorRendimento;
-        
-        receita.CustoTotal = custoTotalComRendimento;
-        receita.CustoPorPorcao = receita.Rendimento > 0 ? custoTotalComRendimento / receita.Rendimento : 0;
+        // OPÇÃO B (contrato): IC/FatorRendimento NÃO altera o custo total dos insumos.
+        // IC deve alterar apenas o peso final / rendimento (porções) — e isso já está refletido em receita.Rendimento quando o cálculo automático estiver ativo no frontend.
+        receita.CustoTotal = custoTotal;
+        receita.CustoPorPorcao = receita.Rendimento > 0 ? custoTotal / receita.Rendimento : 0;
     }
 
     private decimal? CalcularCustoUnitario(Insumo insumo)

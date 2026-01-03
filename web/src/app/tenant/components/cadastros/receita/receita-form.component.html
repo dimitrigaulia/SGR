@@ -11,7 +11,7 @@
           <ol style="margin: 0 0 0 16px; padding: 0; font-size: 13px;">
             <li>Defina nome, categoria e rendimento (número de porções prontas).</li>
             <li>Opcional: informe o peso por porção e a tolerância de peso.</li>
-            <li>Ajuste o IC (índice de cocção) apenas se quiser considerar perdas/ganhos de cocção; o fator de rendimento é calculado automaticamente.</li>
+            <li>Ajuste o IC (índice de cocção) para considerar perdas/ganhos de cocção. O IC ajusta o peso final e, se o cálculo automático estiver ativo, as porções. Não altera o custo dos insumos.</li>
             <li>Adicione os insumos na tabela de itens com as quantidades usadas na receita.</li>
           </ol>
         </mat-card-content>
@@ -46,10 +46,15 @@
             [(ngModel)]="model.calcularRendimentoAutomatico" 
             [ngModelOptions]="{standalone: true}"
             (ngModelChange)="onToggleChange()"
-            [disabled]="isView()">
+            [disabled]="isView() || !todosItensEmGramas">
             Calcular rendimento automaticamente a partir do peso por porção
           </mat-slide-toggle>
         </div>
+        @if (!todosItensEmGramas) {
+          <div style="font-size: 12px; color: #666; margin-top: 6px; margin-bottom: 16px;">
+            Para ativar o cálculo automático, todos os itens precisam estar em GR (ou KG).
+          </div>
+        }
       }
 
       <div class="form-row">
@@ -127,10 +132,15 @@
 
       <mat-form-field appearance="outline" class="form-field-spacing">
         <mat-label>IC - Valor (%)</mat-label>
-        <input matInput type="number" name="icValor" [(ngModel)]="model.icValor" (ngModelChange)="onICChange()" [disabled]="isView()" min="0" max="999" step="1" />
+        <input matInput type="number" name="icValor" [(ngModel)]="model.icValor" (ngModelChange)="onICChange()" [disabled]="isView()" min="0" [max]="icValorMax" step="0.01" />
         <mat-hint class="hint-responsive">
-          <span class="hint-full">Ex: - e 5 = 5% de perda (fator â‰ˆ 0,95)</span>
-          <span class="hint-mobile">Ex: - e 5 = 5% de perda</span>
+          <span class="hint-full">
+            IC ajusta o peso final da receita (cocção). Se o cálculo automático estiver ativo, ajusta as porções.
+            Não altera o custo dos insumos. Ex.: "-" e 5 = 5% de perda (fator ≈ 0,95).
+          </span>
+          <span class="hint-mobile">
+            IC ajusta peso final/porções (não altera custo). Ex.: "-" e 5 = 5% de perda.
+          </span>
         </mat-hint>
       </mat-form-field>
 
@@ -234,7 +244,7 @@
                   {{ getUnidadeSigla(item.unidadeMedidaId) }}
                 } @else {
                   <mat-form-field appearance="outline" class="field-unidade">
-                    <mat-select [(ngModel)]="item.unidadeMedidaId" [ngModelOptions]="{standalone: true}" (ngModelChange)="atualizarCalculosAutomaticos()">
+                    <mat-select [(ngModel)]="item.unidadeMedidaId" [ngModelOptions]="{standalone: true}" (ngModelChange)="onUnidadeMedidaChange(); atualizarCalculosAutomaticos()">
                       <mat-option [value]="null">Selecione...</mat-option>
                       @for (u of unidades(); track u.id) {
                         <mat-option [value]="u.id">{{ u.sigla }} - {{ u.nome }}</mat-option>
@@ -380,7 +390,7 @@
                       
                       <mat-form-field appearance="outline" class="field-unidade-mobile">
                         <mat-label>Unidade</mat-label>
-                        <mat-select [(ngModel)]="item.unidadeMedidaId" [ngModelOptions]="{standalone: true}" (ngModelChange)="atualizarCalculosAutomaticos()">
+                        <mat-select [(ngModel)]="item.unidadeMedidaId" [ngModelOptions]="{standalone: true}" (ngModelChange)="onUnidadeMedidaChange(); atualizarCalculosAutomaticos()">
                           <mat-option [value]="null">Selecione...</mat-option>
                           @for (u of unidades(); track u.id) {
                             <mat-option [value]="u.id">{{ u.sigla }}</mat-option>

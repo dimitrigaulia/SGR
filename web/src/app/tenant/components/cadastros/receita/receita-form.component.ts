@@ -102,6 +102,27 @@ export class TenantReceitaFormComponent {
     return sinal === '-' ? 1 - delta : 1 + delta;
   }
 
+  get todosItensEmGramas(): boolean {
+    const validItens = this.itens().filter(i =>
+      i.insumoId !== null &&
+      i.unidadeMedidaId !== null &&
+      i.quantidade > 0
+    );
+    if (validItens.length === 0) return false;
+
+    return validItens.every(i => {
+      const unidade = this.unidades().find(u => u.id === i.unidadeMedidaId);
+      const sigla = (unidade?.sigla || '').toUpperCase();
+      return sigla === 'GR' || sigla === 'KG';
+    });
+  }
+
+  get icValorMax(): number {
+    // Se perda (-): máximo 99.99% (evitar 100% que zera)
+    // Se ganho (+): máximo 300% (permitir ganhos maiores)
+    return this.model.icSinal === '-' ? 99.99 : 300;
+  }
+
   constructor() {
     // Detectar mobile
     this.breakpointObserver.observe([Breakpoints.Handset, Breakpoints.TabletPortrait])
@@ -287,9 +308,19 @@ export class TenantReceitaFormComponent {
         item.unidadeMedidaId = insumo.unidadeCompraId;
       }
     }
+    this.onUnidadeMedidaChange();
     this.atualizarCalculosAutomaticos();
     this.atualizarCustosItens();
     this.cdr.markForCheck();
+  }
+
+  onUnidadeMedidaChange(): void {
+    // Se toggle está ligado e agora não todos itens estão em GR/KG, desligar toggle
+    if (this.model.calcularRendimentoAutomatico && !this.todosItensEmGramas) {
+      this.model.calcularRendimentoAutomatico = false;
+      this.toast.info('Cálculo automático desativado: todos os itens precisam estar em GR ou KG.');
+      this.cdr.markForCheck();
+    }
   }
 
   get pesoTotalTeorico(): number | null {
@@ -393,6 +424,13 @@ export class TenantReceitaFormComponent {
   }
 
   onToggleChange(): void {
+    // Se tentar ativar sem pré-condição, desfaz e orienta
+    if (this.model.calcularRendimentoAutomatico && !this.todosItensEmGramas) {
+      this.model.calcularRendimentoAutomatico = false;
+      this.toast.error('Cálculo automático de rendimento só funciona quando todos os itens estão em GR ou KG.');
+      this.cdr.markForCheck();
+      return;
+    }
     this.atualizarCalculosAutomaticos();
   }
 
@@ -465,9 +503,8 @@ export class TenantReceitaFormComponent {
     
     if (!temItensValidos) return null;
     
-    // Aplicar fator de rendimento
-    const fatorRendimento = this.fatorRendimentoCalculado > 0 ? this.fatorRendimentoCalculado : 1.0;
-    return custoTotalBruto / fatorRendimento;
+    // OPÇÃO B (contrato): IC/FatorRendimento não altera custo total — apenas rendimento/peso final.
+    return custoTotalBruto;
   }
 
   // Preview para UI; fonte da verdade = backend
@@ -556,6 +593,12 @@ export class TenantReceitaFormComponent {
     );
     if (validItens.length === 0) {
       this.toast.error('Adicione pelo menos um item vÃ¡lido Ã  receita (com insumo, quantidade e unidade de medida)');
+      return;
+    }
+
+    // Validações do IC
+    if (v.icSinal === '-' && v.icValor !== null && v.icValor >= 100) {
+      this.toast.error('Perda de 100% ou mais resultaria em peso final zero. Use um valor menor que 100%.');
       return;
     }
 
