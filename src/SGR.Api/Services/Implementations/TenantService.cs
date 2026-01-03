@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using SGR.Api.Data;
 using SGR.Api.Exceptions;
@@ -1057,7 +1057,7 @@ text;
                 ('Massas e Farinhas', true, '{usuarioCriacaoValue}', {dataCriacao}),
                 ('Bebidas', true, '{usuarioCriacaoValue}', {dataCriacao}),
                 ('Condimentos e Temperos', true, '{usuarioCriacaoValue}', {dataCriacao}),
-                ('Ã“leos e Gorduras', true, '{usuarioCriacaoValue}', {dataCriacao}),
+                ('Óleos e Gorduras', true, '{usuarioCriacaoValue}', {dataCriacao}),
                 ('Limpeza e Higiene', true, '{usuarioCriacaoValue}', {dataCriacao}),
                 ('Embalagens', true, '{usuarioCriacaoValue}', {dataCriacao}),
                 ('Outros', true, '{usuarioCriacaoValue}', {dataCriacao})
