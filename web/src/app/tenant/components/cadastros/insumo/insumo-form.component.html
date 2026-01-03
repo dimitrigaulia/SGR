@@ -8,9 +8,9 @@
       </div>
       <ol style="margin: 0 0 0 16px; padding: 0; font-size: 13px;">
         <li>Escolha a categoria do insumo.</li>
-        <li>Informe como ele é comprado (Unidade de Compra, Quantidade por Embalagem e Custo Unitário).</li>
-        <li>Informe como ele é usado nas receitas (Unidade de Uso â€“ recomendado: g, mL ou un).</li>
-        <li>Defina o IPC - quantidade aproveitável na mesma unidade de uso (ex.: 1000gr comprados, 650gr aproveitáveis = IPC 650).</li>
+        <li>Informe a unidade de medida, quantidade por embalagem e custo da embalagem.</li>
+        <li>Essa unidade será usada nas receitas (g, mL ou un).</li>
+        <li>O IPC será preenchido automaticamente. Ajuste apenas se houver perda.</li>
       </ol>
     </mat-card-content>
   </mat-card>
@@ -40,30 +40,15 @@
 
     <div class="form-row">
       <mat-form-field appearance="outline" class="form-field-spacing">
-        <mat-label>Unidade de Compra</mat-label>
+        <mat-label>Unidade de Medida</mat-label>
         <mat-select name="unidadeCompraId" [(ngModel)]="model.unidadeCompraId" [disabled]="isView()" required>
           @for (u of unidades(); track u.id) {
             <mat-option [value]="u.id">{{ u.nome }} ({{ u.sigla }})</mat-option>
           }
         </mat-select>
-        <mat-hint class="hint-responsive">Unidade em que o insumo é comprado</mat-hint>
+        <mat-hint class="hint-responsive">Unidade de medida do insumo (recomendado: g, mL ou un)</mat-hint>
         @if (f.controls['unidadeCompraId']?.errors?.['required']) {
-          <mat-error>Unidade de compra é obrigatória</mat-error>
-        }
-      </mat-form-field>
-
-      <mat-form-field appearance="outline" class="form-field-spacing">
-        <mat-label>Unidade de Uso</mat-label>
-        <mat-select name="unidadeUsoId" [(ngModel)]="model.unidadeUsoId" [disabled]="isView()" required>
-          @for (u of unidades(); track u.id) {
-            <mat-option [value]="u.id">{{ u.nome }} ({{ u.sigla }})</mat-option>
-          }
-        </mat-select>
-        <mat-hint class="hint-responsive">
-          <span class="hint-mobile">Recomendado: g, mL ou un</span>
-        </mat-hint>
-        @if (f.controls['unidadeUsoId']?.errors?.['required']) {
-          <mat-error>Unidade de uso é obrigatória</mat-error>
+          <mat-error>Unidade de medida é obrigatória</mat-error>
         }
       </mat-form-field>
     </div>
@@ -71,9 +56,9 @@
     <div class="form-row">
       <mat-form-field appearance="outline" class="form-field-spacing">
         <mat-label>Quantidade por Embalagem</mat-label>
-        <input matInput type="number" name="quantidadePorEmbalagem" [(ngModel)]="model.quantidadePorEmbalagem" [disabled]="isView()" required min="0.0001" step="0.0001" />
+        <input matInput type="text" name="quantidadePorEmbalagem" [value]="model.quantidadePorEmbalagem > 0 ? model.quantidadePorEmbalagem : ''" (input)="onQuantidadePorEmbalagemInput($event)" [disabled]="isView()" required pattern="[0-9.,]+" />
         <mat-hint class="hint-responsive">
-          
+          Aceita ponto ou vírgula como separador decimal (ex: 1000,5 ou 1000.5)
         </mat-hint>
         @if (f.controls['quantidadePorEmbalagem']?.errors?.['required']) {
           <mat-error>Quantidade por embalagem é obrigatória</mat-error>
@@ -81,23 +66,34 @@
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="form-field-spacing">
-        <mat-label>IPC - Índice de Partes Comestíveis</mat-label>
-        <input matInput type="number" name="ipcValor" [(ngModel)]="model.ipcValor" [disabled]="isView()" min="0" step="0.01" />
-        <mat-hint class="hint-responsive">Quantidade aproveitável na mesma unidade de uso (ex: 1000gr comprados, 650gr aproveitáveis = IPC 650)</mat-hint>
+        <mat-label>IPC (quantidade aproveitável)</mat-label>
+        <input matInput #ipcInput type="text" name="ipcValor" [value]="model.ipcValor && model.ipcValor > 0 ? model.ipcValor : ''" (input)="onIPCInput($event)" [disabled]="isView()" pattern="[0-9.,]+" />
+        <mat-hint class="hint-responsive">Quanto dessa embalagem é realmente usado na receita. Se aproveita tudo, deixe igual à Quantidade por Embalagem. Aceita ponto ou vírgula como separador decimal.</mat-hint>
+        @if (ipcEditadoManualmente() && !isView()) {
+          <button mat-icon-button type="button" matSuffix (click)="resetarIPC()" matTooltip="Resetar IPC = Quantidade por Embalagem" style="margin-right: -8px;">
+            <mat-icon style="font-size: 18px; width: 18px; height: 18px;">refresh</mat-icon>
+          </button>
+        }
+        @if (model.ipcValor && model.ipcValor <= 0) {
+          <mat-error>IPC deve ser maior que zero</mat-error>
+        }
+        @if (model.ipcValor && model.quantidadePorEmbalagem > 0 && model.ipcValor > model.quantidadePorEmbalagem) {
+          <mat-error>IPC não pode ser maior que Quantidade por Embalagem</mat-error>
+        }
       </mat-form-field>
     </div>
 
     <div class="form-row">
       <mat-form-field appearance="outline" class="form-field-spacing">
-        <mat-label>Custo Unitário</mat-label>
-        <input matInput type="number" name="custoUnitario" [(ngModel)]="model.custoUnitario" [disabled]="isView()" required min="0" step="0.01" />
+        <mat-label>Custo da Embalagem</mat-label>
+        <input matInput type="text" name="custoUnitario" [value]="model.custoUnitario > 0 ? model.custoUnitario : ''" (input)="onCustoInput($event)" [disabled]="isView()" required pattern="[0-9.,]+" />
         <span matTextPrefix>R$&nbsp;</span>
-        <mat-hint class="hint-responsive">Custo por unidade de compra</mat-hint>
+        <mat-hint class="hint-responsive">Custo do item comprado (embalagem). Aceita ponto ou vírgula como separador decimal.</mat-hint>
         @if (f.controls['custoUnitario']?.errors?.['required']) {
-          <mat-error>Custo unitário é obrigatório</mat-error>
+          <mat-error>Custo da embalagem é obrigatório</mat-error>
         }
-        @if (f.controls['custoUnitario']?.errors?.['min']) {
-          <mat-error>Custo unitário deve ser maior ou igual a zero</mat-error>
+        @if (model.custoUnitario < 0) {
+          <mat-error>Custo da embalagem deve ser maior ou igual a zero</mat-error>
         }
       </mat-form-field>
     </div>
@@ -117,13 +113,24 @@
       </mat-card-header>
       <mat-card-content>
         <div style="display: flex; justify-content: space-between; gap: 8px; margin-bottom: 8px;">
-          <span>Custo por unidade de compra:</span>
+          <span>Custo por embalagem:</span>
           <span style="font-weight: 500;">{{ resumoCustoPorUnidadeCompra }}</span>
         </div>
         <div style="display: flex; justify-content: space-between; gap: 8px; margin-bottom: 8px;">
-          <span>Custo por unidade de uso:</span>
-          <span style="font-weight: 500;">{{ resumoCustoPorUnidadeUso }}</span>
+          <span>Custo por unidade usada na receita:</span>
+          <span style="font-weight: 500;">{{ resumoCustoPorUnidade }}</span>
         </div>
+        @if (aproveitamentoPercentual !== '-') {
+          <div style="display: flex; justify-content: space-between; gap: 8px; margin-bottom: 8px;">
+            <span>Aproveitamento (IPC ÷ Embalagem):</span>
+            <span style="font-weight: 500; color: var(--mat-app-text-color); opacity: 0.7; font-size: 13px;">{{ aproveitamentoPercentual }}</span>
+          </div>
+        }
+        @if (exemploIPC) {
+          <div style="margin-top: 8px; font-size: 12px; color: var(--mat-app-text-color); opacity: 0.7;">
+            Ex.: {{ exemploIPC }}
+          </div>
+        }
         <div style="margin-top: 8px; font-size: 12px; color: var(--mat-app-text-color); opacity: 0.7;">
           Valores calculados automaticamente com base nas unidades, quantidade por embalagem e IPC.
         </div>
@@ -139,7 +146,7 @@
       <mat-slide-toggle name="isAtivo" [(ngModel)]="model.isAtivo" [disabled]="isView()">Ativo</mat-slide-toggle>
     </div>
 
-    <div class="imagem-row form-section">
+    <!-- <div class="imagem-row form-section">
       @if (model.pathImagem) {
         <img [src]="model.pathImagem" alt="insumo" width="64" height="64" style="border-radius:4px; object-fit:cover" />
       }
@@ -148,7 +155,7 @@
         <button mat-button type="button" color="warn" (click)="clearImage()">Remover</button>
       }
       <input type="file" accept="image/png,image/jpeg" hidden #fileInput (change)="onFile($event)" />
-    </div>
+    </div> -->
 
     @if (error()) {
       <div class="form-error">{{ error() }}</div>
@@ -162,4 +169,3 @@
     </div>
   </form>
 </div>
-

@@ -9,13 +9,10 @@ public class InsumoDto
     public long UnidadeCompraId { get; set; }
     public string? UnidadeCompraNome { get; set; }
     public string? UnidadeCompraSigla { get; set; }
-    public long UnidadeUsoId { get; set; }
-    public string? UnidadeUsoNome { get; set; }
-    public string? UnidadeUsoSigla { get; set; }
     public decimal QuantidadePorEmbalagem { get; set; }
     public decimal CustoUnitario { get; set; }
     public decimal FatorCorrecao { get; set; }
-    public int? IpcValor { get; set; }
+    public decimal? IpcValor { get; set; }
     public decimal QuantidadeAjustadaIPC { get; set; }
     public decimal CustoPorUnidadeUsoAlternativo { get; set; }
     public string? Descricao { get; set; }

@@ -28,10 +28,6 @@ public class CreateTenantRequest
     [Required(ErrorMessage = "A categoria Ã© obrigatÃ³ria")]
     public long CategoriaId { get; set; }
 
-    [Required(ErrorMessage = "O fator contÃ¡bil Ã© obrigatÃ³rio")]
-    [Range(0.0001, 9999.9999, ErrorMessage = "O fator contÃ¡bil deve estar entre 0,0001 e 9999,9999")]
-    public decimal FatorContabil { get; set; } = 1.0m;
-
     [Required(ErrorMessage = "Os dados do administrador sÃ£o obrigatÃ³rios")]
     public CreateAdminRequest Admin { get; set; } = new();
 }

@@ -26,8 +26,7 @@ public class InsumoService : BaseService<TenantDbContext, Insumo, InsumoDto, Cre
             EF.Functions.ILike(i.Nome, $"%{search}%") ||
             (i.Descricao != null && EF.Functions.ILike(i.Descricao, $"%{search}%")) ||
             (i.Categoria != null && EF.Functions.ILike(i.Categoria.Nome, $"%{search}%")) ||
-            (i.UnidadeCompra != null && EF.Functions.ILike(i.UnidadeCompra.Nome, $"%{search}%")) ||
-            (i.UnidadeUso != null && EF.Functions.ILike(i.UnidadeUso.Nome, $"%{search}%")));
+            (i.UnidadeCompra != null && EF.Functions.ILike(i.UnidadeCompra.Nome, $"%{search}%")));
     }
 
     protected override IQueryable<Insumo> ApplySorting(IQueryable<Insumo> query, string? sort, string? order)
@@ -38,7 +37,6 @@ public class InsumoService : BaseService<TenantDbContext, Insumo, InsumoDto, Cre
             "nome" => ascending ? query.OrderBy(i => i.Nome) : query.OrderByDescending(i => i.Nome),
             "categoria" => ascending ? query.OrderBy(i => i.Categoria.Nome) : query.OrderByDescending(i => i.Categoria.Nome),
             "unidadecompra" or "unidade_compra" => ascending ? query.OrderBy(i => i.UnidadeCompra.Nome) : query.OrderByDescending(i => i.UnidadeCompra.Nome),
-            "unidadeuso" or "unidade_uso" => ascending ? query.OrderBy(i => i.UnidadeUso.Nome) : query.OrderByDescending(i => i.UnidadeUso.Nome),
             "custo" or "custounitario" => ascending ? query.OrderBy(i => i.CustoUnitario) : query.OrderByDescending(i => i.CustoUnitario),
             "ativo" or "isativo" => ascending ? query.OrderBy(i => i.IsAtivo) : query.OrderByDescending(i => i.IsAtivo),
             _ => query.OrderBy(i => i.Nome)
@@ -54,7 +52,6 @@ public class InsumoService : BaseService<TenantDbContext, Insumo, InsumoDto, Cre
         var query = _dbSet
             .Include(i => i.Categoria)
             .Include(i => i.UnidadeCompra)
-            .Include(i => i.UnidadeUso)
             .AsQueryable();
 
         query = ApplySearch(query, search);
@@ -79,7 +76,6 @@ public class InsumoService : BaseService<TenantDbContext, Insumo, InsumoDto, Cre
         var entity = await _dbSet
             .Include(i => i.Categoria)
             .Include(i => i.UnidadeCompra)
-            .Include(i => i.UnidadeUso)
             .FirstOrDefaultAsync(e => e.Id == id);
 
         if (entity == null)
@@ -103,9 +99,6 @@ public class InsumoService : BaseService<TenantDbContext, Insumo, InsumoDto, Cre
             UnidadeCompraId = i.UnidadeCompraId,
             UnidadeCompraNome = i.UnidadeCompra != null ? i.UnidadeCompra.Nome : null,
             UnidadeCompraSigla = i.UnidadeCompra != null ? i.UnidadeCompra.Sigla : null,
-            UnidadeUsoId = i.UnidadeUsoId,
-            UnidadeUsoNome = i.UnidadeUso != null ? i.UnidadeUso.Nome : null,
-            UnidadeUsoSigla = i.UnidadeUso != null ? i.UnidadeUso.Sigla : null,
             QuantidadePorEmbalagem = i.QuantidadePorEmbalagem,
             CustoUnitario = i.CustoUnitario,
             FatorCorrecao = i.FatorCorrecao,
@@ -122,11 +115,11 @@ public class InsumoService : BaseService<TenantDbContext, Insumo, InsumoDto, Cre
 
     protected override Insumo MapToEntity(CreateInsumoRequest request)
     {
-        // Validar e limitar IPCValor se fornecido
-        int? ipcValor = null;
-        if (request.IpcValor.HasValue)
+        // Validar IPCValor se fornecido
+        decimal? ipcValor = null;
+        if (request.IpcValor.HasValue && request.IpcValor.Value > 0)
         {
-            ipcValor = Math.Clamp(request.IpcValor.Value, 0, 999);
+            ipcValor = request.IpcValor.Value;
         }
 
         return new Insumo
@@ -134,7 +127,6 @@ public class InsumoService : BaseService<TenantDbContext, Insumo, InsumoDto, Cre
             Nome = request.Nome,
             CategoriaId = request.CategoriaId,
             UnidadeCompraId = request.UnidadeCompraId,
-            UnidadeUsoId = request.UnidadeUsoId,
             QuantidadePorEmbalagem = request.QuantidadePorEmbalagem,
             CustoUnitario = request.CustoUnitario,
             FatorCorrecao = request.FatorCorrecao <= 0 ? 1.0m : request.FatorCorrecao, // Manter para compatibilidade
@@ -147,17 +139,16 @@ public class InsumoService : BaseService<TenantDbContext, Insumo, InsumoDto, Cre
 
     protected override void UpdateEntity(Insumo entity, UpdateInsumoRequest request)
     {
-        // Validar e limitar IPCValor se fornecido
-        int? ipcValor = null;
-        if (request.IpcValor.HasValue)
+        // Validar IPCValor se fornecido
+        decimal? ipcValor = null;
+        if (request.IpcValor.HasValue && request.IpcValor.Value > 0)
         {
-            ipcValor = Math.Clamp(request.IpcValor.Value, 0, 999);
+            ipcValor = request.IpcValor.Value;
         }
 
         entity.Nome = request.Nome;
         entity.CategoriaId = request.CategoriaId;
         entity.UnidadeCompraId = request.UnidadeCompraId;
-        entity.UnidadeUsoId = request.UnidadeUsoId;
         entity.QuantidadePorEmbalagem = request.QuantidadePorEmbalagem;
         entity.CustoUnitario = request.CustoUnitario;
         entity.FatorCorrecao = request.FatorCorrecao <= 0 ? 1.0m : request.FatorCorrecao; // Manter para compatibilidade
@@ -180,13 +171,20 @@ public class InsumoService : BaseService<TenantDbContext, Insumo, InsumoDto, Cre
         var unidadeCompraExists = await _context.Set<UnidadeMedida>().AnyAsync(u => u.Id == request.UnidadeCompraId && u.IsAtivo);
         if (!unidadeCompraExists)
         {
-            throw new BusinessException("Unidade de compra invÃ¡lida ou inativa");
+            throw new BusinessException("Unidade de medida invÃ¡lida ou inativa");
         }
 
-        var unidadeUsoExists = await _context.Set<UnidadeMedida>().AnyAsync(u => u.Id == request.UnidadeUsoId && u.IsAtivo);
-        if (!unidadeUsoExists)
+        // Validar IPC se informado
+        if (request.IpcValor.HasValue)
         {
-            throw new BusinessException("Unidade de uso invÃ¡lida ou inativa");
+            if (request.IpcValor.Value <= 0)
+            {
+                throw new BusinessException("IPC deve ser maior que zero");
+            }
+            if (request.IpcValor.Value > request.QuantidadePorEmbalagem)
+            {
+                throw new BusinessException("IPC não pode ser maior que Quantidade por Embalagem");
+            }
         }
     }
 
@@ -203,13 +201,20 @@ public class InsumoService : BaseService<TenantDbContext, Insumo, InsumoDto, Cre
         var unidadeCompraExists = await _context.Set<UnidadeMedida>().AnyAsync(u => u.Id == request.UnidadeCompraId && u.IsAtivo);
         if (!unidadeCompraExists)
         {
-            throw new BusinessException("Unidade de compra invÃ¡lida ou inativa");
+            throw new BusinessException("Unidade de medida invÃ¡lida ou inativa");
         }
 
-        var unidadeUsoExists = await _context.Set<UnidadeMedida>().AnyAsync(u => u.Id == request.UnidadeUsoId && u.IsAtivo);
-        if (!unidadeUsoExists)
+        // Validar IPC se informado
+        if (request.IpcValor.HasValue)
         {
-            throw new BusinessException("Unidade de uso invÃ¡lida ou inativa");
+            if (request.IpcValor.Value <= 0)
+            {
+                throw new BusinessException("IPC deve ser maior que zero");
+            }
+            if (request.IpcValor.Value > request.QuantidadePorEmbalagem)
+            {
+                throw new BusinessException("IPC não pode ser maior que Quantidade por Embalagem");
+            }
         }
     }
 }

@@ -37,7 +37,7 @@ export class TenantInsumosListComponent implements OnDestroy {
   private destroyRef = inject(DestroyRef);
   private cdr = inject(ChangeDetectorRef);
   
-  displayedColumns = ['imagem', 'nome', 'categoria', 'unidadeCompra', 'unidadeUso', 'quantidadeEmbalagem', 'custo', 'custoPorUnidadeUso', 'ativo', 'acoes'];
+  displayedColumns = ['imagem', 'nome', 'categoria', 'unidadeCompra', 'quantidadeEmbalagem', 'custo', 'custoPorUnidade', 'ativo', 'acoes'];
   data = signal<InsumoDto[]>([]);
   total = signal(0);
   pageIndex = signal(0);
@@ -171,16 +171,16 @@ export class TenantInsumosListComponent implements OnDestroy {
     return custo / quantidadePorEmbalagem;
   }
 
-  formatarCustoPorUnidadeUso(insumo: InsumoDto): string {
+  formatarCustoPorUnidade(insumo: InsumoDto): string {
     const custo = this.calcularCustoPorUnidadeUso(insumo);
-    const unidadeUso = insumo.unidadeUsoSigla || insumo.unidadeUsoNome || '';
+    const unidade = insumo.unidadeCompraSigla || insumo.unidadeCompraNome || '';
     
-    if (custo <= 0 || !unidadeUso) {
+    if (custo <= 0 || !unidade) {
       return '-';
     }
 
     const valor = this.formatCurrency(custo);
-    return `${valor} / ${unidadeUso}`;
+    return `${valor} / ${unidade}`;
   }
 
   ngOnDestroy() {

@@ -72,11 +72,10 @@ public class UnidadeMedidaService : BaseService<TenantDbContext, UnidadeMedida, 
     protected override async Task BeforeDeleteAsync(UnidadeMedida entity)
     {
         var hasInsumosCompra = await _context.Set<Insumo>().AnyAsync(i => i.UnidadeCompraId == entity.Id);
-        var hasInsumosUso = await _context.Set<Insumo>().AnyAsync(i => i.UnidadeUsoId == entity.Id);
         var hasReceitaItens = await _context.Set<ReceitaItem>().AnyAsync(r => r.UnidadeMedidaId == entity.Id);
         var hasFichaTecnicaItens = await _context.Set<FichaTecnicaItem>().AnyAsync(f => f.UnidadeMedidaId == entity.Id);
         
-        if (hasInsumosCompra || hasInsumosUso || hasReceitaItens || hasFichaTecnicaItens)
+        if (hasInsumosCompra || hasReceitaItens || hasFichaTecnicaItens)
         {
             throw new BusinessException("NÃ£o Ã© possÃ­vel excluir uma unidade de medida que possui insumos, receitas ou fichas tÃ©cnicas cadastradas");
         }

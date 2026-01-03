@@ -14,7 +14,6 @@ export interface TenantDto {
   nomeSchema: string;
   categoriaId: number;
   categoriaNome?: string | null;
-  fatorContabil: number;
   isAtivo: boolean;
   usuarioAtualizacao?: string | null;
   dataAtualizacao?: string | null;
@@ -27,7 +26,6 @@ export interface CreateTenantRequest {
   cpfCnpj: string;
   subdominio: string;
   categoriaId: number;
-  fatorContabil: number;
   admin: CreateAdminRequest;
 }
 
@@ -44,7 +42,6 @@ export interface UpdateTenantRequest {
   tipoPessoaId: number;
   cpfCnpj: string;
   categoriaId: number;
-  fatorContabil: number;
   isAtivo: boolean;
 }
 

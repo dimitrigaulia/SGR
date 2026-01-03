@@ -280,11 +280,11 @@ export class TenantReceitaFormComponent {
   }
 
   onInsumoChange(item: ReceitaItemFormModel, index: number) {
-    // Quando o insumo muda, preencher automaticamente a unidade com a unidade de uso do insumo
+    // Quando o insumo muda, preencher automaticamente a unidade com a unidade de medida do insumo
     if (item.insumoId) {
       const insumo = this.insumos().find(i => i.id === item.insumoId);
-      if (insumo && insumo.unidadeUsoId) {
-        item.unidadeMedidaId = insumo.unidadeUsoId;
+      if (insumo && insumo.unidadeCompraId) {
+        item.unidadeMedidaId = insumo.unidadeCompraId;
       }
     }
     this.atualizarCalculosAutomaticos();
@@ -431,14 +431,14 @@ export class TenantReceitaFormComponent {
     if (!insumo) return '-';
     
     const custo = this.calcularCustoPorUnidadeUso(insumo);
-    const unidadeUso = this.getUnidadeSigla(insumo.unidadeUsoId);
+    const unidade = this.getUnidadeSigla(insumo.unidadeCompraId);
     
-    if (custo <= 0 || !unidadeUso) {
+    if (custo <= 0 || !unidade) {
       return '-';
     }
 
     const valor = this.formatCurrency(custo);
-    return `${valor} / ${unidadeUso}`;
+    return `${valor} / ${unidade}`;
   }
 
   // Preview para UI; fonte da verdade = backend

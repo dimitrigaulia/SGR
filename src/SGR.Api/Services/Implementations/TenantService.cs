@@ -46,7 +46,6 @@ public class TenantService : BaseService<ApplicationDbContext, TenantEntity, Ten
             NomeSchema = t.NomeSchema,
             CategoriaId = t.CategoriaId,
             CategoriaNome = t.Categoria != null ? t.Categoria.Nome : null,
-            FatorContabil = t.FatorContabil,
             IsAtivo = t.IsAtivo,
             UsuarioAtualizacao = t.UsuarioAtualizacao,
             DataAtualizacao = t.DataAtualizacao
@@ -65,7 +64,6 @@ public class TenantService : BaseService<ApplicationDbContext, TenantEntity, Ten
             CpfCnpj = Regex.Replace(request.CpfCnpj, @"[^\d]", ""),
             Subdominio = request.Subdominio.ToLower(),
             CategoriaId = request.CategoriaId,
-            FatorContabil = request.FatorContabil,
             IsAtivo = true
         };
     }
@@ -83,7 +81,6 @@ public class TenantService : BaseService<ApplicationDbContext, TenantEntity, Ten
         entity.TipoPessoaId = request.TipoPessoaId;
         entity.CpfCnpj = Regex.Replace(request.CpfCnpj, @"[^\d]", "");
         entity.CategoriaId = request.CategoriaId;
-        entity.FatorContabil = request.FatorContabil;
         entity.IsAtivo = request.IsAtivo;
     }
 
@@ -174,7 +171,6 @@ public class TenantService : BaseService<ApplicationDbContext, TenantEntity, Ten
             CpfCnpj = Regex.Replace(request.CpfCnpj, @"[^\d]", ""), // Remove mÃ¡scara
             Subdominio = request.Subdominio.ToLower(),
             CategoriaId = request.CategoriaId,
-            FatorContabil = request.FatorContabil,
             IsAtivo = true
         };
 
@@ -261,7 +257,6 @@ public class TenantService : BaseService<ApplicationDbContext, TenantEntity, Ten
                 TipoPessoaId = tenant.TipoPessoaId,
                 CpfCnpj = tenant.CpfCnpj,
                 CategoriaId = tenant.CategoriaId,
-                FatorContabil = tenant.FatorContabil,
                 IsAtivo = false
             };
             SetAuditFieldsOnUpdate(tenant, updateRequest, null);
@@ -302,7 +297,6 @@ public class TenantService : BaseService<ApplicationDbContext, TenantEntity, Ten
                 TipoPessoaId = tenant.TipoPessoaId,
                 CpfCnpj = tenant.CpfCnpj,
                 CategoriaId = tenant.CategoriaId,
-                FatorContabil = tenant.FatorContabil,
                 IsAtivo = tenant.IsAtivo
             };
             SetAuditFieldsOnUpdate(tenant, updateRequest, usuarioAtualizacao);
@@ -618,7 +612,7 @@ public class TenantService : BaseService<ApplicationDbContext, TenantEntity, Ten
                         AND column_name = 'IPCValor'
                     ) THEN
                         ALTER TABLE ""{schemaName}"".""Insumo""
-                        ADD COLUMN ""IPCValor"" INTEGER;
+                        ADD COLUMN ""IPCValor"" DECIMAL(18, 4);
                     END IF;
 
                     -- FichaTecnica.RendimentoPorcoes: alterar de DECIMAL para VARCHAR(200) se necessário
@@ -872,11 +866,10 @@ text;
                 ""Nome"" VARCHAR(200) NOT NULL,
                 ""CategoriaId"" BIGINT NOT NULL,
                 ""UnidadeCompraId"" BIGINT NOT NULL,
-                ""UnidadeUsoId"" BIGINT NOT NULL,
                 ""QuantidadePorEmbalagem"" DECIMAL(18, 4) NOT NULL,
                 ""CustoUnitario"" DECIMAL(18, 4) NOT NULL DEFAULT 0,
                 ""FatorCorrecao"" DECIMAL(18, 4) NOT NULL DEFAULT 1.0,
-                ""IPCValor"" INTEGER,
+                ""IPCValor"" DECIMAL(18, 4),
                 ""Descricao"" TEXT,
                 ""PathImagem"" VARCHAR(500),
                 ""IsAtivo"" BOOLEAN NOT NULL DEFAULT true,
@@ -885,8 +878,7 @@ text;
                 ""DataCriacao"" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT (NOW() AT TIME ZONE 'utc'),
                 ""DataAtualizacao"" TIMESTAMP WITH TIME ZONE,
                 CONSTRAINT ""FK_Insumo_CategoriaInsumo_{schemaName}"" FOREIGN KEY (""CategoriaId"") REFERENCES ""{schemaName}"".""CategoriaInsumo""(""Id"") ON DELETE RESTRICT,
-                CONSTRAINT ""FK_Insumo_UnidadeCompra_{schemaName}"" FOREIGN KEY (""UnidadeCompraId"") REFERENCES ""{schemaName}"".""UnidadeMedida""(""Id"") ON DELETE RESTRICT,
-                CONSTRAINT ""FK_Insumo_UnidadeUso_{schemaName}"" FOREIGN KEY (""UnidadeUsoId"") REFERENCES ""{schemaName}"".""UnidadeMedida""(""Id"") ON DELETE RESTRICT
+                CONSTRAINT ""FK_Insumo_UnidadeCompra_{schemaName}"" FOREIGN KEY (""UnidadeCompraId"") REFERENCES ""{schemaName}"".""UnidadeMedida""(""Id"") ON DELETE RESTRICT
             );
 
             -- Tabela CategoriaReceita
@@ -956,7 +948,7 @@ text;
                 ""PrecoSugeridoVenda"" DECIMAL(18, 4),
                 ""ICOperador"" CHAR(1),
                 ""ICValor"" INTEGER,
-                ""IPCValor"" INTEGER,
+                ""IPCValor"" DECIMAL(18, 4),
                 ""MargemAlvoPercentual"" DECIMAL(18, 4),
                 ""PorcaoVendaQuantidade"" DECIMAL(18, 4),
                 ""PorcaoVendaUnidadeMedidaId"" BIGINT,
@@ -1054,14 +1046,14 @@ text;
                 ('Chef on Line', true, '{usuarioCriacaoValue}', {dataCriacao})
             ON CONFLICT DO NOTHING;
 
-            -- Inserir Categorias de Insumo padrÃ£o
+            -- Inserir Categorias de Insumo padrão
             INSERT INTO ""{schemaName}"".""CategoriaInsumo"" (""Nome"", ""IsAtivo"", ""UsuarioCriacao"", ""DataCriacao"")
             VALUES 
                 ('Hortifruti', true, '{usuarioCriacaoValue}', {dataCriacao}),
                 ('Carnes e Aves', true, '{usuarioCriacaoValue}', {dataCriacao}),
                 ('Peixes e Frutos do Mar', true, '{usuarioCriacaoValue}', {dataCriacao}),
-                ('LaticÃ­nios', true, '{usuarioCriacaoValue}', {dataCriacao}),
-                ('GrÃ£os e Cereais', true, '{usuarioCriacaoValue}', {dataCriacao}),
+                ('Laticínios', true, '{usuarioCriacaoValue}', {dataCriacao}),
+                ('Grãos e Cereais', true, '{usuarioCriacaoValue}', {dataCriacao}),
                 ('Massas e Farinhas', true, '{usuarioCriacaoValue}', {dataCriacao}),
                 ('Bebidas', true, '{usuarioCriacaoValue}', {dataCriacao}),
                 ('Condimentos e Temperos', true, '{usuarioCriacaoValue}', {dataCriacao}),
@@ -1071,7 +1063,7 @@ text;
                 ('Outros', true, '{usuarioCriacaoValue}', {dataCriacao})
             ON CONFLICT DO NOTHING;
 
-            -- Inserir Unidades de Medida padrÃ£o simplificadas
+            -- Inserir Unidades de Medida padrão simplificadas
             INSERT INTO ""{schemaName}"".""UnidadeMedida"" (""Nome"", ""Sigla"", ""IsAtivo"", ""UsuarioCriacao"", ""DataCriacao"")
             VALUES 
                 ('Unidade', 'UN', true, '{usuarioCriacaoValue}', {dataCriacao}),

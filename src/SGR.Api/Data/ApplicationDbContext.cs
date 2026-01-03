@@ -93,7 +93,6 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.Subdominio).HasMaxLength(50).IsRequired();
             entity.Property(e => e.NomeSchema).HasMaxLength(100).IsRequired();
             entity.Property(e => e.CategoriaId).IsRequired();
-            entity.Property(e => e.FatorContabil).HasPrecision(18, 4).IsRequired();
             entity.Property(e => e.IsAtivo).IsRequired();
             entity.Property(e => e.UsuarioCriacao).HasMaxLength(100);
             entity.Property(e => e.UsuarioAtualizacao).HasMaxLength(100);

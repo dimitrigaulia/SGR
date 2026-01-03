@@ -8,12 +8,11 @@ public class Insumo
     public long Id { get; set; }
     public string Nome { get; set; } = string.Empty;
     public long CategoriaId { get; set; }
-    public long UnidadeCompraId { get; set; } // Unidade em que o insumo Ã© comprado (ex: Caixa, Saco 5kg)
-    public long UnidadeUsoId { get; set; } // Unidade usada nas receitas (ex: kg, unidade)
-	public decimal QuantidadePorEmbalagem { get; set; } // Quantidade na unidade de compra (ex: 12 unidades, 5 kg)
+    public long UnidadeCompraId { get; set; } // Unidade de medida do insumo (ex: g, mL, un)
+	public decimal QuantidadePorEmbalagem { get; set; } // Quantidade na unidade de medida (ex: 12 unidades, 5 kg)
 	public decimal CustoUnitario { get; set; } // Custo por unidade de compra
 	public decimal FatorCorrecao { get; set; } = 1.0m; // Fator de perda/preparo (1.0 = sem perda, 1.10 = 10% de perda)
-	public int? IPCValor { get; set; } // Índice de Partes Comestíveis: quantidade aproveitável na mesma unidade de uso (ex: 1000gr comprados, 650gr aproveitáveis = IPC 650)
+	public decimal? IPCValor { get; set; } // IPC (quantidade aproveitável): quantidade aproveitável na mesma unidade de medida (ex: 1000gr comprados, 650gr aproveitáveis = IPC 650)
     public string? Descricao { get; set; }
     public string? PathImagem { get; set; }
     public bool IsAtivo { get; set; }
@@ -66,6 +65,5 @@ public class Insumo
     // NavegaÃ§Ã£o
     public CategoriaInsumo Categoria { get; set; } = null!;
     public UnidadeMedida UnidadeCompra { get; set; } = null!;
-    public UnidadeMedida UnidadeUso { get; set; } = null!;
 }
 

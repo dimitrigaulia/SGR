@@ -378,8 +378,8 @@ export class TenantFichaTecnicaFormComponent {
     item.insumoId = insumoId;
     if (insumoId) {
       const insumo = this.insumos().find(i => i.id === insumoId);
-      if (insumo?.unidadeUsoId) {
-        item.unidadeMedidaId = insumo.unidadeUsoId;
+      if (insumo?.unidadeCompraId) {
+        item.unidadeMedidaId = insumo.unidadeCompraId;
       }
     } else {
       item.unidadeMedidaId = null;
@@ -495,7 +495,7 @@ export class TenantFichaTecnicaFormComponent {
   isUnidadeTravada(item: FichaTecnicaItemFormModel): boolean {
     // Unidade está travada se:
     // - Item é do tipo Receita (sempre GR)
-    // - Item é do tipo Insumo e já tem insumo selecionado (usa unidadeUsoId do insumo)
+    // - Item é do tipo Insumo e já tem insumo selecionado (usa unidadeCompraId do insumo)
     if (item.tipoItem === 'Receita') {
       return true;
     }

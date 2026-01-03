@@ -550,9 +550,9 @@ public class FichaTecnicaService : IFichaTecnicaService
                 {
                     throw new BusinessException($"Insumo com ID {item.InsumoId.Value} não encontrado.");
                 }
-                if (item.UnidadeMedidaId != insumo.UnidadeUsoId)
+                if (item.UnidadeMedidaId != insumo.UnidadeCompraId)
                 {
-                    throw new BusinessException($"Unidade do item deve ser igual à unidade de uso do insumo '{insumo.Nome}'.");
+                    throw new BusinessException($"Unidade do item deve ser igual à unidade de medida do insumo '{insumo.Nome}'.");
                 }
             }
             else if (item.TipoItem == "Receita")
@@ -802,9 +802,9 @@ public class FichaTecnicaService : IFichaTecnicaService
                     {
                         throw new BusinessException($"Insumo com ID {item.InsumoId.Value} não encontrado.");
                     }
-                    if (item.UnidadeMedidaId != insumo.UnidadeUsoId)
+                    if (item.UnidadeMedidaId != insumo.UnidadeCompraId)
                     {
-                        throw new BusinessException($"Unidade do item deve ser igual à unidade de uso do insumo '{insumo.Nome}'.");
+                        throw new BusinessException($"Unidade do item deve ser igual à unidade de medida do insumo '{insumo.Nome}'.");
                     }
                 }
                 else if (item.TipoItem == "Receita")

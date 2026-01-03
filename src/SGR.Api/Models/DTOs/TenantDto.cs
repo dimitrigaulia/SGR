@@ -12,7 +12,6 @@ public class TenantDto
     public string NomeSchema { get; set; } = string.Empty;
     public long CategoriaId { get; set; }
     public string? CategoriaNome { get; set; }
-    public decimal FatorContabil { get; set; }
     public bool IsAtivo { get; set; }
     public string? UsuarioAtualizacao { get; set; }
     public DateTime? DataAtualizacao { get; set; }

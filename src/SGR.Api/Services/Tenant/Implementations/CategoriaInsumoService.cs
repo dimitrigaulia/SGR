@@ -68,7 +68,7 @@ public class CategoriaInsumoService : BaseService<TenantDbContext, CategoriaInsu
         var hasInsumos = await _context.Set<Insumo>().AnyAsync(i => i.CategoriaId == entity.Id);
         if (hasInsumos)
         {
-            throw new BusinessException("NÃ£o Ã© possÃ­vel excluir uma categoria que possui insumos cadastrados");
+            throw new BusinessException("Não é possível excluir uma categoria que possui insumos cadastrados");
         }
     }
 }

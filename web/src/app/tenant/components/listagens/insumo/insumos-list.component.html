@@ -53,10 +53,6 @@
         <td mat-cell *matCellDef="let e">{{ e.unidadeCompraSigla || e.unidadeCompraNome || '-' }}</td>
       </ng-container>
 
-      <ng-container matColumnDef="unidadeUso">
-        <th mat-header-cell *matHeaderCellDef>Unidade Uso</th>
-        <td mat-cell *matCellDef="let e">{{ e.unidadeUsoSigla || e.unidadeUsoNome || '-' }}</td>
-      </ng-container>
 
       <ng-container matColumnDef="quantidadeEmbalagem">
         <th mat-header-cell *matHeaderCellDef>Qtd/Embalagem</th>
@@ -68,9 +64,9 @@
         <td mat-cell *matCellDef="let e">{{ formatCurrency(e.custoUnitario) }}</td>
       </ng-container>
 
-      <ng-container matColumnDef="custoPorUnidadeUso">
-        <th mat-header-cell *matHeaderCellDef>Custo por Unidade de Uso</th>
-        <td mat-cell *matCellDef="let e">{{ formatarCustoPorUnidadeUso(e) }}</td>
+      <ng-container matColumnDef="custoPorUnidade">
+        <th mat-header-cell *matHeaderCellDef>Custo por Unidade</th>
+        <td mat-cell *matCellDef="let e">{{ formatarCustoPorUnidade(e) }}</td>
       </ng-container>
 
       <ng-container matColumnDef="ativo">
@@ -120,11 +116,10 @@
             }
             <p class="insumo-detalhes">
               {{ formatCurrency(e.custoUnitario) }} / {{ e.unidadeCompraSigla || e.unidadeCompraNome || '' }}
-              • Uso: {{ e.unidadeUsoSigla || e.unidadeUsoNome || '' }}
               • Qtd/Embalagem: {{ e.quantidadePorEmbalagem }} {{ e.unidadeCompraSigla || e.unidadeCompraNome || '' }}
             </p>
             <p class="insumo-detalhes" style="margin-top: 4px;">
-              Custo por unidade de uso: {{ formatarCustoPorUnidadeUso(e) }}
+              Custo por unidade: {{ formatarCustoPorUnidade(e) }}
             </p>
           </div>
         </div>

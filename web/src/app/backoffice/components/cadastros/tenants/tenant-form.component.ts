@@ -26,7 +26,6 @@ type TenantFormModel = {
   cpfCnpj: string;
   subdominio: string;
   categoriaId: number | null;
-  fatorContabil: number;
   isAtivo: boolean;
   admin: {
     nomeCompleto: string;
@@ -87,7 +86,6 @@ export class TenantFormComponent {
     cpfCnpj: '',
     subdominio: '',
     categoriaId: null,
-    fatorContabil: 1.0,
     isAtivo: true,
     admin: {
       nomeCompleto: '',
@@ -119,7 +117,6 @@ export class TenantFormComponent {
               cpfCnpj: e.cpfCnpj,
               subdominio: e.subdominio,
               categoriaId: e.categoriaId,
-              fatorContabil: e.fatorContabil,
               isAtivo: e.isAtivo,
               admin: {
                 nomeCompleto: '',
@@ -286,7 +283,6 @@ export class TenantFormComponent {
         tipoPessoaId: this.model.tipoPessoaId!,
         cpfCnpj: removeMask(this.model.cpfCnpj), // Remove mÃ¡scara antes de enviar
         categoriaId: this.model.categoriaId!,
-        fatorContabil: this.model.fatorContabil,
         isAtivo: this.model.isAtivo
       };
       
@@ -314,7 +310,6 @@ export class TenantFormComponent {
         cpfCnpj: removeMask(this.model.cpfCnpj), // Remove mÃ¡scara antes de enviar
         subdominio: this.model.subdominio,
         categoriaId: this.model.categoriaId!,
-        fatorContabil: this.model.fatorContabil,
         admin: {
           nomeCompleto: this.model.admin.nomeCompleto,
           email: this.model.admin.email,

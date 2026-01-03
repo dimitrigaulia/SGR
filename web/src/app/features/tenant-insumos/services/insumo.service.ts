@@ -11,10 +11,6 @@ export interface InsumoDto {
   unidadeCompraId: number;
   unidadeCompraNome?: string | null;
   unidadeCompraSigla?: string | null;
-  unidadeUsoId: number;
-  unidadeUsoNome?: string | null;
-  unidadeUsoSigla?: string | null;
-  unidadeUsoTipo?: string | null; // Tipo da unidade de uso (Peso, Volume, Quantidade)
   quantidadePorEmbalagem: number;
   custoUnitario: number;
   fatorCorrecao: number;
@@ -30,7 +26,6 @@ export interface CreateInsumoRequest {
   nome: string;
   categoriaId: number;
   unidadeCompraId: number;
-  unidadeUsoId: number;
   quantidadePorEmbalagem: number;
   custoUnitario: number;
   fatorCorrecao: number;
@@ -44,7 +39,6 @@ export interface UpdateInsumoRequest {
   nome: string;
   categoriaId: number;
   unidadeCompraId: number;
-  unidadeUsoId: number;
   quantidadePorEmbalagem: number;
   custoUnitario: number;
   fatorCorrecao: number;

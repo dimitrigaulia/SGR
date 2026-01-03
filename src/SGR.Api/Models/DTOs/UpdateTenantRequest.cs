@@ -23,10 +23,6 @@ public class UpdateTenantRequest
     [Required(ErrorMessage = "A categoria Ã© obrigatÃ³ria")]
     public long CategoriaId { get; set; }
 
-    [Required(ErrorMessage = "O fator contÃ¡bil Ã© obrigatÃ³rio")]
-    [Range(0.0001, 9999.9999, ErrorMessage = "O fator contÃ¡bil deve estar entre 0,0001 e 9999,9999")]
-    public decimal FatorContabil { get; set; } = 1.0m;
-
     public bool IsAtivo { get; set; }
 }
 

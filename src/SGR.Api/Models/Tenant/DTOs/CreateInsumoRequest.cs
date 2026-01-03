@@ -11,11 +11,8 @@ public class CreateInsumoRequest
 	[Required(ErrorMessage = "Categoria Ã© obrigatÃ³ria")]
 	public long CategoriaId { get; set; }
 
-	[Required(ErrorMessage = "Unidade de compra Ã© obrigatÃ³ria")]
+	[Required(ErrorMessage = "Unidade de medida Ã© obrigatÃ³ria")]
 	public long UnidadeCompraId { get; set; }
-
-	[Required(ErrorMessage = "Unidade de uso Ã© obrigatÃ³ria")]
-	public long UnidadeUsoId { get; set; }
 
 	[Required(ErrorMessage = "Quantidade por embalagem Ã© obrigatÃ³ria")]
 	[Range(0.0001, double.MaxValue, ErrorMessage = "Quantidade por embalagem deve ser maior que zero")]
@@ -28,11 +25,11 @@ public class CreateInsumoRequest
 	public decimal FatorCorrecao { get; set; } = 1.0m;
 
 	/// <summary>
-	/// IPC (%) inteiro. Se informado, o serviÃ§o converte em FatorCorrecao.
-	/// Ex: 0 = 1,00 (sem perda); 10 = 1,10 (10% de perda)
+	/// IPC (quantidade aproveitável): quantidade aproveitável na mesma unidade de medida.
+	/// Ex: 1000gr comprados, 650gr aproveitáveis = IPC 650
 	/// </summary>
-	[Range(0, 999, ErrorMessage = "IPC deve estar entre 0 e 999%")]
-	public int? IpcValor { get; set; }
+	[Range(0.0001, 9999.9999, ErrorMessage = "IPC deve estar entre 0,0001 e 9999,9999")]
+	public decimal? IpcValor { get; set; }
 
 	public string? Descricao { get; set; }
 

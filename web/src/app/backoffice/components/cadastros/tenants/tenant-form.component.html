@@ -67,26 +67,6 @@
         }
       </mat-form-field>
 
-      <mat-form-field appearance="outline" class="form-field-spacing">
-        <mat-label>Fator Contábil</mat-label>
-        <input 
-          matInput 
-          type="number" 
-          name="fatorContabil" 
-          [(ngModel)]="model.fatorContabil" 
-          [disabled]="isView()" 
-          required 
-          step="0.0001"
-          min="0.0001"
-          max="9999.9999" />
-        @if (f.controls['fatorContabil']?.errors?.['required'] && f.controls['fatorContabil']?.touched) {
-          <mat-error>Fator contábil é obrigatório</mat-error>
-        }
-        @if (f.controls['fatorContabil']?.errors?.['min'] && f.controls['fatorContabil']?.touched) {
-          <mat-error>Fator contábil deve ser maior que 0</mat-error>
-        }
-      </mat-form-field>
-
       @if (!isEdit()) {
         <mat-form-field appearance="outline" class="form-field-spacing">
           <mat-label>Subdomínio</mat-label>

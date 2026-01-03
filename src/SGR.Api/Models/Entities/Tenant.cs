@@ -13,7 +13,6 @@ public class Tenant
     public string Subdominio { get; set; } = string.Empty; // Ex: "vangoghbar" (apenas letras e nÃºmeros)
     public string NomeSchema { get; set; } = string.Empty; // Gerado: "{subdominio}_{id}" (ex: "vangoghbar_1")
     public long CategoriaId { get; set; } // ReferÃªncia Ã  CategoriaTenant
-    public decimal FatorContabil { get; set; } = 1.0m; // Fator contÃ¡bil padrÃ£o
     public bool IsAtivo { get; set; } = true;
     
     // NavegaÃ§Ã£o

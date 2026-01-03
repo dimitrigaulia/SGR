@@ -46,10 +46,10 @@ public class ReceitaService : IReceitaService
     /// <summary>
     /// Calcula o custo por unidade de uso de um insumo
     /// Fórmula: CustoUnitario / IPCValor (quando IPC informado)
-    /// IPC representa quantidade aproveitável na mesma unidade de uso (ex: 1000gr comprados, 650gr aproveitáveis = IPC 650)
-    /// Se IPCValor for null ou 0, calcula custo por unidade de compra: CustoUnitario / QuantidadePorEmbalagem
+    /// IPC representa quantidade aproveitável na mesma unidade de medida (ex: 1000gr comprados, 650gr aproveitáveis = IPC 650)
+    /// Se IPCValor for null ou 0, calcula custo por unidade de medida: CustoUnitario / QuantidadePorEmbalagem
     /// </summary>
-    private static decimal CalcularCustoPorUnidadeUso(Insumo insumo)
+    private static decimal CalcularCustoPorUnidade(Insumo insumo)
     {
         if (insumo.QuantidadePorEmbalagem <= 0 || insumo.CustoUnitario <= 0)
         {
@@ -57,7 +57,7 @@ public class ReceitaService : IReceitaService
         }
 
         // Se IPC informado, usar: CustoUnitario / IPCValor
-        // IPC representa quantidade aproveitável na mesma unidade de uso
+        // IPC representa quantidade aproveitável na mesma unidade de medida
         if (insumo.IPCValor.HasValue && insumo.IPCValor.Value > 0)
         {
             return insumo.CustoUnitario / insumo.IPCValor.Value;
@@ -73,13 +73,13 @@ public class ReceitaService : IReceitaService
         // IMPORTANTE: quantidadeBruta é apenas para exibição no DTO, NÃO usar no cálculo de custo
         var quantidadeBruta = CalcularQuantidadeBruta(item, insumo);
         
-        // Custo por unidade de uso (já inclui FatorCorrecao)
-        var custoPorUnidadeUso = CalcularCustoPorUnidadeUso(insumo);
+        // Custo por unidade de medida (já inclui FatorCorrecao)
+        var custoPorUnidade = CalcularCustoPorUnidade(insumo);
         
-        // Custo do item = Quantidade (não quantidadeBruta) Ã— CustoPorUnidadeUso
-        // Isso evita aplicar FatorCorrecao duas vezes (já está em custoPorUnidadeUso)
+        // Custo do item = Quantidade (não quantidadeBruta) Ã— CustoPorUnidade
+        // Isso evita aplicar FatorCorrecao duas vezes (já está em custoPorUnidade)
         // IMPORTANTE: ExibirComoQB Ã© apenas visual, sempre usar Quantidade numÃ©rica para cÃ¡lculos
-        return item.Quantidade * custoPorUnidadeUso;
+        return item.Quantidade * custoPorUnidade;
     }
 
     public async Task<PagedResult<ReceitaDto>> GetAllAsync(string? search, int page, int pageSize, string? sort, string? order)
@@ -95,7 +95,7 @@ public class ReceitaService : IReceitaService
                     .ThenInclude(i => i.Categoria)
             .Include(r => r.Itens)
                 .ThenInclude(i => i.Insumo)
-                    .ThenInclude(i => i.UnidadeUso)
+                    .ThenInclude(i => i.UnidadeCompra)
             .Include(r => r.Itens)
                 .ThenInclude(i => i.UnidadeMedida)
             .AsQueryable();
@@ -167,7 +167,7 @@ public class ReceitaService : IReceitaService
             .Include(r => r.Categoria)
             .Include(r => r.Itens)
                 .ThenInclude(i => i.Insumo)
-                    .ThenInclude(ins => ins.UnidadeUso)
+                    .ThenInclude(ins => ins.UnidadeCompra)
             .Include(r => r.Itens)
                 .ThenInclude(i => i.Insumo)
                     .ThenInclude(ins => ins.UnidadeCompra)
@@ -207,7 +207,7 @@ public class ReceitaService : IReceitaService
             // Validar insumos
             var insumoIds = request.Itens.Select(i => i.InsumoId).Distinct().ToList();
             var insumos = await _context.Insumos
-                .Include(i => i.UnidadeUso)
+                .Include(i => i.UnidadeCompra)
                 .Include(i => i.UnidadeCompra)
                 .Include(i => i.Categoria)
                 .Where(i => insumoIds.Contains(i.Id) && i.IsAtivo)
@@ -307,7 +307,7 @@ public class ReceitaService : IReceitaService
             // Validar insumos
             var insumoIds = request.Itens.Select(i => i.InsumoId).Distinct().ToList();
             var insumos = await _context.Insumos
-                .Include(i => i.UnidadeUso)
+                .Include(i => i.UnidadeCompra)
                 .Include(i => i.UnidadeCompra)
                 .Include(i => i.Categoria)
                 .Where(i => insumoIds.Contains(i.Id) && i.IsAtivo)
@@ -431,7 +431,7 @@ public class ReceitaService : IReceitaService
             // Buscar insumos para calcular custos
             var insumoIds = novaReceita.Itens.Select(i => i.InsumoId).Distinct().ToList();
             var insumos = await _context.Insumos
-                .Include(i => i.UnidadeUso)
+                .Include(i => i.UnidadeCompra)
                 .Include(i => i.UnidadeCompra)
                 .Include(i => i.Categoria)
                 .Where(i => insumoIds.Contains(i.Id))
@@ -478,14 +478,14 @@ public class ReceitaService : IReceitaService
         receita.CustoPorPorcao = receita.Rendimento > 0 ? custoTotalComRendimento / receita.Rendimento : 0;
     }
 
-    private decimal? CalcularCustoUnitarioUso(Insumo insumo)
+    private decimal? CalcularCustoUnitario(Insumo insumo)
     {
         if (insumo.QuantidadePorEmbalagem <= 0 || insumo.CustoUnitario <= 0)
         {
             return null;
         }
 
-        return CalcularCustoPorUnidadeUso(insumo);
+        return CalcularCustoPorUnidade(insumo);
     }
 
     private ReceitaDto MapToDto(Receita receita)
@@ -536,17 +536,17 @@ public class ReceitaService : IReceitaService
                 var insumo = item.Insumo;
                 var quantidadeBruta = item.Quantidade * insumo.FatorCorrecao;
                 var custoItem = CalcularCustoItem(item, insumo);
-                var custoPorUnidadeUso = CalcularCustoUnitarioUso(insumo);
-                decimal? custoPor100UnidadesUso = null;
+                var custoPorUnidade = CalcularCustoUnitario(insumo);
+                decimal? custoPor100Unidades = null;
 
-                if (custoPorUnidadeUso.HasValue)
+                if (custoPorUnidade.HasValue)
                 {
                     // Para peso/volume, Ã© comum visualizar custo por 100 g / 100 mL
                     // Verificar pela sigla se Ã© GR (grama) ou ML (mililitro)
-                    var sigla = insumo.UnidadeUso?.Sigla?.ToUpper();
+                    var sigla = insumo.UnidadeCompra?.Sigla?.ToUpper();
                     if (sigla == "GR" || sigla == "ML")
                     {
-                        custoPor100UnidadesUso = custoPorUnidadeUso.Value * 100m;
+                        custoPor100Unidades = custoPorUnidade.Value * 100m;
                     }
                 }
 
@@ -563,8 +563,8 @@ public class ReceitaService : IReceitaService
                     Quantidade = item.Quantidade,
                     QuantidadeBruta = quantidadeBruta,
                     CustoItem = custoItem,
-                    CustoPorUnidadeUso = custoPorUnidadeUso,
-                    CustoPor100UnidadesUso = custoPor100UnidadesUso,
+                    CustoPorUnidadeUso = custoPorUnidade,
+                    CustoPor100UnidadesUso = custoPor100Unidades,
                     ExibirComoQB = item.ExibirComoQB,
                     Ordem = item.Ordem,
                     Observacoes = item.Observacoes

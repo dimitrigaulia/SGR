@@ -113,12 +113,6 @@ namespace SGR.Api.Data
                       .WithMany()
                       .HasForeignKey(e => e.UnidadeCompraId)
                       .OnDelete(DeleteBehavior.Restrict);
-
-                // Relacionamento com UnidadeUso
-                entity.HasOne(e => e.UnidadeUso)
-                      .WithMany()
-                      .HasForeignKey(e => e.UnidadeUsoId)
-                      .OnDelete(DeleteBehavior.Restrict);
             });
 
             // UnidadeMedida
@@ -129,8 +123,7 @@ namespace SGR.Api.Data
                 entity.HasIndex(e => e.Nome).IsUnique();
                 entity.HasIndex(e => e.Sigla).IsUnique();
 
-                // Como Insumo tem duas navegaÃ§Ãµes para UnidadeMedida (UnidadeCompra e UnidadeUso),
-                // ignoramos a coleÃ§Ã£o UnidadeMedida.Insumos para evitar ambiguidades de mapeamento.
+                // Ignoramos a coleÃ§Ã£o UnidadeMedida.Insumos para evitar ambiguidades de mapeamento.
                 entity.Ignore(e => e.Insumos);
             });
 
