@@ -119,10 +119,18 @@ export class TenantFichaTecnicaFormComponent {
 
   // Métodos auxiliares de cálculo
   private calcularCustoPorUnidadeUso(insumo: InsumoDto): number {
-    if (insumo.quantidadePorEmbalagem <= 0) {
+    if (insumo.custoUnitario <= 0 || insumo.quantidadePorEmbalagem <= 0) {
       return 0;
     }
-    return (insumo.custoUnitario / insumo.quantidadePorEmbalagem) * insumo.fatorCorrecao;
+    
+    // Se IPC informado, usar: CustoUnitario / IPCValor
+    // IPC representa quantidade aproveitável na mesma unidade de uso
+    if (insumo.ipcValor && insumo.ipcValor > 0) {
+      return insumo.custoUnitario / insumo.ipcValor;
+    }
+    
+    // Se IPC não informado, calcular custo por unidade de compra
+    return insumo.custoUnitario / insumo.quantidadePorEmbalagem;
   }
 
   private calcularCustoItem(item: FichaTecnicaItemFormModel): number {
@@ -168,10 +176,8 @@ export class TenantFichaTecnicaFormComponent {
       if (!unidade) continue;
 
       const siglaUnidade = unidade.sigla.toUpperCase();
-      
-      // Considerar apenas GR ou ML para cálculo do rendimento final
-      if (siglaUnidade !== 'GR' && siglaUnidade !== 'ML') continue;
 
+      // IMPORTANTE: Processar receitas primeiro, independente da unidade (usando PesoPorPorcao)
       if (item.tipoItem === 'Receita' && item.receitaId) {
         // Para receitas: sempre usar PesoPorPorcao, independente da unidade (GR ou UN)
         const receita = this.receitas().find(r => r.id === item.receitaId);
@@ -180,7 +186,9 @@ export class TenantFichaTecnicaFormComponent {
         }
       } else if (item.tipoItem === 'Insumo') {
         // Para insumos: somar quantidade diretamente apenas se unidade for GR ou ML
-        quantidadeTotalBase += item.quantidade;
+        if (siglaUnidade === 'GR' || siglaUnidade === 'ML') {
+          quantidadeTotalBase += item.quantidade;
+        }
       }
     }
 

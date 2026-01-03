@@ -361,9 +361,9 @@ export class TenantReceitaFormComponent {
         quantidadeEmGramas = item.quantidade * 1000;
       }
 
-      // Aplicar fator de correção do insumo
-      const quantidadeComFatorCorrecao = quantidadeEmGramas * insumo.fatorCorrecao;
-      total += quantidadeComFatorCorrecao;
+      // IMPORTANTE: FatorCorrecao é apenas visual (para exibição de QB), não entra no cálculo de rendimento
+      // IPC já representa a quantidade aproveitável quando informado
+      total += quantidadeEmGramas;
       temItensPeso = true;
     }
 
