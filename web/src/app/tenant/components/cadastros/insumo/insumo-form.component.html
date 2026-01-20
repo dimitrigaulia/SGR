@@ -82,6 +82,27 @@
 
     <div class="form-row">
       <mat-form-field appearance="outline" class="form-field-spacing">
+        <mat-label>Contém X unidades</mat-label>
+        <input matInput type="text" name="unidadesPorEmbalagem" [value]="model.unidadesPorEmbalagem && model.unidadesPorEmbalagem > 0 ? model.unidadesPorEmbalagem : ''" (input)="onUnidadesPorEmbalagemInput($event)" [disabled]="isView()" pattern="[0-9.,]+" />
+        <mat-hint class="hint-responsive">Preencha quando a embalagem contiver unidades (ex: 13 unidades).</mat-hint>
+        @if (model.unidadesPorEmbalagem && model.unidadesPorEmbalagem <= 0) {
+          <mat-error>Unidades por embalagem deve ser maior que zero</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="form-field-spacing">
+        <mat-label>Peso por unidade (g/ml)</mat-label>
+        <input matInput type="text" name="pesoPorUnidade" [value]="model.pesoPorUnidade && model.pesoPorUnidade > 0 ? model.pesoPorUnidade : ''" (input)="onPesoPorUnidadeInput($event)" [disabled]="isView()" pattern="[0-9.,]+" />
+        <button mat-button matSuffix type="button" (click)="calcularPesoPorUnidade()" [disabled]="isView()">Calcular</button>
+        <mat-hint class="hint-responsive">Use para converter UN → GR/ML na ficha tecnica (ex: 50 g por unidade).</mat-hint>
+        @if (model.pesoPorUnidade && model.pesoPorUnidade <= 0) {
+          <mat-error>Peso por unidade deve ser maior que zero</mat-error>
+        }
+      </mat-form-field>
+    </div>
+
+    <div class="form-row">
+      <mat-form-field appearance="outline" class="form-field-spacing">
         <mat-label>Custo da Embalagem</mat-label>
         <input matInput type="text" name="custoUnitario" [value]="model.custoUnitario > 0 ? model.custoUnitario : ''" (input)="onCustoInput($event)" [disabled]="isView()" required pattern="[0-9.,]+" />
         <span matTextPrefix>R$&nbsp;</span>
@@ -109,14 +130,29 @@
         <mat-card-title style="font-size: 14px;">Resumo de custos</mat-card-title>
       </mat-card-header>
       <mat-card-content>
+        @if (model.unidadesPorEmbalagem && model.unidadesPorEmbalagem > 0) {
+          <div style="display: flex; justify-content: flex-end; margin-bottom: 8px;">
+            <button mat-button type="button" (click)="toggleDetalhesCusto()">
+              {{ exibirDetalhesCusto ? 'Ocultar detalhes' : 'Mostrar detalhes' }}
+            </button>
+          </div>
+        }
         <div style="display: flex; justify-content: space-between; gap: 8px; margin-bottom: 8px;">
           <span>Custo por embalagem:</span>
           <span style="font-weight: 500;">{{ resumoCustoPorUnidadeCompra }}</span>
         </div>
-        <div style="display: flex; justify-content: space-between; gap: 8px; margin-bottom: 8px;">
-          <span>Custo por unidade usada na receita:</span>
-          <span style="font-weight: 500;">{{ resumoCustoPorUnidade }}</span>
-        </div>
+        @if (resumoCustoPorUnidadeLimpa !== '-') {
+          <div style="display: flex; justify-content: space-between; gap: 8px; margin-bottom: 8px;">
+            <span>Custo por unidade (peca):</span>
+            <span style="font-weight: 500;">{{ resumoCustoPorUnidadeLimpa }}</span>
+          </div>
+        }
+        @if (exibirDetalhesCusto) {
+          <div style="display: flex; justify-content: space-between; gap: 8px; margin-bottom: 8px;">
+            <span>Custo por g/ml usado na receita:</span>
+            <span style="font-weight: 500;">{{ resumoCustoPorUnidade }}</span>
+          </div>
+        }
         @if (aproveitamentoPercentual !== '-') {
           <div style="display: flex; justify-content: space-between; gap: 8px; margin-bottom: 8px;">
             <span>Aproveitamento (IPC ÷ Embalagem):</span>

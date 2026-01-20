@@ -615,6 +615,40 @@ public class TenantService : BaseService<ApplicationDbContext, TenantEntity, Ten
                         ADD COLUMN ""IPCValor"" DECIMAL(18, 4);
                     END IF;
 
+                    -- Insumo.UnidadesPorEmbalagem
+                    IF EXISTS (
+                        SELECT 1
+                        FROM information_schema.tables
+                        WHERE table_schema = '{schemaName}'
+                        AND table_name = 'Insumo'
+                    ) AND NOT EXISTS (
+                        SELECT 1
+                        FROM information_schema.columns
+                        WHERE table_schema = '{schemaName}'
+                        AND table_name = 'Insumo'
+                        AND column_name = 'UnidadesPorEmbalagem'
+                    ) THEN
+                        ALTER TABLE ""{schemaName}"".""Insumo""
+                        ADD COLUMN ""UnidadesPorEmbalagem"" DECIMAL(18, 4);
+                    END IF;
+
+                    -- Insumo.PesoPorUnidade
+                    IF EXISTS (
+                        SELECT 1
+                        FROM information_schema.tables
+                        WHERE table_schema = '{schemaName}'
+                        AND table_name = 'Insumo'
+                    ) AND NOT EXISTS (
+                        SELECT 1
+                        FROM information_schema.columns
+                        WHERE table_schema = '{schemaName}'
+                        AND table_name = 'Insumo'
+                        AND column_name = 'PesoPorUnidade'
+                    ) THEN
+                        ALTER TABLE ""{schemaName}"".""Insumo""
+                        ADD COLUMN ""PesoPorUnidade"" DECIMAL(18, 4);
+                    END IF;
+
                     -- FichaTecnica.RendimentoPorcoes: alterar de DECIMAL para VARCHAR(200) se necessário
                     IF EXISTS (
                         SELECT 1
@@ -627,6 +661,37 @@ public class TenantService : BaseService<ApplicationDbContext, TenantEntity, Ten
                         ALTER TABLE ""{schemaName}"".""FichaTecnica""
                         ALTER COLUMN ""RendimentoPorcoes"" TYPE VARCHAR(200) USING ""RendimentoPorcoes""::
 text;
+                    END IF;
+
+                    -- FichaTecnica.RendimentoPorcoesNumero
+                    IF EXISTS (
+                        SELECT 1
+                        FROM information_schema.tables
+                        WHERE table_schema = '{schemaName}'
+                        AND table_name = 'FichaTecnica'
+                    ) AND NOT EXISTS (
+                        SELECT 1
+                        FROM information_schema.columns
+                        WHERE table_schema = '{schemaName}'
+                        AND table_name = 'FichaTecnica'
+                        AND column_name = 'RendimentoPorcoesNumero'
+                    ) THEN
+                        ALTER TABLE ""{schemaName}"".""FichaTecnica""
+                        ADD COLUMN ""RendimentoPorcoesNumero"" DECIMAL(18, 4);
+                    END IF;
+
+                    -- Preencher RendimentoPorcoesNumero a partir do texto, quando possivel
+                    IF EXISTS (
+                        SELECT 1
+                        FROM information_schema.columns
+                        WHERE table_schema = '{schemaName}'
+                        AND table_name = 'FichaTecnica'
+                        AND column_name = 'RendimentoPorcoesNumero'
+                    ) THEN
+                        UPDATE ""{schemaName}"".""FichaTecnica""
+                        SET ""RendimentoPorcoesNumero"" = NULLIF(REPLACE(substring(""RendimentoPorcoes"" from '([0-9]+([\.,][0-9]+)?)'), ',', '.'), '')::numeric
+                        WHERE ""RendimentoPorcoesNumero"" IS NULL
+                          AND ""RendimentoPorcoes"" IS NOT NULL;
                     END IF;
 
                     -- Criar tabela CanalVenda se não existir
@@ -867,6 +932,8 @@ text;
                 ""CategoriaId"" BIGINT NOT NULL,
                 ""UnidadeCompraId"" BIGINT NOT NULL,
                 ""QuantidadePorEmbalagem"" DECIMAL(18, 4) NOT NULL,
+                ""UnidadesPorEmbalagem"" DECIMAL(18, 4),
+                ""PesoPorUnidade"" DECIMAL(18, 4),
                 ""CustoUnitario"" DECIMAL(18, 4) NOT NULL DEFAULT 0,
                 ""FatorCorrecao"" DECIMAL(18, 4) NOT NULL DEFAULT 1.0,
                 ""IPCValor"" DECIMAL(18, 4),
@@ -953,6 +1020,7 @@ text;
                 ""PorcaoVendaQuantidade"" DECIMAL(18, 4),
                 ""PorcaoVendaUnidadeMedidaId"" BIGINT,
                 ""RendimentoPorcoes"" VARCHAR(200),
+                ""RendimentoPorcoesNumero"" DECIMAL(18, 4),
                 ""TempoPreparo"" INTEGER,
                 ""IsAtivo"" BOOLEAN NOT NULL DEFAULT true,
                 ""UsuarioCriacao"" VARCHAR(100),

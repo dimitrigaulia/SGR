@@ -274,30 +274,89 @@ export class TenantReceitaFormComponent {
     return insumo ? insumo.nome : '';
   }
 
-  getUnidadeSigla(unidadeMedidaId: number | null): string {
+  private obterSiglaUnidade(unidadeMedidaId: number | null): string {
     if (!unidadeMedidaId) return '';
     const unidade = this.unidades().find(u => u.id === unidadeMedidaId);
     return unidade ? unidade.sigla : '';
   }
 
+  private obterConversaoUnidade(sigla: string): { fator: number; siglaExibicao: string } {
+    const upper = sigla.toUpperCase();
+    if (upper === 'KG') return { fator: 1000, siglaExibicao: 'g' };
+    if (upper === 'L') return { fator: 1000, siglaExibicao: 'mL' };
+    if (upper === 'GR') return { fator: 1, siglaExibicao: 'g' };
+    if (upper === 'ML') return { fator: 1, siglaExibicao: 'mL' };
+    return { fator: 1, siglaExibicao: sigla || '' };
+  }
+
+  private ajustarPesoPorUnidade(pesoPorUnidade: number, unidadeCompraSigla?: string | null): number {
+    const sigla = (unidadeCompraSigla || '').trim().toUpperCase();
+    if (sigla === 'KG' || sigla === 'L') {
+      return pesoPorUnidade / 1000;
+    }
+    return pesoPorUnidade;
+  }
+
+  getUnidadeSigla(unidadeMedidaId: number | null): string {
+    const sigla = this.obterSiglaUnidade(unidadeMedidaId);
+    if (!sigla) return '';
+    return this.obterConversaoUnidade(sigla).siglaExibicao;
+  }
+
+  getQuantidadeExibicao(item: ReceitaItemFormModel): number {
+    const sigla = this.obterSiglaUnidade(item.unidadeMedidaId);
+    const { fator } = this.obterConversaoUnidade(sigla);
+    return item.quantidade * fator;
+  }
+
+  onQuantidadeExibicaoChange(item: ReceitaItemFormModel, valor: number): void {
+    const sigla = this.obterSiglaUnidade(item.unidadeMedidaId);
+    const { fator, siglaExibicao } = this.obterConversaoUnidade(sigla);
+    let numero = typeof valor === 'number' ? valor : Number(valor);
+    if (Number.isNaN(numero)) {
+      numero = 0;
+    }
+    if (siglaExibicao.toUpperCase() === 'UN') {
+      numero = Math.round(numero);
+    } else {
+      numero = Math.round(numero * 100) / 100;
+    }
+    item.quantidade = fator > 0 ? numero / fator : numero;
+    this.onQuantidadeChange(item, 0);
+  }
+
   getStepForUnidade(unidadeMedidaId: number | null): string {
-    if (!unidadeMedidaId) return '0.0001';
-    const unidade = this.unidades().find(u => u.id === unidadeMedidaId);
-    if (!unidade) return '0.0001';
-    // Se for UN (Unidade), usar step 1, caso contrÃ¡rio 0.0001
-    if (unidade.sigla.toUpperCase() === 'UN') {
+    const sigla = this.obterSiglaUnidade(unidadeMedidaId).toUpperCase();
+    if (sigla == 'UN') {
       return '1';
     }
-    return '0.0001';
+    return '1';
+  }
+
+  getMinForUnidade(unidadeMedidaId: number | null): number {
+    const sigla = this.obterSiglaUnidade(unidadeMedidaId).toUpperCase();
+    if (sigla == 'UN') {
+      return 1;
+    }
+    return 0.01;
   }
 
   formatQuantidade(quantidade: number, unidadeMedidaId: number | null): string {
-    const unidade = this.unidades().find(u => u.id === unidadeMedidaId);
-    if (unidade && unidade.sigla.toUpperCase() === 'UN') {
-      return Math.round(quantidade).toString();
+    const sigla = this.obterSiglaUnidade(unidadeMedidaId);
+    const { fator, siglaExibicao } = this.obterConversaoUnidade(sigla);
+    const valorExibicao = quantidade * fator;
+    const casas = siglaExibicao.toUpperCase() == 'UN' ? 0 : 2;
+    return new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: casas }).format(valorExibicao);
+  }
+
+  formatQuantidadeNumero(valor: number | null | undefined, sigla: string): string {
+    if (valor === null || valor === undefined) {
+      return '-';
     }
-    // Para outras unidades, mostrar atÃ© 4 casas decimais
-    return quantidade.toFixed(4).replace(/\.?0+$/, '');
+    const { fator, siglaExibicao } = this.obterConversaoUnidade(sigla);
+    const valorExibicao = valor * fator;
+    const casas = siglaExibicao.toUpperCase() == 'UN' ? 0 : 2;
+    return new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: casas }).format(valorExibicao);
   }
 
   onInsumoChange(item: ReceitaItemFormModel, index: number) {
@@ -469,14 +528,16 @@ export class TenantReceitaFormComponent {
     if (!insumo) return '-';
     
     const custo = this.calcularCustoPorUnidadeUso(insumo);
-    const unidade = this.getUnidadeSigla(insumo.unidadeCompraId);
+    const siglaBase = this.obterSiglaUnidade(insumo.unidadeCompraId);
+    const { fator, siglaExibicao } = this.obterConversaoUnidade(siglaBase);
+    const custoExibicao = fator > 0 ? custo / fator : custo;
     
-    if (custo <= 0 || !unidade) {
+    if (custoExibicao <= 0 || !siglaExibicao) {
       return '-';
     }
 
-    const valor = this.formatCurrency(custo);
-    return `${valor} / ${unidade}`;
+    const valor = this.formatCurrency(custoExibicao);
+    return `${valor} / ${siglaExibicao}`;
   }
 
   // Preview para UI; fonte da verdade = backend
@@ -486,6 +547,14 @@ export class TenantReceitaFormComponent {
     if (!insumo) return 0;
 
     const custoPorUnidadeUso = this.calcularCustoPorUnidadeUso(insumo);
+    const unidadeSigla = this.obterSiglaUnidade(item.unidadeMedidaId).toUpperCase();
+    if (unidadeSigla === 'UN') {
+      if (!insumo.pesoPorUnidade || insumo.pesoPorUnidade <= 0) {
+        return 0;
+      }
+      const pesoPorUnidade = this.ajustarPesoPorUnidade(insumo.pesoPorUnidade, insumo.unidadeCompraSigla);
+      return item.quantidade * pesoPorUnidade * custoPorUnidadeUso;
+    }
     return item.quantidade * custoPorUnidadeUso;
   }
 

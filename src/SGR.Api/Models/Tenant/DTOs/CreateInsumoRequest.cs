@@ -18,6 +18,12 @@ public class CreateInsumoRequest
 	[Range(0.0001, double.MaxValue, ErrorMessage = "Quantidade por embalagem deve ser maior que zero")]
 	public decimal QuantidadePorEmbalagem { get; set; }
 
+	[Range(0, double.MaxValue, ErrorMessage = "Unidades por embalagem deve ser maior ou igual a zero")]
+	public decimal? UnidadesPorEmbalagem { get; set; }
+
+	[Range(0, double.MaxValue, ErrorMessage = "Peso por unidade deve ser maior ou igual a zero")]
+	public decimal? PesoPorUnidade { get; set; }
+
 	[Range(0, double.MaxValue, ErrorMessage = "Custo unitÃ¡rio deve ser maior ou igual a zero")]
 	public decimal CustoUnitario { get; set; }
 

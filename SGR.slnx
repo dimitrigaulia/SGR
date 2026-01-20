@@ -1,6 +1,7 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/SGR.Api/SGR.Api.csproj" />
+    <Project Path="src/SGR.Tests/SGR.Tests.csproj" />
   </Folder>
   <Folder Name="/web/" />
 </Solution>

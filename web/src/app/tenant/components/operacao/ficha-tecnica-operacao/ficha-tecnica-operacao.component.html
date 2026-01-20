@@ -63,9 +63,9 @@
                     <div class="label">Porção sugerida</div>
                     <div class="value">
                       @if (receita()?.pesoPorPorcao) {
-                        {{ receita()!.pesoPorPorcao }} g
+                        {{ formatQuantidadeComUnidade(receita()!.pesoPorPorcao, 'GR') }}
                       } @else if (ficha()?.porcaoVendaQuantidade && ficha()?.porcaoVendaUnidadeMedidaSigla) {
-                        {{ ficha()!.porcaoVendaQuantidade }} {{ ficha()!.porcaoVendaUnidadeMedidaSigla?.toLowerCase() }}
+                        {{ formatQuantidadeComUnidade(ficha()!.porcaoVendaQuantidade, ficha()!.porcaoVendaUnidadeMedidaSigla) }}
                       } @else {
                         -
                       }
@@ -119,7 +119,7 @@
                       <th mat-header-cell *matHeaderCellDef>Qtde/Medida</th>
                       <td mat-cell *matCellDef="let item">
                         @if (quantidadePorPorcao(item) !== null) {
-                          {{ quantidadePorPorcao(item) | number:'1.0-4' }} {{ item.unidadeMedidaSigla || '' }}
+                          {{ formatQuantidadeComUnidade(quantidadePorPorcao(item), item.unidadeMedidaSigla) }}
                         } @else {
                           -
                         }
@@ -155,7 +155,7 @@
                       <th mat-header-cell *matHeaderCellDef>Qtde/porção</th>
                       <td mat-cell *matCellDef="let item">
                         @if (quantidadePorPorcaoFicha(item) !== null) {
-                          {{ quantidadePorPorcaoFicha(item) | number:'1.0-4' }} {{ item.unidadeMedidaSigla || '' }}
+                          {{ formatQuantidadeComUnidade(quantidadePorPorcaoFicha(item), item.unidadeMedidaSigla) }}
                         } @else {
                           -
                         }
@@ -262,4 +262,3 @@
     </mat-tab-group>
   }
 </div>
-

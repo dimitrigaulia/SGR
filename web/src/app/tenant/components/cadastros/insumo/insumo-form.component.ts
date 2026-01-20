@@ -19,7 +19,7 @@ import { UnidadeMedidaService, UnidadeMedidaDto } from '../../../../features/ten
 import { ToastService } from '../../../../core/services/toast.service';
 import { UploadService } from '../../../../features/usuarios/services/upload.service';
 
-type InsumoFormModel = Omit<InsumoDto, 'id' | 'categoriaNome' | 'unidadeCompraNome' | 'unidadeCompraSigla' | 'quantidadeAjustadaIPC' | 'custoPorUnidadeUsoAlternativo'>;
+type InsumoFormModel = Omit<InsumoDto, 'id' | 'categoriaNome' | 'unidadeCompraNome' | 'unidadeCompraSigla' | 'quantidadeAjustadaIPC' | 'custoPorUnidadeUsoAlternativo' | 'aproveitamentoPercentual' | 'custoPorUnidadeLimpa'>;
 
 @Component({
   standalone: true,
@@ -38,6 +38,8 @@ export class TenantInsumoFormComponent {
   private upload = inject(UploadService);
   private cdr = inject(ChangeDetectorRef);
   private destroyRef = inject(DestroyRef);
+
+  mostrarDetalhesCusto = signal(false);
   private dialog = inject(MatDialog);
 
   id = signal<number | null>(null);
@@ -56,6 +58,8 @@ export class TenantInsumoFormComponent {
     categoriaId: null as any,
     unidadeCompraId: null as any,
     quantidadePorEmbalagem: 1,
+    unidadesPorEmbalagem: 0,
+    pesoPorUnidade: 0,
     custoUnitario: 0,
     fatorCorrecao: 1.0,
     ipcValor: 0,
@@ -111,6 +115,8 @@ export class TenantInsumoFormComponent {
             categoriaId: e.categoriaId,
             unidadeCompraId: e.unidadeCompraId,
             quantidadePorEmbalagem: e.quantidadePorEmbalagem,
+            unidadesPorEmbalagem: e.unidadesPorEmbalagem ?? 0,
+            pesoPorUnidade: e.pesoPorUnidade ?? 0,
             custoUnitario: e.custoUnitario,
             fatorCorrecao: e.fatorCorrecao,
             ipcValor: e.ipcValor ?? 0,
@@ -131,6 +137,15 @@ export class TenantInsumoFormComponent {
   private findUnidade(id: number | null | undefined): UnidadeMedidaDto | undefined {
     if (!id) return undefined;
     return this.unidades().find(u => u.id === id);
+  }
+
+  private obterConversaoBase(sigla?: string): { fator: number; siglaExibicao: string } {
+    const upper = (sigla || '').toUpperCase();
+    if (upper === 'KG') return { fator: 1000, siglaExibicao: 'g' };
+    if (upper === 'L') return { fator: 1000, siglaExibicao: 'mL' };
+    if (upper === 'GR') return { fator: 1, siglaExibicao: 'g' };
+    if (upper === 'ML') return { fator: 1, siglaExibicao: 'mL' };
+    return { fator: 1, siglaExibicao: sigla || '' };
   }
 
   get unidadeCompraSelecionada(): UnidadeMedidaDto | undefined {
@@ -172,7 +187,7 @@ export class TenantInsumoFormComponent {
   get resumoCustoPorUnidade(): string {
     const unidadeCompra = this.findUnidade(this.model.unidadeCompraId);
     const quantidadePorEmbalagem = this.model.quantidadePorEmbalagem;
-    // Garantir que custo seja número
+    // Garantir que custo seja numero
     const custo = typeof this.model.custoUnitario === 'number' ? this.model.custoUnitario : (parseFloat(String(this.model.custoUnitario || 0)) || 0);
     const ipcValor = this.model.ipcValor;
 
@@ -180,18 +195,60 @@ export class TenantInsumoFormComponent {
       return '-';
     }
 
-    // Se IPC informado, usar: CustoUnitario / IPCValor
-    let custoPorUnidade: number;
-    if (ipcValor && ipcValor > 0) {
-      custoPorUnidade = custo / ipcValor;
-    } else {
-      // Se IPC não informado, calcular custo por unidade de medida
-      custoPorUnidade = custo / quantidadePorEmbalagem;
+    const { fator, siglaExibicao } = this.obterConversaoBase(unidadeCompra.sigla);
+    const quantidadeBase = quantidadePorEmbalagem * fator;
+    const ipcBase = ipcValor && ipcValor > 0 ? ipcValor * fator : quantidadeBase;
+
+    if (quantidadeBase <= 0 || ipcBase <= 0) {
+      return '-';
     }
 
-    const valor = custoPorUnidade.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-    return `${valor} / ${unidadeCompra.sigla}`;
+    const custoPorUnidadeBase = custo / ipcBase;
+    const valor = custoPorUnidadeBase.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    return `${valor} / ${siglaExibicao || unidadeCompra.sigla}`;
   }
+
+
+  get resumoCustoPorUnidadeLimpa(): string {
+    const quantidadePorEmbalagem = this.model.quantidadePorEmbalagem;
+    const unidadesPorEmbalagem = this.model.unidadesPorEmbalagem || 0;
+    const custo = typeof this.model.custoUnitario === 'number' ? this.model.custoUnitario : (parseFloat(String(this.model.custoUnitario || 0)) || 0);
+    const ipcValor = this.model.ipcValor;
+    const unidadeCompra = this.findUnidade(this.model.unidadeCompraId);
+
+    if (unidadesPorEmbalagem <= 0 || quantidadePorEmbalagem <= 0 || custo <= 0) {
+      return '-';
+    }
+
+    if (!unidadeCompra) {
+      return '-';
+    }
+
+    const { fator } = this.obterConversaoBase(unidadeCompra.sigla);
+    const quantidadeBase = quantidadePorEmbalagem * fator;
+    const ipcBase = ipcValor && ipcValor > 0 ? ipcValor * fator : quantidadeBase;
+    if (ipcBase <= 0) {
+      return '-';
+    }
+
+    const custoPorUnidade = (quantidadeBase / ipcBase) * (custo / unidadesPorEmbalagem);
+    const valor = custoPorUnidade.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    return `${valor} / un`;
+  }
+
+  get exibirDetalhesCusto(): boolean {
+    const unidades = this.model.unidadesPorEmbalagem || 0;
+    if (unidades <= 0) {
+      return true;
+    }
+    return this.mostrarDetalhesCusto();
+  }
+
+  toggleDetalhesCusto(): void {
+    this.mostrarDetalhesCusto.set(!this.mostrarDetalhesCusto());
+    this.cdr.markForCheck();
+  }
+
 
   /**
    * Limpa a entrada removendo caracteres inválidos, mantendo apenas números, ponto e vírgula
@@ -304,18 +361,94 @@ export class TenantInsumoFormComponent {
   }
 
   onIPCChange(): void {
-    // Marcar que o usuário editou o IPC manualmente
+    // Marcar que o usuario editou o IPC manualmente
     this.ipcEditadoManualmente.set(true);
     
-    // Validar que IPC não ultrapasse a quantidade por embalagem
+    // Validar que IPC nao ultrapasse a quantidade por embalagem
     if (this.model.ipcValor && this.model.quantidadePorEmbalagem > 0) {
       if (this.model.ipcValor > this.model.quantidadePorEmbalagem) {
         this.model.ipcValor = this.model.quantidadePorEmbalagem;
-        this.toast.error('IPC não pode ser maior que Quantidade por Embalagem');
+        this.toast.error('IPC nao pode ser maior que Quantidade por Embalagem');
         this.cdr.markForCheck();
       }
     }
+
+    this.atualizarPesoPorUnidade(false);
   }
+
+  private atualizarPesoPorUnidade(force: boolean): void {
+    const unidades = this.model.unidadesPorEmbalagem || 0;
+    const ipcValor = this.model.ipcValor || 0;
+    if (unidades <= 0 || ipcValor <= 0) {
+      return;
+    }
+
+    if (!force && this.model.pesoPorUnidade && this.model.pesoPorUnidade > 0) {
+      return;
+    }
+
+    const unidadeCompra = this.findUnidade(this.model.unidadeCompraId);
+    const { fator } = this.obterConversaoBase(unidadeCompra?.sigla);
+    const ipcBase = ipcValor * fator;
+
+    if (ipcBase <= 0) {
+      return;
+    }
+
+    const calculado = ipcBase / unidades;
+    if (calculado <= 0) {
+      return;
+    }
+
+    this.model.pesoPorUnidade = Math.round(calculado * 100) / 100;
+    this.cdr.markForCheck();
+  }
+
+  onUnidadesPorEmbalagemInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const valorLimpo = this.limparEntradaNumerica(input.value);
+
+    if (input.value !== valorLimpo) {
+      input.value = valorLimpo;
+    }
+
+    const valorNormalizado = this.normalizarNumero(valorLimpo);
+
+    if (valorNormalizado !== null && valorNormalizado >= 0) {
+      this.model.unidadesPorEmbalagem = valorNormalizado;
+      this.atualizarPesoPorUnidade(false);
+      this.cdr.markForCheck();
+    } else if (valorLimpo === '') {
+      this.model.unidadesPorEmbalagem = 0;
+      this.atualizarPesoPorUnidade(false);
+      this.cdr.markForCheck();
+    }
+  }
+
+  onPesoPorUnidadeInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const valorLimpo = this.limparEntradaNumerica(input.value);
+
+    if (input.value !== valorLimpo) {
+      input.value = valorLimpo;
+    }
+
+    const valorNormalizado = this.normalizarNumero(valorLimpo);
+
+    if (valorNormalizado !== null && valorNormalizado >= 0) {
+      this.model.pesoPorUnidade = valorNormalizado;
+      this.cdr.markForCheck();
+    } else if (valorLimpo === '') {
+      this.model.pesoPorUnidade = 0;
+      this.cdr.markForCheck();
+    }
+  }
+
+  calcularPesoPorUnidade(): void {
+    this.atualizarPesoPorUnidade(true);
+  }
+
+
 
   onCustoInput(event: Event): void {
     const input = event.target as HTMLInputElement;
@@ -434,12 +567,24 @@ export class TenantInsumoFormComponent {
       }
     }
 
+    if (v.unidadesPorEmbalagem && v.unidadesPorEmbalagem <= 0) {
+      this.toast.error('Unidades por embalagem deve ser maior que zero');
+      return;
+    }
+
+    if (v.pesoPorUnidade && v.pesoPorUnidade <= 0) {
+      this.toast.error('Peso por unidade deve ser maior que zero');
+      return;
+    }
+
     if (!this.isEdit()) {
       const req: CreateInsumoRequest = {
         nome: v.nome,
         categoriaId: v.categoriaId!,
         unidadeCompraId: v.unidadeCompraId!,
         quantidadePorEmbalagem: v.quantidadePorEmbalagem,
+        unidadesPorEmbalagem: v.unidadesPorEmbalagem && v.unidadesPorEmbalagem > 0 ? v.unidadesPorEmbalagem : undefined,
+        pesoPorUnidade: v.pesoPorUnidade && v.pesoPorUnidade > 0 ? v.pesoPorUnidade : undefined,
         custoUnitario: v.custoUnitario || 0,
         fatorCorrecao: v.fatorCorrecao || 1.0,
         ipcValor: v.ipcValor && v.ipcValor > 0 ? v.ipcValor : undefined,
@@ -464,6 +609,8 @@ export class TenantInsumoFormComponent {
         categoriaId: v.categoriaId!,
         unidadeCompraId: v.unidadeCompraId!,
         quantidadePorEmbalagem: v.quantidadePorEmbalagem,
+        unidadesPorEmbalagem: v.unidadesPorEmbalagem && v.unidadesPorEmbalagem > 0 ? v.unidadesPorEmbalagem : undefined,
+        pesoPorUnidade: v.pesoPorUnidade && v.pesoPorUnidade > 0 ? v.pesoPorUnidade : undefined,
         custoUnitario: v.custoUnitario || 0,
         fatorCorrecao: v.fatorCorrecao || 1.0,
         ipcValor: v.ipcValor && v.ipcValor > 0 ? v.ipcValor : undefined,
@@ -532,4 +679,3 @@ export class TenantInsumoFormComponent {
   }
 
 }
-

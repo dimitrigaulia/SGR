@@ -100,11 +100,15 @@ public class InsumoService : BaseService<TenantDbContext, Insumo, InsumoDto, Cre
             UnidadeCompraNome = i.UnidadeCompra != null ? i.UnidadeCompra.Nome : null,
             UnidadeCompraSigla = i.UnidadeCompra != null ? i.UnidadeCompra.Sigla : null,
             QuantidadePorEmbalagem = i.QuantidadePorEmbalagem,
+            UnidadesPorEmbalagem = i.UnidadesPorEmbalagem,
+            PesoPorUnidade = i.PesoPorUnidade,
             CustoUnitario = i.CustoUnitario,
             FatorCorrecao = i.FatorCorrecao,
             IpcValor = i.IPCValor,
             QuantidadeAjustadaIPC = i.QuantidadeAjustadaIPC,
             CustoPorUnidadeUsoAlternativo = i.CustoPorUnidadeUsoAlternativo,
+            AproveitamentoPercentual = i.AproveitamentoPercentual,
+            CustoPorUnidadeLimpa = i.CustoPorUnidadeLimpa,
             Descricao = i.Descricao,
             PathImagem = i.PathImagem,
             IsAtivo = i.IsAtivo,
@@ -122,12 +126,22 @@ public class InsumoService : BaseService<TenantDbContext, Insumo, InsumoDto, Cre
             ipcValor = request.IpcValor.Value;
         }
 
+        decimal? unidadesPorEmbalagem = request.UnidadesPorEmbalagem.HasValue && request.UnidadesPorEmbalagem.Value > 0
+            ? request.UnidadesPorEmbalagem.Value
+            : null;
+
+        decimal? pesoPorUnidade = request.PesoPorUnidade.HasValue && request.PesoPorUnidade.Value > 0
+            ? request.PesoPorUnidade.Value
+            : null;
+
         return new Insumo
         {
             Nome = request.Nome,
             CategoriaId = request.CategoriaId,
             UnidadeCompraId = request.UnidadeCompraId,
             QuantidadePorEmbalagem = request.QuantidadePorEmbalagem,
+            UnidadesPorEmbalagem = unidadesPorEmbalagem,
+            PesoPorUnidade = pesoPorUnidade,
             CustoUnitario = request.CustoUnitario,
             FatorCorrecao = request.FatorCorrecao <= 0 ? 1.0m : request.FatorCorrecao, // Manter para compatibilidade
             IPCValor = ipcValor,
@@ -150,6 +164,12 @@ public class InsumoService : BaseService<TenantDbContext, Insumo, InsumoDto, Cre
         entity.CategoriaId = request.CategoriaId;
         entity.UnidadeCompraId = request.UnidadeCompraId;
         entity.QuantidadePorEmbalagem = request.QuantidadePorEmbalagem;
+        entity.UnidadesPorEmbalagem = request.UnidadesPorEmbalagem.HasValue && request.UnidadesPorEmbalagem.Value > 0
+            ? request.UnidadesPorEmbalagem.Value
+            : null;
+        entity.PesoPorUnidade = request.PesoPorUnidade.HasValue && request.PesoPorUnidade.Value > 0
+            ? request.PesoPorUnidade.Value
+            : null;
         entity.CustoUnitario = request.CustoUnitario;
         entity.FatorCorrecao = request.FatorCorrecao <= 0 ? 1.0m : request.FatorCorrecao; // Manter para compatibilidade
         entity.IPCValor = ipcValor;
@@ -186,6 +206,16 @@ public class InsumoService : BaseService<TenantDbContext, Insumo, InsumoDto, Cre
                 throw new BusinessException("IPC não pode ser maior que Quantidade por Embalagem");
             }
         }
+
+        if (request.UnidadesPorEmbalagem.HasValue && request.UnidadesPorEmbalagem.Value <= 0)
+        {
+            throw new BusinessException("Unidades por embalagem deve ser maior que zero");
+        }
+
+        if (request.PesoPorUnidade.HasValue && request.PesoPorUnidade.Value <= 0)
+        {
+            throw new BusinessException("Peso por unidade deve ser maior que zero");
+        }
     }
 
     protected override async Task BeforeUpdateAsync(Insumo entity, UpdateInsumoRequest request, string? usuarioAtualizacao)
@@ -215,6 +245,16 @@ public class InsumoService : BaseService<TenantDbContext, Insumo, InsumoDto, Cre
             {
                 throw new BusinessException("IPC não pode ser maior que Quantidade por Embalagem");
             }
+        }
+
+        if (request.UnidadesPorEmbalagem.HasValue && request.UnidadesPorEmbalagem.Value <= 0)
+        {
+            throw new BusinessException("Unidades por embalagem deve ser maior que zero");
+        }
+
+        if (request.PesoPorUnidade.HasValue && request.PesoPorUnidade.Value <= 0)
+        {
+            throw new BusinessException("Peso por unidade deve ser maior que zero");
         }
     }
 }

@@ -38,6 +38,8 @@ public class CreateFichaTecnicaRequest
     
     [MaxLength(200, ErrorMessage = "Rendimento deve ter no máximo 200 caracteres")]
     public string? RendimentoPorcoes { get; set; }
+    [Range(0, double.MaxValue, ErrorMessage = "RendimentoPorcoesNumero deve ser maior ou igual a zero")]
+    public decimal? RendimentoPorcoesNumero { get; set; }
     public int? TempoPreparo { get; set; }
 
     [Required(ErrorMessage = "Itens são obrigatórios")]

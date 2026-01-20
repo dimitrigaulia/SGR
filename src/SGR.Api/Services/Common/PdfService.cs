@@ -48,7 +48,7 @@ public class PdfService
                             infoColumn.Item().Text($"Rendimento: {receita.Rendimento} porções");
                             if (receita.PesoPorPorcao.HasValue)
                             {
-                                infoColumn.Item().Text($"Peso por porção: {receita.PesoPorPorcao.Value:F2} g");
+                                infoColumn.Item().Text($"Peso por porção: {FormatarQuantidade(receita.PesoPorPorcao.Value, "GR")}");
                             }
                         });
 
@@ -85,7 +85,7 @@ public class PdfService
                                 var item = receita.Itens[i];
                                 var quantidadeDisplay = item.ExibirComoQB 
                                     ? "QB" 
-                                    : $"{item.Quantidade:F4} {item.UnidadeMedidaSigla ?? ""}";
+                                    : FormatarQuantidade(item.Quantidade, item.UnidadeMedidaSigla);
 
                                 table.Cell().Element(CellStyle).Text((i + 1).ToString());
                                 table.Cell().Element(CellStyle).Text(item.InsumoNome ?? "");
@@ -167,7 +167,7 @@ public class PdfService
                                 {
                                     item.Item().Text("Peso Total Base:").FontSize(9).FontColor(Colors.Grey.Darken1);
                                     var pesoDisplay = ficha.PesoTotalBase.HasValue 
-                                        ? $"{ficha.PesoTotalBase.Value:F0} {ObterUnidadePorcao(ficha)}"
+                                        ? $"{FormatarQuantidade(ficha.PesoTotalBase.Value, ObterUnidadePorcao(ficha))}"
                                         : "-";
                                     item.Item().Text(pesoDisplay).FontSize(10).SemiBold();
                                 });
@@ -175,17 +175,22 @@ public class PdfService
                                 {
                                     item.Item().Text("Rendimento Final:").FontSize(9).FontColor(Colors.Grey.Darken1);
                                     var rendimentoDisplay = ficha.RendimentoFinal.HasValue 
-                                        ? $"{ficha.RendimentoFinal.Value:F0} {ObterUnidadePorcao(ficha)}"
+                                        ? $"{FormatarQuantidade(ficha.RendimentoFinal.Value, ObterUnidadePorcao(ficha))}"
                                         : "-";
                                     item.Item().Text(rendimentoDisplay).FontSize(10).SemiBold();
                                 });
                                 row.RelativeItem().Column(item =>
                                 {
-                                    item.Item().Text("Custo por kg/L:").FontSize(9).FontColor(Colors.Grey.Darken1);
+                                    item.Item().Text("Custo/kg final:").FontSize(9).FontColor(Colors.Grey.Darken1);
                                     var custoKgLDisplay = ficha.CustoKgL.HasValue 
                                         ? $"{FormatarMoeda(ficha.CustoKgL.Value)}/{ObterUnidadePreco(ficha)}"
                                         : "-";
                                     item.Item().Text(custoKgLDisplay).FontSize(10).SemiBold();
+                                    if (ficha.CustoKgBase.HasValue)
+                                    {
+                                        var custoKgBaseDisplay = $"{FormatarMoeda(ficha.CustoKgBase.Value)}/{ObterUnidadePreco(ficha)}";
+                                        item.Item().Text($"Custo/kg base: {custoKgBaseDisplay}").FontSize(8).FontColor(Colors.Grey.Darken1);
+                                    }
                                 });
                             });
                             resumo.Item().PaddingTop(5).Row(row =>
@@ -194,7 +199,7 @@ public class PdfService
                                 {
                                     item.Item().Text("Porção:").FontSize(9).FontColor(Colors.Grey.Darken1);
                                     var porcaoDisplay = ficha.PorcaoVendaQuantidade.HasValue 
-                                        ? $"{ficha.PorcaoVendaQuantidade.Value:F2} {ObterUnidadePorcao(ficha)}"
+                                        ? $"{FormatarQuantidade(ficha.PorcaoVendaQuantidade.Value, ObterUnidadePorcao(ficha))}"
                                         : "-";
                                     item.Item().Text(porcaoDisplay).FontSize(10).SemiBold();
                                 });
@@ -270,7 +275,7 @@ public class PdfService
                                         }
                                         else
                                         {
-                                            quantidadeDisplay = $"{item.Quantidade:F4} {item.UnidadeMedidaSigla ?? ""}";
+                                            quantidadeDisplay = FormatarQuantidade(item.Quantidade, item.UnidadeMedidaSigla);
                                         }
                                         
                                         var nomeDisplay = item.TipoItem == "Receita" 
@@ -300,7 +305,7 @@ public class PdfService
                                 // Peso Total Base abaixo da tabela
                                 if (ficha.PesoTotalBase.HasValue)
                                 {
-                                    section.Item().PaddingTop(5).Text($"Peso Total Base: {ficha.PesoTotalBase.Value:F4} {ObterUnidadePorcao(ficha)}")
+                                    section.Item().PaddingTop(5).Text($"Peso Total Base: {FormatarQuantidade(ficha.PesoTotalBase.Value, ObterUnidadePorcao(ficha))}")
                                         .FontSize(9).FontColor(Colors.Grey.Darken1);
                                 }
                             });
@@ -344,7 +349,7 @@ public class PdfService
                                 });
                             });
 
-                            section.Item().PaddingTop(8).Text("Fórmula: Preço mesa = custo por porção × markup")
+                            section.Item().PaddingTop(8).Text("Formula: Preco mesa = custo por porcao x markup")
                                 .FontSize(9).FontColor(Colors.Grey.Darken1).Italic();
                         });
 
@@ -472,8 +477,41 @@ public class PdfService
     {
         return $"R$ {valor:N2}";
     }
-}
 
+    private static string FormatarQuantidade(decimal quantidade, string? sigla)
+    {
+        if (string.IsNullOrWhiteSpace(sigla))
+        {
+            return quantidade.ToString("0.##");
+        }
+
+        var siglaUpper = sigla.ToUpperInvariant();
+        var valor = quantidade;
+        var siglaExibicao = sigla;
+
+        if (siglaUpper == "KG")
+        {
+            valor = quantidade * 1000m;
+            siglaExibicao = "g";
+        }
+        else if (siglaUpper == "L")
+        {
+            valor = quantidade * 1000m;
+            siglaExibicao = "mL";
+        }
+        else if (siglaUpper == "GR")
+        {
+            siglaExibicao = "g";
+        }
+        else if (siglaUpper == "ML")
+        {
+            siglaExibicao = "mL";
+        }
+
+        var formato = siglaUpper == "UN" ? "0" : "0.##";
+        return $"{valor.ToString(formato)} {siglaExibicao}".Trim();
+    }
+}
 
 
 

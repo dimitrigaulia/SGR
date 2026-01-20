@@ -104,6 +104,7 @@ export class TenantFichaTecnicaFormComponent {
     porcaoVendaQuantidade: null as number | null,
     porcaoVendaUnidadeMedidaId: null as number | null,
     rendimentoPorcoes: null as string | null,
+    rendimentoPorcoesNumero: null as number | null,
     tempoPreparo: null as number | null,
     isAtivo: true
   };
@@ -140,6 +141,17 @@ export class TenantFichaTecnicaFormComponent {
       const insumo = this.insumos().find(i => i.id === item.insumoId);
       if (insumo) {
         const custoPorUnidadeUso = this.calcularCustoPorUnidadeUso(insumo);
+        const unidade = this.unidades().find(u => u.id === item.unidadeMedidaId);
+        const sigla = unidade?.sigla?.toUpperCase();
+
+        if (sigla === 'UN') {
+          if (insumo.pesoPorUnidade && insumo.pesoPorUnidade > 0) {
+            const pesoPorUnidade = this.ajustarPesoPorUnidade(insumo.pesoPorUnidade, insumo.unidadeCompraSigla);
+            return item.quantidade * pesoPorUnidade * custoPorUnidadeUso;
+          }
+          return 0;
+        }
+
         return item.quantidade * custoPorUnidadeUso;
       }
     } else if (item.tipoItem === 'Receita' && item.receitaId) {
@@ -188,6 +200,13 @@ export class TenantFichaTecnicaFormComponent {
         // Para insumos: somar quantidade diretamente apenas se unidade for GR ou ML
         if (siglaUnidade === 'GR' || siglaUnidade === 'ML') {
           quantidadeTotalBase += item.quantidade;
+        } else if (siglaUnidade === 'KG' || siglaUnidade === 'L') {
+          quantidadeTotalBase += item.quantidade * 1000;
+        } else if (siglaUnidade === 'UN') {
+          const insumo = this.insumos().find(i => i.id === item.insumoId);
+          if (insumo?.pesoPorUnidade && insumo.pesoPorUnidade > 0) {
+            quantidadeTotalBase += item.quantidade * insumo.pesoPorUnidade;
+          }
         }
       }
     }
@@ -240,13 +259,24 @@ export class TenantFichaTecnicaFormComponent {
   get precoMesaCalculado(): number | null {
     const dto = this.fichaDtoCompleto();
     
-    // Ordem determinística: se porção definida → NUNCA calcular no frontend, só usar DTO
+    // Ordem deterministica: se porcao definida -> NUNCA calcular no frontend, so usar DTO
     if (this.hasPorcao) {
-      // Se porção definida → retornar valor do DTO ou null (exibir "—")
+      // Se porcao definida -> retornar valor do DTO ou null (exibir "-")
       return dto?.precoMesaSugerido ?? null;
     }
     
-    // Se sem porção → legado (pode calcular no frontend)
+    // Se sem porcao, priorizar rendimentoPorcoesNumero (produto vendido por unidade)
+    const rendimentoPorcoesNumero = this.model.rendimentoPorcoesNumero ?? dto?.rendimentoPorcoesNumero ?? null;
+    if (rendimentoPorcoesNumero && rendimentoPorcoesNumero > 0) {
+      const custoTotal = this.custoTotalCalculado;
+      if (this.model.indiceContabil && this.model.indiceContabil > 0 && custoTotal > 0) {
+        const custoPorUnidadeVendida = custoTotal / rendimentoPorcoesNumero;
+        return Math.round(custoPorUnidadeVendida * this.model.indiceContabil * 10000) / 10000;
+      }
+      return null;
+    }
+
+    // Se sem porcao e sem rendimentoPorcoesNumero -> legado (pode calcular no frontend)
     const rendimentoFinal = this.rendimentoFinalCalculado;
     if (rendimentoFinal === null || rendimentoFinal <= 0) {
       return null;
@@ -442,19 +472,139 @@ export class TenantFichaTecnicaFormComponent {
     return '';
   }
 
-  getUnidadeSigla(unidadeMedidaId: number | null): string {
-    if (!unidadeMedidaId) return '-';
+  private obterSiglaUnidade(unidadeMedidaId: number | null): string {
+    if (!unidadeMedidaId) return '';
     const unidade = this.unidades().find(u => u.id === unidadeMedidaId);
-    return unidade ? unidade.sigla : '-';
+    return unidade ? unidade.sigla : '';
   }
 
-  formatQuantidadeItem(item: { tipoItem: string; quantidade: number; unidadeMedidaSigla?: string | null }): string {
-    // Se for Receita, exibir como "1x" ou "1 receita" sem unidade
+  private obterConversaoUnidade(sigla: string): { fator: number; siglaExibicao: string } {
+    const upper = sigla.toUpperCase();
+    if (upper === 'KG') return { fator: 1000, siglaExibicao: 'g' };
+    if (upper === 'L') return { fator: 1000, siglaExibicao: 'mL' };
+    if (upper === 'GR') return { fator: 1, siglaExibicao: 'g' };
+    if (upper === 'ML') return { fator: 1, siglaExibicao: 'mL' };
+    return { fator: 1, siglaExibicao: sigla || '-' };
+  }
+
+  private ajustarPesoPorUnidade(pesoPorUnidade: number, unidadeCompraSigla?: string | null): number {
+    const sigla = (unidadeCompraSigla || '').trim().toUpperCase();
+    if (sigla === 'KG' || sigla === 'L') {
+      return pesoPorUnidade / 1000;
+    }
+    return pesoPorUnidade;
+  }
+
+  getUnidadeSigla(unidadeMedidaId: number | null): string {
+    const sigla = this.obterSiglaUnidade(unidadeMedidaId);
+    if (!sigla) return '-';
+    return this.obterConversaoUnidade(sigla).siglaExibicao;
+  }
+
+  getQuantidadeExibicao(item: FichaTecnicaItemFormModel): number {
+    const sigla = this.obterSiglaUnidade(item.unidadeMedidaId);
+    const { fator } = this.obterConversaoUnidade(sigla);
+    return item.quantidade * fator;
+  }
+
+  onQuantidadeExibicaoChange(item: FichaTecnicaItemFormModel, valor: number): void {
+    const sigla = this.obterSiglaUnidade(item.unidadeMedidaId);
+    const { fator, siglaExibicao } = this.obterConversaoUnidade(sigla);
+    let numero = typeof valor === 'number' ? valor : Number(valor);
+    if (Number.isNaN(numero)) {
+      numero = 0;
+    }
+    if (siglaExibicao.toUpperCase() === 'UN') {
+      numero = Math.round(numero);
+    } else {
+      numero = Math.round(numero * 100) / 100;
+    }
+    item.quantidade = fator > 0 ? numero / fator : numero;
+    this.onQuantidadeChange(item);
+  }
+
+  getQuantidadeStep(item: FichaTecnicaItemFormModel): number {
+    const sigla = this.obterSiglaUnidade(item.unidadeMedidaId).toUpperCase();
+    if (sigla === 'UN') {
+      return 1;
+    }
+    return 1;
+  }
+
+  getQuantidadeMin(item: FichaTecnicaItemFormModel): number {
+    const sigla = this.obterSiglaUnidade(item.unidadeMedidaId).toUpperCase();
+    if (sigla === 'UN') {
+      return 1;
+    }
+    return 0.01;
+  }
+
+  getUnidadesPermitidas(item: FichaTecnicaItemFormModel): UnidadeMedidaDto[] {
+    if (item.tipoItem !== 'Insumo' || !item.insumoId) {
+      return this.unidades();
+    }
+
+    const insumo = this.insumos().find(i => i.id === item.insumoId);
+    if (!insumo) {
+      return this.unidades();
+    }
+
+    const unidades = this.unidades();
+    const unidadeCompra = unidades.find(u => u.id === insumo.unidadeCompraId);
+    const unidadeUn = unidades.find(u => u.sigla.toUpperCase() === 'UN');
+
+    if (insumo.pesoPorUnidade && insumo.pesoPorUnidade > 0) {
+      const lista = [unidadeCompra, unidadeUn].filter((u): u is UnidadeMedidaDto => !!u);
+      return lista.filter((u, index, arr) => arr.findIndex(x => x.id === u.id) === index);
+    }
+
+    return unidadeCompra ? [unidadeCompra] : [];
+  }
+
+
+  private formatQuantidadeValor(quantidade: number, sigla: string, incluirUnidade = true): string {
+    const { fator, siglaExibicao } = this.obterConversaoUnidade(sigla);
+    const valorExibicao = quantidade * fator;
+    const casas = siglaExibicao.toUpperCase() == 'UN' ? 0 : 2;
+    const valorFormatado = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: casas }).format(valorExibicao);
+    if (!incluirUnidade) {
+      return valorFormatado;
+    }
+    return `${valorFormatado} ${siglaExibicao || '-'}`.trim();
+  }
+
+  private formatQuantidadeNumero(quantidade: number, sigla: string): string {
+    return this.formatQuantidadeValor(quantidade, sigla, false);
+  }
+
+  formatQuantidadeFormItem(item: FichaTecnicaItemFormModel): string {
     if (item.tipoItem === 'Receita') {
       return `${item.quantidade}x`;
     }
-    // Para Insumo, exibir quantidade + unidade normalmente
-    return `${item.quantidade.toFixed(4)} ${item.unidadeMedidaSigla || '-'}`;
+    const sigla = this.obterSiglaUnidade(item.unidadeMedidaId);
+    return this.formatQuantidadeValor(item.quantidade, sigla);
+  }
+
+  formatQuantidadeNumeroForm(item: FichaTecnicaItemFormModel): string {
+    if (item.tipoItem === 'Receita') {
+      return `${item.quantidade}`;
+    }
+    const sigla = this.obterSiglaUnidade(item.unidadeMedidaId);
+    return this.formatQuantidadeNumero(item.quantidade, sigla);
+  }
+
+  formatQuantidadeExibicao(valor: number | null | undefined, sigla: string): string {
+    if (valor === null || valor === undefined) {
+      return '-';
+    }
+    return this.formatQuantidadeValor(valor, sigla);
+  }
+
+  formatQuantidadeItem(item: { tipoItem: string; quantidade: number; unidadeMedidaSigla?: string | null }): string {
+    if (item.tipoItem === 'Receita') {
+      return `${item.quantidade}x`;
+    }
+    return this.formatQuantidadeValor(item.quantidade, item.unidadeMedidaSigla ?? '');
   }
 
   getUnidadePorcao(): { unidade: string; unidadePreco: string } {
@@ -501,17 +651,22 @@ export class TenantFichaTecnicaFormComponent {
   }
 
   isUnidadeTravada(item: FichaTecnicaItemFormModel): boolean {
-    // Unidade está travada se:
-    // - Item é do tipo Receita (sempre GR)
-    // - Item é do tipo Insumo e já tem insumo selecionado (usa unidadeCompraId do insumo)
+    // Unidade est? travada se:
+    // - Item ? do tipo Receita (sempre GR)
+    // - Item ? do tipo Insumo sem convers?o por unidade
     if (item.tipoItem === 'Receita') {
       return true;
     }
     if (item.tipoItem === 'Insumo' && item.insumoId != null) {
+      const insumo = this.insumos().find(i => i.id === item.insumoId);
+      if (insumo?.pesoPorUnidade && insumo.pesoPorUnidade > 0) {
+        return false;
+      }
       return true;
     }
     return false;
   }
+
 
   addCanal() {
     const current = this.canais();
@@ -665,6 +820,7 @@ export class TenantFichaTecnicaFormComponent {
         porcaoVendaQuantidade: v.porcaoVendaQuantidade ?? undefined,
         porcaoVendaUnidadeMedidaId: v.porcaoVendaUnidadeMedidaId ?? undefined,
         rendimentoPorcoes: v.rendimentoPorcoes ?? undefined,
+        rendimentoPorcoesNumero: v.rendimentoPorcoesNumero ?? undefined,
         tempoPreparo: v.tempoPreparo ?? undefined,
         isAtivo: !!v.isAtivo,
         itens: itensValidos.map(i => ({
@@ -723,6 +879,7 @@ export class TenantFichaTecnicaFormComponent {
         porcaoVendaQuantidade: v.porcaoVendaQuantidade ?? undefined,
         porcaoVendaUnidadeMedidaId: v.porcaoVendaUnidadeMedidaId ?? undefined,
         rendimentoPorcoes: v.rendimentoPorcoes ?? undefined,
+        rendimentoPorcoesNumero: v.rendimentoPorcoesNumero ?? undefined,
         tempoPreparo: v.tempoPreparo ?? undefined,
         isAtivo: !!v.isAtivo,
         itens: itensValidos.map(i => ({
@@ -829,6 +986,7 @@ export class TenantFichaTecnicaFormComponent {
             porcaoVendaQuantidade: e.porcaoVendaQuantidade ?? null,
             porcaoVendaUnidadeMedidaId: e.porcaoVendaUnidadeMedidaId ?? null,
             rendimentoPorcoes: e.rendimentoPorcoes ?? null,
+            rendimentoPorcoesNumero: e.rendimentoPorcoesNumero ?? null,
             tempoPreparo: e.tempoPreparo ?? null,
             isAtivo: e.isAtivo
           };

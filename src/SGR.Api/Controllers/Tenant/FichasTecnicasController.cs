@@ -58,19 +58,63 @@ public class FichasTecnicasController : ControllerBase
         var ficha = await _service.GetByIdAsync(id);
         if (ficha == null) return NotFound();
 
+        string FormatarQuantidade(decimal quantidade, string? sigla)
+        {
+            if (string.IsNullOrWhiteSpace(sigla))
+            {
+                return quantidade.ToString("0.##");
+            }
+
+            var siglaUpper = sigla.ToUpperInvariant();
+            var valor = quantidade;
+            var siglaExibicao = sigla;
+
+            if (siglaUpper == "KG")
+            {
+                valor = quantidade * 1000m;
+                siglaExibicao = "g";
+            }
+            else if (siglaUpper == "L")
+            {
+                valor = quantidade * 1000m;
+                siglaExibicao = "mL";
+            }
+            else if (siglaUpper == "GR")
+            {
+                siglaExibicao = "g";
+            }
+            else if (siglaUpper == "ML")
+            {
+                siglaExibicao = "mL";
+            }
+
+            var formato = siglaUpper == "UN" ? "0" : "0.##";
+            return $"{valor.ToString(formato)} {System.Net.WebUtility.HtmlEncode(siglaExibicao)}".Trim();
+        }
+
         // Construir as linhas da tabela de itens
         var itensHtml = string.Join("", ficha.Itens.Select(i =>
         {
-            var quantidadeDisplay = i.ExibirComoQB ? "QB" : i.Quantidade.ToString("0.####");
-            var unidadeDisplay = i.ExibirComoQB ? "" : $" {System.Net.WebUtility.HtmlEncode(i.UnidadeMedidaSigla ?? "")}";
+            var quantidadeDisplay = i.ExibirComoQB
+                ? "QB"
+                : i.TipoItem == "Receita"
+                    ? $"{i.Quantidade:0.##}x"
+                    : FormatarQuantidade(i.Quantidade, i.UnidadeMedidaSigla);
             var tipoDisplay = i.TipoItem == "Receita" ? "Receita" : "Insumo";
             var nomeDisplay = i.TipoItem == "Receita" ? (i.ReceitaNome ?? "") : (i.InsumoNome ?? "");
-            return $"<tr><td>{tipoDisplay}</td><td>{System.Net.WebUtility.HtmlEncode(nomeDisplay)}</td><td>{quantidadeDisplay}{unidadeDisplay}</td></tr>";
+            return $"<tr><td>{tipoDisplay}</td><td>{System.Net.WebUtility.HtmlEncode(nomeDisplay)}</td><td>{quantidadeDisplay}</td></tr>";
         }));
 
         // Construir as linhas da tabela de canais
         var canaisHtml = string.Join("", ficha.Canais.Select(c =>
             $"<tr><td>{System.Net.WebUtility.HtmlEncode(c.Canal)}</td><td>{System.Net.WebUtility.HtmlEncode(c.NomeExibicao ?? "")}</td><td>{c.PrecoVenda:C}</td><td>{c.TaxaPercentual ?? 0}</td><td>{(c.MargemCalculadaPercentual?.ToString("0.##") ?? "-")}</td></tr>"));
+
+        var custoPorPorcao = ficha.CustoPorPorcaoVenda.HasValue
+            ? ficha.CustoPorPorcaoVenda
+            : ficha.CustoPorUnidade > 0
+                ? ficha.CustoPorUnidade
+                : null;
+        var custoPorPorcaoDisplay = custoPorPorcao.HasValue ? custoPorPorcao.Value.ToString("C") : "-";
 
         var html = $@"
 <!DOCTYPE html>
@@ -90,8 +134,8 @@ public class FichasTecnicasController : ControllerBase
 <body>
   <h1>Ficha Tï¿½ï¿½cnica: {System.Net.WebUtility.HtmlEncode(ficha.Nome)}</h1>
   <p><strong>Receita:</strong> {System.Net.WebUtility.HtmlEncode(ficha.CategoriaNome ?? "")}</p>
-  <p><strong>Custo tÇ¸cnico por porï¿½ï¿½Çœo:</strong> {ficha.CustoPorUnidade:C}</p>
-  <p><strong>Preï¿½ï¿½o sugerido (por porï¿½ï¿½Çœo):</strong> {(ficha.PrecoSugeridoVenda.HasValue ? ficha.PrecoSugeridoVenda.Value.ToString("C") : "-")}</p>
+  <p><strong>Custo por porcao/unidade:</strong> {custoPorPorcaoDisplay}</p>
+  <p><strong>Preco sugerido:</strong> {(ficha.PrecoSugeridoVenda.HasValue ? ficha.PrecoSugeridoVenda.Value.ToString("C") : "-")}</p>
 
   <h2>Canais</h2>
   <table>

@@ -74,6 +74,11 @@ public class FichaTecnica
     public string? RendimentoPorcoes { get; set; }
 
     /// <summary>
+    /// Quantidade num?rica de por??es/unidades (para precifica??o por unidade vendida)
+    /// </summary>
+    public decimal? RendimentoPorcoesNumero { get; set; }
+
+    /// <summary>
     /// Tempo de preparo em minutos (apenas informativo)
     /// </summary>
     public int? TempoPreparo { get; set; }

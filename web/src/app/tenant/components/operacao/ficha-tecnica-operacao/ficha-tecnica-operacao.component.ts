@@ -152,10 +152,27 @@ export class TenantFichaTecnicaOperacaoComponent {
     return `${mins}min`;
   }
 
+  private obterConversaoUnidade(sigla: string): { fator: number; siglaExibicao: string } {
+    const upper = sigla.toUpperCase();
+    if (upper === 'KG') return { fator: 1000, siglaExibicao: 'g' };
+    if (upper === 'L') return { fator: 1000, siglaExibicao: 'mL' };
+    if (upper === 'GR') return { fator: 1, siglaExibicao: 'g' };
+    if (upper === 'ML') return { fator: 1, siglaExibicao: 'mL' };
+    return { fator: 1, siglaExibicao: sigla || '' };
+  }
+
+  formatQuantidadeComUnidade(quantidade: number | null | undefined, sigla?: string | null): string {
+    if (quantidade === null || quantidade === undefined) return '-';
+    const { fator, siglaExibicao } = this.obterConversaoUnidade(sigla ?? '');
+    const valorExibicao = quantidade * fator;
+    const casas = siglaExibicao.toUpperCase() === 'UN' ? 0 : 2;
+    const valorFormatado = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: casas }).format(valorExibicao);
+    return `${valorFormatado} ${siglaExibicao}`.trim();
+  }
+
   quantidadeDisplay(item: ReceitaItemDto): string {
     if (item.exibirComoQB) return 'QB';
-    const unidade = item.unidadeMedidaSigla || '';
-    return `${(item.quantidade ?? 0).toFixed(4)} ${unidade}`.trim();
+    return this.formatQuantidadeComUnidade(item.quantidade, item.unidadeMedidaSigla);
   }
 
   // Métodos para trabalhar com itens da ficha técnica (quando não há receita principal)
@@ -205,8 +222,7 @@ export class TenantFichaTecnicaOperacaoComponent {
     if (item.tipoItem === 'Receita') {
       return `${item.quantidade}x`;
     }
-    const unidade = item.unidadeMedidaSigla || '';
-    return `${(item.quantidade ?? 0).toFixed(4)} ${unidade}`.trim();
+    return this.formatQuantidadeComUnidade(item.quantidade, item.unidadeMedidaSigla);
   }
 
   getItemNomeFicha(item: FichaTecnicaItemDto): string {

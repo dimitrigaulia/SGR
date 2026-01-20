@@ -12,11 +12,15 @@ export interface InsumoDto {
   unidadeCompraNome?: string | null;
   unidadeCompraSigla?: string | null;
   quantidadePorEmbalagem: number;
+  unidadesPorEmbalagem?: number | null;
+  pesoPorUnidade?: number | null;
   custoUnitario: number;
   fatorCorrecao: number;
   ipcValor?: number | null;
   quantidadeAjustadaIPC: number;
   custoPorUnidadeUsoAlternativo: number;
+  aproveitamentoPercentual?: number | null;
+  custoPorUnidadeLimpa: number;
   descricao?: string | null;
   pathImagem?: string | null;
   isAtivo: boolean;
@@ -27,6 +31,8 @@ export interface CreateInsumoRequest {
   categoriaId: number;
   unidadeCompraId: number;
   quantidadePorEmbalagem: number;
+  unidadesPorEmbalagem?: number | null;
+  pesoPorUnidade?: number | null;
   custoUnitario: number;
   fatorCorrecao: number;
   ipcValor?: number | null;
@@ -40,6 +46,8 @@ export interface UpdateInsumoRequest {
   categoriaId: number;
   unidadeCompraId: number;
   quantidadePorEmbalagem: number;
+  unidadesPorEmbalagem?: number | null;
+  pesoPorUnidade?: number | null;
   custoUnitario: number;
   fatorCorrecao: number;
   ipcValor?: number | null;
@@ -98,4 +106,3 @@ export class InsumoService {
     return this.http.delete<void>(`${this.base}/${id}`);
   }
 }
-

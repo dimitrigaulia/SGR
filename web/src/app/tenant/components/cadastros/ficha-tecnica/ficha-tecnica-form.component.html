@@ -125,6 +125,12 @@
               <input matInput type="text" name="rendimentoPorcoes" [(ngModel)]="model.rendimentoPorcoes" [disabled]="isView()" maxlength="200" placeholder="Ex: Porção para 3 pessoas, 4 palitos, 8 bolinhos" />
               <mat-hint>Descrição do rendimento (ex: "Porção para 3 pessoas", "4 palitos", "8 bolinhos")</mat-hint>
             </mat-form-field>
+
+            <mat-form-field appearance="outline" class="form-field-spacing">
+              <mat-label>Rendimento (n?mero)</mat-label>
+              <input matInput type="number" name="rendimentoPorcoesNumero" [(ngModel)]="model.rendimentoPorcoesNumero" [disabled]="isView()" min="0" step="0.01" />
+              <mat-hint>Informe a quantidade num?rica de por??es/unidades quando o produto ? vendido por unidade.</mat-hint>
+            </mat-form-field>
           </div>
         </div>
 
@@ -211,10 +217,10 @@
                   <th mat-header-cell *matHeaderCellDef>Quantidade</th>
                   <td mat-cell *matCellDef="let item">
                     @if (isView()) {
-                      {{ item.quantidade }}
+                      {{ formatQuantidadeNumeroForm(item) }}
                     } @else {
                       <mat-form-field appearance="outline" class="field-quantidade">
-                        <input matInput type="number" [(ngModel)]="item.quantidade" [ngModelOptions]="{standalone: true}" min="0.0001" step="0.0001" />
+                        <input matInput type="number" [ngModel]="getQuantidadeExibicao(item)" (ngModelChange)="onQuantidadeExibicaoChange(item, $event)" [ngModelOptions]="{standalone: true}" [min]="getQuantidadeMin(item)" [step]="getQuantidadeStep(item)" />
                       </mat-form-field>
                     }
                   </td>
@@ -232,8 +238,8 @@
                         <mat-form-field appearance="outline" class="field-unidade">
                           <mat-select [(ngModel)]="item.unidadeMedidaId" [ngModelOptions]="{standalone: true}">
                             <mat-option [value]="null">Selecione...</mat-option>
-                            @for (u of unidades(); track u.id) {
-                              <mat-option [value]="u.id">{{ u.sigla }} - {{ u.nome }}</mat-option>
+                            @for (u of getUnidadesPermitidas(item); track u.id) {
+                              <mat-option [value]="u.id">{{ getUnidadeSigla(u.id) }} - {{ u.nome }}</mat-option>
                             }
                           </mat-select>
                         </mat-form-field>
@@ -314,7 +320,7 @@
                             @if (item.tipoItem === 'Receita') {
                               {{ item.quantidade }}x
                             } @else {
-                              {{ item.quantidade }} {{ getUnidadeSigla(item.unidadeMedidaId) }}
+                              {{ formatQuantidadeNumeroForm(item) }} {{ getUnidadeSigla(item.unidadeMedidaId) }}
                             }
                           </span>
                         </div>
@@ -364,7 +370,7 @@
                         <div class="item-row-mobile">
                           <mat-form-field appearance="outline" class="field-quantidade-mobile">
                             <mat-label>Quantidade</mat-label>
-                            <input matInput type="number" [(ngModel)]="item.quantidade" (ngModelChange)="onQuantidadeChange(item)" [ngModelOptions]="{standalone: true}" min="0.0001" step="0.0001" />
+                            <input matInput type="number" [ngModel]="getQuantidadeExibicao(item)" (ngModelChange)="onQuantidadeExibicaoChange(item, $event)" [ngModelOptions]="{standalone: true}" [min]="getQuantidadeMin(item)" [step]="getQuantidadeStep(item)" />
                           </mat-form-field>
                           
                           @if (isUnidadeTravada(item)) {
@@ -377,8 +383,8 @@
                               <mat-label>Unidade</mat-label>
                               <mat-select [(ngModel)]="item.unidadeMedidaId" [ngModelOptions]="{standalone: true}">
                                 <mat-option [value]="null">Selecione...</mat-option>
-                                @for (u of unidades(); track u.id) {
-                                  <mat-option [value]="u.id">{{ u.sigla }}</mat-option>
+                                @for (u of getUnidadesPermitidas(item); track u.id) {
+                                  <mat-option [value]="u.id">{{ getUnidadeSigla(u.id) }}</mat-option>
                                 }
                               </mat-select>
                             </mat-form-field>
@@ -416,7 +422,7 @@
               <div class="value">{{ formatCurrency(custoTotalCalculado) }}</div>
             </div>
             <div>
-              <div class="label">Preço Mesa Sugerido</div>
+              <div class="label">Preço Mesa</div>
               <div class="value">
                 @if (precoMesaCalculado === null) {
                   —
@@ -595,7 +601,7 @@
                   <div style="font-size: 14px; color: #666; margin-bottom: 8px;">Peso Total Base</div>
                   <div style="font-size: 20px; font-weight: bold; margin-bottom: 12px;">
                     @if (fichaDtoCompleto()!.pesoTotalBase !== null && fichaDtoCompleto()!.pesoTotalBase !== undefined) {
-                      {{ fichaDtoCompleto()!.pesoTotalBase | number:'1.0-4' }} {{ getUnidadePorcao().unidade }}
+                      {{ formatQuantidadeExibicao(fichaDtoCompleto()!.pesoTotalBase, getUnidadePorcao().unidade) }}
                     } @else {
                       -
                     }
@@ -603,7 +609,7 @@
                   <div style="font-size: 14px; color: #666; margin-bottom: 4px;">Rendimento Final (após IC/IPC)</div>
                   <div style="font-size: 18px; font-weight: bold;">
                     @if (fichaDtoCompleto()!.rendimentoFinal !== null && fichaDtoCompleto()!.rendimentoFinal !== undefined) {
-                      {{ fichaDtoCompleto()!.rendimentoFinal | number:'1.0-4' }} {{ getUnidadePorcao().unidade }}
+                      {{ formatQuantidadeExibicao(fichaDtoCompleto()!.rendimentoFinal, getUnidadePorcao().unidade) }}
                     } @else {
                       -
                     }
@@ -611,15 +617,18 @@
                 </mat-card-content>
               </mat-card>
 
-              <!-- Card 3: Custo por kg/L -->
+              <!-- Card 3: Custo/kg final -->
               <mat-card>
                 <mat-card-content>
-                  <div style="font-size: 14px; color: #666; margin-bottom: 8px;">Custo por kg/L</div>
+                  <div style="font-size: 14px; color: #666; margin-bottom: 8px;">Custo/kg final</div>
                   <div style="font-size: 24px; font-weight: bold;">
                     @if (fichaDtoCompleto()!.custoKgL !== null && fichaDtoCompleto()!.custoKgL !== undefined) {
                       {{ formatCurrency(fichaDtoCompleto()!.custoKgL ?? 0) }}/{{ getUnidadePorcao().unidadePreco.replace('R$/', '') }}
                     } @else {
                       -
+                    }
+                    @if (fichaDtoCompleto()!.custoKgBase !== null && fichaDtoCompleto()!.custoKgBase !== undefined) {
+                      <div style="margin-top: 6px; font-size: 12px; color: #666;">Custo/kg base: {{ formatCurrency(fichaDtoCompleto()!.custoKgBase ?? 0) }}/{{ getUnidadePorcao().unidadePreco.replace('R$/', '') }}</div>
                     }
                   </div>
                 </mat-card-content>
@@ -631,7 +640,7 @@
                   <div style="font-size: 14px; color: #666; margin-bottom: 8px;">Porção</div>
                   <div style="font-size: 18px; font-weight: bold; margin-bottom: 8px;">
                     @if (fichaDtoCompleto()!.porcaoVendaQuantidade) {
-                      {{ fichaDtoCompleto()!.porcaoVendaQuantidade | number:'1.0-2' }} {{ getUnidadePorcao().unidade }}
+                      {{ formatQuantidadeExibicao(fichaDtoCompleto()!.porcaoVendaQuantidade, getUnidadePorcao().unidade) }}
                     } @else {
                       -
                     }
@@ -691,11 +700,7 @@
                 <ng-container matColumnDef="quantidade">
                   <th mat-header-cell *matHeaderCellDef>Quantidade + Unidade</th>
                   <td mat-cell *matCellDef="let item">
-                    @if (item.tipoItem === 'Receita') {
-                      {{ item.quantidade }}x
-                    } @else {
-                      {{ item.quantidade | number:'1.0-4' }} {{ item.unidadeMedidaSigla || '-' }}
-                    }
+                    {{ formatQuantidadeItem(item) }}
                   </td>
                   <td mat-footer-cell *matFooterCellDef></td>
                 </ng-container>
@@ -720,7 +725,7 @@
             <div style="margin-top: 8px; font-size: 14px; color: #666;">
               <strong>Peso Total Base:</strong>
               @if (fichaDtoCompleto()!.pesoTotalBase !== null && fichaDtoCompleto()!.pesoTotalBase !== undefined) {
-                {{ fichaDtoCompleto()!.pesoTotalBase | number:'1.0-4' }} {{ getUnidadePorcao().unidade }}
+                {{ formatQuantidadeExibicao(fichaDtoCompleto()!.pesoTotalBase, getUnidadePorcao().unidade) }}
               } @else {
                 -
               }
@@ -734,7 +739,7 @@
               <mat-card-content>
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
                   <div>
-                    <div style="font-size: 14px; color: #666; margin-bottom: 4px;">Custo (unidade/ml/gr)</div>
+                    <div style="font-size: 14px; color: #666; margin-bottom: 4px;">Custo por g/ml (base)</div>
                     <div style="font-size: 18px; font-weight: bold;">{{ formatCurrency(fichaDtoCompleto()!.custoPorUnidade) }}</div>
                   </div>
                   <div>
@@ -748,7 +753,7 @@
                     </div>
                   </div>
                   <div>
-                    <div style="font-size: 14px; color: #666; margin-bottom: 4px;">Markup (IndiceContabil)</div>
+                    <div style="font-size: 14px; color: #666; margin-bottom: 4px;">Markup</div>
                     <div style="font-size: 18px; font-weight: bold;">
                       @if (fichaDtoCompleto()!.indiceContabil) {
                         {{ fichaDtoCompleto()!.indiceContabil | number:'1.0-2' }}
@@ -758,7 +763,7 @@
                     </div>
                   </div>
                   <div>
-                    <div style="font-size: 14px; color: #666; margin-bottom: 4px;">Preço Mesa Sugerido</div>
+                    <div style="font-size: 14px; color: #666; margin-bottom: 4px;">Preço Mesa</div>
                     <div style="font-size: 20px; font-weight: bold;">
                       @if (fichaDtoCompleto()!.precoMesaSugerido !== null && fichaDtoCompleto()!.precoMesaSugerido !== undefined) {
                         {{ formatCurrency(fichaDtoCompleto()!.precoMesaSugerido ?? 0) }}
@@ -769,7 +774,7 @@
                   </div>
                 </div>
                 <div style="margin-top: 16px; padding: 12px; background: #f5f5f5; border-radius: 4px; font-size: 14px; color: #666;">
-                  <strong>Fórmula:</strong> Preço mesa = custo por porção × markup
+                  <strong>Formula:</strong> Preco mesa = custo por porcao x markup
                 </div>
               </mat-card-content>
             </mat-card>

@@ -77,7 +77,7 @@
             } @else {
               Quantas porções padrão essa receita rende ao todo (ex: 10 porções)
               @if (pesoTotalAposRendimento !== null) {
-                <br>Peso total calculado: {{ pesoTotalAposRendimento | number:'1.0-0' }} g
+                <br>Peso total calculado: {{ formatQuantidadeNumero(pesoTotalAposRendimento, 'GR') }} g
               }
             }
           </mat-hint>
@@ -102,12 +102,12 @@
             @if (model.calcularRendimentoAutomatico) {
               Informe o peso por porção para calcular o rendimento automaticamente
               @if (pesoTotalAposRendimento !== null) {
-                <br>Peso total calculado: {{ pesoTotalAposRendimento | number:'1.0-0' }} g
+                <br>Peso total calculado: {{ formatQuantidadeNumero(pesoTotalAposRendimento, 'GR') }} g
               }
             } @else {
               @if (pesoTotalAposRendimento !== null) {
-                Calculado automaticamente: {{ (pesoTotalAposRendimento / model.rendimento) | number:'1.0-0' }} g por porção
-                <br>Peso total: {{ pesoTotalAposRendimento | number:'1.0-0' }} g
+                Calculado automaticamente: {{ formatQuantidadeNumero(pesoTotalAposRendimento / model.rendimento, 'GR') }} g por porção
+                <br>Peso total: {{ formatQuantidadeNumero(pesoTotalAposRendimento, 'GR') }} g
               } @else {
                 Peso aproximado de cada porção em gramas (ex: 250 g por porção)
                 <br>Adicione itens com unidade de peso (GR ou KG) para cálculo automático
@@ -231,7 +231,7 @@
                   {{ formatQuantidade(item.quantidade, item.unidadeMedidaId) }}
                 } @else {
                   <mat-form-field appearance="outline" class="field-quantidade">
-                    <input matInput type="number" [(ngModel)]="item.quantidade" [ngModelOptions]="{standalone: true}" (ngModelChange)="onQuantidadeChange(item, 0)" [step]="getStepForUnidade(item.unidadeMedidaId)" min="0.0001" />
+                    <input matInput type="number" [ngModel]="getQuantidadeExibicao(item)" (ngModelChange)="onQuantidadeExibicaoChange(item, $event)" [ngModelOptions]="{standalone: true}" [step]="getStepForUnidade(item.unidadeMedidaId)" [min]="getMinForUnidade(item.unidadeMedidaId)" />
                   </mat-form-field>
                 }
               </td>
@@ -383,10 +383,10 @@
                     </mat-form-field>
                     
                     <div class="item-row-mobile">
-                      <mat-form-field appearance="outline" class="field-quantidade-mobile">
-                        <mat-label>Quantidade</mat-label>
-                        <input matInput type="number" [(ngModel)]="item.quantidade" [ngModelOptions]="{standalone: true}" (ngModelChange)="onQuantidadeChange(item, 0)" [step]="getStepForUnidade(item.unidadeMedidaId)" min="0.0001" />
-                      </mat-form-field>
+                    <mat-form-field appearance="outline" class="field-quantidade-mobile">
+                      <mat-label>Quantidade</mat-label>
+                      <input matInput type="number" [ngModel]="getQuantidadeExibicao(item)" (ngModelChange)="onQuantidadeExibicaoChange(item, $event)" [ngModelOptions]="{standalone: true}" [step]="getStepForUnidade(item.unidadeMedidaId)" [min]="getMinForUnidade(item.unidadeMedidaId)" />
+                    </mat-form-field>
                       
                       <mat-form-field appearance="outline" class="field-unidade-mobile">
                         <mat-label>Unidade</mat-label>
