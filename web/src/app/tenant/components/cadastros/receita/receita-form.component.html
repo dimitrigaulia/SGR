@@ -52,7 +52,7 @@
         </div>
         @if (!todosItensEmGramas) {
           <div style="font-size: 12px; color: #666; margin-top: 6px; margin-bottom: 16px;">
-            Para ativar o cálculo automático, todos os itens precisam estar em GR (ou KG).
+            Para ativar o cálculo automático, todos os itens precisam estar em GR (itens em outras unidades não participam do cálculo automático).
           </div>
         }
       }
@@ -110,7 +110,7 @@
                 <br>Peso total: {{ formatQuantidadeNumero(pesoTotalAposRendimento, 'GR') }} g
               } @else {
                 Peso aproximado de cada porção em gramas (ex: 250 g por porção)
-                <br>Adicione itens com unidade de peso (GR ou KG) para cálculo automático
+                <br>Adicione itens com unidade de peso (GR) para cálculo automático
               }
             }
           </mat-hint>
@@ -244,7 +244,7 @@
                   {{ getUnidadeSigla(item.unidadeMedidaId) }}
                 } @else {
                   <mat-form-field appearance="outline" class="field-unidade">
-                    <mat-select [(ngModel)]="item.unidadeMedidaId" [ngModelOptions]="{standalone: true}" (ngModelChange)="onUnidadeMedidaChange(); atualizarCalculosAutomaticos()">
+                    <mat-select [(ngModel)]="item.unidadeMedidaId" [ngModelOptions]="{standalone: true}" (ngModelChange)="onUnidadeMedidaChangeItem(item)">
                       <mat-option [value]="null">Selecione...</mat-option>
                       @for (u of unidades(); track u.id) {
                         <mat-option [value]="u.id">{{ u.sigla }} - {{ u.nome }}</mat-option>
@@ -390,7 +390,7 @@
                       
                       <mat-form-field appearance="outline" class="field-unidade-mobile">
                         <mat-label>Unidade</mat-label>
-                        <mat-select [(ngModel)]="item.unidadeMedidaId" [ngModelOptions]="{standalone: true}" (ngModelChange)="onUnidadeMedidaChange(); atualizarCalculosAutomaticos()">
+                        <mat-select [(ngModel)]="item.unidadeMedidaId" [ngModelOptions]="{standalone: true}" (ngModelChange)="onUnidadeMedidaChangeItem(item)">
                           <mat-option [value]="null">Selecione...</mat-option>
                           @for (u of unidades(); track u.id) {
                             <mat-option [value]="u.id">{{ u.sigla }}</mat-option>

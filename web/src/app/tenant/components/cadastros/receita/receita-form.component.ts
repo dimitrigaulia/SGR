@@ -113,7 +113,7 @@ export class TenantReceitaFormComponent {
     return validItens.every(i => {
       const unidade = this.unidades().find(u => u.id === i.unidadeMedidaId);
       const sigla = (unidade?.sigla || '').toUpperCase();
-      return sigla === 'GR' || sigla === 'KG';
+      return sigla === 'GR';
     });
   }
 
@@ -156,6 +156,14 @@ export class TenantReceitaFormComponent {
       .subscribe({ 
         next: res => {
           this.unidades.set(res.items.filter(u => u.isAtivo));
+          // Normalizar itens após carregar unidades (garante conversão KG→GR, L→ML)
+          const itensAtualizados = this.itens();
+          if (itensAtualizados.length > 0) {
+            itensAtualizados.forEach(item => this.normalizarUnidadeItemParaBase(item));
+            this.itens.set([...itensAtualizados]);
+            this.atualizarCalculosAutomaticos();
+            this.atualizarCustosItens();
+          }
           this.cdr.markForCheck();
         }
       });
@@ -202,13 +210,15 @@ export class TenantReceitaFormComponent {
             custoPor100UnidadesUso: item.custoPor100UnidadesUso ?? null
           })));
           
-          // Atualizar cálculos automaticamente após carregar os dados
-          // Usar setTimeout para garantir que insumos e unidades já estejam carregados
-          setTimeout(() => {
+          // Normalizar se unidades já estiverem carregadas (elimina race condition)
+          if (this.unidades().length > 0) {
+            const itensAtualizados = this.itens();
+            itensAtualizados.forEach(item => this.normalizarUnidadeItemParaBase(item));
+            this.itens.set([...itensAtualizados]);
             this.atualizarCalculosAutomaticos();
             this.atualizarCustosItens();
-            this.cdr.markForCheck();
-          }, 0);
+          }
+          this.cdr.markForCheck();
         });
     } else {
       // Adicionar um item vazio inicial
@@ -280,10 +290,62 @@ export class TenantReceitaFormComponent {
     return unidade ? unidade.sigla : '';
   }
 
+  private getUnidadeIdPorSigla(sigla: string): number | null {
+    const u = this.unidades().find(x => (x.sigla || '').toUpperCase() === sigla.toUpperCase());
+    return u?.id ?? null;
+  }
+
+  private normalizarUnidadeItemParaBase(item: ReceitaItemFormModel): void {
+    // Legado: receitas antigas podem vir em KG/L/G; normalizar para GR/ML/UN
+    const sigla = (this.obterSiglaUnidade(item.unidadeMedidaId) || '').toUpperCase();
+    
+    // Return rápido se já estiver em unidade base (GR/ML/UN)
+    if (sigla === 'GR' || sigla === 'ML' || sigla === 'UN') {
+      return;
+    }
+    
+    const qtd = item.quantidade || 0;
+
+    // Converter KG -> GR
+    if (sigla === 'KG') {
+      const grId = this.getUnidadeIdPorSigla('GR');
+      if (grId) {
+        item.quantidade = Math.round(qtd * 1000);
+        item.unidadeMedidaId = grId;
+      }
+    }
+
+    // Converter L -> ML
+    if (sigla === 'L') {
+      const mlId = this.getUnidadeIdPorSigla('ML');
+      if (mlId) {
+        item.quantidade = Math.round(qtd * 1000);
+        item.unidadeMedidaId = mlId;
+      }
+    }
+
+    // Converter G -> GR (legado)
+    if (sigla === 'G') {
+      const grId = this.getUnidadeIdPorSigla('GR');
+      if (grId) {
+        item.quantidade = qtd; // mesma quantidade, só mudar unidade
+        item.unidadeMedidaId = grId;
+      }
+    }
+  }
+
   private obterConversaoUnidade(sigla: string): { fator: number; siglaExibicao: string } {
     const upper = sigla.toUpperCase();
+    if (upper === 'GR') return { fator: 1, siglaExibicao: 'g' };
+    if (upper === 'ML') return { fator: 1, siglaExibicao: 'mL' };
+    // Se chegou KG/L aqui, normalização falhou - exibir como está para evidenciar
+    return { fator: 1, siglaExibicao: sigla || '' };
+  }
+
+  private conversaoParaBaseCusto(sigla: string): { fator: number; siglaExibicao: string } {
+    const upper = (sigla || '').toUpperCase();
     if (upper === 'KG') return { fator: 1000, siglaExibicao: 'g' };
-    if (upper === 'L') return { fator: 1000, siglaExibicao: 'mL' };
+    if (upper === 'L')  return { fator: 1000, siglaExibicao: 'mL' };
     if (upper === 'GR') return { fator: 1, siglaExibicao: 'g' };
     if (upper === 'ML') return { fator: 1, siglaExibicao: 'mL' };
     return { fator: 1, siglaExibicao: sigla || '' };
@@ -304,49 +366,44 @@ export class TenantReceitaFormComponent {
   }
 
   getQuantidadeExibicao(item: ReceitaItemFormModel): number {
-    const sigla = this.obterSiglaUnidade(item.unidadeMedidaId);
-    const { fator } = this.obterConversaoUnidade(sigla);
-    return item.quantidade * fator;
+    return item.quantidade || 0;
   }
 
   onQuantidadeExibicaoChange(item: ReceitaItemFormModel, valor: number): void {
-    const sigla = this.obterSiglaUnidade(item.unidadeMedidaId);
-    const { fator, siglaExibicao } = this.obterConversaoUnidade(sigla);
-    let numero = typeof valor === 'number' ? valor : Number(valor);
-    if (Number.isNaN(numero)) {
-      numero = 0;
-    }
-    if (siglaExibicao.toUpperCase() === 'UN') {
-      numero = Math.round(numero);
+    let n = typeof valor === 'number' ? valor : Number(valor);
+    if (!Number.isFinite(n)) n = 0;
+
+    const sigla = (this.obterSiglaUnidade(item.unidadeMedidaId) || '').toUpperCase();
+
+    if (sigla === 'UN') {
+      n = Math.round(n);
+      if (n < 1) n = 1;
     } else {
-      numero = Math.round(numero * 100) / 100;
+      // GR/ML: inteiro
+      n = Math.round(n);
+      if (n < 0) n = 0;
     }
-    item.quantidade = fator > 0 ? numero / fator : numero;
-    this.onQuantidadeChange(item, 0);
+
+    item.quantidade = n;
+    
+    // Recalcular imediatamente para dar feedback instantâneo
+    this.atualizarCalculosAutomaticos();
+    this.atualizarCustosItens();
+    this.cdr.markForCheck();
   }
 
   getStepForUnidade(unidadeMedidaId: number | null): string {
-    const sigla = this.obterSiglaUnidade(unidadeMedidaId).toUpperCase();
-    if (sigla == 'UN') {
-      return '1';
-    }
     return '1';
   }
 
   getMinForUnidade(unidadeMedidaId: number | null): number {
-    const sigla = this.obterSiglaUnidade(unidadeMedidaId).toUpperCase();
-    if (sigla == 'UN') {
-      return 1;
-    }
-    return 0.01;
+    const sigla = (this.obterSiglaUnidade(unidadeMedidaId) || '').toUpperCase();
+    return sigla === 'UN' ? 1 : 0;
   }
 
   formatQuantidade(quantidade: number, unidadeMedidaId: number | null): string {
-    const sigla = this.obterSiglaUnidade(unidadeMedidaId);
-    const { fator, siglaExibicao } = this.obterConversaoUnidade(sigla);
-    const valorExibicao = quantidade * fator;
-    const casas = siglaExibicao.toUpperCase() == 'UN' ? 0 : 2;
-    return new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: casas }).format(valorExibicao);
+    const casas = 0;
+    return new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: casas }).format(quantidade || 0);
   }
 
   formatQuantidadeNumero(valor: number | null | undefined, sigla: string): string {
@@ -365,6 +422,7 @@ export class TenantReceitaFormComponent {
       const insumo = this.insumos().find(i => i.id === item.insumoId);
       if (insumo && insumo.unidadeCompraId) {
         item.unidadeMedidaId = insumo.unidadeCompraId;
+        this.normalizarUnidadeItemParaBase(item);
       }
     }
     this.onUnidadeMedidaChange();
@@ -374,12 +432,25 @@ export class TenantReceitaFormComponent {
   }
 
   onUnidadeMedidaChange(): void {
-    // Se toggle está ligado e agora não todos itens estão em GR/KG, desligar toggle
+    // Se toggle está ligado e agora não todos itens estão em GR, desligar toggle
     if (this.model.calcularRendimentoAutomatico && !this.todosItensEmGramas) {
       this.model.calcularRendimentoAutomatico = false;
-      this.toast.info('Cálculo automático desativado: todos os itens precisam estar em GR ou KG.');
+      this.toast.info('Cálculo automático desativado: todos os itens precisam estar em GR.');
       this.cdr.markForCheck();
     }
+  }
+
+  onUnidadeMedidaChangeItem(item: ReceitaItemFormModel): void {
+    this.normalizarUnidadeItemParaBase(item);
+
+    if (this.model.calcularRendimentoAutomatico && !this.todosItensEmGramas) {
+      this.model.calcularRendimentoAutomatico = false;
+      this.toast.info('Cálculo automático desativado: todos os itens precisam estar em GR.');
+    }
+
+    this.atualizarCalculosAutomaticos();
+    this.atualizarCustosItens();
+    this.cdr.markForCheck();
   }
 
   get pesoTotalTeorico(): number | null {
@@ -392,7 +463,7 @@ export class TenantReceitaFormComponent {
   }
 
   get pesoTotalItens(): number | null {
-    // Somar apenas itens com unidade de peso (GR, KG)
+    // Somar apenas itens com unidade de peso (GR - unidade base)
     let total = 0;
     let temItensPeso = false;
 
@@ -406,23 +477,14 @@ export class TenantReceitaFormComponent {
 
       const sigla = unidade.sigla.toUpperCase();
       
-      // Verificar se é unidade de peso (GR ou KG)
-      if (sigla !== 'GR' && sigla !== 'KG') {
+      // Verificar se é unidade de peso base (GR)
+      if (sigla !== 'GR') {
         continue;
-      }
-
-      const insumo = this.insumos().find(i => i.id === item.insumoId);
-      if (!insumo) continue;
-
-      // Converter quantidade para gramas
-      let quantidadeEmGramas = item.quantidade;
-      if (sigla === 'KG') {
-        quantidadeEmGramas = item.quantidade * 1000;
       }
 
       // IMPORTANTE: FatorCorrecao é apenas visual (para exibição de QB), não entra no cálculo de rendimento
       // IPC já representa a quantidade aproveitável quando informado
-      total += quantidadeEmGramas;
+      total += item.quantidade;
       temItensPeso = true;
     }
 
@@ -486,7 +548,7 @@ export class TenantReceitaFormComponent {
     // Se tentar ativar sem pré-condição, desfaz e orienta
     if (this.model.calcularRendimentoAutomatico && !this.todosItensEmGramas) {
       this.model.calcularRendimentoAutomatico = false;
-      this.toast.error('Cálculo automático de rendimento só funciona quando todos os itens estão em GR ou KG.');
+      this.toast.error('Cálculo automático de rendimento só funciona quando todos os itens estão em GR.');
       this.cdr.markForCheck();
       return;
     }
@@ -529,7 +591,7 @@ export class TenantReceitaFormComponent {
     
     const custo = this.calcularCustoPorUnidadeUso(insumo);
     const siglaBase = this.obterSiglaUnidade(insumo.unidadeCompraId);
-    const { fator, siglaExibicao } = this.obterConversaoUnidade(siglaBase);
+    const { fator, siglaExibicao } = this.conversaoParaBaseCusto(siglaBase);
     const custoExibicao = fator > 0 ? custo / fator : custo;
     
     if (custoExibicao <= 0 || !siglaExibicao) {
@@ -597,26 +659,6 @@ export class TenantReceitaFormComponent {
     this.cdr.markForCheck();
   }
 
-  onQuantidadeChange(item: ReceitaItemFormModel, index: number) {
-    // Quando a quantidade muda, ajustar se for unidade UN
-    if (item.unidadeMedidaId) {
-      const unidade = this.unidades().find(u => u.id === item.unidadeMedidaId);
-      if (unidade && unidade.sigla.toUpperCase() === 'UN' && item.quantidade > 0) {
-        // Arredondar para inteiro
-        const rounded = Math.round(item.quantidade);
-        if (rounded !== item.quantidade) {
-          item.quantidade = rounded;
-          if (item.quantidade < 1) {
-            item.quantidade = 1;
-          }
-          this.cdr.markForCheck();
-        }
-      }
-    }
-    this.atualizarCalculosAutomaticos();
-    this.atualizarCustosItens();
-  }
-
   onFileSelected(event: Event) {
     const input = event.target as HTMLInputElement;
     if (!input.files || input.files.length === 0) return;
@@ -664,7 +706,22 @@ export class TenantReceitaFormComponent {
       this.toast.error('Adicione pelo menos um item vÃ¡lido Ã  receita (com insumo, quantidade e unidade de medida)');
       return;
     }
-
+    // Validação defensiva: garantir que todas as unidades são base (GR/ML/UN)
+    const unidadesInvalidas = validItens.filter(item => {
+      const unidade = this.unidades().find(u => u.id === item.unidadeMedidaId);
+      if (!unidade) return true;
+      const sigla = (unidade.sigla || '').toUpperCase();
+      return sigla !== 'GR' && sigla !== 'ML' && sigla !== 'UN';
+    });
+    
+    if (unidadesInvalidas.length > 0) {
+      const siglasInvalidas = unidadesInvalidas.map(item => {
+        const unidade = this.unidades().find(u => u.id === item.unidadeMedidaId);
+        return unidade?.sigla || '?';
+      }).join(', ');
+      this.toast.error(`Erro: existem itens com unidades inválidas (${siglasInvalidas}). Use apenas GR, ML ou UN.`);
+      return;
+    }
     // Validações do IC
     if (v.icSinal === '-' && v.icValor !== null && v.icValor >= 100) {
       this.toast.error('Perda de 100% ou mais resultaria em peso final zero. Use um valor menor que 100%.');

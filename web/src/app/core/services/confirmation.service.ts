@@ -4,16 +4,16 @@ import { Observable } from 'rxjs';
 import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../shared/components/confirmation-dialog/confirmation-dialog.component';
 
 /**
- * Service para exibiÃ§Ã£o de diÃ¡logos de confirmaÃ§Ã£o
- * Segue o mesmo padrÃ£o do ToastService para consistÃªncia
+ * Service para exibição de diálogos de confirmação
+ * Segue o mesmo padrão do ToastService para consistência
  */
 @Injectable({ providedIn: 'root' })
 export class ConfirmationService {
   private dialog = inject(MatDialog);
 
   /**
-   * Exibe um diÃ¡logo de confirmaÃ§Ã£o customizado
-   * @param data Dados do diÃ¡logo (mensagem, tÃ­tulo, textos dos botÃµes)
+   * Exibe um diálogo de confirmação customizado
+   * @param data Dados do diálogo (mensagem, título, textos dos botões)
    * @returns Observable<boolean> - true se confirmado, false se cancelado
    */
   confirm(data: ConfirmationDialogData): Observable<boolean> {
@@ -28,9 +28,9 @@ export class ConfirmationService {
   }
 
   /**
-   * MÃ©todo helper para confirmaÃ§Ãµes simples
-   * @param message Mensagem de confirmaÃ§Ã£o
-   * @param title TÃ­tulo do diÃ¡logo (opcional)
+   * Método helper para confirmações simples
+   * @param message Mensagem de confirmação
+   * @param title Título do diálogo (opcional)
    * @returns Observable<boolean>
    */
   confirmSimple(message: string, title?: string): Observable<boolean> {
@@ -38,8 +38,8 @@ export class ConfirmationService {
   }
 
   /**
-   * MÃ©todo helper para confirmaÃ§Ãµes de exclusÃ£o
-   * @param itemName Nome do item a ser excluÃ­do (opcional)
+   * Método helper para confirmações de exclusão
+   * @param itemName Nome do item a ser excluído (opcional)
    * @returns Observable<boolean>
    */
   confirmDelete(itemName?: string): Observable<boolean> {
@@ -49,7 +49,7 @@ export class ConfirmationService {
     
     return this.confirm({
       message,
-      title: 'Confirmar exclusÃ£o',
+      title: 'Confirmar exclusão',
       confirmText: 'Excluir',
       cancelText: 'Cancelar',
       confirmColor: 'warn'
@@ -57,7 +57,7 @@ export class ConfirmationService {
   }
 
   /**
-   * MÃ©todo helper para confirmaÃ§Ãµes de ativaÃ§Ã£o/inativaÃ§Ã£o
+   * Método helper para confirmações de ativação/inativação
    * @param action 'ativar' ou 'inativar'
    * @param itemName Nome do item (opcional)
    * @param warningMessage Mensagem de aviso adicional (opcional)
