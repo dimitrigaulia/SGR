@@ -224,9 +224,9 @@ export class TenantInsumoFormComponent {
   obterLabelPesoPorUnidade(): string {
     const unidadeBase = this.obterUnidadeBase();
     if (unidadeBase === 'mL') {
-      return `Volume médio por unidade (${unidadeBase})`;
+      return `Volume limpo por unidade (${unidadeBase})`;
     }
-    return `Peso médio por unidade (${unidadeBase})`;
+    return `Peso limpo por unidade (${unidadeBase})`;
   }
 
   getCalcularTooltip(): string {
@@ -327,6 +327,34 @@ export class TenantInsumoFormComponent {
 
     const custoPorUnidade = (quantidadeBase / ipcBase) * (custo / unidadesPorEmbalagem);
     const valor = custoPorUnidade.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    return `${valor} / un`;
+  }
+
+  get quantidadeUnidadesTexto(): string {
+    const unidades = this.model.unidadesPorEmbalagem || 0;
+    if (unidades <= 0) {
+      return '';
+    }
+    return `Contém ${unidades} unidade${unidades !== 1 ? 's' : ''}`;
+  }
+
+  get resumoCustoPorUnidadeComprada(): string {
+    const unidades = this.model.unidadesPorEmbalagem || 0;
+    const custo = typeof this.model.custoUnitario === 'number' 
+      ? this.model.custoUnitario 
+      : (parseFloat(String(this.model.custoUnitario || 0)) || 0);
+    
+    if (unidades <= 0 || custo <= 0) {
+      return '-';
+    }
+    
+    const custoPorUnidade = custo / unidades;
+    const valor = custoPorUnidade.toLocaleString('pt-BR', { 
+      style: 'currency', 
+      currency: 'BRL',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
     return `${valor} / un`;
   }
 

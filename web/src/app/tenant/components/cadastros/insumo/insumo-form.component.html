@@ -5,7 +5,15 @@
 
   <!-- QUICK SUMMARY (somente o que é "principal" para o usuário) -->
   <div class="quick-summary two-cols">
-    @if (model.custoUnitario > 0 && model.quantidadePorEmbalagem > 0 && resumoCustoPorUnidade !== '-') {
+    @if ((model.unidadesPorEmbalagem ?? 0) > 0 && resumoCustoPorUnidadeLimpa !== '-') {
+      <div class="quick-card primary">
+        <div class="quick-label">
+          <span>Custo real por unidade (limpa)</span>
+          <span class="auto-badge" matTooltip="Valor calculado automaticamente">⚡ auto</span>
+        </div>
+        <div class="quick-value">{{ resumoCustoPorUnidadeLimpa }}</div>
+      </div>
+    } @else if (model.custoUnitario > 0 && model.quantidadePorEmbalagem > 0 && resumoCustoPorUnidade !== '-') {
       <div class="quick-card primary">
         <div class="quick-label">
           <span>Custo por unidade limpa</span>
@@ -171,6 +179,18 @@
       </mat-card-content>
     </mat-card>
 
+    <!-- INFORMAÇÃO DE UNIDADES -->
+    @if (quantidadeUnidadesTexto) {
+      <mat-card class="section-card info-card">
+        <mat-card-content>
+          <div class="info-highlight">
+            <mat-icon>inventory_2</mat-icon>
+            <span>{{ quantidadeUnidadesTexto }}</span>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    }
+
     <!-- UNIDADES INDIVIDUAIS (OPCIONAL) -->
     <mat-expansion-panel class="section-panel" [expanded]="(model.unidadesPorEmbalagem ?? 0) > 0">
       <mat-expansion-panel-header>
@@ -235,18 +255,10 @@
           <mat-hint class="hint-responsive">Usado para converter unidades → {{ obterUnidadeBase() }} na ficha técnica</mat-hint>
 
           @if (model.pesoPorUnidade && model.pesoPorUnidade <= 0) {
-            <mat-error>{{ obterUnidadeBase() === 'mL' ? 'Volume' : 'Peso' }} médio deve ser maior que zero</mat-error>
+            <mat-error>{{ obterUnidadeBase() === 'mL' ? 'Volume' : 'Peso' }} limpo deve ser maior que zero</mat-error>
           }
         </mat-form-field>
       </div>
-
-      <!-- CUSTO POR UNIDADE INDIVIDUAL -->
-      @if (resumoCustoPorUnidadeLimpa !== '-') {
-        <div class="panel-metric">
-          <span class="panel-metric-label">Custo por unidade individual</span>
-          <span class="panel-metric-value">{{ resumoCustoPorUnidadeLimpa }}</span>
-        </div>
-      }
     </mat-expansion-panel>
 
     <!-- RESUMO DE CUSTOS -->
@@ -261,7 +273,21 @@
           <strong>{{ resumoCustoPorUnidadeCompra }}</strong>
         </div>
 
-        @if (exemploIPC) {
+        @if ((model.unidadesPorEmbalagem ?? 0) > 0 && model.custoUnitario > 0) {
+          <div class="summary-row">
+            <span>Custo de cada unidade (comprada)</span>
+            <strong>{{ resumoCustoPorUnidadeComprada }}</strong>
+          </div>
+        }
+
+        @if ((model.unidadesPorEmbalagem ?? 0) > 0 && resumoCustoPorUnidadeLimpa !== '-') {
+          <div class="summary-row">
+            <span>Custo real de cada unidade (limpa)</span>
+            <strong>{{ resumoCustoPorUnidadeLimpa }}</strong>
+          </div>
+        }
+
+        @if (exemploIPC && (model.unidadesPorEmbalagem ?? 0) === 0) {
           <div class="summary-note">💡 {{ exemploIPC }}</div>
         }
 

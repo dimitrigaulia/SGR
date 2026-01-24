@@ -101,6 +101,27 @@
   font-weight: 700;
 }
 
+/* Info card (Contém N unidades) */
+.info-card {
+  background: rgba(33, 150, 243, 0.08);
+  border: 1px solid rgba(33, 150, 243, 0.2);
+}
+
+.info-highlight {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  color: rgba(33, 150, 243, 1);
+
+  mat-icon {
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+  }
+}
+
 /* Summary */
 .summary-row {
   display: flex;
