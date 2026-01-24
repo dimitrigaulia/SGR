@@ -1,194 +1,293 @@
 <div class="form-container">
-  <h2 class="form-title">{{ isEdit() ? (isView() ? 'Visualizar insumo' : 'Editar insumo') : 'Cadastro de insumo' }}</h2>
+  <h2 class="form-title">
+    {{ isEdit() ? (isView() ? 'Visualizar insumo' : 'Editar insumo') : 'Cadastro de insumo' }}
+  </h2>
 
-  <mat-card class="form-field-spacing" *ngIf="!isView()">
-    <mat-card-content>
-      <div style="font-size: 13px; margin-bottom: 4px; font-weight: 500;">
-        Passos para cadastrar um insumo:
+  <!-- QUICK SUMMARY (somente o que é "principal" para o usuário) -->
+  <div class="quick-summary two-cols">
+    @if (model.custoUnitario > 0 && model.quantidadePorEmbalagem > 0 && resumoCustoPorUnidade !== '-') {
+      <div class="quick-card primary">
+        <div class="quick-label">
+          <span>Custo por unidade limpa</span>
+          <span class="auto-badge" matTooltip="Valor calculado automaticamente">⚡ auto</span>
+        </div>
+        <div class="quick-value">{{ resumoCustoPorUnidade }}</div>
       </div>
-      <ol style="margin: 0 0 0 16px; padding: 0; font-size: 13px;">
-        <li>Escolha a categoria do insumo.</li>
-        <li>Informe a unidade de medida, quantidade por embalagem e custo da embalagem.</li>
-        <li>Essa unidade será usada nas receitas (g, mL ou un).</li>
-        <li>O IPC será preenchido automaticamente. Ajuste apenas se houver perda.</li>
-      </ol>
-    </mat-card-content>
-  </mat-card>
+    }
+
+    @if (model.quantidadePorEmbalagem > 0 && (model.ipcValor || 0) > 0 && aproveitamentoPercentualNumero < 100) {
+      <div class="quick-card">
+        <div class="quick-label">
+          <span>Aproveitamento</span>
+          <span class="auto-badge" matTooltip="Valor calculado automaticamente">⚡ auto</span>
+        </div>
+        <div class="quick-value muted">{{ aproveitamentoPercentual }}</div>
+      </div>
+    }
+  </div>
 
   <form #f="ngForm" (ngSubmit)="save()">
-    <mat-form-field appearance="outline" class="form-field-spacing">
-      <mat-label>Nome</mat-label>
-      <input matInput name="nome" [(ngModel)]="model.nome" [disabled]="isView()" required maxlength="200" />
-      @if (f.controls['nome']?.errors?.['required']) {
-        <mat-error>Nome é obrigatório</mat-error>
-      }
-    </mat-form-field>
-
-    <div class="form-row">
-      <mat-form-field appearance="outline" class="form-field-spacing">
-        <mat-label>Categoria</mat-label>
-        <mat-select name="categoriaId" [(ngModel)]="model.categoriaId" [disabled]="isView()" required>
-          @for (c of categorias(); track c.id) {
-            <mat-option [value]="c.id">{{ c.nome }}</mat-option>
-          }
-        </mat-select>
-        @if (f.controls['categoriaId']?.errors?.['required']) {
-          <mat-error>Categoria é obrigatória</mat-error>
-        }
-      </mat-form-field>
-      <mat-form-field appearance="outline" class="form-field-spacing">
-        <mat-label>Unidade de Medida</mat-label>
-        <mat-select name="unidadeCompraId" [(ngModel)]="model.unidadeCompraId" [disabled]="isView()" required>
-          @for (u of unidades(); track u.id) {
-            <mat-option [value]="u.id">{{ u.nome }} ({{ u.sigla }})</mat-option>
-          }
-        </mat-select>
-        <mat-hint class="hint-responsive">Unidade de medida do insumo (recomendado: g, mL ou un)</mat-hint>
-        @if (f.controls['unidadeCompraId']?.errors?.['required']) {
-          <mat-error>Unidade de medida é obrigatória</mat-error>
-        }
-      </mat-form-field>
-    </div>
-
-    <div class="form-row">
-      <mat-form-field appearance="outline" class="form-field-spacing">
-        <mat-label>Quantidade por Embalagem</mat-label>
-        <input matInput type="text" name="quantidadePorEmbalagem" [value]="model.quantidadePorEmbalagem > 0 ? model.quantidadePorEmbalagem : ''" (input)="onQuantidadePorEmbalagemInput($event)" [disabled]="isView()" required pattern="[0-9.,]+" />
-        <mat-hint class="hint-responsive">
-          Aceita ponto ou vírgula como separador decimal (ex: 1000,5 ou 1000.5)
-        </mat-hint>
-        @if (f.controls['quantidadePorEmbalagem']?.errors?.['required']) {
-          <mat-error>Quantidade por embalagem é obrigatória</mat-error>
-        }
-      </mat-form-field>
-
-      <mat-form-field appearance="outline" class="form-field-spacing">
-        <mat-label>IPC (quantidade aproveitável)</mat-label>
-        <input matInput #ipcInput type="text" name="ipcValor" [value]="model.ipcValor && model.ipcValor > 0 ? model.ipcValor : ''" (input)="onIPCInput($event)" [disabled]="isView()" pattern="[0-9.,]+" />
-        <mat-hint class="hint-responsive">Quanto dessa embalagem é realmente usado na receita. Se aproveita tudo, deixe igual à Quantidade por Embalagem. Aceita ponto ou vírgula como separador decimal.</mat-hint>
-        @if (ipcEditadoManualmente() && !isView()) {
-          <button mat-icon-button type="button" matSuffix (click)="resetarIPC()" matTooltip="Resetar IPC = Quantidade por Embalagem" style="margin-right: -8px;">
-            <mat-icon style="font-size: 18px; width: 18px; height: 18px;">refresh</mat-icon>
-          </button>
-        }
-        @if (model.ipcValor && model.ipcValor <= 0) {
-          <mat-error>IPC deve ser maior que zero</mat-error>
-        }
-        @if (model.ipcValor && model.quantidadePorEmbalagem > 0 && model.ipcValor > model.quantidadePorEmbalagem) {
-          <mat-error>IPC não pode ser maior que Quantidade por Embalagem</mat-error>
-        }
-      </mat-form-field>
-    </div>
-
-    <div class="form-row">
-      <mat-form-field appearance="outline" class="form-field-spacing">
-        <mat-label>Contém X unidades</mat-label>
-        <input matInput type="text" name="unidadesPorEmbalagem" [value]="model.unidadesPorEmbalagem && model.unidadesPorEmbalagem > 0 ? model.unidadesPorEmbalagem : ''" (input)="onUnidadesPorEmbalagemInput($event)" [disabled]="isView()" pattern="[0-9.,]+" />
-        <mat-hint class="hint-responsive">Preencha quando a embalagem contiver unidades (ex: 13 unidades).</mat-hint>
-        @if (model.unidadesPorEmbalagem && model.unidadesPorEmbalagem <= 0) {
-          <mat-error>Unidades por embalagem deve ser maior que zero</mat-error>
-        }
-      </mat-form-field>
-
-      <mat-form-field appearance="outline" class="form-field-spacing">
-        <mat-label>Peso por unidade (g/ml)</mat-label>
-        <input matInput type="text" name="pesoPorUnidade" [value]="model.pesoPorUnidade && model.pesoPorUnidade > 0 ? model.pesoPorUnidade : ''" (input)="onPesoPorUnidadeInput($event)" [disabled]="isView()" pattern="[0-9.,]+" />
-        <button mat-button matSuffix type="button" (click)="calcularPesoPorUnidade()" [disabled]="isView()">Calcular</button>
-        <mat-hint class="hint-responsive">Use para converter UN → GR/ML na ficha tecnica (ex: 50 g por unidade).</mat-hint>
-        @if (model.pesoPorUnidade && model.pesoPorUnidade <= 0) {
-          <mat-error>Peso por unidade deve ser maior que zero</mat-error>
-        }
-      </mat-form-field>
-    </div>
-
-    <div class="form-row">
-      <mat-form-field appearance="outline" class="form-field-spacing">
-        <mat-label>Custo da Embalagem</mat-label>
-        <input matInput type="text" name="custoUnitario" [value]="model.custoUnitario > 0 ? model.custoUnitario : ''" (input)="onCustoInput($event)" [disabled]="isView()" required pattern="[0-9.,]+" />
-        <span matTextPrefix>R$&nbsp;</span>
-        <mat-hint class="hint-responsive">Custo do item comprado (embalagem). Aceita ponto ou vírgula como separador decimal.</mat-hint>
-        @if (f.controls['custoUnitario']?.errors?.['required']) {
-          <mat-error>Custo da embalagem é obrigatório</mat-error>
-        }
-        @if (model.custoUnitario < 0) {
-          <mat-error>Custo da embalagem deve ser maior ou igual a zero</mat-error>
-        }
-      </mat-form-field>
-    </div>
-
-    <!-- <mat-card class="form-field-spacing">
-      <mat-card-content>
-        <div style="display: flex; justify-content: space-between; gap: 8px;">
-          <span>Conversão entre compra e uso:</span>
-          <span style="font-weight: 500;">{{ tiposUnidadeMensagem }}</span>
-        </div>
-      </mat-card-content>
-    </mat-card> -->
-
-    <mat-card class="form-field-spacing">
+    <!-- DADOS BÁSICOS -->
+    <mat-card class="section-card">
       <mat-card-header>
-        <mat-card-title style="font-size: 14px;">Resumo de custos</mat-card-title>
+        <mat-card-title class="section-title">Dados básicos</mat-card-title>
       </mat-card-header>
       <mat-card-content>
-        @if (model.unidadesPorEmbalagem && model.unidadesPorEmbalagem > 0) {
-          <div style="display: flex; justify-content: flex-end; margin-bottom: 8px;">
-            <button mat-button type="button" (click)="toggleDetalhesCusto()">
-              {{ exibirDetalhesCusto ? 'Ocultar detalhes' : 'Mostrar detalhes' }}
-            </button>
-          </div>
-        }
-        <div style="display: flex; justify-content: space-between; gap: 8px; margin-bottom: 8px;">
-          <span>Custo por embalagem:</span>
-          <span style="font-weight: 500;">{{ resumoCustoPorUnidadeCompra }}</span>
-        </div>
-        @if (resumoCustoPorUnidadeLimpa !== '-') {
-          <div style="display: flex; justify-content: space-between; gap: 8px; margin-bottom: 8px;">
-            <span>Custo por unidade (peca):</span>
-            <span style="font-weight: 500;">{{ resumoCustoPorUnidadeLimpa }}</span>
-          </div>
-        }
-        @if (exibirDetalhesCusto) {
-          <div style="display: flex; justify-content: space-between; gap: 8px; margin-bottom: 8px;">
-            <span>Custo por g/ml usado na receita:</span>
-            <span style="font-weight: 500;">{{ resumoCustoPorUnidade }}</span>
-          </div>
-        }
-        @if (aproveitamentoPercentual !== '-') {
-          <div style="display: flex; justify-content: space-between; gap: 8px; margin-bottom: 8px;">
-            <span>Aproveitamento (IPC ÷ Embalagem):</span>
-            <span style="font-weight: 500; color: var(--mat-app-text-color); opacity: 0.7; font-size: 13px;">{{ aproveitamentoPercentual }}</span>
-          </div>
-        }
-        @if (exemploIPC) {
-          <div style="margin-top: 8px; font-size: 12px; color: var(--mat-app-text-color); opacity: 0.7;">
-            Ex.: {{ exemploIPC }}
-          </div>
-        }
-        <div style="margin-top: 8px; font-size: 12px; color: var(--mat-app-text-color); opacity: 0.7;">
-          Valores calculados automaticamente com base nas unidades, quantidade por embalagem e IPC.
+        <mat-form-field appearance="outline" class="form-field-spacing">
+          <mat-label>Nome</mat-label>
+          <input
+            matInput
+            name="nome"
+            [(ngModel)]="model.nome"
+            [disabled]="isView()"
+            required
+            maxlength="200"
+          />
+          @if (f.controls['nome']?.errors?.['required']) {
+            <mat-error>Nome é obrigatório</mat-error>
+          }
+        </mat-form-field>
+
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="form-field-spacing">
+            <mat-label>Categoria</mat-label>
+            <mat-select name="categoriaId" [(ngModel)]="model.categoriaId" [disabled]="isView()" required>
+              @for (c of categorias(); track c.id) {
+                <mat-option [value]="c.id">{{ c.nome }}</mat-option>
+              }
+            </mat-select>
+            @if (f.controls['categoriaId']?.errors?.['required']) {
+              <mat-error>Categoria é obrigatória</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="form-field-spacing">
+            <mat-label>Unidade</mat-label>
+            <mat-select name="unidadeCompraId" [(ngModel)]="model.unidadeCompraId" [disabled]="isView()" required>
+              @for (u of unidades(); track u.id) {
+                <mat-option [value]="u.id">{{ u.nome }} ({{ u.sigla }})</mat-option>
+              }
+            </mat-select>
+            @if (f.controls['unidadeCompraId']?.errors?.['required']) {
+              <mat-error>Unidade é obrigatória</mat-error>
+            }
+          </mat-form-field>
         </div>
       </mat-card-content>
     </mat-card>
 
-    <mat-form-field appearance="outline" class="form-field-spacing">
-      <mat-label>Descrição</mat-label>
-      <textarea matInput name="descricao" [(ngModel)]="model.descricao" [disabled]="isView()" rows="3"></textarea>
-    </mat-form-field>
+    <!-- COMPRA E APROVEITAMENTO -->
+    <mat-card class="section-card">
+      <mat-card-header>
+        <mat-card-title class="section-title">Compra e aproveitamento</mat-card-title>
+      </mat-card-header>
+
+      <mat-card-content>
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="form-field-spacing" subscriptSizing="dynamic">
+            <mat-label>Quantidade por embalagem @if (unidadeCompraSelecionada) { ({{ unidadeCompraSelecionada.sigla }}) }</mat-label>
+            <input
+              matInput
+              type="text"
+              name="quantidadePorEmbalagem"
+              [(ngModel)]="quantidadePorEmbalagemStr"
+              (ngModelChange)="onQuantidadePorEmbalagemChange($event)"
+              (keydown)="onNumericKeyDown($event)"
+              [disabled]="isView()"
+              required
+              pattern="[0-9.,]+"
+              inputmode="decimal"
+            />
+            <mat-hint class="hint-responsive">Quanto vem na embalagem comprada. Ex: pacote de 500g, garrafa de 2L</mat-hint>
+            @if (f.controls['quantidadePorEmbalagem']?.invalid && f.controls['quantidadePorEmbalagem']?.touched) {
+              <mat-error>Quantidade por embalagem é obrigatória e deve ser maior que zero</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="form-field-spacing" subscriptSizing="dynamic">
+            <mat-label>
+              Quantidade limpa/aproveitável @if (unidadeCompraSelecionada) { ({{ unidadeCompraSelecionada.sigla }}) }
+              <mat-icon class="help-icon" matTooltip="Quanto sobra após limpar/preparar o insumo (descascar, desossar, etc.). Também conhecido como IPC (Índice de Parte Comestível)">help_outline</mat-icon>
+            </mat-label>
+            <input
+              matInput
+              #ipcInput
+              type="text"
+              name="ipcValor"
+              [(ngModel)]="ipcValorStr"
+              (ngModelChange)="onIPCValorChange($event)"
+              (keydown)="onNumericKeyDown($event)"
+              [disabled]="isView()"
+              pattern="[0-9.,]+"
+              inputmode="decimal"
+            />
+            <mat-hint class="hint-responsive">Quanto sobra após limpeza. <strong>Exemplos COM perda:</strong> batata descascada, frango sem osso, alface sem talo. <strong>SEM perda:</strong> óleo, açúcar, arroz. Se não houver perda, mantenha igual à quantidade</mat-hint>
+
+            @if (ipcEditadoManualmente() && !isView()) {
+              <button
+                mat-icon-button
+                type="button"
+                matSuffix
+                (click)="resetarIPC()"
+                matTooltip="Resetar para valor padrão (sem perda)"
+                class="suffix-icon"
+              >
+                <mat-icon>refresh</mat-icon>
+              </button>
+            }
+
+            @if (model.ipcValor && model.ipcValor <= 0) {
+              <mat-error>Quantidade limpa deve ser maior que zero</mat-error>
+            }
+            @if (model.ipcValor && model.quantidadePorEmbalagem > 0 && model.ipcValor > model.quantidadePorEmbalagem) {
+              <mat-error>Quantidade limpa não pode ser maior que a quantidade por embalagem</mat-error>
+            }
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="form-field-spacing">
+            <mat-label>Custo da embalagem completa</mat-label>
+            <span matTextPrefix>R$&nbsp;</span>
+            <input
+              matInput
+              type="text"
+              name="custoUnitario"
+              [(ngModel)]="custoUnitarioStr"
+              (ngModelChange)="onCustoUnitarioChange($event)"
+              (keydown)="onNumericKeyDown($event)"
+              [disabled]="isView()"
+              required
+              pattern="[0-9.,]+"
+              inputmode="decimal"
+            />
+            @if (f.controls['custoUnitario']?.invalid && f.controls['custoUnitario']?.touched) {
+              <mat-error>Custo da embalagem é obrigatório e deve ser maior que zero</mat-error>
+            }
+          </mat-form-field>
+
+          <div class="grid-spacer"></div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- UNIDADES INDIVIDUAIS (OPCIONAL) -->
+    <mat-expansion-panel class="section-panel" [expanded]="(model.unidadesPorEmbalagem ?? 0) > 0">
+      <mat-expansion-panel-header>
+        <mat-panel-title>Unidades individuais (opcional)</mat-panel-title>
+
+        <mat-panel-description>
+          @if ((model.unidadesPorEmbalagem ?? 0) > 0 && (model.pesoPorUnidade ?? 0) > 0) {
+            {{ model.unidadesPorEmbalagem }} un • {{ model.pesoPorUnidade }} @if (unidadeCompraSelecionada) { {{ obterUnidadeBase() }} }
+          } @else if ((model.unidadesPorEmbalagem ?? 0) > 0) {
+            {{ model.unidadesPorEmbalagem }} un por embalagem
+          } @else {
+            Use quando a embalagem contém itens individuais (ex: pacote com 8 salsichas, bandeja com 6 ovos)
+          }
+        </mat-panel-description>
+      </mat-expansion-panel-header>
+
+      <div class="form-row">
+        <mat-form-field appearance="outline" class="form-field-spacing" subscriptSizing="dynamic">
+          <mat-label>Unidades por embalagem</mat-label>
+          <input
+            matInput
+            type="text"
+            name="unidadesPorEmbalagem"
+            [(ngModel)]="unidadesPorEmbalagemStr"
+            (ngModelChange)="onUnidadesPorEmbalagemChange($event)"
+            (keydown)="onIntegerKeyDown($event)"
+            [disabled]="isView()"
+            pattern="[0-9]+"
+            inputmode="numeric"
+          />
+          <mat-hint class="hint-responsive">Quantas unidades individuais vêm na embalagem. Ex: 8 salsichas, 12 ovos</mat-hint>
+          @if (model.unidadesPorEmbalagem && model.unidadesPorEmbalagem <= 0) {
+            <mat-error>Unidades por embalagem deve ser maior que zero</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="form-field-spacing" subscriptSizing="dynamic">
+          <mat-label>{{ obterLabelPesoPorUnidade() }}</mat-label>
+          <input
+            matInput
+            type="text"
+            name="pesoPorUnidade"
+            [(ngModel)]="pesoPorUnidadeStr"
+            (ngModelChange)="onPesoPorUnidadeChange($event)"
+            (keydown)="onNumericKeyDown($event)"
+            [disabled]="isView()"
+            pattern="[0-9.,]+"
+            inputmode="decimal"
+          />
+
+          <button
+            mat-stroked-button
+            matSuffix
+            type="button"
+            (click)="calcularPesoPorUnidade()"
+            [disabled]="isView() || !(model.unidadesPorEmbalagem && model.quantidadePorEmbalagem)"
+            [matTooltip]="getCalcularTooltip()"
+          >
+            Calcular
+          </button>
+
+          <mat-hint class="hint-responsive">Usado para converter unidades → {{ obterUnidadeBase() }} na ficha técnica</mat-hint>
+
+          @if (model.pesoPorUnidade && model.pesoPorUnidade <= 0) {
+            <mat-error>{{ obterUnidadeBase() === 'mL' ? 'Volume' : 'Peso' }} médio deve ser maior que zero</mat-error>
+          }
+        </mat-form-field>
+      </div>
+
+      <!-- CUSTO POR UNIDADE INDIVIDUAL -->
+      @if (resumoCustoPorUnidadeLimpa !== '-') {
+        <div class="panel-metric">
+          <span class="panel-metric-label">Custo por unidade individual</span>
+          <span class="panel-metric-value">{{ resumoCustoPorUnidadeLimpa }}</span>
+        </div>
+      }
+    </mat-expansion-panel>
+
+    <!-- RESUMO DE CUSTOS -->
+    <mat-card class="section-card">
+      <mat-card-header>
+        <mat-card-title class="section-title">Resumo de custos</mat-card-title>
+      </mat-card-header>
+
+      <mat-card-content>
+        <div class="summary-row">
+          <span>Custo da embalagem completa</span>
+          <strong>{{ resumoCustoPorUnidadeCompra }}</strong>
+        </div>
+
+        @if (exemploIPC) {
+          <div class="summary-note">💡 {{ exemploIPC }}</div>
+        }
+
+        <div class="summary-footnote">
+          ⚡ Valores calculados automaticamente com base na unidade, quantidade por embalagem e quantidade limpa.
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- INFORMAÇÕES ADICIONAIS -->
+    <mat-card class="section-card">
+      <mat-card-header>
+        <mat-card-title class="section-title">Informações adicionais</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <mat-form-field appearance="outline" class="form-field-spacing">
+          <mat-label>Descrição</mat-label>
+          <textarea matInput name="descricao" [(ngModel)]="model.descricao" [disabled]="isView()" rows="3" maxlength="1000"></textarea>
+          <mat-hint>Observações ou informações extras sobre o insumo</mat-hint>
+        </mat-form-field>
+      </mat-card-content>
+    </mat-card>
 
     <div class="form-toggle-wrapper">
       <mat-slide-toggle name="isAtivo" [(ngModel)]="model.isAtivo" [disabled]="isView()">Ativo</mat-slide-toggle>
     </div>
-
-    <!-- <div class="imagem-row form-section">
-      @if (model.pathImagem) {
-        <img [src]="model.pathImagem" alt="insumo" width="64" height="64" style="border-radius:4px; object-fit:cover" />
-      }
-      <button mat-stroked-button type="button" (click)="triggerFile()" [disabled]="isView()">{{ model.pathImagem ? 'Alterar imagem' : 'Adicionar imagem' }}</button>
-      @if (model.pathImagem && !isView()) {
-        <button mat-button type="button" color="warn" (click)="clearImage()">Remover</button>
-      }
-      <input type="file" accept="image/png,image/jpeg" hidden #fileInput (change)="onFile($event)" />
-    </div> -->
 
     @if (error()) {
       <div class="form-error">{{ error() }}</div>

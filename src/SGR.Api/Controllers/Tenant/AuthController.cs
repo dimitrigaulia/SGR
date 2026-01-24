@@ -50,7 +50,7 @@ public class AuthController : ControllerBase
         if (response == null)
         {
             _logger.LogWarning("Tentativa de login do tenant falhou para: {Email}", request.Email);
-            return Unauthorized(new { message = "Email ou senha inválidos" });
+            return Unauthorized(new { message = "Email ou senha inválidos." });
         }
 
         return Ok(response);

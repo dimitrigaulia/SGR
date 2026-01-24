@@ -18,13 +18,15 @@ import { CategoriaInsumoService, CategoriaInsumoDto } from '../../../../features
 import { UnidadeMedidaService, UnidadeMedidaDto } from '../../../../features/tenant-unidades-medida/services/unidade-medida.service';
 import { ToastService } from '../../../../core/services/toast.service';
 import { UploadService } from '../../../../features/usuarios/services/upload.service';
+import { MatExpansionModule } from '@angular/material/expansion';
+import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog.component';
 
 type InsumoFormModel = Omit<InsumoDto, 'id' | 'categoriaNome' | 'unidadeCompraNome' | 'unidadeCompraSigla' | 'quantidadeAjustadaIPC' | 'custoPorUnidadeUsoAlternativo' | 'aproveitamentoPercentual' | 'custoPorUnidadeLimpa'>;
 
 @Component({
   standalone: true,
   selector: 'app-tenant-insumo-form',
-  imports: [CommonModule, FormsModule, RouterLink, MatFormFieldModule, MatInputModule, MatButtonModule, MatSelectModule, MatSlideToggleModule, MatSnackBarModule, MatCardModule, MatDialogModule, MatIconModule, MatTooltipModule],
+  imports: [CommonModule, FormsModule, RouterLink, MatFormFieldModule,  MatInputModule, MatButtonModule, MatSelectModule, MatSlideToggleModule, MatSnackBarModule, MatCardModule, MatDialogModule, MatIconModule, MatTooltipModule, MatExpansionModule],
   templateUrl: './insumo-form.component.html',
   styleUrls: ['./insumo-form.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -39,7 +41,6 @@ export class TenantInsumoFormComponent {
   private cdr = inject(ChangeDetectorRef);
   private destroyRef = inject(DestroyRef);
 
-  mostrarDetalhesCusto = signal(false);
   private dialog = inject(MatDialog);
 
   id = signal<number | null>(null);
@@ -52,6 +53,13 @@ export class TenantInsumoFormComponent {
   ipcEditadoManualmente = signal<boolean>(false);
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
   @ViewChild('ipcInput') ipcInput!: ElementRef<HTMLInputElement>;
+
+  // Campos string para binding com ngModel (validações do form)
+  quantidadePorEmbalagemStr = '';
+  ipcValorStr = '';
+  custoUnitarioStr = '';
+  unidadesPorEmbalagemStr = '';
+  pesoPorUnidadeStr = '';
 
   model: InsumoFormModel = {
     nome: '',
@@ -129,9 +137,67 @@ export class TenantInsumoFormComponent {
           if (e.ipcValor && e.ipcValor !== e.quantidadePorEmbalagem) {
             this.ipcEditadoManualmente.set(true);
           }
+          // Inicializar campos string para ngModel
+          this.syncModelToStrings();
           this.cdr.markForCheck();
         });
+    } else {
+      // Inicializar campos string para criação
+      this.syncModelToStrings();
     }
+  }
+
+  private syncModelToStrings(): void {
+    this.quantidadePorEmbalagemStr = this.model.quantidadePorEmbalagem > 0 ? String(this.model.quantidadePorEmbalagem) : '';
+    this.ipcValorStr = (this.model.ipcValor || 0) > 0 ? String(this.model.ipcValor) : '';
+    this.custoUnitarioStr = this.model.custoUnitario > 0 ? String(this.model.custoUnitario) : '';
+    this.unidadesPorEmbalagemStr = (this.model.unidadesPorEmbalagem || 0) > 0 ? String(this.model.unidadesPorEmbalagem) : '';
+    this.pesoPorUnidadeStr = (this.model.pesoPorUnidade || 0) > 0 ? String(this.model.pesoPorUnidade) : '';
+  }
+
+  /**
+   * Valida keydown para permitir apenas números, vírgula, ponto e teclas de controle
+   */
+  onNumericKeyDown(event: KeyboardEvent, allowDecimal: boolean = true): void {
+    const key = event.key;
+    
+    // Permitir teclas de controle
+    if (
+      key === 'Backspace' ||
+      key === 'Delete' ||
+      key === 'Tab' ||
+      key === 'Escape' ||
+      key === 'Enter' ||
+      key === 'ArrowLeft' ||
+      key === 'ArrowRight' ||
+      key === 'ArrowUp' ||
+      key === 'ArrowDown' ||
+      key === 'Home' ||
+      key === 'End' ||
+      (event.ctrlKey && (key === 'a' || key === 'c' || key === 'v' || key === 'x' || key === 'z'))
+    ) {
+      return;
+    }
+    
+    // Permitir números
+    if (key >= '0' && key <= '9') {
+      return;
+    }
+    
+    // Permitir vírgula e ponto se decimal for permitido
+    if (allowDecimal && (key === ',' || key === '.')) {
+      return;
+    }
+    
+    // Bloquear qualquer outra tecla
+    event.preventDefault();
+  }
+
+  /**
+   * Valida keydown para permitir apenas números inteiros
+   */
+  onIntegerKeyDown(event: KeyboardEvent): void {
+    this.onNumericKeyDown(event, false);
   }
 
   private findUnidade(id: number | null | undefined): UnidadeMedidaDto | undefined {
@@ -146,6 +212,34 @@ export class TenantInsumoFormComponent {
     if (upper === 'GR') return { fator: 1, siglaExibicao: 'g' };
     if (upper === 'ML') return { fator: 1, siglaExibicao: 'mL' };
     return { fator: 1, siglaExibicao: sigla || '' };
+  }
+
+  obterUnidadeBase(): string {
+    const unidadeCompra = this.unidadeCompraSelecionada;
+    if (!unidadeCompra) return 'g/mL';
+    const { siglaExibicao } = this.obterConversaoBase(unidadeCompra.sigla);
+    return siglaExibicao;
+  }
+
+  obterLabelPesoPorUnidade(): string {
+    const unidadeBase = this.obterUnidadeBase();
+    if (unidadeBase === 'mL') {
+      return `Volume médio por unidade (${unidadeBase})`;
+    }
+    return `Peso médio por unidade (${unidadeBase})`;
+  }
+
+  getCalcularTooltip(): string {
+    const unidadeCompra = this.unidadeCompraSelecionada;
+    if (!unidadeCompra) {
+      return 'Selecione uma unidade de compra primeiro';
+    }
+    if (!this.model.quantidadePorEmbalagem || !this.model.unidadesPorEmbalagem) {
+      return 'Preencha quantidade por embalagem e unidades por embalagem primeiro';
+    }
+    const { fator, siglaExibicao } = this.obterConversaoBase(unidadeCompra.sigla);
+    const base = (this.model.quantidadePorEmbalagem * fator) / this.model.unidadesPorEmbalagem;
+    return `Calcula automaticamente: Quantidade ÷ Unidades. Ex: ${this.model.quantidadePorEmbalagem} ${unidadeCompra.sigla} ÷ ${this.model.unidadesPorEmbalagem} un = ${base.toFixed(2)} ${siglaExibicao}/un`;
   }
 
   get unidadeCompraSelecionada(): UnidadeMedidaDto | undefined {
@@ -236,19 +330,6 @@ export class TenantInsumoFormComponent {
     return `${valor} / un`;
   }
 
-  get exibirDetalhesCusto(): boolean {
-    const unidades = this.model.unidadesPorEmbalagem || 0;
-    if (unidades <= 0) {
-      return true;
-    }
-    return this.mostrarDetalhesCusto();
-  }
-
-  toggleDetalhesCusto(): void {
-    this.mostrarDetalhesCusto.set(!this.mostrarDetalhesCusto());
-    this.cdr.markForCheck();
-  }
-
 
   /**
    * Limpa a entrada removendo caracteres inválidos, mantendo apenas números, ponto e vírgula
@@ -301,66 +382,42 @@ export class TenantInsumoFormComponent {
     return isNaN(num) ? null : num;
   }
 
-  onQuantidadePorEmbalagemInput(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    // Limpar entrada removendo caracteres inválidos
-    const valorLimpo = this.limparEntradaNumerica(input.value);
-    
-    // Atualizar o valor do input com a versão limpa
-    if (input.value !== valorLimpo) {
-      input.value = valorLimpo;
-    }
-    
-    const valorNormalizado = this.normalizarNumero(valorLimpo);
+  onQuantidadePorEmbalagemChange(valor: string): void {
+    const valorNormalizado = this.normalizarNumero(valor);
     
     if (valorNormalizado !== null && valorNormalizado >= 0) {
       this.model.quantidadePorEmbalagem = valorNormalizado;
-      this.onQuantidadePorEmbalagemChange();
+      this.syncIPCAutomatico();
       this.cdr.markForCheck();
-    } else if (valorLimpo === '') {
-      // Permitir campo vazio durante digitação
+    } else {
       this.model.quantidadePorEmbalagem = 0;
       this.cdr.markForCheck();
     }
   }
 
-  onQuantidadePorEmbalagemChange(): void {
+  private syncIPCAutomatico(): void {
     // Preencher IPC automaticamente apenas se o usuário ainda não tiver mexido manualmente
     if (!this.ipcEditadoManualmente() && this.model.quantidadePorEmbalagem > 0) {
       this.model.ipcValor = this.model.quantidadePorEmbalagem;
-      // Atualizar input do IPC diretamente para garantir que o valor seja exibido
-      if (this.ipcInput?.nativeElement) {
-        this.ipcInput.nativeElement.value = String(this.model.quantidadePorEmbalagem);
-      }
-      // Usar detectChanges() para garantir atualização imediata com OnPush
-      this.cdr.detectChanges();
+      this.ipcValorStr = String(this.model.quantidadePorEmbalagem);
+      this.cdr.markForCheck();
     }
   }
 
-  onIPCInput(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    // Limpar entrada removendo caracteres inválidos
-    const valorLimpo = this.limparEntradaNumerica(input.value);
-    
-    // Atualizar o valor do input com a versão limpa
-    if (input.value !== valorLimpo) {
-      input.value = valorLimpo;
-    }
-    
-    const valorNormalizado = this.normalizarNumero(valorLimpo);
+  onIPCValorChange(valor: string): void {
+    const valorNormalizado = this.normalizarNumero(valor);
     
     if (valorNormalizado !== null && valorNormalizado >= 0) {
       this.model.ipcValor = valorNormalizado;
-      this.onIPCChange();
+      this.onIPCEditado();
       this.cdr.markForCheck();
-    } else if (valorLimpo === '') {
-      // Permitir campo vazio durante digitação
+    } else {
       this.model.ipcValor = 0;
       this.cdr.markForCheck();
     }
   }
 
-  onIPCChange(): void {
+  private onIPCEditado(): void {
     // Marcar que o usuario editou o IPC manualmente
     this.ipcEditadoManualmente.set(true);
     
@@ -368,7 +425,7 @@ export class TenantInsumoFormComponent {
     if (this.model.ipcValor && this.model.quantidadePorEmbalagem > 0) {
       if (this.model.ipcValor > this.model.quantidadePorEmbalagem) {
         this.model.ipcValor = this.model.quantidadePorEmbalagem;
-        this.toast.error('IPC nao pode ser maior que Quantidade por Embalagem');
+        this.toast.error('Quantidade limpa não pode ser maior que a quantidade por embalagem');
         this.cdr.markForCheck();
       }
     }
@@ -404,41 +461,29 @@ export class TenantInsumoFormComponent {
     this.cdr.markForCheck();
   }
 
-  onUnidadesPorEmbalagemInput(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const valorLimpo = this.limparEntradaNumerica(input.value);
-
-    if (input.value !== valorLimpo) {
-      input.value = valorLimpo;
-    }
-
-    const valorNormalizado = this.normalizarNumero(valorLimpo);
-
-    if (valorNormalizado !== null && valorNormalizado >= 0) {
-      this.model.unidadesPorEmbalagem = valorNormalizado;
+  onUnidadesPorEmbalagemChange(valor: string): void {
+    // Aceitar apenas inteiros
+    const valorLimpo = valor.replace(/[^0-9]/g, '');
+    const n = parseInt(valorLimpo, 10);
+    
+    if (Number.isFinite(n) && n >= 0) {
+      this.model.unidadesPorEmbalagem = n;
       this.atualizarPesoPorUnidade(false);
       this.cdr.markForCheck();
-    } else if (valorLimpo === '') {
+    } else {
       this.model.unidadesPorEmbalagem = 0;
       this.atualizarPesoPorUnidade(false);
       this.cdr.markForCheck();
     }
   }
 
-  onPesoPorUnidadeInput(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const valorLimpo = this.limparEntradaNumerica(input.value);
-
-    if (input.value !== valorLimpo) {
-      input.value = valorLimpo;
-    }
-
-    const valorNormalizado = this.normalizarNumero(valorLimpo);
+  onPesoPorUnidadeChange(valor: string): void {
+    const valorNormalizado = this.normalizarNumero(valor);
 
     if (valorNormalizado !== null && valorNormalizado >= 0) {
       this.model.pesoPorUnidade = valorNormalizado;
       this.cdr.markForCheck();
-    } else if (valorLimpo === '') {
+    } else {
       this.model.pesoPorUnidade = 0;
       this.cdr.markForCheck();
     }
@@ -446,28 +491,19 @@ export class TenantInsumoFormComponent {
 
   calcularPesoPorUnidade(): void {
     this.atualizarPesoPorUnidade(true);
+    this.pesoPorUnidadeStr = (this.model.pesoPorUnidade || 0) > 0 ? String(this.model.pesoPorUnidade) : '';
+    this.cdr.markForCheck();
   }
 
 
 
-  onCustoInput(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    // Limpar entrada removendo caracteres inválidos
-    const valorLimpo = this.limparEntradaNumerica(input.value);
-    
-    // Atualizar o valor do input com a versão limpa
-    if (input.value !== valorLimpo) {
-      input.value = valorLimpo;
-    }
-    
-    const valorNormalizado = this.normalizarNumero(valorLimpo);
+  onCustoUnitarioChange(valor: string): void {
+    const valorNormalizado = this.normalizarNumero(valor);
     
     if (valorNormalizado !== null && valorNormalizado >= 0) {
-      // Garantir que seja número, não string
       this.model.custoUnitario = Number(valorNormalizado);
       this.cdr.markForCheck();
-    } else if (valorLimpo === '') {
-      // Permitir campo vazio durante digitação
+    } else {
       this.model.custoUnitario = 0;
       this.cdr.markForCheck();
     }
@@ -476,6 +512,7 @@ export class TenantInsumoFormComponent {
   resetarIPC(): void {
     if (this.model.quantidadePorEmbalagem > 0) {
       this.model.ipcValor = this.model.quantidadePorEmbalagem;
+      this.ipcValorStr = String(this.model.quantidadePorEmbalagem);
       this.ipcEditadoManualmente.set(false);
       this.cdr.markForCheck();
     }
@@ -490,7 +527,7 @@ export class TenantInsumoFormComponent {
     }
 
     if (!ipcValor || ipcValor <= 0) {
-      return '100%';
+      return '100.0%';
     }
 
     const percentual = (ipcValor / quantidadePorEmbalagem) * 100;
@@ -541,31 +578,55 @@ export class TenantInsumoFormComponent {
       return;
     }
     
-    if (!v.custoUnitario || v.custoUnitario < 0) {
-      this.toast.error('Custo da embalagem é obrigatório e deve ser maior ou igual a zero');
+    if (!v.custoUnitario || v.custoUnitario <= 0) {
+      this.toast.error('Custo da embalagem é obrigatório e deve ser maior que zero');
       return;
     }
 
     // Validações do IPC
     if (v.ipcValor) {
       if (v.ipcValor <= 0) {
-        this.toast.error('IPC deve ser maior que zero');
+        this.toast.error('Quantidade limpa deve ser maior que zero');
         return;
       }
       if (v.ipcValor > v.quantidadePorEmbalagem) {
-        this.toast.error('IPC não pode ser maior que Quantidade por Embalagem');
+        this.toast.error('Quantidade limpa não pode ser maior que a quantidade por embalagem');
         return;
       }
       
       // Verificar aproveitamento muito baixo (< 30%)
       const aproveitamento = this.aproveitamentoPercentualNumero;
       if (aproveitamento < 30) {
-        const confirmar = confirm(`Aproveitamento muito baixo (${aproveitamento.toFixed(1)}%). Confirma?`);
-        if (!confirmar) {
-          return;
-        }
+        this.confirmarAproveitamentoBaixo(aproveitamento);
+        return;
       }
     }
+
+    this.salvarInsumo();
+  }
+
+  private confirmarAproveitamentoBaixo(aproveitamento: number): void {
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '400px',
+      data: {
+        title: 'Aproveitamento muito baixo',
+        message: `O aproveitamento está em ${aproveitamento.toFixed(1)}%. Isso pode indicar um erro de preenchimento. Deseja continuar mesmo assim?`,
+        confirmText: 'Sim, continuar',
+        cancelText: 'Revisar'
+      }
+    });
+
+    dialogRef.afterClosed()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(result => {
+        if (result) {
+          this.salvarInsumo();
+        }
+      });
+  }
+
+  private salvarInsumo(): void {
+    const v = this.model;
 
     if (v.unidadesPorEmbalagem && v.unidadesPorEmbalagem <= 0) {
       this.toast.error('Unidades por embalagem deve ser maior que zero');

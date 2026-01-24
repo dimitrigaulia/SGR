@@ -89,7 +89,7 @@ export class TenantLoginComponent {
         },
         error: (error) => {
           this.isLoading.set(false);
-          this.errorMessage.set(error.error?.message || 'Email ou senha invÃ¡lidos');
+          this.errorMessage.set(error.error?.message || 'Email ou senha inválidos.');
         }
       });
   }

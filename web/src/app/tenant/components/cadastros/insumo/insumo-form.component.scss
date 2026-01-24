@@ -1,97 +1,186 @@
-// Estilos especÃ­ficos do componente
-// Os estilos globais de formulÃ¡rio estÃ£o em styles.scss
-
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
+  row-gap: 22px;
+
+  @media (max-width: 599px) {
+    grid-template-columns: 1fr;
+    row-gap: 18px;
+  }
+}
+
+.grid-spacer {
+  display: block;
+}
+
+.section-card {
+  margin-bottom: 14px;
+}
+
+.section-title {
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.section-panel {
+  margin: 14px 0 16px 0;
+}
+
+/* Top cards */
+.quick-summary {
+  display: grid;
+  gap: 12px;
+  margin: 8px 0 16px 0;
+}
+
+.quick-summary.two-cols {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 
   @media (max-width: 599px) {
     grid-template-columns: 1fr;
   }
 }
 
-.imagem-row {
+.quick-card {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.quick-card.primary {
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.quick-label {
+  font-size: 12px;
+  opacity: 0.7;
+  margin-bottom: 4px;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 6px;
   flex-wrap: wrap;
-
-  img {
-    border-radius: 4px;
-    object-fit: cover;
-    flex-shrink: 0;
-  }
 }
 
+.auto-badge {
+  font-size: 10px;
+  opacity: 0.6;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  cursor: help;
+}
+
+.quick-value {
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+.muted {
+  opacity: 0.75;
+  font-weight: 600;
+}
+
+/* Panel metric (Custo por peça dentro do opcional) */
+.panel-metric {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 6px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.panel-metric-label {
+  opacity: 0.75;
+}
+
+.panel-metric-value {
+  font-weight: 700;
+}
+
+/* Summary */
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.summary-note {
+  margin-top: 6px;
+  font-size: 12px;
+  opacity: 0.72;
+}
+
+.summary-footnote {
+  margin-top: 8px;
+  font-size: 12px;
+  opacity: 0.6;
+}
+
+/* Hints */
 .hint-responsive {
   font-size: 12px;
-  line-height: 1.4;
+  line-height: 1.35;
   white-space: normal;
   word-wrap: break-word;
-  max-width: 100%;
-  
-  .hint-full {
-    display: block;
-  }
-  
-  .hint-mobile {
-    display: none;
-  }
-  
+}
+
+/* Fix suffix icon spacing (refresh) */
+.suffix-icon {
+  margin-right: -8px;
+}
+
+/*
+  IMPORTANT:
+  form-field-spacing is applied ON the mat-form-field.
+  So target internal MDC subscript elements directly.
+*/
+::ng-deep .form-field-spacing .mat-mdc-form-field-subscript-wrapper {
+  position: static;
+  min-height: unset;
+  padding-top: 4px;
+  padding-bottom: 6px;
+}
+
+::ng-deep .form-field-spacing .mat-mdc-form-field-hint {
+  display: block;
+  white-space: normal;
+  line-height: 1.35;
+}
+
+::ng-deep .form-field-spacing .mat-mdc-form-field-hint-wrapper {
+  padding: 0;
+  margin-top: 2px;
+}
+
+
+
+/* Sticky footer para botões em telas longas */
+.form-actions {
+  position: sticky;
+  bottom: 0;
+  background: var(--mat-app-background-color, #303030);
+  padding: 16px 0;
+  margin-top: 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  z-index: 10;
+
   @media (max-width: 599px) {
-    font-size: 11px;
-    
-    .hint-full {
-      display: none;
-    }
-    
-    .hint-mobile {
-      display: block;
-    }
+    padding: 12px 0;
   }
 }
 
-// Garantir que mat-form-field tenha espaÃ§o suficiente para hints longos
-::ng-deep .form-field-spacing {
-  mat-form-field {
-    .mat-mdc-form-field-subscript-wrapper {
-      min-height: auto;
-      margin-top: 4px;
-      position: relative;
-    }
-    
-    .mat-mdc-form-field-hint-wrapper {
-      padding: 0;
-      margin-top: 4px;
-    }
-    
-    .mat-mdc-form-field-hint {
-      white-space: normal;
-      word-wrap: break-word;
-      line-height: 1.4;
-      display: block;
-      max-width: 100%;
-    }
-    
-    // Garantir espaÃ§o extra quando hÃ¡ hint longo
-    &.mat-form-field-has-hint {
-      margin-bottom: 8px;
-    }
-  }
+/* Estilo para o ícone de ajuda */
+::ng-deep .help-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+  margin-left: 4px;
+  opacity: 0.6;
+  cursor: help;
+  vertical-align: middle;
 }
-
-// Ajustar espaÃ§amento do form-row para acomodar hints
-.form-row {
-  .form-field-spacing {
-    // EspaÃ§amento extra quando hÃ¡ hints longos
-    mat-form-field {
-      margin-bottom: 32px;
-      
-      @media (max-width: 599px) {
-        margin-bottom: 28px;
-      }
-    }
-  }
-}
-
