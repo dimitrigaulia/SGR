@@ -3,6 +3,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { environment } from '../../../../../environments/environment';
+import { HttpClient } from '@angular/common/http';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -55,6 +57,8 @@ export class TenantReceitaCozinhaComponent implements AfterViewInit {
   private service = inject(ReceitaService);
   private insumoService = inject(InsumoService);
   private unidadeService = inject(UnidadeMedidaService);
+  private http = inject(HttpClient);
+  environment = environment;
   private cdr = inject(ChangeDetectorRef);
   private destroyRef = inject(DestroyRef);
 
@@ -244,9 +248,19 @@ export class TenantReceitaCozinhaComponent implements AfterViewInit {
         }
       });
 
-    // Ler ID da receita
+    // Ler ID da receita (state ou fallback pela URL) para suportar acesso direto via URL
     const st: any = this.router.getCurrentNavigation()?.extras.state ?? (typeof window !== 'undefined' ? (window as any).history?.state : undefined);
-    const id = st?.id as number | undefined;
+    let id = st?.id as number | undefined;
+
+    if (!id) {
+      try
+      {
+        const url = this.router.url || (typeof window !== 'undefined' ? (window as any).location?.pathname : '');
+        const m = /\/tenant\/receitas\/(\d+)/.exec(url || '');
+        if (m && m[1]) id = Number(m[1]);
+      }
+      catch {}
+    }
 
     if (id) {
       this.id.set(id);
@@ -523,6 +537,46 @@ export class TenantReceitaCozinhaComponent implements AfterViewInit {
   printPdf() {
     const id = this.id();
     if (!id) return;
-    window.open(`/api/tenant/receitas/${id}/pdf`, '_blank');
+
+    // Usar HttpClient para obter blob (mesmo comportamento que no form)
+    this.http.get(`${this.environment.apiUrl}/tenant/receitas/${id}/pdf`, { responseType: 'blob' })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: async (blob) => {
+          try {
+            console.log('PDF blob type/size:', blob.type, blob.size);
+            // Verificar assinatura do PDF (%PDF)
+            const headerBuf = await blob.slice(0, 4).arrayBuffer();
+            const header = new Uint8Array(headerBuf);
+            const isPdf = header.length >= 4 && header[0] === 0x25 && header[1] === 0x50 && header[2] === 0x44 && header[3] === 0x46;
+
+            if (isPdf || blob.type === 'application/pdf') {
+              const url = window.URL.createObjectURL(blob);
+              const win = window.open(url, '_blank');
+              if (win) {
+                win.onload = () => window.URL.revokeObjectURL(url);
+              }
+            } else {
+              // Possível HTML de login retornado; abrir em aba para debug
+              const text = await blob.text();
+              console.error('Resposta retornou não-PDF. Conteúdo:', text.substring(0, 400));
+              const debugWin = window.open('', '_blank');
+              if (debugWin) {
+                debugWin.document.open();
+                debugWin.document.write(text);
+                debugWin.document.close();
+              }
+              alert('O servidor retornou conteúdo não-PDF (possível redirecionamento para login). Verifique o console e a aba aberta para detalhes.');
+            }
+          } catch (e) {
+            console.error('Erro ao processar blob do PDF', e);
+            alert('Erro ao processar o PDF. Veja o console para mais detalhes.');
+          }
+        },
+        error: (err) => {
+          console.error('Erro ao gerar PDF', err);
+          alert('Erro ao gerar PDF. Verifique sua sessão e permissões.');
+        }
+      });
   }
 }
