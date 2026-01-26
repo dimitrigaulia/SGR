@@ -66,7 +66,10 @@ public class PdfService
                             row.RelativeItem().BorderColor(Colors.Grey.Lighten2).Border(1).Padding(8).Column(card =>
                             {
                                 card.Item().Text("Rendimento").FontSize(9).FontColor(Colors.Grey.Darken1);
-                                card.Item().Text($"{receita.Rendimento:F2} porções").FontSize(11).SemiBold();
+                                // Exibir sempre como número inteiro e ajustar pluralização
+                                var rendimentoInt = (int)Math.Round(receita.Rendimento);
+                                var unidadeTexto = rendimentoInt == 1 ? "porção" : "porções";
+                                card.Item().Text($"{rendimentoInt} {unidadeTexto}").FontSize(11).SemiBold();
                             });
                             
                             row.RelativeItem().BorderColor(Colors.Grey.Lighten2).Border(1).Padding(8).Column(card =>
@@ -348,6 +351,9 @@ public class PdfService
                                 consColumn.Item().PaddingTop(5).Text(receita.Conservacao).FontSize(10).LineHeight(1.4f);
                             });
                         }
+
+                        // Total de custos (exibido também ao final do documento)
+                        column.Item().PaddingTop(12).AlignRight().Text($"Total dos custos: {FormatarMoeda(receita.CustoTotal)}").FontSize(11).SemiBold().FontColor(Colors.Red.Darken1);
                     });
 
                 page.Footer()
