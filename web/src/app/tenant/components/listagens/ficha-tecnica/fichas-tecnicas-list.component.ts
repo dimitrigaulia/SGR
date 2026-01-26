@@ -96,7 +96,7 @@ export class TenantFichasTecnicasListComponent {
           this.cdr.markForCheck();
         },
         error: () => {
-          this.toast.error('Falha ao carregar fichas tÃ©cnicas');
+          this.toast.error('Falha ao carregar fichas técnicas');
           this.isLoading.set(false);
           this.cdr.markForCheck();
         }
@@ -114,7 +114,7 @@ export class TenantFichasTecnicasListComponent {
   }
 
   delete(id: number) {
-    this.confirmationService.confirmDelete('esta ficha tÃ©cnica')
+    this.confirmationService.confirmDelete('esta ficha técnica')
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(confirmed => {
         if (!confirmed) return;
@@ -124,11 +124,11 @@ export class TenantFichasTecnicasListComponent {
           .pipe(takeUntilDestroyed(this.destroyRef))
           .subscribe({
             next: () => {
-              this.toast.success('Ficha tÃ©cnica excluÃ­da');
+              this.toast.success('Ficha técnica excluída');
               this.load();
             },
             error: (e: any) => {
-              this.toast.error(e.error?.message || 'Falha ao excluir ficha tÃ©cnica');
+              this.toast.error(e.error?.message || 'Falha ao excluir ficha técnica');
               this.isLoading.set(false);
               this.cdr.markForCheck();
             }

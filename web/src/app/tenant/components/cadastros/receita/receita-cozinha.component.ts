@@ -62,6 +62,7 @@ export class TenantReceitaCozinhaComponent implements AfterViewInit {
   model = signal<ReceitaDto | null>(null);
   insumos = signal<InsumoDto[]>([]);
   unidades = signal<UnidadeMedidaDto[]>([]);
+  alarmAtivo = signal<boolean>(false);
 
   // Meta de produção
   metaTipo = signal<'porcoes' | 'peso'>('porcoes');
@@ -72,6 +73,10 @@ export class TenantReceitaCozinhaComponent implements AfterViewInit {
   timerLabel = signal<string>('00:00');
   private timerInterval: any = null;
   private timerSegundosRestantes = 0;
+  private titleInterval: any = null;
+  private originalTitle: string = (typeof document !== 'undefined' && document.title) ? document.title : '';
+  private audioInterval: any = null;
+  private alarmTimeout: any = null;
 
   // Itens escalados
   itensEscalados = signal<ItemEscalado[]>([]);
@@ -265,6 +270,7 @@ export class TenantReceitaCozinhaComponent implements AfterViewInit {
 
     this.destroyRef.onDestroy(() => {
       if (this.timerInterval) clearInterval(this.timerInterval);
+      this.stopAlarm();
     });
   }
 
@@ -331,8 +337,8 @@ export class TenantReceitaCozinhaComponent implements AfterViewInit {
       this.timerSegundosRestantes--;
       if (this.timerSegundosRestantes <= 0) {
         this.stopTimer();
-        // Opcional: tocar som ou notificação
-        alert('Timer finalizado!');
+        // Tocar som e notificação visual
+        this.triggerAlarm('Timer finalizado!');
       } else {
         this.atualizarTimerLabel();
       }
@@ -347,7 +353,155 @@ export class TenantReceitaCozinhaComponent implements AfterViewInit {
     }
     this.timerAtivo.set(false);
     this.timerLabel.set('00:00');
+    // parar qualquer flash de título
+    if (this.titleInterval) {
+      clearInterval(this.titleInterval);
+      this.titleInterval = null;
+      if (typeof document !== 'undefined') document.title = this.originalTitle;
+    }
     this.cdr.markForCheck();
+  }
+
+  private triggerAlarm(message: string, options?: { loopUntilStopped?: boolean; durationMs?: number }) {
+    const loop = !!options?.loopUntilStopped;
+    const duration = options?.durationMs ?? (loop ? null : 5000);
+
+    // mark alarm active
+    this.alarmAtivo.set(true);
+
+    // start audio loop if loop requested, otherwise play once and optionally repeat until duration
+    if (loop) {
+      // play immediately then keep interval
+      this.playBeep();
+      if (this.audioInterval) clearInterval(this.audioInterval);
+      this.audioInterval = setInterval(() => this.playBeep(), 1200);
+    } else {
+      // play immediately; if duration > single sequence length, schedule repeats
+      this.playBeep();
+      if (duration && duration > 1200) {
+        const repeats = Math.floor(duration / 1200);
+        let i = 0;
+        if (this.audioInterval) clearInterval(this.audioInterval);
+        this.audioInterval = setInterval(() => {
+          i++;
+          if (i > repeats) {
+            if (this.audioInterval) { clearInterval(this.audioInterval); this.audioInterval = null; }
+          } else {
+            this.playBeep();
+          }
+        }, 1200);
+        // safety timeout
+        if (this.alarmTimeout) clearTimeout(this.alarmTimeout);
+        this.alarmTimeout = setTimeout(() => this.stopAlarm(), duration + 200);
+      }
+    }
+
+    // visual alert: pass duration (null means until stopAlarm called)
+    this.showVisualAlert(message, duration ?? null);
+  }
+
+  private playBeep() {
+    try {
+      const AudioCtx = (window as any).AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+
+      const playTone = (freq: number, dur = 200, delay = 0) => {
+        const now = ctx.currentTime + delay / 1000;
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.type = 'sawtooth';
+        o.frequency.setValueAtTime(freq, now);
+        g.gain.setValueAtTime(0.0001, now);
+        g.gain.linearRampToValueAtTime(0.25, now + 0.01);
+        g.gain.linearRampToValueAtTime(0.0001, now + dur / 1000);
+        o.connect(g);
+        g.connect(ctx.destination);
+        o.start(now);
+        o.stop(now + dur / 1000 + 0.02);
+      };
+
+      // Sequência de pulsos: três pulsos descendentes para maior percepção
+      playTone(1500, 180, 0);
+      playTone(1200, 180, 220);
+      playTone(900, 300, 460);
+
+      // Garantir fechamento do contexto após toda a sequência
+      setTimeout(() => {
+        try { ctx.close(); } catch {}
+      }, 1200);
+
+      // Tentar vibrar se disponível
+      try { if (navigator && 'vibrate' in navigator) (navigator as any).vibrate?.([200, 100, 300]); } catch {}
+    } catch (e) {
+      // silencioso em caso de erro
+    }
+  }
+
+  // Método público para testes no template (5s)
+  testAlarm() {
+    this.triggerAlarm('Teste de alarme', { durationMs: 5000 });
+  }
+
+  // Método público para teste em loop até o usuário parar
+  testAlarmLoop() {
+    this.triggerAlarm('Teste de alarme (loop até parar)', { loopUntilStopped: true });
+  }
+
+  private async showVisualAlert(message: string, durationMs: number | null = 5000) {
+    // Tentar Notification API
+    try {
+      if ('Notification' in window) {
+        if (Notification.permission === 'granted') {
+          new Notification(message);
+        } else if (Notification.permission !== 'denied') {
+          const perm = await Notification.requestPermission();
+          if (perm === 'granted') new Notification(message);
+        }
+      }
+    } catch {}
+
+    // Flashar o título da página como fallback/visível
+    if (typeof document !== 'undefined') {
+      const flashText = message + ' — ' + (this.originalTitle || '');
+      let visible = true;
+      // Limpar qualquer intervalo pré-existente
+      if (this.titleInterval) {
+        clearInterval(this.titleInterval);
+        this.titleInterval = null;
+      }
+      let count = 0;
+      const maxCount = durationMs === null ? Infinity : Math.ceil((durationMs || 0) / 500);
+      this.titleInterval = setInterval(() => {
+        try {
+          document.title = visible ? flashText : this.originalTitle;
+        } catch {}
+        visible = !visible;
+        count++;
+        if (count >= maxCount) {
+          if (this.titleInterval) { clearInterval(this.titleInterval); this.titleInterval = null; }
+          try { document.title = this.originalTitle; } catch {}
+        }
+      }, 500);
+    }
+  }
+
+  // Para parar alarmes em looping ou limpar timeouts
+  stopAlarm() {
+    if (this.audioInterval) {
+      try { clearInterval(this.audioInterval); } catch {}
+      this.audioInterval = null;
+    }
+    if (this.alarmTimeout) {
+      try { clearTimeout(this.alarmTimeout); } catch {}
+      this.alarmTimeout = null;
+    }
+    if (this.titleInterval) {
+      try { clearInterval(this.titleInterval); } catch {}
+      this.titleInterval = null;
+      try { if (typeof document !== 'undefined') document.title = this.originalTitle; } catch {}
+    }
+    this.alarmAtivo.set(false);
   }
 
   private atualizarTimerLabel() {

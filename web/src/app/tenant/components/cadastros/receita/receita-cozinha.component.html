@@ -193,6 +193,20 @@
                     <mat-icon>timer</mat-icon>
                     Iniciar timer
                   </button>
+                  <button mat-stroked-button color="warn" type="button" (click)="testAlarm()" style="margin-left:8px;">
+                    <mat-icon>volume_up</mat-icon>
+                    Testar alarme (5s)
+                  </button>
+                  <button mat-stroked-button color="warn" type="button" (click)="testAlarmLoop()" style="margin-left:8px;">
+                    <mat-icon>volume_up</mat-icon>
+                    Testar loop até parar
+                  </button>
+                  @if (alarmAtivo()) {
+                    <button mat-stroked-button color="accent" type="button" (click)="stopAlarm()" style="margin-left:8px;">
+                      <mat-icon>stop_circle</mat-icon>
+                      Parar alarme
+                    </button>
+                  }
                   @if (timerAtivo()) {
                     <div class="k-timer">
                       <span class="time">{{ timerLabel() }}</span>
