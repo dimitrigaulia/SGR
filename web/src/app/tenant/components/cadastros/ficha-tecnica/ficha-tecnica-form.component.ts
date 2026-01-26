@@ -201,7 +201,7 @@ export class TenantFichaTecnicaFormComponent {
           quantidadeTotalBase += item.quantidade * receita.pesoPorPorcao;
         }
       } else if (item.tipoItem === 'Insumo') {
-        // Para insumos: somar quantidade diretamente apenas se unidade for GR ou ML
+        // Para insumos: somar quantidade diretamente se GR/ML, ou converter de UN via PesoPorUnidade
         if (siglaUnidade === 'GR' || siglaUnidade === 'ML') {
           quantidadeTotalBase += item.quantidade;
         } else if (siglaUnidade === 'KG' || siglaUnidade === 'L') {
@@ -209,7 +209,9 @@ export class TenantFichaTecnicaFormComponent {
         } else if (siglaUnidade === 'UN') {
           const insumo = this.insumos().find(i => i.id === item.insumoId);
           if (insumo?.pesoPorUnidade && insumo.pesoPorUnidade > 0) {
-            quantidadeTotalBase += item.quantidade * insumo.pesoPorUnidade;
+            // Ajustar PesoPorUnidade se insumo foi comprado em KG/L
+            const pesoPorUnidade = this.ajustarPesoPorUnidade(insumo.pesoPorUnidade, insumo.unidadeCompraSigla);
+            quantidadeTotalBase += item.quantidade * pesoPorUnidade;
           }
         }
       }
@@ -431,8 +433,20 @@ export class TenantFichaTecnicaFormComponent {
     item.insumoId = insumoId;
     if (insumoId) {
       const insumo = this.insumos().find(i => i.id === insumoId);
-      if (insumo?.unidadeCompraId) {
-        item.unidadeMedidaId = insumo.unidadeCompraId;
+      if (insumo) {
+        // Defaultar para UN se o insumo tem PesoPorUnidade ou UnidadesPorEmbalagem
+        const temPesoPorUnidade = insumo.pesoPorUnidade && insumo.pesoPorUnidade > 0;
+        const temUnidadesPerEmbalagem = insumo.unidadesPorEmbalagem && insumo.unidadesPorEmbalagem > 0;
+        
+        if (temPesoPorUnidade || temUnidadesPerEmbalagem) {
+          const unidadeUn = this.unidades().find(u => u.sigla.toUpperCase() === 'UN');
+          if (unidadeUn) {
+            item.unidadeMedidaId = unidadeUn.id;
+          }
+        } else if (insumo?.unidadeCompraId) {
+          // Caso contrário, usar unidade de compra
+          item.unidadeMedidaId = insumo.unidadeCompraId;
+        }
       }
     } else {
       item.unidadeMedidaId = null;

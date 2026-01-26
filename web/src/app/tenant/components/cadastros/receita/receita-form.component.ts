@@ -447,9 +447,20 @@ export class TenantReceitaFormComponent {
     // Quando o insumo muda, preencher automaticamente a unidade com a unidade de medida do insumo
     if (item.insumoId) {
       const insumo = this.insumos().find(i => i.id === item.insumoId);
-      if (insumo && insumo.unidadeCompraId) {
-        item.unidadeMedidaId = insumo.unidadeCompraId;
-        this.normalizarUnidadeItemParaBase(item);
+      if (insumo) {
+        // Defaultar para UN se o insumo tem PesoPorUnidade ou UnidadesPorEmbalagem
+        const temPesoPorUnidade = insumo.pesoPorUnidade && insumo.pesoPorUnidade > 0;
+        const temUnidadesPerEmbalagem = insumo.unidadesPorEmbalagem && insumo.unidadesPorEmbalagem > 0;
+        
+        if (temPesoPorUnidade || temUnidadesPerEmbalagem) {
+          const unId = this.getUnidadeIdPorSigla('UN');
+          if (unId) {
+            item.unidadeMedidaId = unId;
+          }
+        } else if (insumo.unidadeCompraId) {
+          item.unidadeMedidaId = insumo.unidadeCompraId;
+          this.normalizarUnidadeItemParaBase(item);
+        }
       }
     }
     this.onUnidadeMedidaChange();
@@ -490,7 +501,7 @@ export class TenantReceitaFormComponent {
   }
 
   get pesoTotalItens(): number | null {
-    // Somar apenas itens com unidade de peso (GR - unidade base)
+    // Somar peso considerando GR/ML direto e UN via PesoPorUnidade
     let total = 0;
     let temItensPeso = false;
 
@@ -504,15 +515,24 @@ export class TenantReceitaFormComponent {
 
       const sigla = unidade.sigla.toUpperCase();
       
-      // Verificar se é unidade de peso base (GR)
-      if (sigla !== 'GR') {
+      // Se é GR/ML, somar direto
+      if (sigla === 'GR' || sigla === 'ML') {
+        total += item.quantidade;
+        temItensPeso = true;
         continue;
       }
 
-      // IMPORTANTE: FatorCorrecao é apenas visual (para exibição de QB), não entra no cálculo de rendimento
-      // IPC já representa a quantidade aproveitável quando informado
-      total += item.quantidade;
-      temItensPeso = true;
+      // Se é UN, usar PesoPorUnidade para converter
+      if (sigla === 'UN') {
+        const insumo = this.insumos().find(i => i.id === item.insumoId);
+        if (insumo && insumo.pesoPorUnidade && insumo.pesoPorUnidade > 0) {
+          // Ajustar PesoPorUnidade se o insumo foi comprado em KG/L
+          const pesoPorUnidade = this.ajustarPesoPorUnidade(insumo.pesoPorUnidade, insumo.unidadeCompraSigla);
+          total += item.quantidade * pesoPorUnidade;
+          temItensPeso = true;
+        }
+        // Se não tiver PesoPorUnidade, não somar (avisar ao usuário depois)
+      }
     }
 
     return temItensPeso ? total : null;

@@ -285,19 +285,23 @@
                   <ng-container matColumnDef="unidade">
                     <th mat-header-cell *matHeaderCellDef>Unidade</th>
                     <td mat-cell *matCellDef="let item">
-                      @if (isView()) { {{ getUnidadeSigla(item.unidadeMedidaId) }} }
-                      @else {
-                        @if (isUnidadeTravada(item)) {
-                          <span class="locked">{{ getUnidadeSigla(item.unidadeMedidaId) }}</span>
-                        } @else {
-                          <mat-form-field appearance="outline" class="cell-field">
-                            <mat-select [(ngModel)]="item.unidadeMedidaId" [ngModelOptions]="{standalone: true}">
-                              <mat-option [value]="null">Selecione...</mat-option>
-                              @for (u of getUnidadesPermitidas(item); track u.id) {
-                                <mat-option [value]="u.id">{{ getUnidadeSigla(u.id) }} - {{ u.nome }}</mat-option>
-                              }
-                            </mat-select>
-                          </mat-form-field>
+                      @if (item.tipoItem === 'Receita') {
+                        <span class="text-muted">—</span>
+                      } @else {
+                        @if (isView()) { {{ getUnidadeSigla(item.unidadeMedidaId) }} }
+                        @else {
+                          @if (isUnidadeTravada(item)) {
+                            <span class="locked">{{ getUnidadeSigla(item.unidadeMedidaId) }}</span>
+                          } @else {
+                            <mat-form-field appearance="outline" class="cell-field">
+                              <mat-select [(ngModel)]="item.unidadeMedidaId" [ngModelOptions]="{standalone: true}">
+                                <mat-option [value]="null">Selecione...</mat-option>
+                                @for (u of getUnidadesPermitidas(item); track u.id) {
+                                  <mat-option [value]="u.id">{{ getUnidadeSigla(u.id) }} - {{ u.nome }}</mat-option>
+                                }
+                              </mat-select>
+                            </mat-form-field>
+                          }
                         }
                       }
                     </td>
@@ -362,7 +366,7 @@
                         </div>
 
                         <div class="row">
-                          <div class="label">Quantidade</div>
+                          <div class="label">{{ item.tipoItem === 'Receita' ? 'Multiplicador (x)' : 'Quantidade' }}</div>
                           <div class="value">{{ formatQuantidadeFormItem(item) }}</div>
                         </div>
 
