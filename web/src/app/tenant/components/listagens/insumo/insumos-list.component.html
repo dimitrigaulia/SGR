@@ -60,12 +60,12 @@
       </ng-container>
 
       <ng-container matColumnDef="custo">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header="custo">Custo Unitário</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header="custo">Custo da Embalagem</th>
         <td mat-cell *matCellDef="let e">{{ formatCurrency(e.custoUnitario) }}</td>
       </ng-container>
 
       <ng-container matColumnDef="custoPorUnidade">
-        <th mat-header-cell *matHeaderCellDef>Custo por Unidade</th>
+        <th mat-header-cell *matHeaderCellDef>Custo por (unidade)</th>
         <td mat-cell *matCellDef="let e">{{ formatarCustoPorUnidade(e) }}</td>
       </ng-container>
 
@@ -119,7 +119,7 @@
               • Qtd/Embalagem: {{ e.quantidadePorEmbalagem }} {{ e.unidadeCompraSigla || e.unidadeCompraNome || '' }}
             </p>
             <p class="insumo-detalhes" style="margin-top: 4px;">
-              Custo por unidade: {{ formatarCustoPorUnidade(e) }}
+              Custo por (unidade): {{ formatarCustoPorUnidade(e) }}
             </p>
           </div>
         </div>

@@ -540,6 +540,85 @@ public class ReceitaService : IReceitaService
             }
         }
 
+        // Mapear itens primeiro para calcular peso total
+        var itensDto = receita.Itens.OrderBy(i => i.Ordem).Select(item =>
+        {
+            var insumo = item.Insumo;
+            var quantidadeBruta = item.Quantidade * insumo.FatorCorrecao;
+            var custoItem = CalcularCustoItem(item, insumo, item.UnidadeMedida?.Sigla);
+            var custoPorUnidade = CalcularCustoUnitario(insumo);
+            decimal? custoPor100Unidades = null;
+
+            if (custoPorUnidade.HasValue)
+            {
+                // Para peso/volume, é comum visualizar custo por 100 g / 100 mL
+                // Verificar pela sigla se é GR (grama) ou ML (mililitro)
+                var sigla = insumo.UnidadeCompra?.Sigla?.ToUpper();
+                if (sigla == "GR" || sigla == "ML")
+                {
+                    custoPor100Unidades = custoPorUnidade.Value * 100m;
+                }
+            }
+
+            // Calcular peso do item
+            decimal? pesoPorUnidadeGml = null;
+            decimal pesoItemGml = 0m;
+            var siglaUso = item.UnidadeMedida?.Sigla?.ToUpper() ?? string.Empty;
+
+            if (siglaUso == "UN" && insumo.PesoPorUnidade.HasValue && insumo.PesoPorUnidade.Value > 0)
+            {
+                var pesoPorUnidade = AjustarPesoPorUnidade(insumo.PesoPorUnidade.Value, insumo.UnidadeCompra?.Sigla);
+                pesoPorUnidadeGml = pesoPorUnidade;
+                pesoItemGml = item.Quantidade * pesoPorUnidade;
+            }
+            else if (siglaUso == "GR" || siglaUso == "ML")
+            {
+                pesoItemGml = item.Quantidade;
+            }
+            else if (siglaUso == "KG" || siglaUso == "L")
+            {
+                pesoItemGml = item.Quantidade * 1000m;
+            }
+
+            return new ReceitaItemDto
+            {
+                Id = item.Id,
+                ReceitaId = item.ReceitaId,
+                InsumoId = item.InsumoId,
+                InsumoNome = insumo.Nome,
+                InsumoCategoriaNome = insumo.Categoria?.Nome,
+                UnidadeMedidaId = item.UnidadeMedidaId,
+                UnidadeMedidaNome = item.UnidadeMedida?.Nome,
+                UnidadeMedidaSigla = item.UnidadeMedida?.Sigla,
+                Quantidade = item.Quantidade,
+                QuantidadeBruta = quantidadeBruta,
+                CustoItem = custoItem,
+                CustoPorUnidadeUso = custoPorUnidade,
+                CustoPor100UnidadesUso = custoPor100Unidades,
+                ExibirComoQB = item.ExibirComoQB,
+                Ordem = item.Ordem,
+                Observacoes = item.Observacoes,
+                PesoPorUnidadeGml = pesoPorUnidadeGml,
+                PesoItemGml = pesoItemGml
+            };
+        }).ToList();
+
+        // Calcular peso total dos itens
+        var pesoTotalItens = itensDto.Sum(i => i.PesoItemGml);
+        
+        // Calcular peso por porção: se temos peso total > 0 e rendimento > 0, calcular
+        // Caso contrário, manter o valor do banco (pode ser null ou configurado manualmente)
+        decimal? pesoPorPorcaoCalculado = receita.PesoPorPorcao;
+        if (pesoTotalItens > 0 && receita.Rendimento > 0)
+        {
+            pesoPorPorcaoCalculado = pesoTotalItens / receita.Rendimento;
+        }
+        else if (pesoTotalItens == 0)
+        {
+            // Se não conseguimos calcular peso (itens sem peso), deixar como null
+            pesoPorPorcaoCalculado = null;
+        }
+
         return new ReceitaDto
         {
             Id = receita.Id,
@@ -550,7 +629,7 @@ public class ReceitaService : IReceitaService
             Descricao = receita.Descricao,
             InstrucoesEmpratamento = receita.InstrucoesEmpratamento,
             Rendimento = receita.Rendimento,
-            PesoPorPorcao = receita.PesoPorPorcao,
+            PesoPorPorcao = pesoPorPorcaoCalculado,
             FatorRendimento = receita.FatorRendimento,
             IcSinal = icSinal,
             IcValor = icValor,
@@ -564,45 +643,7 @@ public class ReceitaService : IReceitaService
             UsuarioAtualizacao = receita.UsuarioAtualizacao,
             DataCriacao = receita.DataCriacao,
             DataAtualizacao = receita.DataAtualizacao,
-            Itens = receita.Itens.OrderBy(i => i.Ordem).Select(item =>
-            {
-                var insumo = item.Insumo;
-                var quantidadeBruta = item.Quantidade * insumo.FatorCorrecao;
-                var custoItem = CalcularCustoItem(item, insumo, item.UnidadeMedida?.Sigla);
-                var custoPorUnidade = CalcularCustoUnitario(insumo);
-                decimal? custoPor100Unidades = null;
-
-                if (custoPorUnidade.HasValue)
-                {
-                    // Para peso/volume, ÃƒÂ© comum visualizar custo por 100 g / 100 mL
-                    // Verificar pela sigla se ÃƒÂ© GR (grama) ou ML (mililitro)
-                    var sigla = insumo.UnidadeCompra?.Sigla?.ToUpper();
-                    if (sigla == "GR" || sigla == "ML")
-                    {
-                        custoPor100Unidades = custoPorUnidade.Value * 100m;
-                    }
-                }
-
-                return new ReceitaItemDto
-                {
-                    Id = item.Id,
-                    ReceitaId = item.ReceitaId,
-                    InsumoId = item.InsumoId,
-                    InsumoNome = insumo.Nome,
-                    InsumoCategoriaNome = insumo.Categoria?.Nome,
-                    UnidadeMedidaId = item.UnidadeMedidaId,
-                    UnidadeMedidaNome = item.UnidadeMedida?.Nome,
-                    UnidadeMedidaSigla = item.UnidadeMedida?.Sigla,
-                    Quantidade = item.Quantidade,
-                    QuantidadeBruta = quantidadeBruta,
-                    CustoItem = custoItem,
-                    CustoPorUnidadeUso = custoPorUnidade,
-                    CustoPor100UnidadesUso = custoPor100Unidades,
-                    ExibirComoQB = item.ExibirComoQB,
-                    Ordem = item.Ordem,
-                    Observacoes = item.Observacoes
-                };
-            }).ToList()
+            Itens = itensDto
         };
     }
 }

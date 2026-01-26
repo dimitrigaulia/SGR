@@ -972,17 +972,20 @@ public class FichaTecnicaService : IFichaTecnicaService
                 custoKgBase = (ficha.CustoTotal / pesoTotalBase.Value) * 1000m;
             }
 
-            if (ficha.PorcaoVendaQuantidade.HasValue && ficha.PorcaoVendaQuantidade.Value > 0)
+            // PRIORIDADE: "Vendido por unidade" tem prioridade sobre "vendido por porção (g/ml)"
+            // Se rendimentoPorcoesNumero estiver preenchido, usa modo unidade
+            if (ficha.RendimentoPorcoesNumero.HasValue && ficha.RendimentoPorcoesNumero.Value > 0 && ficha.CustoTotal > 0)
+            {
+                custoPorPorcaoVenda = ficha.CustoTotal / ficha.RendimentoPorcoesNumero.Value;
+            }
+            // Senão, usa modo porção (g/ml)
+            else if (ficha.PorcaoVendaQuantidade.HasValue && ficha.PorcaoVendaQuantidade.Value > 0)
             {
                 if (ficha.RendimentoFinal.HasValue && ficha.RendimentoFinal.Value > 0)
                 {
                     var custoUnitPreciso = ficha.CustoTotal / ficha.RendimentoFinal.Value;
                     custoPorPorcaoVenda = custoUnitPreciso * ficha.PorcaoVendaQuantidade.Value;
                 }
-            }
-            else if (ficha.RendimentoPorcoesNumero.HasValue && ficha.RendimentoPorcoesNumero.Value > 0 && ficha.CustoTotal > 0)
-            {
-                custoPorPorcaoVenda = ficha.CustoTotal / ficha.RendimentoPorcoesNumero.Value;
             }
         }
 
@@ -1027,6 +1030,8 @@ public class FichaTecnicaService : IFichaTecnicaService
                 .Select(i =>
                 {
                     decimal custoItem = 0m;
+                    decimal? pesoPorUnidadeGml = null;
+                    decimal pesoItemGml = 0m;
 
                     if (i.TipoItem == "Insumo" && i.InsumoId.HasValue && i.Insumo != null)
                     {
@@ -1037,6 +1042,18 @@ public class FichaTecnicaService : IFichaTecnicaService
                         {
                             var pesoPorUnidade = AjustarPesoPorUnidade(i.Insumo.PesoPorUnidade.Value, i.Insumo.UnidadeCompra?.Sigla);
                             custoItem = Math.Round(i.Quantidade * pesoPorUnidade * custoPorUnidadeUso, 4);
+                            pesoPorUnidadeGml = pesoPorUnidade;
+                            pesoItemGml = i.Quantidade * pesoPorUnidade;
+                        }
+                        else if (sigla == "GR" || sigla == "ML")
+                        {
+                            custoItem = Math.Round(i.Quantidade * custoPorUnidadeUso, 4);
+                            pesoItemGml = i.Quantidade;
+                        }
+                        else if (sigla == "KG" || sigla == "L")
+                        {
+                            custoItem = Math.Round(i.Quantidade * custoPorUnidadeUso, 4);
+                            pesoItemGml = i.Quantidade * 1000m;
                         }
                         else
                         {
@@ -1046,6 +1063,10 @@ public class FichaTecnicaService : IFichaTecnicaService
                     else if (i.TipoItem == "Receita" && i.ReceitaId.HasValue && i.Receita != null)
                     {
                         custoItem = Math.Round(i.Quantidade * i.Receita.CustoPorPorcao, 4);
+                        if (i.Receita.PesoPorPorcao.HasValue)
+                        {
+                            pesoItemGml = i.Quantidade * i.Receita.PesoPorPorcao.Value;
+                        }
                     }
 
                     return new FichaTecnicaItemDto
@@ -1065,6 +1086,8 @@ public class FichaTecnicaService : IFichaTecnicaService
                         Ordem = i.Ordem,
                         Observacoes = i.Observacoes,
                         CustoItem = custoItem,
+                        PesoPorUnidadeGml = pesoPorUnidadeGml,
+                        PesoItemGml = pesoItemGml,
                         UsuarioCriacao = i.UsuarioCriacao,
                         UsuarioAtualizacao = i.UsuarioAtualizacao,
                         DataCriacao = i.DataCriacao,

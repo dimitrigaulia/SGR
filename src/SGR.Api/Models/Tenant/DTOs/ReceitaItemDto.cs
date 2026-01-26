@@ -18,5 +18,9 @@ public class ReceitaItemDto
     public bool ExibirComoQB { get; set; }
     public int Ordem { get; set; }
     public string? Observacoes { get; set; }
+    
+    // Campos para exibir peso real dos itens
+    public decimal? PesoPorUnidadeGml { get; set; } // Para insumos UN, peso unitário em g/ml
+    public decimal PesoItemGml { get; set; } // Peso total do item em g/ml (quantidade × peso unitário)
 }
 

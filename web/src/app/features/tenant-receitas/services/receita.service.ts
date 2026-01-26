@@ -20,6 +20,8 @@ export interface ReceitaItemDto {
   custoPor100UnidadesUso?: number | null;
   ordem: number;
   observacoes?: string | null;
+  pesoPorUnidadeGml?: number | null;  // Para insumos UN, peso unitário em g/ml
+  pesoItemGml: number;                // Peso total do item em g/ml
 }
 
 export interface ReceitaDto {

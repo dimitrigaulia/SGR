@@ -72,9 +72,9 @@ public class PdfService
                             row.RelativeItem().BorderColor(Colors.Grey.Lighten2).Border(1).Padding(8).Column(card =>
                             {
                                 card.Item().Text("Peso por Porção").FontSize(9).FontColor(Colors.Grey.Darken1);
-                                var peso = receita.PesoPorPorcao.HasValue 
+                                var peso = receita.PesoPorPorcao.HasValue && receita.PesoPorPorcao.Value > 0
                                     ? FormatarQuantidade(receita.PesoPorPorcao.Value, "GR") 
-                                    : "-";
+                                    : "—";
                                 card.Item().Text(peso).FontSize(11).SemiBold();
                             });
                             
@@ -135,32 +135,49 @@ public class PdfService
                                 {
                                     table.ColumnsDefinition(columns =>
                                     {
-                                        columns.RelativeColumn(3f);    // Insumo
-                                        columns.RelativeColumn(1.2f);  // Quantidade
-                                        columns.RelativeColumn(1.2f);  // Custo/unidade
-                                        columns.RelativeColumn(1f);    // Custo item
+                                        columns.RelativeColumn(2.5f);  // Insumo
+                                        columns.RelativeColumn(1f);    // Quantidade
+                                        columns.RelativeColumn(0.8f);  // Peso item
+                                        columns.RelativeColumn(1f);    // Custo/unidade
+                                        columns.RelativeColumn(0.9f);  // Custo item
                                     });
 
                                     table.Header(header =>
                                     {
                                         header.Cell().Element(CellStyleLight).Text("Insumo").FontSize(9).SemiBold();
                                         header.Cell().Element(CellStyleLight).Text("Quantidade").FontSize(9).SemiBold();
-                                        header.Cell().Element(CellStyleLight).Text("Custo/un uso").FontSize(9).SemiBold();
+                                        header.Cell().Element(CellStyleLight).Text("Peso (g)").FontSize(8).SemiBold();
+                                        header.Cell().Element(CellStyleLight).Text("Custo/un uso").FontSize(8).SemiBold();
                                         header.Cell().Element(CellStyleLight).Text("Custo").FontSize(9).SemiBold();
                                     });
 
+                                    decimal pesoTotalGR = 0;
                                     foreach (var item in itensPeso)
                                     {
                                         var qtdDisplay = item.ExibirComoQB ? "QB" : FormatarQuantidade(item.Quantidade, item.UnidadeMedidaSigla);
                                         var custoPorUnidade = item.CustoPorUnidadeUso.HasValue 
                                             ? FormatarMoeda(item.CustoPorUnidadeUso.Value) + "/g" 
                                             : "-";
+                                        var pesoDisplay = item.PesoItemGml > 0 ? $"{item.PesoItemGml:F2}" : "—";
+                                        
+                                        if (item.PesoItemGml > 0) pesoTotalGR += item.PesoItemGml;
                                         
                                         table.Cell().Element(CellStyleLight).Text(item.InsumoNome ?? "").FontSize(9);
                                         table.Cell().Element(CellStyleLight).Text(qtdDisplay).FontSize(9);
-                                        table.Cell().Element(CellStyleLight).Text(custoPorUnidade).FontSize(8);
+                                        table.Cell().Element(CellStyleLight).Text(pesoDisplay).FontSize(8);
+                                        table.Cell().Element(CellStyleLight).Text(custoPorUnidade).FontSize(7);
                                         table.Cell().Element(CellStyleLight).Text(FormatarMoeda(item.CustoItem)).FontSize(9);
                                     }
+                                    
+                                    // Rodapé com total de peso
+                                    table.Footer(footer =>
+                                    {
+                                        footer.Cell().Element(CellStyle).Text("").SemiBold();
+                                        footer.Cell().Element(CellStyle).Text("TOTAL").FontSize(9).SemiBold();
+                                        footer.Cell().Element(CellStyle).Text(pesoTotalGR > 0 ? $"{pesoTotalGR:F2} g" : "—").FontSize(9).SemiBold();
+                                        footer.Cell().Element(CellStyle).Text("").SemiBold();
+                                        footer.Cell().Element(CellStyle).Text("").SemiBold();
+                                    });
                                 });
                             });
                         }
@@ -174,32 +191,49 @@ public class PdfService
                                 {
                                     table.ColumnsDefinition(columns =>
                                     {
-                                        columns.RelativeColumn(3f);
-                                        columns.RelativeColumn(1.2f);
-                                        columns.RelativeColumn(1.2f);
+                                        columns.RelativeColumn(2.5f);
                                         columns.RelativeColumn(1f);
+                                        columns.RelativeColumn(0.8f);
+                                        columns.RelativeColumn(1f);
+                                        columns.RelativeColumn(0.9f);
                                     });
 
                                     table.Header(header =>
                                     {
                                         header.Cell().Element(CellStyleLight).Text("Insumo").FontSize(9).SemiBold();
                                         header.Cell().Element(CellStyleLight).Text("Quantidade").FontSize(9).SemiBold();
-                                        header.Cell().Element(CellStyleLight).Text("Custo/un uso").FontSize(9).SemiBold();
+                                        header.Cell().Element(CellStyleLight).Text("Vol (ml)").FontSize(8).SemiBold();
+                                        header.Cell().Element(CellStyleLight).Text("Custo/un uso").FontSize(8).SemiBold();
                                         header.Cell().Element(CellStyleLight).Text("Custo").FontSize(9).SemiBold();
                                     });
 
+                                    decimal volumeTotalML = 0;
                                     foreach (var item in itensVolume)
                                     {
                                         var qtdDisplay = item.ExibirComoQB ? "QB" : FormatarQuantidade(item.Quantidade, item.UnidadeMedidaSigla);
                                         var custoPorUnidade = item.CustoPorUnidadeUso.HasValue 
                                             ? FormatarMoeda(item.CustoPorUnidadeUso.Value) + "/mL" 
                                             : "-";
+                                        var volumeDisplay = item.PesoItemGml > 0 ? $"{item.PesoItemGml:F2}" : "—";
+                                        
+                                        if (item.PesoItemGml > 0) volumeTotalML += item.PesoItemGml;
                                         
                                         table.Cell().Element(CellStyleLight).Text(item.InsumoNome ?? "").FontSize(9);
                                         table.Cell().Element(CellStyleLight).Text(qtdDisplay).FontSize(9);
-                                        table.Cell().Element(CellStyleLight).Text(custoPorUnidade).FontSize(8);
+                                        table.Cell().Element(CellStyleLight).Text(volumeDisplay).FontSize(8);
+                                        table.Cell().Element(CellStyleLight).Text(custoPorUnidade).FontSize(7);
                                         table.Cell().Element(CellStyleLight).Text(FormatarMoeda(item.CustoItem)).FontSize(9);
                                     }
+                                    
+                                    // Rodapé com total de volume
+                                    table.Footer(footer =>
+                                    {
+                                        footer.Cell().Element(CellStyle).Text("").SemiBold();
+                                        footer.Cell().Element(CellStyle).Text("TOTAL").FontSize(9).SemiBold();
+                                        footer.Cell().Element(CellStyle).Text(volumeTotalML > 0 ? $"{volumeTotalML:F2} ml" : "—").FontSize(9).SemiBold();
+                                        footer.Cell().Element(CellStyle).Text("").SemiBold();
+                                        footer.Cell().Element(CellStyle).Text("").SemiBold();
+                                    });
                                 });
                             });
                         }
@@ -213,32 +247,56 @@ public class PdfService
                                 {
                                     table.ColumnsDefinition(columns =>
                                     {
-                                        columns.RelativeColumn(3f);
-                                        columns.RelativeColumn(1.2f);
-                                        columns.RelativeColumn(1.2f);
+                                        columns.RelativeColumn(2.5f);
                                         columns.RelativeColumn(1f);
+                                        columns.RelativeColumn(0.8f);
+                                        columns.RelativeColumn(0.8f);
+                                        columns.RelativeColumn(1f);
+                                        columns.RelativeColumn(0.9f);
                                     });
 
                                     table.Header(header =>
                                     {
                                         header.Cell().Element(CellStyleLight).Text("Insumo").FontSize(9).SemiBold();
                                         header.Cell().Element(CellStyleLight).Text("Quantidade").FontSize(9).SemiBold();
-                                        header.Cell().Element(CellStyleLight).Text("Custo/un uso").FontSize(9).SemiBold();
+                                        header.Cell().Element(CellStyleLight).Text("Peso/UN").FontSize(8).SemiBold();
+                                        header.Cell().Element(CellStyleLight).Text("Peso tot").FontSize(8).SemiBold();
+                                        header.Cell().Element(CellStyleLight).Text("Custo/un uso").FontSize(8).SemiBold();
                                         header.Cell().Element(CellStyleLight).Text("Custo").FontSize(9).SemiBold();
                                     });
 
+                                    decimal pesoTotalUN = 0;
                                     foreach (var item in itensUnidade)
                                     {
                                         var qtdDisplay = item.ExibirComoQB ? "QB" : FormatarQuantidade(item.Quantidade, item.UnidadeMedidaSigla);
                                         var custoPorUnidade = item.CustoPorUnidadeUso.HasValue 
                                             ? FormatarMoeda(item.CustoPorUnidadeUso.Value) + "/un" 
                                             : "-";
+                                        var pesoPorUnDisplay = item.PesoPorUnidadeGml.HasValue && item.PesoPorUnidadeGml.Value > 0
+                                            ? $"{item.PesoPorUnidadeGml.Value:F2} g"
+                                            : "—";
+                                        var pesoTotalDisplay = item.PesoItemGml > 0 ? $"{item.PesoItemGml:F2}" : "—";
+                                        
+                                        if (item.PesoItemGml > 0) pesoTotalUN += item.PesoItemGml;
                                         
                                         table.Cell().Element(CellStyleLight).Text(item.InsumoNome ?? "").FontSize(9);
                                         table.Cell().Element(CellStyleLight).Text(qtdDisplay).FontSize(9);
-                                        table.Cell().Element(CellStyleLight).Text(custoPorUnidade).FontSize(8);
+                                        table.Cell().Element(CellStyleLight).Text(pesoPorUnDisplay).FontSize(7);
+                                        table.Cell().Element(CellStyleLight).Text(pesoTotalDisplay).FontSize(8);
+                                        table.Cell().Element(CellStyleLight).Text(custoPorUnidade).FontSize(7);
                                         table.Cell().Element(CellStyleLight).Text(FormatarMoeda(item.CustoItem)).FontSize(9);
                                     }
+                                    
+                                    // Rodapé com total de peso
+                                    table.Footer(footer =>
+                                    {
+                                        footer.Cell().Element(CellStyle).Text("").SemiBold();
+                                        footer.Cell().Element(CellStyle).Text("TOTAL").FontSize(9).SemiBold();
+                                        footer.Cell().Element(CellStyle).Text("").SemiBold();
+                                        footer.Cell().Element(CellStyle).Text(pesoTotalUN > 0 ? $"{pesoTotalUN:F2} g" : "—").FontSize(9).SemiBold();
+                                        footer.Cell().Element(CellStyle).Text("").SemiBold();
+                                        footer.Cell().Element(CellStyle).Text("").SemiBold();
+                                    });
                                 });
                             });
                         }
@@ -437,7 +495,14 @@ public class PdfService
                         // Seção 3: Porção de Venda (1 venda = quanto?)
                         column.Item().PaddingTop(5).PaddingBottom(5).Column(porcao =>
                         {
-                            porcao.Item().Text("🍽 Porção de Venda (1 venda = quanto?)")
+                            // Determinar se é modo unidade ou modo porção (g/ml)
+                            var isModoUnidade = ficha.RendimentoPorcoesNumero.HasValue && ficha.RendimentoPorcoesNumero.Value > 0;
+                            
+                            var tituloSecao = isModoUnidade 
+                                ? "🍽 Venda por Unidade"
+                                : "🍽 Porção de Venda (1 venda = quanto?)";
+                            
+                            porcao.Item().Text(tituloSecao)
                                 .FontSize(14)
                                 .SemiBold()
                                 .FontColor(Colors.Blue.Darken1);
@@ -446,15 +511,25 @@ public class PdfService
                             {
                                 row.RelativeItem().Column(item =>
                                 {
-                                    item.Item().Text("1 Porção de venda").FontSize(9).FontColor(Colors.Grey.Darken2);
-                                    var porcaoDisplay = ficha.PorcaoVendaQuantidade.HasValue 
-                                        ? $"{FormatarQuantidade(ficha.PorcaoVendaQuantidade.Value, ObterUnidadePorcao(ficha))}"
-                                        : "-";
-                                    item.Item().Text(porcaoDisplay).FontSize(12).SemiBold();
+                                    if (isModoUnidade)
+                                    {
+                                        item.Item().Text("1 Unidade =").FontSize(9).FontColor(Colors.Grey.Darken2);
+                                        var unidadeDisplay = ficha.RendimentoPorcoes ?? "unidades";
+                                        item.Item().Text(unidadeDisplay).FontSize(12).SemiBold();
+                                    }
+                                    else
+                                    {
+                                        item.Item().Text("1 Porção de venda").FontSize(9).FontColor(Colors.Grey.Darken2);
+                                        var porcaoDisplay = ficha.PorcaoVendaQuantidade.HasValue 
+                                            ? $"{FormatarQuantidade(ficha.PorcaoVendaQuantidade.Value, ObterUnidadePorcao(ficha))}"
+                                            : "-";
+                                        item.Item().Text(porcaoDisplay).FontSize(12).SemiBold();
+                                    }
                                 });
                                 row.RelativeItem().Column(item =>
                                 {
-                                    item.Item().Text("Custo por porção").FontSize(9).FontColor(Colors.Grey.Darken2);
+                                    var custoLabel = isModoUnidade ? "Custo por unidade" : "Custo por porção";
+                                    item.Item().Text(custoLabel).FontSize(9).FontColor(Colors.Grey.Darken2);
                                     var custoPorcaoDisplay = ficha.CustoPorPorcaoVenda.HasValue 
                                         ? FormatarMoeda(ficha.CustoPorPorcaoVenda.Value)
                                         : "-";
@@ -541,11 +616,13 @@ public class PdfService
                                     table.ColumnsDefinition(columns =>
                                     {
                                         columns.ConstantColumn(25); // #
-                                        columns.RelativeColumn(0.8f); // Tipo
-                                        columns.RelativeColumn(2f); // Item
-                                        columns.RelativeColumn(1.2f); // Quantidade + Unidade
-                                        columns.RelativeColumn(1f); // Custo item (R$)
-                                        columns.RelativeColumn(1.5f); // Observações
+                                        columns.RelativeColumn(0.7f); // Tipo
+                                        columns.RelativeColumn(1.8f); // Item
+                                        columns.RelativeColumn(1f); // Quantidade + Unidade
+                                        columns.RelativeColumn(0.8f); // Peso/UN (g)
+                                        columns.RelativeColumn(0.9f); // Peso item (g/ml)
+                                        columns.RelativeColumn(0.9f); // Custo item (R$)
+                                        columns.RelativeColumn(1.2f); // Observações
                                     });
 
                                     // Cabeçalho
@@ -555,11 +632,14 @@ public class PdfService
                                         header.Cell().Element(CellStyleLight).Text("Tipo").FontSize(9).SemiBold();
                                         header.Cell().Element(CellStyleLight).Text("Item").FontSize(9).SemiBold();
                                         header.Cell().Element(CellStyleLight).Text("Quantidade").FontSize(9).SemiBold();
+                                        header.Cell().Element(CellStyleLight).Text("Peso/UN").FontSize(8).SemiBold();
+                                        header.Cell().Element(CellStyleLight).Text("Peso item").FontSize(8).SemiBold();
                                         header.Cell().Element(CellStyleLight).Text("Custo").FontSize(9).SemiBold();
                                         header.Cell().Element(CellStyleLight).Text("Obs").FontSize(9).SemiBold();
                                     });
 
                                     // Linhas de dados
+                                    decimal pesoTotalCalculado = 0;
                                     foreach (var item in ficha.Itens)
                                     {
                                         string quantidadeDisplay;
@@ -580,21 +660,40 @@ public class PdfService
                                             ? (item.ReceitaNome ?? "") 
                                             : (item.InsumoNome ?? "");
 
+                                        // Peso por unidade (apenas para itens UN)
+                                        var pesoPorUnDisplay = item.PesoPorUnidadeGml.HasValue 
+                                            ? $"{item.PesoPorUnidadeGml.Value:F2} g"
+                                            : "-";
+                                        
+                                        // Peso total do item
+                                        var pesoItemDisplay = item.PesoItemGml > 0
+                                            ? $"{item.PesoItemGml:F2}"
+                                            : "-";
+                                        
+                                        if (item.PesoItemGml > 0)
+                                        {
+                                            pesoTotalCalculado += item.PesoItemGml;
+                                        }
+
                                         table.Cell().Element(CellStyleLight).Text(item.Ordem.ToString()).FontSize(9);
-                                        table.Cell().Element(CellStyleLight).Text(item.TipoItem).FontSize(9);
+                                        table.Cell().Element(CellStyleLight).Text(item.TipoItem).FontSize(8);
                                         table.Cell().Element(CellStyleLight).Text(nomeDisplay).FontSize(9);
                                         table.Cell().Element(CellStyleLight).Text(quantidadeDisplay).FontSize(9);
+                                        table.Cell().Element(CellStyleLight).Text(pesoPorUnDisplay).FontSize(8);
+                                        table.Cell().Element(CellStyleLight).Text(pesoItemDisplay).FontSize(8);
                                         table.Cell().Element(CellStyleLight).Text(FormatarMoeda(item.CustoItem)).FontSize(9);
-                                        table.Cell().Element(CellStyleLight).Text(item.Observacoes ?? "-").FontSize(8);
+                                        table.Cell().Element(CellStyleLight).Text(item.Observacoes ?? "-").FontSize(7);
                                     }
 
-                                    // Rodapé com total
+                                    // Rodapé com totais
                                     table.Footer(footer =>
                                     {
                                         footer.Cell().Element(CellStyle).Text("").SemiBold();
                                         footer.Cell().Element(CellStyle).Text("").SemiBold();
                                         footer.Cell().Element(CellStyle).Text("").SemiBold();
-                                        footer.Cell().Element(CellStyle).Text("TOTAL").FontSize(10).SemiBold();
+                                        footer.Cell().Element(CellStyle).Text("TOTAL").FontSize(9).SemiBold();
+                                        footer.Cell().Element(CellStyle).Text("").SemiBold();
+                                        footer.Cell().Element(CellStyle).Text(pesoTotalCalculado > 0 ? $"{pesoTotalCalculado:F2} g" : "-").FontSize(9).SemiBold();
                                         footer.Cell().Element(CellStyle).Text(FormatarMoeda(ficha.CustoTotal)).FontSize(10).SemiBold();
                                         footer.Cell().Element(CellStyle).Text("");
                                     });

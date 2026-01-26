@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, DestroyRef, ChangeDetectorRef } from '@angular/core';
+import { Component, inject, signal, computed, effect, DestroyRef, ChangeDetectorRef, AfterViewInit } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -50,7 +50,7 @@ type ItemEscalado = {
   templateUrl: './receita-cozinha.component.html',
   styleUrls: ['./receita-cozinha.component.scss']
 })
-export class TenantReceitaCozinhaComponent {
+export class TenantReceitaCozinhaComponent implements AfterViewInit {
   private router = inject(Router);
   private service = inject(ReceitaService);
   private insumoService = inject(InsumoService);
@@ -76,45 +76,6 @@ export class TenantReceitaCozinhaComponent {
   // Itens escalados
   itensEscalados = signal<ItemEscalado[]>([]);
 
-  constructor() {
-    // Carregar insumos e unidades
-    this.insumoService.list({ pageSize: 1000 })
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: res => {
-          this.insumos.set(res.items.filter(i => i.isAtivo));
-          this.cdr.markForCheck();
-        }
-      });
-
-    this.unidadeService.list({ pageSize: 1000 })
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: res => {
-          this.unidades.set(res.items.filter(u => u.isAtivo));
-          this.cdr.markForCheck();
-        }
-      });
-
-    // Ler ID da receita
-    const st: any = this.router.getCurrentNavigation()?.extras.state ?? (typeof window !== 'undefined' ? (window as any).history?.state : undefined);
-    const id = st?.id as number | undefined;
-
-    if (id) {
-      this.id.set(id);
-      this.service.get(id)
-        .pipe(takeUntilDestroyed(this.destroyRef))
-        .subscribe(receita => {
-          this.model.set(receita);
-          this.metaValor.set(receita.rendimento);
-          this.recalcularItensEscalados();
-          this.cdr.markForCheck();
-        });
-    } else {
-      this.router.navigate(['/tenant/receitas']);
-    }
-  }
-
   // Computed: Peso base disponível (soma itens em GR)
   pesoBaseDisponivel = computed(() => {
     const receita = this.model();
@@ -131,25 +92,25 @@ export class TenantReceitaCozinhaComponent {
     return temGR;
   });
 
-  // Computed: Peso total dos itens em GR (após IC)
+  // Computed: Peso total dos itens em g/ml (após IC)
   pesoTotalAposRendimento = computed(() => {
     const receita = this.model();
     if (!receita) return null;
 
+    // Somar peso de todos os itens usando o campo pesoItemGml calculado no backend
     let total = 0;
     let temPeso = false;
 
     for (const item of receita.itens) {
-      const unidade = this.unidades().find(u => u.id === item.unidadeMedidaId);
-      if (!unidade || unidade.sigla.toUpperCase() !== 'GR') continue;
-
-      total += item.quantidade;
-      temPeso = true;
+      if (item.pesoItemGml && item.pesoItemGml > 0) {
+        total += item.pesoItemGml;
+        temPeso = true;
+      }
     }
 
     if (!temPeso) return null;
 
-    // Aplicar IC
+    // Aplicar IC (Índice de Cocção)
     const sinal = receita.icSinal || '-';
     const valor = receita.icValor ?? 0;
     const delta = Math.max(0, Math.min(999, valor)) / 100;
@@ -216,43 +177,21 @@ export class TenantReceitaCozinhaComponent {
     return this.itensEscalados().filter(it => it.unidadeSigla === 'UN');
   });
 
-  onMetaTipoChange(tipo: 'porcoes' | 'peso') {
-    this.metaTipo.set(tipo);
-    
-    // Ajustar metaValor baseado no tipo
+  // Computed: Recalcula itens escalados automaticamente quando dependências mudam
+  private itensEscaladosComputed = computed(() => {
     const receita = this.model();
-    if (!receita) return;
-
-    if (tipo === 'porcoes') {
-      this.metaValor.set(receita.rendimento);
-    } else {
-      const pesoBase = this.pesoTotalAposRendimento();
-      if (pesoBase) {
-        this.metaValor.set(Math.round(pesoBase));
-      }
-    }
-
-    this.recalcularItensEscalados();
-    this.cdr.markForCheck();
-  }
-
-  onMetaValorChange(valor: number) {
-    if (valor < 1) valor = 1;
-    this.metaValor.set(valor);
-    this.recalcularItensEscalados();
-    this.cdr.markForCheck();
-  }
-
-  private recalcularItensEscalados() {
-    const receita = this.model();
-    if (!receita) return;
-
+    const insumos = this.insumos();
+    const unidades = this.unidades();
     const fator = this.fatorEscala();
+
+    if (!receita || !receita.itens.length) return [];
+    if (!insumos.length || !unidades.length) return []; // Aguardar carregamento
+
     const itens: ItemEscalado[] = [];
 
     for (const item of receita.itens) {
-      const insumo = this.insumos().find(i => i.id === item.insumoId);
-      const unidade = this.unidades().find(u => u.id === item.unidadeMedidaId);
+      const insumo = insumos.find(i => i.id === item.insumoId);
+      const unidade = unidades.find(u => u.id === item.unidadeMedidaId);
       if (!insumo || !unidade) continue;
 
       const sigla = unidade.sigla.toUpperCase();
@@ -277,7 +216,99 @@ export class TenantReceitaCozinhaComponent {
       });
     }
 
-    this.itensEscalados.set(itens);
+    return itens;
+  });
+
+  constructor() {
+    // Carregar insumos e unidades
+    this.insumoService.list({ pageSize: 1000 })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: res => {
+          this.insumos.set(res.items.filter(i => i.isAtivo));
+          this.cdr.markForCheck();
+        }
+      });
+
+    this.unidadeService.list({ pageSize: 1000 })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: res => {
+          this.unidades.set(res.items.filter(u => u.isAtivo));
+          this.cdr.markForCheck();
+        }
+      });
+
+    // Ler ID da receita
+    const st: any = this.router.getCurrentNavigation()?.extras.state ?? (typeof window !== 'undefined' ? (window as any).history?.state : undefined);
+    const id = st?.id as number | undefined;
+
+    if (id) {
+      this.id.set(id);
+      this.service.get(id)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe(receita => {
+          this.model.set(receita);
+          this.metaValor.set(receita.rendimento);
+          this.cdr.markForCheck();
+        });
+    } else {
+      this.router.navigate(['/tenant/receitas']);
+    }
+
+    // Sincronizar itensEscalados com computed sempre que mudar (reactivo)
+    effect(() => {
+      const itens = this.itensEscaladosComputed();
+      this.itensEscalados.set(itens);
+      this.cdr.markForCheck();
+    }, { allowSignalWrites: true });
+
+    this.destroyRef.onDestroy(() => {
+      if (this.timerInterval) clearInterval(this.timerInterval);
+    });
+  }
+
+  ngAfterViewInit() {
+    // Inicializar itens escalados após a view estar pronta
+    setTimeout(() => {
+      const itens = this.itensEscaladosComputed();
+      this.itensEscalados.set(itens);
+      this.cdr.markForCheck();
+    }, 0);
+  }
+
+  onMetaTipoChange(tipo: 'porcoes' | 'peso') {
+    this.metaTipo.set(tipo);
+    
+    // Ajustar metaValor baseado no tipo
+    const receita = this.model();
+    if (!receita) return;
+
+    if (tipo === 'porcoes') {
+      this.metaValor.set(receita.rendimento);
+    } else {
+      const pesoBase = this.pesoTotalAposRendimento();
+      if (pesoBase) {
+        this.metaValor.set(Math.round(pesoBase));
+      }
+    }
+
+    // Recalcular usando computed
+    this.itensEscalados.set(this.itensEscaladosComputed());
+    this.cdr.markForCheck();
+  }
+
+  onMetaValorChange(valor: number) {
+    if (valor < 1) valor = 1;
+    this.metaValor.set(valor);
+    // Recalcular usando computed
+    this.itensEscalados.set(this.itensEscaladosComputed());
+    this.cdr.markForCheck();
+  }
+
+  private recalcularItensEscalados() {
+    // Mantido para compatibilidade, mas agora usa computed
+    this.itensEscalados.set(this.itensEscaladosComputed());
   }
 
   marcarTodos(checked: boolean) {

@@ -579,30 +579,55 @@
             <!-- Card 4: Porção / Custo por Porção / Preço Mesa -->
             <mat-card class="op-card">
               <mat-card-content>
-                <div class="mini-label">Porção</div>
-                <div class="mid">
-                  @if (fichaDtoCompleto()!.porcaoVendaQuantidade) {
-                    {{ formatQuantidadeExibicao(fichaDtoCompleto()!.porcaoVendaQuantidade, getUnidadePorcao().unidade) }}
-                  } @else {
-                    -
-                  }
-                </div>
-                <div class="mini-label mt8">Custo por porção</div>
-                <div class="mid">
-                  @if (fichaDtoCompleto()!.custoPorPorcaoVenda !== null && fichaDtoCompleto()!.custoPorPorcaoVenda !== undefined) {
-                    {{ formatCurrency(fichaDtoCompleto()!.custoPorPorcaoVenda ?? 0) }}
-                  } @else {
-                    -
-                  }
-                </div>
-                <div class="mini-label mt8">Preço mesa</div>
-                <div class="big">
-                  @if (fichaDtoCompleto()!.precoMesaSugerido !== null && fichaDtoCompleto()!.precoMesaSugerido !== undefined) {
-                    {{ formatCurrency(fichaDtoCompleto()!.precoMesaSugerido ?? 0) }}
-                  } @else {
-                    -
-                  }
-                </div>
+                <!-- Modo unidade (rendimentoPorcoesNumero) -->
+                @if (fichaDtoCompleto()?.rendimentoPorcoesNumero && (fichaDtoCompleto()?.rendimentoPorcoesNumero ?? 0) > 0) {
+                  <div class="mini-label">1 Unidade =</div>
+                  <div class="mid">
+                    {{ fichaDtoCompleto()!.rendimentoPorcoesNumero }} {{ fichaDtoCompleto()!.rendimentoPorcoes || 'unidades' }}
+                  </div>
+                  <div class="mini-label mt8">Custo por unidade</div>
+                  <div class="mid">
+                    @if (fichaDtoCompleto()!.custoPorPorcaoVenda !== null && fichaDtoCompleto()!.custoPorPorcaoVenda !== undefined) {
+                      {{ formatCurrency(fichaDtoCompleto()!.custoPorPorcaoVenda ?? 0) }}
+                    } @else {
+                      -
+                    }
+                  </div>
+                  <div class="mini-label mt8">Preço mesa</div>
+                  <div class="big">
+                    @if (fichaDtoCompleto()!.precoMesaSugerido !== null && fichaDtoCompleto()!.precoMesaSugerido !== undefined) {
+                      {{ formatCurrency(fichaDtoCompleto()!.precoMesaSugerido ?? 0) }}
+                    } @else {
+                      -
+                    }
+                  </div>
+                } @else {
+                  <!-- Modo porção (porcaoVendaQuantidade) -->
+                  <div class="mini-label">Porção</div>
+                  <div class="mid">
+                    @if (fichaDtoCompleto()!.porcaoVendaQuantidade) {
+                      {{ formatQuantidadeExibicao(fichaDtoCompleto()!.porcaoVendaQuantidade, getUnidadePorcao().unidade) }}
+                    } @else {
+                      -
+                    }
+                  </div>
+                  <div class="mini-label mt8">Custo por porção</div>
+                  <div class="mid">
+                    @if (fichaDtoCompleto()!.custoPorPorcaoVenda !== null && fichaDtoCompleto()!.custoPorPorcaoVenda !== undefined) {
+                      {{ formatCurrency(fichaDtoCompleto()!.custoPorPorcaoVenda ?? 0) }}
+                    } @else {
+                      -
+                    }
+                  </div>
+                  <div class="mini-label mt8">Preço mesa</div>
+                  <div class="big">
+                    @if (fichaDtoCompleto()!.precoMesaSugerido !== null && fichaDtoCompleto()!.precoMesaSugerido !== undefined) {
+                      {{ formatCurrency(fichaDtoCompleto()!.precoMesaSugerido ?? 0) }}
+                    } @else {
+                      -
+                    }
+                  </div>
+                }
               </mat-card-content>
             </mat-card>
           </div>
@@ -637,6 +662,26 @@
                     <td mat-footer-cell *matFooterCellDef></td>
                   </ng-container>
 
+                  <ng-container matColumnDef="pesoPorUn">
+                    <th mat-header-cell *matHeaderCellDef>Peso/UN (g)</th>
+                    <td mat-cell *matCellDef="let item">
+                      @if (item.pesoPorUnidadeGml !== null && item.pesoPorUnidadeGml !== undefined) {
+                        {{ formatNumber(item.pesoPorUnidadeGml) }}
+                      } @else {
+                        -
+                      }
+                    </td>
+                    <td mat-footer-cell *matFooterCellDef></td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="pesoItem">
+                    <th mat-header-cell *matHeaderCellDef>Peso item (g/ml)</th>
+                    <td mat-cell *matCellDef="let item">{{ formatNumber(item.pesoItemGml || 0) }}</td>
+                    <td mat-footer-cell *matFooterCellDef>
+                      <strong>{{ formatNumber(fichaDtoCompleto()!.pesoTotalBase ?? 0) }}</strong>
+                    </td>
+                  </ng-container>
+
                   <ng-container matColumnDef="custoItem">
                     <th mat-header-cell *matHeaderCellDef>Custo item (R$)</th>
                     <td mat-cell *matCellDef="let item">{{ formatCurrency(item.custoItem || 0) }}</td>
@@ -649,9 +694,9 @@
                     <td mat-footer-cell *matFooterCellDef></td>
                   </ng-container>
 
-                  <tr mat-header-row *matHeaderRowDef="['ordem', 'tipo', 'item', 'quantidade', 'custoItem', 'observacoes']"></tr>
-                  <tr mat-row *matRowDef="let row; columns: ['ordem', 'tipo', 'item', 'quantidade', 'custoItem', 'observacoes']"></tr>
-                  <tr mat-footer-row *matFooterRowDef="['ordem', 'tipo', 'item', 'quantidade', 'custoItem', 'observacoes']"></tr>
+                  <tr mat-header-row *matHeaderRowDef="['ordem', 'tipo', 'item', 'quantidade', 'pesoPorUn', 'pesoItem', 'custoItem', 'observacoes']"></tr>
+                  <tr mat-row *matRowDef="let row; columns: ['ordem', 'tipo', 'item', 'quantidade', 'pesoPorUn', 'pesoItem', 'custoItem', 'observacoes']"></tr>
+                  <tr mat-footer-row *matFooterRowDef="['ordem', 'tipo', 'item', 'quantidade', 'pesoPorUn', 'pesoItem', 'custoItem', 'observacoes']"></tr>
                 </table>
               </div>
             </mat-card-content>

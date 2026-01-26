@@ -380,6 +380,10 @@ export class TenantFichaTecnicaFormComponent {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
   }
 
+  formatNumber(value: number): string {
+    return new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(value || 0);
+  }
+
   addItem() {
     const current = this.itens();
     const ordem = current.length > 0 ? Math.max(...current.map(i => i.ordem)) + 1 : 1;

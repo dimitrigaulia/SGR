@@ -34,6 +34,8 @@ export interface FichaTecnicaItemDto {
   ordem: number;
   observacoes?: string | null;
   custoItem: number;
+  pesoPorUnidadeGml?: number | null;  // Para insumos UN, peso unitário em g/ml
+  pesoItemGml: number;                // Peso total do item em g/ml
 }
 
 export interface FichaTecnicaDto {

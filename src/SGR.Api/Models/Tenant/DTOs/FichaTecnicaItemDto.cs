@@ -17,6 +17,11 @@ public class FichaTecnicaItemDto
     public int Ordem { get; set; }
     public string? Observacoes { get; set; }
     public decimal CustoItem { get; set; }
+    
+    // Campos para exibir peso real dos itens
+    public decimal? PesoPorUnidadeGml { get; set; } // Para insumos UN, peso unitário em g/ml
+    public decimal PesoItemGml { get; set; } // Peso total do item em g/ml (quantidade × peso unitário)
+    
     public string? UsuarioCriacao { get; set; }
     public string? UsuarioAtualizacao { get; set; }
     public DateTime DataCriacao { get; set; }

@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal, ChangeDetectionStrategy, ChangeDetectorRef, DestroyRef } from '@angular/core';
+import { Component, computed, inject, signal, effect, ChangeDetectionStrategy, ChangeDetectorRef, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -67,6 +67,9 @@ export class TenantReceitaFormComponent {
   categorias = signal<CategoriaReceitaDto[]>([]);
   insumos = signal<InsumoDto[]>([]);
   unidades = signal<UnidadeMedidaDto[]>([]);
+  insumosLoaded = signal(false);
+  unidadesLoaded = signal(false);
+  receitaLoaded = signal(false);
   isEdit = computed(() => this.id() !== null);
   isView = signal<boolean>(false);
   isMobile = signal(false);
@@ -130,6 +133,37 @@ export class TenantReceitaFormComponent {
   }
 
   constructor() {
+    // Effect para normalizar itens quando todas as dependências estiverem prontas
+    effect(() => {
+      const insumosOk = this.insumosLoaded();
+      const unidadesOk = this.unidadesLoaded();
+      const receitaOk = this.receitaLoaded();
+      const currentItens = this.itens();
+      
+      // Só normaliza quando tudo estiver carregado E houver itens
+      if (insumosOk && unidadesOk && receitaOk && currentItens.length > 0) {
+        // Criar nova array para evitar mutação direta
+        const itensNormalizados = currentItens.map(item => ({ ...item }));
+        let houveMudanca = false;
+        
+        itensNormalizados.forEach(item => {
+          const siglaAntes = this.obterSiglaUnidade(item.unidadeMedidaId);
+          this.normalizarUnidadeItemParaBase(item);
+          const siglaDepois = this.obterSiglaUnidade(item.unidadeMedidaId);
+          if (siglaAntes !== siglaDepois) {
+            houveMudanca = true;
+          }
+        });
+        
+        if (houveMudanca) {
+          this.itens.set(itensNormalizados);
+          this.atualizarCalculosAutomaticos();
+          this.atualizarCustosItens();
+          this.cdr.markForCheck();
+        }
+      }
+    }, { allowSignalWrites: true });
+
     // Detectar mobile
     this.breakpointObserver.observe([Breakpoints.Handset, Breakpoints.TabletPortrait])
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -153,6 +187,7 @@ export class TenantReceitaFormComponent {
       .subscribe({ 
         next: res => {
           this.insumos.set(res.items.filter(i => i.isAtivo));
+          this.insumosLoaded.set(true);
           this.cdr.markForCheck();
         }
       });
@@ -162,14 +197,7 @@ export class TenantReceitaFormComponent {
       .subscribe({ 
         next: res => {
           this.unidades.set(res.items.filter(u => u.isAtivo));
-          // Normalizar itens após carregar unidades (garante conversão KG→GR, L→ML)
-          const itensAtualizados = this.itens();
-          if (itensAtualizados.length > 0) {
-            itensAtualizados.forEach(item => this.normalizarUnidadeItemParaBase(item));
-            this.itens.set([...itensAtualizados]);
-            this.atualizarCalculosAutomaticos();
-            this.atualizarCustosItens();
-          }
+          this.unidadesLoaded.set(true);
           this.cdr.markForCheck();
         }
       });
@@ -216,14 +244,7 @@ export class TenantReceitaFormComponent {
             custoPor100UnidadesUso: item.custoPor100UnidadesUso ?? null
           })));
           
-          // Normalizar se unidades já estiverem carregadas (elimina race condition)
-          if (this.unidades().length > 0) {
-            const itensAtualizados = this.itens();
-            itensAtualizados.forEach(item => this.normalizarUnidadeItemParaBase(item));
-            this.itens.set([...itensAtualizados]);
-            this.atualizarCalculosAutomaticos();
-            this.atualizarCustosItens();
-          }
+          this.receitaLoaded.set(true);
           this.cdr.markForCheck();
         });
     } else {
