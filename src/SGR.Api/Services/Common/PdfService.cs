@@ -16,6 +16,45 @@ public class PdfService
     }
 
     /// <summary>
+    /// Determina se a receita é baseada em ML (volume) ou GR (peso) observando os itens
+    /// </summary>
+    private string DeterminarUnidadeBaseReceita(ReceitaDto receita)
+    {
+        // Procura pelo primeiro item que tenha uma sigla de unidade clara (GR, ML, KG, L)
+        // Se encontrar ML ou L antes de GR ou KG, assume ML; caso contrário, assume GR
+        foreach (var item in receita.Itens ?? new List<ReceitaItemDto>())
+        {
+            var sigla = (item.UnidadeMedidaSigla ?? "").ToUpperInvariant();
+            if (sigla == "ML" || sigla == "L")
+            {
+                return "ML";
+            }
+            if (sigla == "GR" || sigla == "KG")
+            {
+                return "GR";
+            }
+        }
+        // Fallback: assume GR (mais comum)
+        return "GR";
+    }
+
+    /// <summary>
+    /// Calcula o custo real por unidade (peça) para itens em UN
+    /// Fórmula: (pesoPorUnidade em g/ml) × (custoUnitario de g/ml)
+    /// </summary>
+    private decimal? CalcularCustoPorPecaUN(ReceitaItemDto item)
+    {
+        // Para UN, o custo correto por peça é: pesoPorUnidade × custoPorUnidadeUso
+        if (item.UnidadeMedidaSigla?.ToUpperInvariant() == "UN" &&
+            item.PesoPorUnidadeGml.HasValue && item.PesoPorUnidadeGml.Value > 0 &&
+            item.CustoPorUnidadeUso.HasValue && item.CustoPorUnidadeUso.Value > 0)
+        {
+            return item.PesoPorUnidadeGml.Value * item.CustoPorUnidadeUso.Value;
+        }
+        return null;
+    }
+
+    /// <summary>
     /// Gera PDF de uma receita
     /// </summary>
     public byte[] GenerateReceitaPdf(ReceitaDto receita)
@@ -75,8 +114,9 @@ public class PdfService
                             row.RelativeItem().BorderColor(Colors.Grey.Lighten2).Border(1).Padding(8).Column(card =>
                             {
                                 card.Item().Text("Peso por Porção").FontSize(9).FontColor(Colors.Grey.Darken1);
+                                var unidadeBase = DeterminarUnidadeBaseReceita(receita);
                                 var peso = receita.PesoPorPorcao.HasValue && receita.PesoPorPorcao.Value > 0
-                                    ? FormatarQuantidade(receita.PesoPorPorcao.Value, "GR") 
+                                    ? FormatarQuantidade(receita.PesoPorPorcao.Value, unidadeBase) 
                                     : "—";
                                 card.Item().Text(peso).FontSize(11).SemiBold();
                             });
@@ -264,7 +304,7 @@ public class PdfService
                                         header.Cell().Element(CellStyleLight).Text("Quantidade").FontSize(9).SemiBold();
                                         header.Cell().Element(CellStyleLight).Text("Peso/UN").FontSize(8).SemiBold();
                                         header.Cell().Element(CellStyleLight).Text("Peso tot").FontSize(8).SemiBold();
-                                        header.Cell().Element(CellStyleLight).Text("Custo/un uso").FontSize(8).SemiBold();
+                                        header.Cell().Element(CellStyleLight).Text("Custo/peça").FontSize(8).SemiBold();
                                         header.Cell().Element(CellStyleLight).Text("Custo").FontSize(9).SemiBold();
                                     });
 
@@ -272,8 +312,10 @@ public class PdfService
                                     foreach (var item in itensUnidade)
                                     {
                                         var qtdDisplay = item.ExibirComoQB ? "QB" : FormatarQuantidade(item.Quantidade, item.UnidadeMedidaSigla);
-                                        var custoPorUnidade = item.CustoPorUnidadeUso.HasValue 
-                                            ? FormatarMoeda(item.CustoPorUnidadeUso.Value) + "/un" 
+                                        // Custo por peça: (peso/UN em g/ml) × (custo/un uso)
+                                        var custoPorPeca = CalcularCustoPorPecaUN(item) ?? item.CustoPorUnidadeUso;
+                                        var custoPorUnidade = custoPorPeca.HasValue 
+                                            ? FormatarMoeda(custoPorPeca.Value) + "/peça" 
                                             : "-";
                                         var pesoPorUnDisplay = item.PesoPorUnidadeGml.HasValue && item.PesoPorUnidadeGml.Value > 0
                                             ? $"{item.PesoPorUnidadeGml.Value:F2} g"

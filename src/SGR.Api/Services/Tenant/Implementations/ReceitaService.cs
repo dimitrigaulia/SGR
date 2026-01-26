@@ -98,8 +98,8 @@ public class ReceitaService : IReceitaService
         {
             if (insumo.PesoPorUnidade.HasValue && insumo.PesoPorUnidade.Value > 0)
             {
-                var pesoPorUnidade = AjustarPesoPorUnidade(insumo.PesoPorUnidade.Value, insumo.UnidadeCompra?.Sigla);
-                return item.Quantidade * pesoPorUnidade * custoPorUnidade;
+                // IMPORTANTE: PesoPorUnidade já está em g/ml (normalizado na UI), não dividir por 1000
+                return item.Quantidade * insumo.PesoPorUnidade.Value * custoPorUnidade;
             }
 
             throw new BusinessException($"Insumo '{insumo.Nome}' esta em UN mas nao possui PesoPorUnidade (g/ml). Cadastre o PesoPorUnidade para permitir conversao.");
@@ -567,9 +567,9 @@ public class ReceitaService : IReceitaService
 
             if (siglaUso == "UN" && insumo.PesoPorUnidade.HasValue && insumo.PesoPorUnidade.Value > 0)
             {
-                var pesoPorUnidade = AjustarPesoPorUnidade(insumo.PesoPorUnidade.Value, insumo.UnidadeCompra?.Sigla);
-                pesoPorUnidadeGml = pesoPorUnidade;
-                pesoItemGml = item.Quantidade * pesoPorUnidade;
+                // IMPORTANTE: PesoPorUnidade já está em g/ml (normalizado), não dividir por 1000
+                pesoPorUnidadeGml = insumo.PesoPorUnidade.Value;
+                pesoItemGml = item.Quantidade * insumo.PesoPorUnidade.Value;
             }
             else if (siglaUso == "GR" || siglaUso == "ML")
             {

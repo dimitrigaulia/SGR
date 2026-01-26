@@ -395,6 +395,33 @@ export class TenantFichaTecnicaFormComponent {
     return new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(value || 0);
   }
 
+  // Getters para exibição de Receita e Insumo nos hints
+  getReceitaItem(item: FichaTecnicaItemFormModel): any {
+    if (item.tipoItem === 'Receita' && item.receitaId) {
+      return this.receitas().find(r => r.id === item.receitaId);
+    }
+    return null;
+  }
+
+  getInsumoItem(item: FichaTecnicaItemFormModel): any {
+    if (item.tipoItem === 'Insumo' && item.insumoId) {
+      return this.insumos().find(i => i.id === item.insumoId);
+    }
+    return null;
+  }
+
+  // Public wrapper para ajustarPesoPorUnidade (usado no template)
+  ajustarPesoPorUnidadePublic(pesoPorUnidade: number, unidadeCompraSigla?: string | null): number {
+    return this.ajustarPesoPorUnidade(pesoPorUnidade, unidadeCompraSigla);
+  }
+
+  // Callback para mudanças de unidade (para recálculos)
+  onUnidadeChange(item: FichaTecnicaItemFormModel): void {
+    // Força recálculo de componentes que dependem da unidade
+    this.itens.set([...this.itens()]);
+    this.cdr.markForCheck();
+  }
+
   addItem() {
     const current = this.itens();
     const ordem = current.length > 0 ? Math.max(...current.map(i => i.ordem)) + 1 : 1;

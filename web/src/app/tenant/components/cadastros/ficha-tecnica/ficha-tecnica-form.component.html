@@ -266,18 +266,32 @@
                   </ng-container>
 
                   <ng-container matColumnDef="quantidade">
-                    <th mat-header-cell *matHeaderCellDef>Quantidade</th>
+                    <th mat-header-cell *matHeaderCellDef>Quantidade / Porções</th>
                     <td mat-cell *matCellDef="let item">
-                      @if (isView()) { {{ formatQuantidadeNumeroForm(item) }} }
-                      @else {
-                        <mat-form-field appearance="outline" class="cell-field">
-                          <input matInput type="number"
-                                 [ngModel]="getQuantidadeExibicao(item)"
-                                 (ngModelChange)="onQuantidadeExibicaoChange(item, $event)"
-                                 [ngModelOptions]="{standalone: true}"
-                                 [min]="getQuantidadeMin(item)"
-                                 [step]="getQuantidadeStep(item)" />
-                        </mat-form-field>
+                      <div>
+                        @if (isView()) { {{ formatQuantidadeNumeroForm(item) }} }
+                        @else {
+                          <mat-form-field appearance="outline" class="cell-field">
+                            <input matInput type="number"
+                                   [ngModel]="getQuantidadeExibicao(item)"
+                                   (ngModelChange)="onQuantidadeExibicaoChange(item, $event)"
+                                   [ngModelOptions]="{standalone: true}"
+                                   [min]="getQuantidadeMin(item)"
+                                   [step]="getQuantidadeStep(item)" />
+                          </mat-form-field>
+                        }
+                      </div>
+                      @if (item.tipoItem === 'Receita' && item.receitaId) {
+                        @if (getReceitaItem(item); as receita) {
+                          <div class="cell-hint">
+                            <small class="muted">
+                              @if (receita.pesoPorPorcao) {
+                                Peso: {{ (item.quantidade * receita.pesoPorPorcao) | number:'1.0-0' }}g •
+                              }
+                              Custo: {{ formatCurrency(item.quantidade * (receita.custoPorPorcao || 0)) }}
+                            </small>
+                          </div>
+                        }
                       }
                     </td>
                   </ng-container>
@@ -286,21 +300,30 @@
                     <th mat-header-cell *matHeaderCellDef>Unidade</th>
                     <td mat-cell *matCellDef="let item">
                       @if (item.tipoItem === 'Receita') {
-                        <span class="text-muted">—</span>
+                        <span class="text-muted" [matTooltip]="'Receita não usa unidade (porções são tratadas por pesoPorPorcao)'">— Auto</span>
                       } @else {
                         @if (isView()) { {{ getUnidadeSigla(item.unidadeMedidaId) }} }
                         @else {
                           @if (isUnidadeTravada(item)) {
-                            <span class="locked">{{ getUnidadeSigla(item.unidadeMedidaId) }}</span>
+                            <span class="locked" [matTooltip]="'Unidade não pode ser alterada para este insumo'">{{ getUnidadeSigla(item.unidadeMedidaId) }}</span>
                           } @else {
                             <mat-form-field appearance="outline" class="cell-field">
-                              <mat-select [(ngModel)]="item.unidadeMedidaId" [ngModelOptions]="{standalone: true}">
+                              <mat-select [(ngModel)]="item.unidadeMedidaId" [ngModelOptions]="{standalone: true}" (selectionChange)="onUnidadeChange(item)">
                                 <mat-option [value]="null">Selecione...</mat-option>
                                 @for (u of getUnidadesPermitidas(item); track u.id) {
                                   <mat-option [value]="u.id">{{ getUnidadeSigla(u.id) }} - {{ u.nome }}</mat-option>
                                 }
                               </mat-select>
                             </mat-form-field>
+                          }
+                        }
+                        @if (item.tipoItem === 'Insumo' && item.insumoId && getUnidadeSigla(item.unidadeMedidaId) === 'UN') {
+                          @if (getInsumoItem(item); as ins) {
+                            @if (ins.pesoPorUnidade && ins.pesoPorUnidade > 0) {
+                              <div class="cell-hint">
+                                <small class="muted">1 UN = {{ (ajustarPesoPorUnidadePublic(ins.pesoPorUnidade, ins.unidadeCompraSigla)) | number:'1.0-0' }}g</small>
+                              </div>
+                            }
                           }
                         }
                       }
@@ -366,9 +389,40 @@
                         </div>
 
                         <div class="row">
-                          <div class="label">{{ item.tipoItem === 'Receita' ? 'Multiplicador (x)' : 'Quantidade' }}</div>
-                          <div class="value">{{ formatQuantidadeFormItem(item) }}</div>
+                          <div class="label">{{ item.tipoItem === 'Receita' ? 'Porções / Multiplicador' : 'Quantidade + Unidade' }}</div>
+                          <div class="value">
+                            @if (item.tipoItem === 'Receita') {
+                              {{ formatQuantidadeFormItem(item) }}
+                            } @else {
+                              {{ formatQuantidadeFormItem(item) }} {{ getUnidadeSigla(item.unidadeMedidaId) }}
+                            }
+                          </div>
                         </div>
+
+                        @if (item.tipoItem === 'Receita' && item.receitaId) {
+                          @if (getReceitaItem(item); as receita) {
+                            <div class="row">
+                              <div class="label">Gerado</div>
+                              <div class="value small">
+                                @if (receita.pesoPorPorcao) {
+                                  {{ (item.quantidade * receita.pesoPorPorcao) | number:'1.0-0' }}g •
+                                }
+                                {{ formatCurrency(item.quantidade * (receita.custoPorPorcao || 0)) }}
+                              </div>
+                            </div>
+                          }
+                        }
+
+                        @if (item.tipoItem === 'Insumo' && item.insumoId && getUnidadeSigla(item.unidadeMedidaId) === 'UN') {
+                          @if (getInsumoItem(item); as ins) {
+                            @if (ins.pesoPorUnidade && ins.pesoPorUnidade > 0) {
+                              <div class="row">
+                                <div class="label">Conversão UN</div>
+                                <div class="value small">1 UN = {{ (ajustarPesoPorUnidadePublic(ins.pesoPorUnidade, ins.unidadeCompraSigla)) | number:'1.0-0' }}g</div>
+                              </div>
+                            }
+                          }
+                        }
 
                         <div class="row" *ngIf="item.observacoes">
                           <div class="label">Observações</div>

@@ -762,8 +762,8 @@ public class FichaTecnicaService : IFichaTecnicaService
 
                 if (sigla == "UN" && insumo.PesoPorUnidade.HasValue && insumo.PesoPorUnidade.Value > 0)
                 {
-                    var pesoPorUnidade = AjustarPesoPorUnidade(insumo.PesoPorUnidade.Value, insumo.UnidadeCompra?.Sigla);
-                    custoLinha = item.Quantidade * pesoPorUnidade * custoPorUnidadeUso;
+                    // IMPORTANTE: PesoPorUnidade já está em g/ml (normalizado), não dividir por 1000
+                    custoLinha = item.Quantidade * insumo.PesoPorUnidade.Value * custoPorUnidadeUso;
                 }
                 else
                 {
@@ -1040,10 +1040,10 @@ public class FichaTecnicaService : IFichaTecnicaService
 
                         if (sigla == "UN" && i.Insumo.PesoPorUnidade.HasValue && i.Insumo.PesoPorUnidade.Value > 0)
                         {
-                            var pesoPorUnidade = AjustarPesoPorUnidade(i.Insumo.PesoPorUnidade.Value, i.Insumo.UnidadeCompra?.Sigla);
-                            custoItem = Math.Round(i.Quantidade * pesoPorUnidade * custoPorUnidadeUso, 4);
-                            pesoPorUnidadeGml = pesoPorUnidade;
-                            pesoItemGml = i.Quantidade * pesoPorUnidade;
+                            // IMPORTANTE: PesoPorUnidade já está em g/ml (normalizado), não dividir por 1000
+                            custoItem = Math.Round(i.Quantidade * i.Insumo.PesoPorUnidade.Value * custoPorUnidadeUso, 4);
+                            pesoPorUnidadeGml = i.Insumo.PesoPorUnidade.Value;
+                            pesoItemGml = i.Quantidade * i.Insumo.PesoPorUnidade.Value;
                         }
                         else if (sigla == "GR" || sigla == "ML")
                         {
