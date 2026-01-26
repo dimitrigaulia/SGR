@@ -77,7 +77,7 @@ public class UnidadeMedidaService : BaseService<TenantDbContext, UnidadeMedida, 
         
         if (hasInsumosCompra || hasReceitaItens || hasFichaTecnicaItens)
         {
-            throw new BusinessException("NÃ£o Ã© possÃ­vel excluir uma unidade de medida que possui insumos, receitas ou fichas tÃ©cnicas cadastradas");
+            throw new BusinessException("Não é possível excluir uma unidade de medida que possui insumos, receitas ou fichas técnicas cadastradas");
         }
     }
 }

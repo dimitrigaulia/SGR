@@ -324,122 +324,239 @@ public class PdfService
                 page.DefaultTextStyle(x => x.FontSize(10).FontFamily("Arial"));
 
                 page.Header()
-                    .Text($"Ficha Técnica: {ficha.Nome}")
-                    .SemiBold()
-                    .FontSize(18)
-                    .AlignCenter()
-                    .FontColor(Colors.Blue.Darken2);
+                    .Row(row =>
+                    {
+                        row.RelativeItem().Column(col =>
+                        {
+                            col.Item().Text($"Ficha Técnica: {ficha.Nome}")
+                                .SemiBold()
+                                .FontSize(18)
+                                .FontColor(Colors.Blue.Darken2);
+                            if (!string.IsNullOrWhiteSpace(ficha.Codigo))
+                            {
+                                col.Item().Text($"Código: {ficha.Codigo}")
+                                    .FontSize(10)
+                                    .FontColor(Colors.Grey.Darken1);
+                            }
+                        });
+                        row.ConstantItem(80).AlignRight().Column(col =>
+                        {
+                            col.Item().Text(ficha.IsAtivo ? "ATIVA" : "INATIVA")
+                                .FontSize(10)
+                                .SemiBold()
+                                .FontColor(ficha.IsAtivo ? Colors.Green.Darken2 : Colors.Red.Darken1);
+                        });
+                    });
 
                 page.Content()
                     .Column(column =>
                     {
                         column.Spacing(10);
 
-                        // Seção 1: Resumo (informações principais)
-                        column.Item().PaddingBottom(10).Column(resumo =>
+                        // Seção 1: Informações de Produção (Lote)
+                        column.Item().PaddingBottom(5).Column(producao =>
                         {
-                            resumo.Item().Row(row =>
+                            producao.Item().Text("📦 Produção (Rendimento do Lote)")
+                                .FontSize(14)
+                                .SemiBold()
+                                .FontColor(Colors.Blue.Darken1);
+                            
+                            producao.Item().PaddingTop(5).Padding(10).Background(Colors.Blue.Lighten4).Border(1).BorderColor(Colors.Blue.Lighten2).Row(row =>
                             {
-                                row.RelativeItem().Column(item =>
+                                if (ficha.TempoPreparo.HasValue && ficha.TempoPreparo.Value > 0)
                                 {
-                                    item.Item().Text("Custo Total:").FontSize(9).FontColor(Colors.Grey.Darken1);
-                                    item.Item().Text(FormatarMoeda(ficha.CustoTotal)).FontSize(12).SemiBold();
-                                });
-                                row.RelativeItem().Column(item =>
-                                {
-                                    item.Item().Text("Peso Total Base:").FontSize(9).FontColor(Colors.Grey.Darken1);
-                                    var pesoDisplay = ficha.PesoTotalBase.HasValue 
-                                        ? $"{FormatarQuantidade(ficha.PesoTotalBase.Value, ObterUnidadePorcao(ficha))}"
-                                        : "-";
-                                    item.Item().Text(pesoDisplay).FontSize(10).SemiBold();
-                                });
-                                row.RelativeItem().Column(item =>
-                                {
-                                    item.Item().Text("Rendimento Final:").FontSize(9).FontColor(Colors.Grey.Darken1);
-                                    var rendimentoDisplay = ficha.RendimentoFinal.HasValue 
-                                        ? $"{FormatarQuantidade(ficha.RendimentoFinal.Value, ObterUnidadePorcao(ficha))}"
-                                        : "-";
-                                    item.Item().Text(rendimentoDisplay).FontSize(10).SemiBold();
-                                });
-                                row.RelativeItem().Column(item =>
-                                {
-                                    item.Item().Text("Custo/kg final:").FontSize(9).FontColor(Colors.Grey.Darken1);
-                                    var custoKgLDisplay = ficha.CustoKgL.HasValue 
-                                        ? $"{FormatarMoeda(ficha.CustoKgL.Value)}/{ObterUnidadePreco(ficha)}"
-                                        : "-";
-                                    item.Item().Text(custoKgLDisplay).FontSize(10).SemiBold();
-                                    if (ficha.CustoKgBase.HasValue)
+                                    row.RelativeItem().Column(item =>
                                     {
-                                        var custoKgBaseDisplay = $"{FormatarMoeda(ficha.CustoKgBase.Value)}/{ObterUnidadePreco(ficha)}";
-                                        item.Item().Text($"Custo/kg base: {custoKgBaseDisplay}").FontSize(8).FontColor(Colors.Grey.Darken1);
-                                    }
-                                });
+                                        item.Item().Text("⏱ Tempo").FontSize(9).FontColor(Colors.Grey.Darken2);
+                                        item.Item().Text($"{ficha.TempoPreparo.Value} min/lote").FontSize(11).SemiBold();
+                                    });
+                                }
+                                
+                                if (!string.IsNullOrWhiteSpace(ficha.RendimentoPorcoes))
+                                {
+                                    row.RelativeItem(2).Column(item =>
+                                    {
+                                        item.Item().Text("Lote rende").FontSize(9).FontColor(Colors.Grey.Darken2);
+                                        item.Item().Text(ficha.RendimentoPorcoes).FontSize(11).SemiBold();
+                                    });
+                                }
+                                
+                                if (ficha.RendimentoPorcoesNumero.HasValue && ficha.RendimentoPorcoesNumero.Value > 0)
+                                {
+                                    row.RelativeItem().Column(item =>
+                                    {
+                                        item.Item().Text("Unidades no lote").FontSize(9).FontColor(Colors.Grey.Darken2);
+                                        item.Item().Text(ficha.RendimentoPorcoesNumero.Value.ToString("0.##")).FontSize(11).SemiBold();
+                                    });
+                                }
                             });
+                        });
+
+                        // Seção 2: Resumo de Custos e Pesos
+                        column.Item().PaddingTop(5).PaddingBottom(5).Column(resumo =>
+                        {
+                            resumo.Item().Text("💰 Custos e Pesos")
+                                .FontSize(14)
+                                .SemiBold()
+                                .FontColor(Colors.Blue.Darken1);
+                            
                             resumo.Item().PaddingTop(5).Row(row =>
                             {
                                 row.RelativeItem().Column(item =>
                                 {
-                                    item.Item().Text("Porção:").FontSize(9).FontColor(Colors.Grey.Darken1);
-                                    var porcaoDisplay = ficha.PorcaoVendaQuantidade.HasValue 
-                                        ? $"{FormatarQuantidade(ficha.PorcaoVendaQuantidade.Value, ObterUnidadePorcao(ficha))}"
-                                        : "-";
-                                    item.Item().Text(porcaoDisplay).FontSize(10).SemiBold();
+                                    item.Item().Text("Custo Total do Lote").FontSize(9).FontColor(Colors.Grey.Darken1);
+                                    item.Item().Text(FormatarMoeda(ficha.CustoTotal)).FontSize(13).SemiBold().FontColor(Colors.Red.Darken1);
                                 });
                                 row.RelativeItem().Column(item =>
                                 {
-                                    item.Item().Text("Custo por porção:").FontSize(9).FontColor(Colors.Grey.Darken1);
-                                    var custoPorcaoDisplay = ficha.CustoPorPorcaoVenda.HasValue 
-                                        ? FormatarMoeda(ficha.CustoPorPorcaoVenda.Value)
+                                    item.Item().Text("Peso Total Base").FontSize(9).FontColor(Colors.Grey.Darken1);
+                                    var pesoDisplay = ficha.PesoTotalBase.HasValue 
+                                        ? $"{FormatarQuantidade(ficha.PesoTotalBase.Value, ObterUnidadePorcao(ficha))}"
                                         : "-";
-                                    item.Item().Text(custoPorcaoDisplay).FontSize(10).SemiBold();
+                                    item.Item().Text(pesoDisplay).FontSize(11).SemiBold();
                                 });
                                 row.RelativeItem().Column(item =>
                                 {
-                                    item.Item().Text("Markup mesa:").FontSize(9).FontColor(Colors.Grey.Darken1);
-                                    var markupDisplay = ficha.IndiceContabil.HasValue 
-                                        ? ficha.IndiceContabil.Value.ToString("F2")
+                                    item.Item().Text("Peso Final (IC/IPC)").FontSize(9).FontColor(Colors.Grey.Darken1);
+                                    var rendimentoDisplay = ficha.RendimentoFinal.HasValue 
+                                        ? $"{FormatarQuantidade(ficha.RendimentoFinal.Value, ObterUnidadePorcao(ficha))}"
                                         : "-";
-                                    item.Item().Text(markupDisplay).FontSize(10).SemiBold();
+                                    item.Item().Text(rendimentoDisplay).FontSize(11).SemiBold();
                                 });
                                 row.RelativeItem().Column(item =>
                                 {
-                                    item.Item().Text("Preço mesa:").FontSize(9).FontColor(Colors.Grey.Darken1);
-                                    var precoMesaDisplay = ficha.PrecoMesaSugerido.HasValue 
-                                        ? FormatarMoeda(ficha.PrecoMesaSugerido.Value)
+                                    item.Item().Text("Custo/kg final").FontSize(9).FontColor(Colors.Grey.Darken1);
+                                    var custoKgLDisplay = ficha.CustoKgL.HasValue 
+                                        ? $"{FormatarMoeda(ficha.CustoKgL.Value)}/{ObterUnidadePreco(ficha)}"
                                         : "-";
-                                    item.Item().Text(precoMesaDisplay).FontSize(12).SemiBold();
+                                    item.Item().Text(custoKgLDisplay).FontSize(10).SemiBold();
                                 });
                             });
                         });
 
-                        // Seção 2: Tabela de Composição
+                        // Seção 3: Porção de Venda (1 venda = quanto?)
+                        column.Item().PaddingTop(5).PaddingBottom(5).Column(porcao =>
+                        {
+                            porcao.Item().Text("🍽 Porção de Venda (1 venda = quanto?)")
+                                .FontSize(14)
+                                .SemiBold()
+                                .FontColor(Colors.Blue.Darken1);
+                            
+                            porcao.Item().PaddingTop(5).Padding(10).Background(Colors.Green.Lighten4).Border(1).BorderColor(Colors.Green.Lighten2).Row(row =>
+                            {
+                                row.RelativeItem().Column(item =>
+                                {
+                                    item.Item().Text("1 Porção de venda").FontSize(9).FontColor(Colors.Grey.Darken2);
+                                    var porcaoDisplay = ficha.PorcaoVendaQuantidade.HasValue 
+                                        ? $"{FormatarQuantidade(ficha.PorcaoVendaQuantidade.Value, ObterUnidadePorcao(ficha))}"
+                                        : "-";
+                                    item.Item().Text(porcaoDisplay).FontSize(12).SemiBold();
+                                });
+                                row.RelativeItem().Column(item =>
+                                {
+                                    item.Item().Text("Custo por porção").FontSize(9).FontColor(Colors.Grey.Darken2);
+                                    var custoPorcaoDisplay = ficha.CustoPorPorcaoVenda.HasValue 
+                                        ? FormatarMoeda(ficha.CustoPorPorcaoVenda.Value)
+                                        : "-";
+                                    item.Item().Text(custoPorcaoDisplay).FontSize(12).SemiBold();
+                                });
+                                row.RelativeItem().Column(item =>
+                                {
+                                    item.Item().Text("Markup mesa").FontSize(9).FontColor(Colors.Grey.Darken2);
+                                    var markupDisplay = ficha.IndiceContabil.HasValue 
+                                        ? ficha.IndiceContabil.Value.ToString("F2")
+                                        : "-";
+                                    item.Item().Text(markupDisplay).FontSize(12).SemiBold();
+                                });
+                                row.RelativeItem().Column(item =>
+                                {
+                                    item.Item().Text("Preço mesa").FontSize(9).FontColor(Colors.Grey.Darken2);
+                                    var precoMesaDisplay = ficha.PrecoMesaSugerido.HasValue 
+                                        ? FormatarMoeda(ficha.PrecoMesaSugerido.Value)
+                                        : "-";
+                                    item.Item().Text(precoMesaDisplay).FontSize(13).SemiBold().FontColor(Colors.Green.Darken2);
+                                });
+                                
+                                // Porções no lote (estimativa)
+                                if (ficha.PorcaoVendaQuantidade.HasValue && ficha.PorcaoVendaQuantidade.Value > 0 
+                                    && ficha.RendimentoFinal.HasValue && ficha.RendimentoFinal.Value > 0)
+                                {
+                                    var porcoesNoLote = ficha.RendimentoFinal.Value / ficha.PorcaoVendaQuantidade.Value;
+                                    row.RelativeItem().Column(item =>
+                                    {
+                                        item.Item().Text("Porções no lote").FontSize(9).FontColor(Colors.Grey.Darken2);
+                                        item.Item().Text(porcoesNoLote.ToString("0.##")).FontSize(11).SemiBold();
+                                    });
+                                }
+                            });
+                        });
+
+                        // Seção 4: Índices de Cocção (IC/IPC) - se existirem
+                        if ((ficha.ICOperador != null && ficha.ICValor.HasValue && ficha.ICValor.Value > 0) 
+                            || (ficha.IPCValor.HasValue && ficha.IPCValor.Value > 0 && ficha.IPCValor.Value != 100))
+                        {
+                            column.Item().PaddingTop(5).PaddingBottom(5).Column(indices =>
+                            {
+                                indices.Item().Text("📊 Índices de Cocção e Partes Comestíveis")
+                                    .FontSize(12)
+                                    .SemiBold()
+                                    .FontColor(Colors.Orange.Darken1);
+                                
+                                indices.Item().PaddingTop(3).Row(row =>
+                                {
+                                    if (ficha.ICOperador != null && ficha.ICValor.HasValue && ficha.ICValor.Value > 0)
+                                    {
+                                        row.RelativeItem().Column(item =>
+                                        {
+                                            item.Item().Text("IC (Índice de Cocção)").FontSize(8).FontColor(Colors.Grey.Darken1);
+                                            var icTexto = ficha.ICOperador == '+' ? "Aumenta" : "Diminui";
+                                            item.Item().Text($"{icTexto} {ficha.ICValor.Value}%").FontSize(10).SemiBold();
+                                        });
+                                    }
+                                    
+                                    if (ficha.IPCValor.HasValue && ficha.IPCValor.Value > 0 && ficha.IPCValor.Value != 100)
+                                    {
+                                        row.RelativeItem().Column(item =>
+                                        {
+                                            item.Item().Text("IPC (Partes Comestíveis)").FontSize(8).FontColor(Colors.Grey.Darken1);
+                                            item.Item().Text($"{ficha.IPCValor.Value}% aproveitável").FontSize(10).SemiBold();
+                                        });
+                                    }
+                                });
+                            });
+                        }
+
+                        // Seção 5: Tabela de Composição (Ingredientes/Componentes)
                         if (ficha.Itens.Any())
                         {
                             column.Item().PaddingTop(10).Column(section =>
                             {
-                                section.Item().PaddingBottom(5).Text("Composição").FontSize(14).SemiBold();
+                                section.Item().PaddingBottom(5).Text("🥘 Composição (Ingredientes/Componentes)")
+                                    .FontSize(14)
+                                    .SemiBold()
+                                    .FontColor(Colors.Blue.Darken1);
                                 
                                 section.Item().Table(table =>
                                 {
                                     table.ColumnsDefinition(columns =>
                                     {
-                                        columns.ConstantColumn(30); // #
-                                        columns.RelativeColumn(1f); // Tipo
+                                        columns.ConstantColumn(25); // #
+                                        columns.RelativeColumn(0.8f); // Tipo
                                         columns.RelativeColumn(2f); // Item
-                                        columns.RelativeColumn(1.5f); // Quantidade + Unidade
-                                        columns.RelativeColumn(1.2f); // Custo item (R$)
+                                        columns.RelativeColumn(1.2f); // Quantidade + Unidade
+                                        columns.RelativeColumn(1f); // Custo item (R$)
                                         columns.RelativeColumn(1.5f); // Observações
                                     });
 
                                     // Cabeçalho
                                     table.Header(header =>
                                     {
-                                        header.Cell().Element(CellStyle).Text("#").SemiBold();
-                                        header.Cell().Element(CellStyle).Text("Tipo").SemiBold();
-                                        header.Cell().Element(CellStyle).Text("Item").SemiBold();
-                                        header.Cell().Element(CellStyle).Text("Quantidade + Unidade").SemiBold();
-                                        header.Cell().Element(CellStyle).Text("Custo item (R$)").SemiBold();
-                                        header.Cell().Element(CellStyle).Text("Observações").SemiBold();
+                                        header.Cell().Element(CellStyleLight).Text("#").FontSize(9).SemiBold();
+                                        header.Cell().Element(CellStyleLight).Text("Tipo").FontSize(9).SemiBold();
+                                        header.Cell().Element(CellStyleLight).Text("Item").FontSize(9).SemiBold();
+                                        header.Cell().Element(CellStyleLight).Text("Quantidade").FontSize(9).SemiBold();
+                                        header.Cell().Element(CellStyleLight).Text("Custo").FontSize(9).SemiBold();
+                                        header.Cell().Element(CellStyleLight).Text("Obs").FontSize(9).SemiBold();
                                     });
 
                                     // Linhas de dados
@@ -452,7 +569,6 @@ public class PdfService
                                         }
                                         else if (item.TipoItem == "Receita")
                                         {
-                                            // Para Receita, exibir como "1x" sem unidade
                                             quantidadeDisplay = $"{item.Quantidade:F0}x";
                                         }
                                         else
@@ -464,122 +580,86 @@ public class PdfService
                                             ? (item.ReceitaNome ?? "") 
                                             : (item.InsumoNome ?? "");
 
-                                        table.Cell().Element(CellStyle).Text(item.Ordem.ToString());
-                                        table.Cell().Element(CellStyle).Text(item.TipoItem);
-                                        table.Cell().Element(CellStyle).Text(nomeDisplay);
-                                        table.Cell().Element(CellStyle).Text(quantidadeDisplay);
-                                        table.Cell().Element(CellStyle).Text(FormatarMoeda(item.CustoItem));
-                                        table.Cell().Element(CellStyle).Text(item.Observacoes ?? "-");
+                                        table.Cell().Element(CellStyleLight).Text(item.Ordem.ToString()).FontSize(9);
+                                        table.Cell().Element(CellStyleLight).Text(item.TipoItem).FontSize(9);
+                                        table.Cell().Element(CellStyleLight).Text(nomeDisplay).FontSize(9);
+                                        table.Cell().Element(CellStyleLight).Text(quantidadeDisplay).FontSize(9);
+                                        table.Cell().Element(CellStyleLight).Text(FormatarMoeda(item.CustoItem)).FontSize(9);
+                                        table.Cell().Element(CellStyleLight).Text(item.Observacoes ?? "-").FontSize(8);
                                     }
 
                                     // Rodapé com total
                                     table.Footer(footer =>
                                     {
-                                        footer.Cell().Element(CellStyle).Text("Total").SemiBold();
-                                        footer.Cell().Element(CellStyle);
-                                        footer.Cell().Element(CellStyle);
-                                        footer.Cell().Element(CellStyle);
-                                        footer.Cell().Element(CellStyle).Text(FormatarMoeda(ficha.CustoTotal)).SemiBold();
-                                        footer.Cell().Element(CellStyle);
+                                        footer.Cell().Element(CellStyle).Text("").SemiBold();
+                                        footer.Cell().Element(CellStyle).Text("").SemiBold();
+                                        footer.Cell().Element(CellStyle).Text("").SemiBold();
+                                        footer.Cell().Element(CellStyle).Text("TOTAL").FontSize(10).SemiBold();
+                                        footer.Cell().Element(CellStyle).Text(FormatarMoeda(ficha.CustoTotal)).FontSize(10).SemiBold();
+                                        footer.Cell().Element(CellStyle).Text("");
                                     });
                                 });
-
-                                // Peso Total Base abaixo da tabela
-                                if (ficha.PesoTotalBase.HasValue)
-                                {
-                                    section.Item().PaddingTop(5).Text($"Peso Total Base: {FormatarQuantidade(ficha.PesoTotalBase.Value, ObterUnidadePorcao(ficha))}")
-                                        .FontSize(9).FontColor(Colors.Grey.Darken1);
-                                }
                             });
                         }
 
-                        // Seção 3: Precificação Mesa
-                        column.Item().PaddingTop(15).Column(section =>
+                        // Seção 6: Descrição Comercial (se existir)
+                        if (!string.IsNullOrWhiteSpace(ficha.DescricaoComercial))
                         {
-                            section.Item().PaddingBottom(5).Text("Precificação Mesa").FontSize(14).SemiBold();
-                            
-                            section.Item().Padding(10).Background(Colors.Grey.Lighten4).Border(1).BorderColor(Colors.Grey.Lighten2).Row(row =>
+                            column.Item().PaddingTop(10).Column(section =>
                             {
-                                row.RelativeItem().Column(item =>
-                                {
-                                    item.Item().Text("Custo por unidade (base)").FontSize(9).FontColor(Colors.Grey.Darken1);
-                                    item.Item().Text(FormatarMoeda(ficha.CustoPorUnidade)).FontSize(12).SemiBold();
-                                });
-                                row.RelativeItem().Column(item =>
-                                {
-                                    item.Item().Text("Custo por porção").FontSize(9).FontColor(Colors.Grey.Darken1);
-                                    var custoPorcaoDisplay = ficha.CustoPorPorcaoVenda.HasValue 
-                                        ? FormatarMoeda(ficha.CustoPorPorcaoVenda.Value)
-                                        : "-";
-                                    item.Item().Text(custoPorcaoDisplay).FontSize(12).SemiBold();
-                                });
-                                row.RelativeItem().Column(item =>
-                                {
-                                    item.Item().Text("Markup (IndiceContabil)").FontSize(9).FontColor(Colors.Grey.Darken1);
-                                    var markupDisplay = ficha.IndiceContabil.HasValue 
-                                        ? ficha.IndiceContabil.Value.ToString("F2")
-                                        : "-";
-                                    item.Item().Text(markupDisplay).FontSize(12).SemiBold();
-                                });
-                                row.RelativeItem().Column(item =>
-                                {
-                                    item.Item().Text("Preço Mesa Sugerido").FontSize(9).FontColor(Colors.Grey.Darken1);
-                                    var precoMesaDisplay = ficha.PrecoMesaSugerido.HasValue 
-                                        ? FormatarMoeda(ficha.PrecoMesaSugerido.Value)
-                                        : "-";
-                                    item.Item().Text(precoMesaDisplay).FontSize(14).SemiBold();
-                                });
+                                section.Item().Text("📝 Descrição Comercial")
+                                    .FontSize(12)
+                                    .SemiBold()
+                                    .FontColor(Colors.Blue.Darken1);
+                                
+                                section.Item().PaddingTop(3).Padding(8).Background(Colors.Grey.Lighten3).Text(ficha.DescricaoComercial)
+                                    .FontSize(9)
+                                    .LineHeight(1.4f);
                             });
+                        }
 
-                            section.Item().PaddingTop(8).Text("Formula: Preco mesa = custo por porcao x markup")
-                                .FontSize(9).FontColor(Colors.Grey.Darken1).Italic();
-                        });
-
-                        // Seção 4: Tabela de Canais
+                        // Seção 7: Canais de Venda
                         if (ficha.Canais.Any())
                         {
-                            column.Item().PaddingTop(15).Column(section =>
+                            column.Item().PaddingTop(10).Column(section =>
                             {
-                                section.Item().PaddingBottom(5).Text("Canais").FontSize(14).SemiBold();
+                                section.Item().PaddingBottom(5).Text("🛒 Canais de Venda")
+                                    .FontSize(14)
+                                    .SemiBold()
+                                    .FontColor(Colors.Blue.Darken1);
                                 
                                 section.Item().Table(table =>
                                 {
                                     table.ColumnsDefinition(columns =>
                                     {
-                                        columns.RelativeColumn(1f); // Canal
+                                        columns.RelativeColumn(1.5f); // Canal
                                         columns.RelativeColumn(1.5f); // Nome exibição
-                                        columns.RelativeColumn(1f); // Modo
-                                        columns.RelativeColumn(1f); // Base (Preço Mesa)
+                                        columns.RelativeColumn(1.2f); // Modo
                                         columns.RelativeColumn(1f); // Preço Canal
-                                        columns.RelativeColumn(1f); // Porcentagem (%)
+                                        columns.RelativeColumn(0.8f); // Taxa %
                                     });
 
                                     // Cabeçalho
                                     table.Header(header =>
                                     {
-                                        header.Cell().Element(CellStyle).Text("Canal").SemiBold();
-                                        header.Cell().Element(CellStyle).Text("Nome exibição").SemiBold();
-                                        header.Cell().Element(CellStyle).Text("Modo").SemiBold();
-                                        header.Cell().Element(CellStyle).Text("Base (Preço Mesa)").SemiBold();
-                                        header.Cell().Element(CellStyle).Text("Preço Canal").SemiBold();
-                                        header.Cell().Element(CellStyle).Text("Porcentagem (%)").SemiBold();
+                                        header.Cell().Element(CellStyleLight).Text("Canal").FontSize(9).SemiBold();
+                                        header.Cell().Element(CellStyleLight).Text("Nome exibição").FontSize(9).SemiBold();
+                                        header.Cell().Element(CellStyleLight).Text("Modo").FontSize(9).SemiBold();
+                                        header.Cell().Element(CellStyleLight).Text("Preço").FontSize(9).SemiBold();
+                                        header.Cell().Element(CellStyleLight).Text("Taxa %").FontSize(9).SemiBold();
                                     });
 
                                     // Linhas de dados
                                     foreach (var canal in ficha.Canais)
                                     {
                                         var modo = ObterModoCanal(canal);
-                                        var basePrecoMesa = ficha.PrecoMesaSugerido.HasValue 
-                                            ? FormatarMoeda(ficha.PrecoMesaSugerido.Value)
-                                            : "-";
                                         var porcentagem = (canal.TaxaPercentual ?? 0m) + (canal.ComissaoPercentual ?? 0m);
 
-                                        table.Cell().Element(CellStyle).Text(canal.Canal);
-                                        table.Cell().Element(CellStyle).Text(canal.NomeExibicao ?? "-");
-                                        table.Cell().Element(CellStyle).Text(modo);
-                                        table.Cell().Element(CellStyle).Text(basePrecoMesa);
-                                        table.Cell().Element(CellStyle).Text(FormatarMoeda(canal.PrecoVenda));
-                                        table.Cell().Element(CellStyle).Text(porcentagem.ToString("F2") + "%");
+                                        table.Cell().Element(CellStyleLight).Text(canal.Canal).FontSize(9);
+                                        table.Cell().Element(CellStyleLight).Text(canal.NomeExibicao ?? "-").FontSize(9);
+                                        table.Cell().Element(CellStyleLight).Text(modo).FontSize(8);
+                                        table.Cell().Element(CellStyleLight).Text(FormatarMoeda(canal.PrecoVenda)).FontSize(9);
+                                        table.Cell().Element(CellStyleLight).Text(porcentagem.ToString("F2") + "%").FontSize(9);
                                     }
                                 });
                             });
@@ -592,6 +672,11 @@ public class PdfService
                     {
                         x.Span("Gerado em: ").FontSize(8).FontColor(Colors.Grey.Medium);
                         x.Span(DateTime.Now.ToString("dd/MM/yyyy HH:mm")).SemiBold().FontSize(8).FontColor(Colors.Grey.Medium);
+                        x.Span(" | ").FontSize(8).FontColor(Colors.Grey.Medium);
+                        x.Span(ficha.IsAtivo ? "FICHA ATIVA" : "FICHA INATIVA")
+                            .SemiBold()
+                            .FontSize(8)
+                            .FontColor(ficha.IsAtivo ? Colors.Green.Darken1 : Colors.Red.Darken1);
                     });
             });
         })

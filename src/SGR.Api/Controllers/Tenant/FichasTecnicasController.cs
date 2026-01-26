@@ -177,7 +177,7 @@ public class FichasTecnicasController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erro ao gerar PDF da ficha tÃ©cnica {Id}", id);
+            _logger.LogError(ex, "Erro ao gerar PDF da ficha técnica {Id}", id);
             return StatusCode(500, new { message = "Erro ao gerar PDF" });
         }
     }
@@ -196,7 +196,7 @@ public class FichasTecnicasController : ControllerBase
         }
         catch (SGR.Api.Exceptions.BusinessException ex)
         {
-            _logger.LogWarning(ex, "Falha ao criar Ficha TÃ©cnica");
+            _logger.LogWarning(ex, "Falha ao criar Ficha técnica");
             return BadRequest(new { message = ex.Message });
         }
     }
@@ -217,7 +217,7 @@ public class FichasTecnicasController : ControllerBase
         }
         catch (SGR.Api.Exceptions.BusinessException ex)
         {
-            _logger.LogWarning(ex, "Falha ao atualizar Ficha TÃ©cnica");
+            _logger.LogWarning(ex, "Falha ao atualizar Ficha técnica");
             return BadRequest(new { message = ex.Message });
         }
     }

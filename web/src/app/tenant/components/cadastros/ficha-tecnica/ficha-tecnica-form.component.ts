@@ -18,6 +18,8 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatChipsModule } from '@angular/material/chips';
 import { ToastService } from '../../../../core/services/toast.service';
 import { environment } from '../../../../../environments/environment';
 import { CategoriaReceitaService, CategoriaReceitaDto } from '../../../../features/tenant-categorias-receita/services/categoria-receita.service';
@@ -56,7 +58,7 @@ type FichaTecnicaItemFormModel = {
 @Component({
   standalone: true,
   selector: 'app-tenant-ficha-tecnica-form',
-  imports: [CommonModule, FormsModule, RouterLink, MatFormFieldModule, MatInputModule, MatButtonModule, MatSelectModule, MatSlideToggleModule, MatSnackBarModule, MatTableModule, MatIconModule, MatCardModule, MatCheckboxModule, MatTooltipModule, MatTabsModule, MatProgressSpinnerModule],
+  imports: [CommonModule, FormsModule, RouterLink, MatFormFieldModule, MatInputModule, MatButtonModule, MatSelectModule, MatSlideToggleModule, MatSnackBarModule, MatTableModule, MatIconModule, MatCardModule, MatCheckboxModule, MatTooltipModule, MatTabsModule, MatProgressSpinnerModule, MatToolbarModule, MatChipsModule],
   templateUrl: './ficha-tecnica-form.component.html',
   styleUrls: ['./ficha-tecnica-form.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -858,7 +860,7 @@ export class TenantFichaTecnicaFormComponent {
             this.loadFichaDetalhe(created.id); // Recarregar dados completos
           },
           error: err => {
-            const msg = err.error?.message || 'Erro ao salvar ficha tÃ©cnica';
+            const msg = err.error?.message || 'Erro ao salvar ficha técnica';
             this.toast.error(msg);
             this.error.set(msg);
             this.cdr.markForCheck();
@@ -918,7 +920,7 @@ export class TenantFichaTecnicaFormComponent {
             this.loadFichaDetalhe(currentId); // Recarregar dados completos
           },
           error: err => {
-            const msg = err.error?.message || 'Erro ao salvar ficha tÃ©cnica';
+            const msg = err.error?.message || 'Erro ao salvar ficha técnica';
             this.toast.error(msg);
             this.error.set(msg);
             this.cdr.markForCheck();
@@ -1057,5 +1059,73 @@ export class TenantFichaTecnicaFormComponent {
       return 'Preço definido';
     }
     return '-';
+  }
+
+  getPorcoesEstimadasOperacao(): string {
+    const dto = this.fichaDtoCompleto();
+    if (!dto) return '—';
+
+    const pesoFinal = dto.rendimentoFinal ?? null;
+    const porcaoQtd = dto.porcaoVendaQuantidade ?? null;
+
+    if (!pesoFinal || !porcaoQtd || porcaoQtd <= 0) return '—';
+
+    const estimado = pesoFinal / porcaoQtd;
+    if (!Number.isFinite(estimado) || estimado <= 0) return '—';
+
+    return new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 2 }).format(estimado);
+  }
+
+  /**
+   * Equivalência em g/mL:
+   * - Insumo UN: usa insumo.pesoPorUnidade (assumido em g ou mL conforme seu domínio)
+   * - Insumo GR/ML: apenas repete o valor como "peso real"
+   * - Receita: usa receita.pesoPorPorcao (g) * quantidade(x)
+   */
+  getEquivalenciaPeso(it: any): string | null {
+    // it: item do DTO completo (fichaDtoCompleto().itens)
+    // Esperado: tipoItem, quantidade, unidadeMedidaSigla, insumoId, receitaId
+    const tipo = (it.tipoItem || '').toString();
+    const qtd = Number(it.quantidade ?? 0);
+    if (!Number.isFinite(qtd) || qtd <= 0) return null;
+
+    if (tipo === 'Insumo') {
+      const sigla = (it.unidadeMedidaSigla || '').toUpperCase();
+
+      if (sigla === 'UN') {
+        const insumo = this.insumos().find(x => x.id === it.insumoId);
+        const pesoUn = insumo?.pesoPorUnidade ?? null;
+        if (!pesoUn || pesoUn <= 0) return null;
+
+        const total = qtd * pesoUn;
+        const un = 'g'; // se você tiver insumo.pesoPorUnidade em mL para líquidos, ajuste aqui.
+        const f = (n: number) => new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 2 }).format(n);
+
+        // Ex.: "1 UN = 50 g • Total: 2 UN = 100 g"
+        return `1 UN = ${f(pesoUn)} ${un} • Total: ${f(qtd)} UN = ${f(total)} ${un}`;
+      }
+
+      // Se já veio em GR/ML, pode exibir como "peso real"
+      if (sigla === 'GR' || sigla === 'ML' || sigla === 'G' || sigla === 'M' ) {
+        const unit = sigla === 'ML' ? 'mL' : 'g';
+        const f = (n: number) => new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 2 }).format(n);
+        return `Total: ${f(qtd)} ${unit}`;
+      }
+
+      return null;
+    }
+
+    if (tipo === 'Receita') {
+      const receita = this.receitas().find(r => r.id === it.receitaId);
+      const pesoPorPorcao = receita?.pesoPorPorcao ?? null; // em g
+      if (!pesoPorPorcao || pesoPorPorcao <= 0) return null;
+
+      const total = qtd * pesoPorPorcao;
+      const f = (n: number) => new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 2 }).format(n);
+
+      return `1x = ${f(pesoPorPorcao)} g • Total: ${f(qtd)}x = ${f(total)} g`;
+    }
+
+    return null;
   }
 }

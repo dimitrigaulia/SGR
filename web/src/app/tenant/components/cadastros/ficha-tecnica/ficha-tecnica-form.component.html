@@ -1,103 +1,122 @@
-<div class="form-container">
-  <h2 class="form-title">{{ isEdit() ? (isView() ? 'Visualizar ficha técnica' : 'Editar ficha técnica') : 'Cadastro de ficha técnica' }}</h2>
+<div class="page">
+  <!-- HEADER PADRÃO (igual Receita/Insumos) -->
+  <mat-toolbar class="page-toolbar" color="transparent">
+    <div class="title">
+      <div class="h1">
+        {{ isEdit() ? (isView() ? 'Visualizar ficha técnica' : 'Editar ficha técnica') : 'Cadastro de ficha técnica' }}
+      </div>
+      <div class="subtitle" *ngIf="isEdit()">
+        <mat-chip-set aria-label="status">
+          <mat-chip [highlighted]="model.isAtivo">
+            {{ model.isAtivo ? 'Ativa' : 'Inativa' }}
+          </mat-chip>
+          <mat-chip *ngIf="hasPorcao" highlighted>Com porção</mat-chip>
+          <mat-chip *ngIf="!hasPorcao">Sem porção</mat-chip>
+        </mat-chip-set>
+      </div>
+    </div>
+
+    <span class="spacer"></span>
+
+    <div class="actions">
+      <button mat-stroked-button type="button" routerLink="/tenant/fichas-tecnicas">Voltar</button>
+
+      @if (isView()) {
+        <button mat-stroked-button type="button" (click)="openOperacao('comercial')">Operação</button>
+        <button mat-stroked-button type="button" (click)="printPdf()">Imprimir / PDF</button>
+      } @else {
+        <button mat-raised-button color="primary" type="button" (click)="save()">Salvar</button>
+      }
+    </div>
+  </mat-toolbar>
 
   <mat-tab-group [selectedIndex]="selectedTabIndex()" (selectedTabChange)="onTabChange($event.index)">
-    <!-- Tab 1: Dados e Composição -->
-    <mat-tab label="Dados e Composição">
-      <form #f="ngForm" (ngSubmit)="save()">
-        <mat-form-field appearance="outline" class="form-field-spacing">
-          <mat-label>Categoria</mat-label>
-          <mat-select name="categoriaId" [(ngModel)]="model.categoriaId" [disabled]="isView()" required>
-            @for (c of categorias(); track c.id) {
-              <mat-option [value]="c.id">{{ c.nome }}</mat-option>
-            }
-          </mat-select>
-          @if (f.controls['categoriaId']?.errors?.['required']) {
-            <mat-error>Categoria é obrigatória</mat-error>
-          }
-        </mat-form-field>
+    <!-- TAB 1: CADASTRO -->
+    <mat-tab label="Cadastro">
+      <form #f="ngForm" (ngSubmit)="save()" class="content">
 
-        <mat-form-field appearance="outline" class="form-field-spacing">
-          <mat-label>Nome comercial</mat-label>
-          <input matInput name="nome" [(ngModel)]="model.nome" [disabled]="isView()" required maxlength="200" />
-          @if (f.controls['nome']?.errors?.['required']) {
-            <mat-error>Nome é obrigatório</mat-error>
-          }
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="form-field-spacing">
-          <mat-label>Receita principal (produção)</mat-label>
-          <mat-select name="receitaPrincipalId" [(ngModel)]="model.receitaPrincipalId" [disabled]="isView()">
-            <mat-option [value]="null">Nenhuma</mat-option>
-            @for (r of receitas(); track r.id) {
-              <mat-option [value]="r.id">{{ r.nome }}</mat-option>
-            }
-          </mat-select>
-          <mat-hint>Usada na tela Operação (Comercial/Produção)</mat-hint>
-        </mat-form-field>
-
-        <div class="form-row">
-          <mat-form-field appearance="outline" class="form-field-spacing">
-            <mat-label>Código</mat-label>
-            <input matInput name="codigo" [(ngModel)]="model.codigo" [disabled]="isView()" maxlength="50" />
-          </mat-form-field>
-
-          <mat-form-field appearance="outline" class="form-field-spacing">
-            <mat-label>Markup Mesa (Índice Contábil)</mat-label>
-            <input matInput type="number" name="indiceContabil" [(ngModel)]="model.indiceContabil" (ngModelChange)="onIndiceContabilChange()" [disabled]="isView()" required min="0.01" step="0.01" />
-            <mat-hint>Preço mesa = custo por porção × markup</mat-hint>
-            @if (f.controls['indiceContabil']?.errors?.['required']) {
-              <mat-error>Markup Mesa é obrigatório</mat-error>
-            }
-            @if (f.controls['indiceContabil']?.errors?.['min']) {
-              <mat-error>Markup Mesa deve ser maior que zero</mat-error>
-            }
-          </mat-form-field>
-
-          <mat-form-field appearance="outline" class="form-field-spacing">
-            <mat-label>Margem alvo (%)</mat-label>
-            <input matInput type="number" name="margemAlvoPercentual" [(ngModel)]="model.margemAlvoPercentual" [disabled]="isView()" min="0" max="100" step="0.1" />
-          </mat-form-field>
-        </div>
-
-        <div class="form-section">
-          <h3>Índices de Cocção e Partes Comestíveis</h3>
-          <div class="form-row">
-            <mat-form-field appearance="outline" class="form-field-spacing">
-              <mat-label>IC Operador</mat-label>
-              <mat-select name="icOperador" [(ngModel)]="model.icOperador" (ngModelChange)="onICChange()" [disabled]="isView()">
-                <mat-option [value]="null">Nenhum</mat-option>
-                <mat-option value="+">+ (Aumenta)</mat-option>
-                <mat-option value="-">- (Diminui)</mat-option>
+        <!-- Card: Identificação -->
+        <mat-card class="card">
+          <mat-card-title>Identificação</mat-card-title>
+          <mat-card-content class="grid">
+            <mat-form-field appearance="outline">
+              <mat-label>Categoria</mat-label>
+              <mat-select name="categoriaId" [(ngModel)]="model.categoriaId" [disabled]="isView()" required>
+                @for (c of categorias(); track c.id) {
+                  <mat-option [value]="c.id">{{ c.nome }}</mat-option>
+                }
               </mat-select>
+              @if (f.controls['categoriaId']?.errors?.['required']) {
+                <mat-error>Categoria é obrigatória</mat-error>
+              }
             </mat-form-field>
 
-            <mat-form-field appearance="outline" class="form-field-spacing">
-              <mat-label>IC Valor (%)</mat-label>
-              <input matInput type="number" name="icValor" [(ngModel)]="model.icValor" (ngModelChange)="onICChange()" [disabled]="isView()" min="0" max="9999" step="1" />
+            <mat-form-field appearance="outline">
+              <mat-label>Nome comercial</mat-label>
+              <input matInput name="nome" [(ngModel)]="model.nome" [disabled]="isView()" required maxlength="200" />
+              @if (f.controls['nome']?.errors?.['required']) {
+                <mat-error>Nome é obrigatório</mat-error>
+              }
             </mat-form-field>
 
-            <mat-form-field appearance="outline" class="form-field-spacing">
-              <mat-label>IPC Valor (%)</mat-label>
-              <input matInput type="number" name="ipcValor" [(ngModel)]="model.ipcValor" (ngModelChange)="onICChange()" [disabled]="isView()" min="0" max="999" step="1" />
-              <mat-hint>100 = sem perda; 90 = 10% de perda (parte aproveitável)</mat-hint>
+            <mat-form-field appearance="outline">
+              <mat-label>Código</mat-label>
+              <input matInput name="codigo" [(ngModel)]="model.codigo" [disabled]="isView()" maxlength="50" />
             </mat-form-field>
-          </div>
-        </div>
 
-        <div class="form-section">
-          <h3>Porção de venda</h3>
-          <div class="form-row">
-            <mat-form-field appearance="outline" class="form-field-spacing">
-              <mat-label>Quantidade</mat-label>
-              <input matInput type="number" name="porcaoVendaQuantidade" [(ngModel)]="model.porcaoVendaQuantidade" [disabled]="isView()" min="0" step="0.01" />
-              <mat-hint>Define a porção comercial (ex.: 100 g). Necessária para custo por porção e preço mesa.</mat-hint>
+            <mat-form-field appearance="outline">
+              <mat-label>Receita principal (produção)</mat-label>
+              <mat-select name="receitaPrincipalId" [(ngModel)]="model.receitaPrincipalId" [disabled]="isView()">
+                <mat-option [value]="null">Nenhuma</mat-option>
+                @for (r of receitas(); track r.id) {
+                  <mat-option [value]="r.id">{{ r.nome }}</mat-option>
+                }
+              </mat-select>
+              <mat-hint>Usada na tela Operação (produção). Selecione a receita que descreve o passo a passo.</mat-hint>
+            </mat-form-field>
+          </mat-card-content>
+        </mat-card>
+
+        <!-- Card: Precificação (cadastro) -->
+        <mat-card class="card">
+          <mat-card-title>Precificação (cadastro)</mat-card-title>
+          <mat-card-content class="grid">
+            <mat-form-field appearance="outline">
+              <mat-label>Markup Mesa (Índice Contábil)</mat-label>
+              <input matInput type="number" name="indiceContabil" [(ngModel)]="model.indiceContabil"
+                     [disabled]="isView()" required min="0.01" step="0.01" />
+              <mat-hint>Preço mesa = custo por porção × markup</mat-hint>
+              @if (f.controls['indiceContabil']?.errors?.['required']) {
+                <mat-error>Markup Mesa é obrigatório</mat-error>
+              }
+              @if (f.controls['indiceContabil']?.errors?.['min']) {
+                <mat-error>Markup Mesa deve ser maior que zero</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Margem alvo (%)</mat-label>
+              <input matInput type="number" name="margemAlvoPercentual" [(ngModel)]="model.margemAlvoPercentual"
+                     [disabled]="isView()" min="0" max="100" step="0.1" />
+            </mat-form-field>
+          </mat-card-content>
+        </mat-card>
+
+        <!-- Card: Porção de venda -->
+        <mat-card class="card">
+          <mat-card-title>Porção de venda (1 venda = quanto?)</mat-card-title>
+          <mat-card-content class="grid">
+            <mat-form-field appearance="outline">
+              <mat-label>Quantidade por porção</mat-label>
+              <input matInput type="number" name="porcaoVendaQuantidade" [(ngModel)]="model.porcaoVendaQuantidade"
+                     [disabled]="isView()" min="0" step="0.01" />
+              <mat-hint>Quanto você serve em 1 venda? (Ex.: 150g, 100ml). Necessário para custo/preço por porção.</mat-hint>
               @if (model.porcaoVendaQuantidade && model.porcaoVendaQuantidade > 0 && !model.porcaoVendaUnidadeMedidaId) {
                 <mat-error>Selecione a unidade da porção</mat-error>
               }
             </mat-form-field>
 
-            <mat-form-field appearance="outline" class="form-field-spacing">
+            <mat-form-field appearance="outline">
               <mat-label>Unidade</mat-label>
               <mat-select name="porcaoVendaUnidadeMedidaId" [(ngModel)]="model.porcaoVendaUnidadeMedidaId" [disabled]="isView()">
                 <mat-option [value]="null">Selecione...</mat-option>
@@ -108,736 +127,682 @@
                 }
               </mat-select>
             </mat-form-field>
-          </div>
-        </div>
+          </mat-card-content>
+        </mat-card>
 
-        <div class="form-section">
-          <h3>Informações de produção</h3>
-          <div class="form-row">
-            <mat-form-field appearance="outline" class="form-field-spacing">
-              <mat-label>Tempo preparo (minutos)</mat-label>
+        <!-- Card: Índices -->
+        <mat-card class="card">
+          <mat-card-title>Índices (IC / IPC)</mat-card-title>
+          <mat-card-content class="grid">
+            <mat-form-field appearance="outline">
+              <mat-label>IC Operador</mat-label>
+              <mat-select name="icOperador" [(ngModel)]="model.icOperador" [disabled]="isView()">
+                <mat-option [value]="null">Nenhum</mat-option>
+                <mat-option value="+">+ (Aumenta)</mat-option>
+                <mat-option value="-">- (Diminui)</mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>IC Valor (%)</mat-label>
+              <input matInput type="number" name="icValor" [(ngModel)]="model.icValor" [disabled]="isView()" min="0" max="9999" step="1" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>IPC Valor (%)</mat-label>
+              <input matInput type="number" name="ipcValor" [(ngModel)]="model.ipcValor" [disabled]="isView()" min="0" max="999" step="1" />
+              <mat-hint>100 = sem perda; 90 = 10% de perda (parte aproveitável)</mat-hint>
+            </mat-form-field>
+          </mat-card-content>
+        </mat-card>
+
+        <!-- Card: Produção -->
+        <mat-card class="card">
+          <mat-card-title>Produção (Rendimento do lote)</mat-card-title>
+          <mat-card-content class="grid">
+            <mat-form-field appearance="outline">
+              <mat-label>Tempo preparo (min)</mat-label>
               <input matInput type="number" name="tempoPreparo" [(ngModel)]="model.tempoPreparo" [disabled]="isView()" min="0" step="1" />
-              <mat-hint>Tempo necessário para preparar o item</mat-hint>
+              <mat-hint>Tempo necessário para produzir 1 lote completo</mat-hint>
             </mat-form-field>
 
-            <mat-form-field appearance="outline" class="form-field-spacing">
-              <mat-label>Rendimento</mat-label>
-              <input matInput type="text" name="rendimentoPorcoes" [(ngModel)]="model.rendimentoPorcoes" [disabled]="isView()" maxlength="200" placeholder="Ex: Porção para 3 pessoas, 4 palitos, 8 bolinhos" />
-              <mat-hint>Descrição do rendimento (ex: "Porção para 3 pessoas", "4 palitos", "8 bolinhos")</mat-hint>
+            <mat-form-field appearance="outline">
+              <mat-label>Rendimento do lote (descrição)</mat-label>
+              <input matInput type="text" name="rendimentoPorcoes" [(ngModel)]="model.rendimentoPorcoes" [disabled]="isView()" maxlength="200"
+                     placeholder="Ex.: 10 porções, 4 palitos, 1 sanduíche, 500ml de molho" />
+              <mat-hint>Descreva quantas porções/unidades este lote produz</mat-hint>
             </mat-form-field>
 
-            <mat-form-field appearance="outline" class="form-field-spacing">
-              <mat-label>Rendimento (n?mero)</mat-label>
+            <mat-form-field appearance="outline">
+              <mat-label>Rendimento do lote (número)</mat-label>
               <input matInput type="number" name="rendimentoPorcoesNumero" [(ngModel)]="model.rendimentoPorcoesNumero" [disabled]="isView()" min="0" step="0.01" />
-              <mat-hint>Informe a quantidade num?rica de por??es/unidades quando o produto ? vendido por unidade.</mat-hint>
+              <mat-hint>Quantas unidades/porções saem deste lote? (Ex.: 1 para hot dog, 10 para molho em batch)</mat-hint>
             </mat-form-field>
-          </div>
-        </div>
+          </mat-card-content>
+        </mat-card>
 
-        <div class="form-section">
-            <h3>Descrição comercial</h3>
-          <mat-form-field appearance="outline" class="form-field-spacing">
-            <mat-label>Descrição para cardápio / canais</mat-label>
-            <textarea matInput name="descricaoComercial" rows="4" [(ngModel)]="model.descricaoComercial" [disabled]="isView()" maxlength="5000"></textarea>
-          </mat-form-field>
-        </div>
+        <!-- Card: Descrição comercial -->
+        <mat-card class="card">
+          <mat-card-title>Descrição comercial</mat-card-title>
+          <mat-card-content>
+            <mat-form-field appearance="outline" class="full">
+              <mat-label>Descrição para cardápio / canais</mat-label>
+              <textarea matInput name="descricaoComercial" rows="4" [(ngModel)]="model.descricaoComercial" [disabled]="isView()" maxlength="5000"></textarea>
+            </mat-form-field>
+          </mat-card-content>
+        </mat-card>
 
-        <div class="form-section">
-          <div class="section-header">
-            <h3>Composição (Itens)</h3>
+        <!-- Card: Composição (Itens) -->
+        <mat-card class="card">
+          <mat-card-title>Composição (Itens)</mat-card-title>
+          <mat-card-content>
+
             @if (!isView()) {
-              <button mat-raised-button color="primary" type="button" (click)="addItem()">
-                <mat-icon>add</mat-icon>
-                <span class="button-text">Adicionar Item</span>
-              </button>
+              <div class="card-actions">
+                <button mat-raised-button color="primary" type="button" (click)="addItem()">
+                  <mat-icon>add</mat-icon>
+                  Adicionar item
+                </button>
+              </div>
             }
-          </div>
 
-          <!-- Versão Desktop: Tabela -->
-          @if (!isMobile() && itens().length > 0) {
+            <!-- Desktop: tabela -->
+            @if (!isMobile() && itens().length > 0) {
+              <div class="table-wrapper">
+                <table mat-table [dataSource]="itens()" class="mat-elevation-z1 full-width-table">
+                  <ng-container matColumnDef="ordem">
+                    <th mat-header-cell *matHeaderCellDef class="col-ordem">Item</th>
+                    <td mat-cell *matCellDef="let item" class="col-ordem">
+                      @if (isView()) { {{ item.ordem }} }
+                      @else { <input type="number" class="input-ordem" [(ngModel)]="item.ordem" [ngModelOptions]="{standalone: true}" min="1" /> }
+                    </td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="tipo">
+                    <th mat-header-cell *matHeaderCellDef>Tipo</th>
+                    <td mat-cell *matCellDef="let item">
+                      @if (isView()) { {{ item.tipoItem }} }
+                      @else {
+                        <mat-form-field appearance="outline" class="cell-field">
+                          <mat-select [(ngModel)]="item.tipoItem" [ngModelOptions]="{standalone: true}" (selectionChange)="onItemTipoChange(item)">
+                            <mat-option value="Receita">Receita</mat-option>
+                            <mat-option value="Insumo">Insumo</mat-option>
+                          </mat-select>
+                        </mat-form-field>
+                      }
+                    </td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="item">
+                    <th mat-header-cell *matHeaderCellDef>Item</th>
+                    <td mat-cell *matCellDef="let item">
+                      @if (isView()) { {{ getItemNome(item) }} }
+                      @else {
+                        @if (item.tipoItem === 'Receita') {
+                          <mat-form-field appearance="outline" class="cell-field">
+                            <mat-select [(ngModel)]="item.receitaId" [ngModelOptions]="{standalone: true}" (selectionChange)="onSelectReceita(item)">
+                              <mat-option [value]="null">Selecione...</mat-option>
+                              @for (r of receitas(); track r.id) { <mat-option [value]="r.id">{{ r.nome }}</mat-option> }
+                            </mat-select>
+                          </mat-form-field>
+                        } @else {
+                          <mat-form-field appearance="outline" class="cell-field">
+                            <mat-select [(ngModel)]="item.insumoId" [ngModelOptions]="{standalone: true}" (selectionChange)="onSelectInsumo(item, $event.value)">
+                              <mat-option [value]="null">Selecione...</mat-option>
+                              @for (i of insumos(); track i.id) { <mat-option [value]="i.id">{{ i.nome }}</mat-option> }
+                            </mat-select>
+                          </mat-form-field>
+                        }
+                      }
+                    </td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="quantidade">
+                    <th mat-header-cell *matHeaderCellDef>Quantidade</th>
+                    <td mat-cell *matCellDef="let item">
+                      @if (isView()) { {{ formatQuantidadeNumeroForm(item) }} }
+                      @else {
+                        <mat-form-field appearance="outline" class="cell-field">
+                          <input matInput type="number"
+                                 [ngModel]="getQuantidadeExibicao(item)"
+                                 (ngModelChange)="onQuantidadeExibicaoChange(item, $event)"
+                                 [ngModelOptions]="{standalone: true}"
+                                 [min]="getQuantidadeMin(item)"
+                                 [step]="getQuantidadeStep(item)" />
+                        </mat-form-field>
+                      }
+                    </td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="unidade">
+                    <th mat-header-cell *matHeaderCellDef>Unidade</th>
+                    <td mat-cell *matCellDef="let item">
+                      @if (isView()) { {{ getUnidadeSigla(item.unidadeMedidaId) }} }
+                      @else {
+                        @if (isUnidadeTravada(item)) {
+                          <span class="locked">{{ getUnidadeSigla(item.unidadeMedidaId) }}</span>
+                        } @else {
+                          <mat-form-field appearance="outline" class="cell-field">
+                            <mat-select [(ngModel)]="item.unidadeMedidaId" [ngModelOptions]="{standalone: true}">
+                              <mat-option [value]="null">Selecione...</mat-option>
+                              @for (u of getUnidadesPermitidas(item); track u.id) {
+                                <mat-option [value]="u.id">{{ getUnidadeSigla(u.id) }} - {{ u.nome }}</mat-option>
+                              }
+                            </mat-select>
+                          </mat-form-field>
+                        }
+                      }
+                    </td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="qb">
+                    <th mat-header-cell *matHeaderCellDef class="col-qb">QB</th>
+                    <td mat-cell *matCellDef="let item" class="col-qb">
+                      @if (isView()) { {{ item.exibirComoQB ? 'Sim' : 'Não' }} }
+                      @else { <mat-checkbox [(ngModel)]="item.exibirComoQB" [ngModelOptions]="{standalone: true}"></mat-checkbox> }
+                    </td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="observacoes">
+                    <th mat-header-cell *matHeaderCellDef>Observações</th>
+                    <td mat-cell *matCellDef="let item">
+                      @if (isView()) { {{ item.observacoes || '-' }} }
+                      @else {
+                        <mat-form-field appearance="outline" class="cell-field">
+                          <input matInput [(ngModel)]="item.observacoes" [ngModelOptions]="{standalone: true}" placeholder="Opcional" />
+                        </mat-form-field>
+                      }
+                    </td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="acoes">
+                    <th mat-header-cell *matHeaderCellDef class="col-acoes">Ações</th>
+                    <td mat-cell *matCellDef="let item; let i = index" class="col-acoes">
+                      @if (!isView()) {
+                        <button mat-icon-button type="button" (click)="removeItem(i)" color="warn" matTooltip="Remover item">
+                          <mat-icon>delete</mat-icon>
+                        </button>
+                      }
+                    </td>
+                  </ng-container>
+
+                  <tr mat-header-row *matHeaderRowDef="displayedColumnsItens"></tr>
+                  <tr mat-row *matRowDef="let row; columns: displayedColumnsItens"></tr>
+                </table>
+              </div>
+            }
+
+            <!-- Mobile: cards -->
+            @if (isMobile() && itens().length > 0) {
+              <div class="items-cards">
+                @for (item of itens(); track $index; let i = $index) {
+                  <mat-card class="item-card">
+                    <mat-card-content>
+                      <div class="item-head">
+                        <div class="item-title">#{{ item.ordem }} — {{ item.tipoItem }}</div>
+                        @if (!isView()) {
+                          <button mat-icon-button type="button" (click)="removeItem(i)" color="warn" matTooltip="Remover">
+                            <mat-icon>delete</mat-icon>
+                          </button>
+                        }
+                      </div>
+
+                      <div class="item-body">
+                        <div class="row">
+                          <div class="label">Item</div>
+                          <div class="value">{{ getItemNome(item) }}</div>
+                        </div>
+
+                        <div class="row">
+                          <div class="label">Quantidade</div>
+                          <div class="value">{{ formatQuantidadeFormItem(item) }}</div>
+                        </div>
+
+                        <div class="row" *ngIf="item.observacoes">
+                          <div class="label">Observações</div>
+                          <div class="value">{{ item.observacoes }}</div>
+                        </div>
+                      </div>
+                    </mat-card-content>
+                  </mat-card>
+                }
+              </div>
+            }
+
+            @if (itens().length === 0) {
+              <div class="empty">Nenhum item adicionado.</div>
+            }
+          </mat-card-content>
+        </mat-card>
+
+        <!-- Card: Custos (somente leitura) + CTA para Resumo -->
+        <mat-card class="card">
+          <mat-card-title>Custos e preços (somente leitura)</mat-card-title>
+          <mat-card-content>
+            <div class="kpis">
+              <div class="kpi">
+                <div class="kpi-label">Custo total</div>
+                <div class="kpi-value">{{ formatCurrency(custoTotalCalculado) }}</div>
+              </div>
+              <div class="kpi">
+                <div class="kpi-label">Preço mesa</div>
+                <div class="kpi-value">
+                  @if (precoMesaCalculado === null) { — } @else { {{ formatCurrency(precoMesaCalculado) }} }
+                </div>
+              </div>
+            </div>
+
+            <div class="inline-actions">
+              <button mat-stroked-button type="button" (click)="goToPlanilhaTab()">Ver resumo</button>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <!-- Card: Canais -->
+        <mat-card class="card">
+          <mat-card-title>Canais comerciais</mat-card-title>
+          <mat-card-content>
+            <div class="presets-row">
+              <span class="presets-label">Presets:</span>
+              <button mat-stroked-button type="button" (click)="addCanalPreset('IFOOD1')" [disabled]="isView()">iFood 1</button>
+              <button mat-stroked-button type="button" (click)="addCanalPreset('IFOOD2')" [disabled]="isView()">iFood 2</button>
+              <button mat-stroked-button type="button" (click)="addCanalPreset('BALCAO')" [disabled]="isView()">Balcão</button>
+              <button mat-stroked-button type="button" (click)="addCanalPreset('DELIVERY')" [disabled]="isView()">Delivery próprio</button>
+            </div>
+
             <div class="table-wrapper">
-              <table mat-table [dataSource]="itens()" class="mat-elevation-z1 full-width-table">
-                <ng-container matColumnDef="ordem">
-                  <th mat-header-cell *matHeaderCellDef class="col-ordem">Item</th>
-                  <td mat-cell *matCellDef="let item" class="col-ordem">
+              <table mat-table [dataSource]="canais()" class="full-width-table">
+                <ng-container matColumnDef="canal">
+                  <th mat-header-cell *matHeaderCellDef>Canal</th>
+                  <td mat-cell *matCellDef="let item; let i = index">
                     @if (isView()) {
-                      {{ item.ordem }}
+                      {{ item.canal }}
                     } @else {
-                      <input type="number" class="input-ordem" [(ngModel)]="item.ordem" [ngModelOptions]="{standalone: true}" min="1" />
-                    }
-                  </td>
-                </ng-container>
-
-                <ng-container matColumnDef="tipo">
-                  <th mat-header-cell *matHeaderCellDef>Tipo</th>
-                  <td mat-cell *matCellDef="let item">
-                    @if (isView()) {
-                      {{ item.tipoItem }}
-                    } @else {
-                      <mat-form-field appearance="outline" class="field-tipo">
-                        <mat-select [(ngModel)]="item.tipoItem" [ngModelOptions]="{standalone: true}" (selectionChange)="onItemTipoChange(item)">
-                          <mat-option value="Receita">Receita</mat-option>
-                          <mat-option value="Insumo">Insumo</mat-option>
+                      <mat-form-field appearance="outline" class="cell-field">
+                        <mat-label>Selecione o canal</mat-label>
+                        <mat-select [(ngModel)]="item.canalVendaId" [ngModelOptions]="{standalone: true}" (selectionChange)="onCanalVendaSelected(i, item.canalVendaId ?? null)">
+                          <mat-option [value]="null">-- Digite manualmente --</mat-option>
+                          @for (canal of canaisVenda(); track canal.id) {
+                            <mat-option [value]="canal.id">{{ canal.nome }}@if (canal.taxaPercentualPadrao) { ({{ canal.taxaPercentualPadrao }}%)}</mat-option>
+                          }
                         </mat-select>
                       </mat-form-field>
-                    }
-                  </td>
-                </ng-container>
 
-                <ng-container matColumnDef="item">
-                  <th mat-header-cell *matHeaderCellDef>Item</th>
-                  <td mat-cell *matCellDef="let item">
-                    @if (isView()) {
-                      {{ getItemNome(item) }}
-                    } @else {
-                      @if (item.tipoItem === 'Receita') {
-                        <mat-form-field appearance="outline" class="field-item">
-                          <mat-select [(ngModel)]="item.receitaId" [ngModelOptions]="{standalone: true}" (selectionChange)="onSelectReceita(item)">
-                            <mat-option [value]="null">Selecione...</mat-option>
-                            @for (r of receitas(); track r.id) {
-                              <mat-option [value]="r.id">{{ r.nome }}</mat-option>
-                            }
-                          </mat-select>
-                        </mat-form-field>
-                      } @else {
-                        <mat-form-field appearance="outline" class="field-item">
-                          <mat-select [(ngModel)]="item.insumoId" [ngModelOptions]="{standalone: true}" (selectionChange)="onSelectInsumo(item, $event.value)">
-                            <mat-option [value]="null">Selecione...</mat-option>
-                            @for (i of insumos(); track i.id) {
-                              <mat-option [value]="i.id">{{ i.nome }}</mat-option>
-                            }
-                          </mat-select>
+                      @if (!item.canalVendaId) {
+                        <mat-form-field appearance="outline" class="cell-field mt8">
+                          <input matInput [(ngModel)]="item.canal" [ngModelOptions]="{standalone: true}" placeholder="Ex.: ifood-1, BALCAO" />
                         </mat-form-field>
                       }
                     }
                   </td>
                 </ng-container>
 
-                <ng-container matColumnDef="quantidade">
-                  <th mat-header-cell *matHeaderCellDef>Quantidade</th>
+                <ng-container matColumnDef="nomeExibicao">
+                  <th mat-header-cell *matHeaderCellDef>Nome exibição</th>
                   <td mat-cell *matCellDef="let item">
-                    @if (isView()) {
-                      {{ formatQuantidadeNumeroForm(item) }}
-                    } @else {
-                      <mat-form-field appearance="outline" class="field-quantidade">
-                        <input matInput type="number" [ngModel]="getQuantidadeExibicao(item)" (ngModelChange)="onQuantidadeExibicaoChange(item, $event)" [ngModelOptions]="{standalone: true}" [min]="getQuantidadeMin(item)" [step]="getQuantidadeStep(item)" />
+                    @if (isView()) { {{ item.nomeExibicao || '-' }} }
+                    @else {
+                      <mat-form-field appearance="outline" class="cell-field">
+                        <input matInput [(ngModel)]="item.nomeExibicao" [ngModelOptions]="{standalone: true}" placeholder="Ex.: iFood 1" />
                       </mat-form-field>
                     }
                   </td>
                 </ng-container>
 
-                <ng-container matColumnDef="unidade">
-                  <th mat-header-cell *matHeaderCellDef>Unidade</th>
+                <ng-container matColumnDef="precoVenda">
+                  <th mat-header-cell *matHeaderCellDef>Preço venda</th>
                   <td mat-cell *matCellDef="let item">
                     @if (isView()) {
-                      {{ getUnidadeSigla(item.unidadeMedidaId) }}
+                      {{ formatCurrency(item.precoVenda) }}
                     } @else {
-                      @if (isUnidadeTravada(item)) {
-                        <span>{{ getUnidadeSigla(item.unidadeMedidaId) }}</span>
-                      } @else {
-                        <mat-form-field appearance="outline" class="field-unidade">
-                          <mat-select [(ngModel)]="item.unidadeMedidaId" [ngModelOptions]="{standalone: true}">
-                            <mat-option [value]="null">Selecione...</mat-option>
-                            @for (u of getUnidadesPermitidas(item); track u.id) {
-                              <mat-option [value]="u.id">{{ getUnidadeSigla(u.id) }} - {{ u.nome }}</mat-option>
-                            }
-                          </mat-select>
-                        </mat-form-field>
-                      }
-                    }
-                  </td>
-                </ng-container>
-
-                <ng-container matColumnDef="qb">
-                  <th mat-header-cell *matHeaderCellDef class="col-qb">QB</th>
-                  <td mat-cell *matCellDef="let item" class="col-qb">
-                    @if (isView()) {
-                      {{ item.exibirComoQB ? 'Sim' : 'Não' }}
-                    } @else {
-                      <mat-checkbox [(ngModel)]="item.exibirComoQB" [ngModelOptions]="{standalone: true}"></mat-checkbox>
-                    }
-                  </td>
-                </ng-container>
-
-                <ng-container matColumnDef="observacoes">
-                  <th mat-header-cell *matHeaderCellDef>Observações</th>
-                  <td mat-cell *matCellDef="let item">
-                    @if (isView()) {
-                      {{ item.observacoes || '-' }}
-                    } @else {
-                      <mat-form-field appearance="outline" class="field-observacoes">
-                        <input matInput [(ngModel)]="item.observacoes" [ngModelOptions]="{standalone: true}" placeholder="Opcional" />
+                      <mat-form-field appearance="outline" class="cell-field">
+                        <input matInput type="number" [(ngModel)]="item.precoVenda" [ngModelOptions]="{standalone: true}" min="0" step="0.01"
+                               placeholder="0 = calcular automaticamente" />
                       </mat-form-field>
                     }
+                  </td>
+                </ng-container>
+
+                <ng-container matColumnDef="taxas">
+                  <th mat-header-cell *matHeaderCellDef>Taxas (%)</th>
+                  <td mat-cell *matCellDef="let item">
+                    @if (isView()) {
+                      <div>Taxa: {{ item.taxaPercentual ?? 0 }}%</div>
+                    } @else {
+                      <mat-form-field appearance="outline" class="cell-field">
+                        <mat-label>Taxa canal (%)</mat-label>
+                        <input matInput type="number" [(ngModel)]="item.taxaPercentual" [ngModelOptions]="{standalone: true}" min="0" max="100" step="0.1" />
+                      </mat-form-field>
+                    }
+                  </td>
+                </ng-container>
+
+                <ng-container matColumnDef="porcentagem">
+                  <th mat-header-cell *matHeaderCellDef>Porcentagem</th>
+                  <td mat-cell *matCellDef="let item">
+                    {{ item.margemCalculadaPercentual ? (item.margemCalculadaPercentual | number:'1.0-2') + '%' : '-' }}
                   </td>
                 </ng-container>
 
                 <ng-container matColumnDef="acoes">
-                  <th mat-header-cell *matHeaderCellDef class="col-acoes">Ações</th>
-                  <td mat-cell *matCellDef="let item; let i = index" class="col-acoes">
+                  <th mat-header-cell *matHeaderCellDef>Ações</th>
+                  <td mat-cell *matCellDef="let item; let i = index">
                     @if (!isView()) {
-                      <button mat-icon-button type="button" (click)="removeItem(i)" color="warn" matTooltip="Remover item">
+                      <button mat-icon-button type="button" (click)="removeCanal(i)" color="warn" matTooltip="Remover canal">
                         <mat-icon>delete</mat-icon>
                       </button>
                     }
                   </td>
                 </ng-container>
 
-                <tr mat-header-row *matHeaderRowDef="displayedColumnsItens"></tr>
-                <tr mat-row *matRowDef="let row; columns: displayedColumnsItens"></tr>
+                <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
               </table>
             </div>
-          }
 
-          <!-- Versão Mobile: Cards -->
-          @if (isMobile() && itens().length > 0) {
-            <div class="items-cards-container">
-              @for (item of itens(); track $index; let i = $index) {
-                <mat-card class="item-card">
-                  <mat-card-content>
-                    <div class="item-card-header">
-                      <span class="item-ordem">#{{ item.ordem }}</span>
-                      @if (!isView()) {
-                        <button mat-icon-button type="button" (click)="removeItem(i)" color="warn" matTooltip="Remover">
-                          <mat-icon>delete</mat-icon>
-                        </button>
-                      }
-                    </div>
-                    
-                    <div class="item-card-body">
-                      @if (isView()) {
-                        <div class="item-field">
-                          <span class="item-label">Tipo:</span>
-                          <span class="item-value">{{ item.tipoItem }}</span>
-                        </div>
-                        <div class="item-field">
-                          <span class="item-label">Item:</span>
-                          <span class="item-value">{{ getItemNome(item) }}</span>
-                        </div>
-                        <div class="item-field">
-                          <span class="item-label">Quantidade:</span>
-                          <span class="item-value">
-                            @if (item.tipoItem === 'Receita') {
-                              {{ item.quantidade }}x
-                            } @else {
-                              {{ formatQuantidadeNumeroForm(item) }} {{ getUnidadeSigla(item.unidadeMedidaId) }}
-                            }
-                          </span>
-                        </div>
-                        @if (item.exibirComoQB) {
-                          <div class="item-field">
-                            <span class="item-label">QB:</span>
-                            <span class="item-value">Sim</span>
-                          </div>
-                        }
-                        @if (item.observacoes) {
-                          <div class="item-field">
-                            <span class="item-label">Observações:</span>
-                            <span class="item-value">{{ item.observacoes }}</span>
-                          </div>
-                        }
-                      } @else {
-                        <mat-form-field appearance="outline" class="field-full">
-                          <mat-label>Tipo</mat-label>
-                          <mat-select [(ngModel)]="item.tipoItem" [ngModelOptions]="{standalone: true}" (selectionChange)="onItemTipoChange(item)">
-                            <mat-option value="Receita">Receita</mat-option>
-                            <mat-option value="Insumo">Insumo</mat-option>
-                          </mat-select>
-                        </mat-form-field>
-                        
-                        @if (item.tipoItem === 'Receita') {
-                          <mat-form-field appearance="outline" class="field-full">
-                            <mat-label>Receita</mat-label>
-                            <mat-select [(ngModel)]="item.receitaId" [ngModelOptions]="{standalone: true}" (selectionChange)="onSelectReceita(item)">
-                              <mat-option [value]="null">Selecione...</mat-option>
-                              @for (r of receitas(); track r.id) {
-                                <mat-option [value]="r.id">{{ r.nome }}</mat-option>
-                              }
-                            </mat-select>
-                          </mat-form-field>
-                        } @else {
-                          <mat-form-field appearance="outline" class="field-full">
-                            <mat-label>Insumo</mat-label>
-                            <mat-select [(ngModel)]="item.insumoId" [ngModelOptions]="{standalone: true}" (selectionChange)="onSelectInsumo(item, $event.value)">
-                              <mat-option [value]="null">Selecione...</mat-option>
-                              @for (i of insumos(); track i.id) {
-                                <mat-option [value]="i.id">{{ i.nome }}</mat-option>
-                              }
-                            </mat-select>
-                          </mat-form-field>
-                        }
-                        
-                        <div class="item-row-mobile">
-                          <mat-form-field appearance="outline" class="field-quantidade-mobile">
-                            <mat-label>Quantidade</mat-label>
-                            <input matInput type="number" [ngModel]="getQuantidadeExibicao(item)" (ngModelChange)="onQuantidadeExibicaoChange(item, $event)" [ngModelOptions]="{standalone: true}" [min]="getQuantidadeMin(item)" [step]="getQuantidadeStep(item)" />
-                          </mat-form-field>
-                          
-                          @if (isUnidadeTravada(item)) {
-                            <mat-form-field appearance="outline" class="field-unidade-mobile">
-                              <mat-label>Unidade</mat-label>
-                              <input matInput [value]="getUnidadeSigla(item.unidadeMedidaId)" [disabled]="true" />
-                            </mat-form-field>
-                          } @else {
-                            <mat-form-field appearance="outline" class="field-unidade-mobile">
-                              <mat-label>Unidade</mat-label>
-                              <mat-select [(ngModel)]="item.unidadeMedidaId" [ngModelOptions]="{standalone: true}">
-                                <mat-option [value]="null">Selecione...</mat-option>
-                                @for (u of getUnidadesPermitidas(item); track u.id) {
-                                  <mat-option [value]="u.id">{{ getUnidadeSigla(u.id) }}</mat-option>
-                                }
-                              </mat-select>
-                            </mat-form-field>
-                          }
-                        </div>
-                        
-                        <div class="item-row-mobile">
-                          <mat-checkbox [(ngModel)]="item.exibirComoQB" [ngModelOptions]="{standalone: true}">Exibir como QB</mat-checkbox>
-                        </div>
-                        
-                        <mat-form-field appearance="outline" class="field-full">
-                          <mat-label>Observações (opcional)</mat-label>
-                          <input matInput [(ngModel)]="item.observacoes" [ngModelOptions]="{standalone: true}" />
-                        </mat-form-field>
-                      }
-                    </div>
-                  </mat-card-content>
-                </mat-card>
-              }
-            </div>
-          }
+            @if (canais().length === 0) {
+              <div class="empty">Nenhum canal adicionado.</div>
+            }
+          </mat-card-content>
+        </mat-card>
 
-          @if (itens().length === 0) {
-            <div class="empty-message">
-              <p>Nenhum item adicionado. Clique em "Adicionar Item" para começar.</p>
-            </div>
-          }
-        </div>
-
-        <div class="form-section">
-          <h3>Custos e Preços (somente leitura)</h3>
-          <div class="custo-grid">
-            <div>
-              <div class="label">Custo Total</div>
-              <div class="value">{{ formatCurrency(custoTotalCalculado) }}</div>
-            </div>
-            <div>
-              <div class="label">Preço Mesa</div>
-              <div class="value">
-                @if (precoMesaCalculado === null) {
-                  —
-                } @else if (!hasPorcao) {
-                  <span>{{ formatCurrency(precoMesaCalculado) }} <span style="font-size: 11px; padding: 2px 6px; background: #fff3e0; color: #e65100; border-radius: 4px; margin-left: 4px;">Legado</span></span>
-                } @else {
-                  {{ formatCurrency(precoMesaCalculado) }}
-                }
-              </div>
-            </div>
-          </div>
-          <div style="margin-top: 16px;">
-            <button mat-stroked-button type="button" (click)="goToPlanilhaTab()">Ver no formato planilha</button>
-          </div>
-        </div>
-
-        <div class="form-section">
-          <h3>Canais comerciais</h3>
-          <div class="presets-row">
-            <span class="presets-label">Presets rápidos:</span>
-            <button mat-stroked-button type="button" (click)="addCanalPreset('IFOOD1')" [disabled]="isView()">Ifood 1</button>
-            <button mat-stroked-button type="button" (click)="addCanalPreset('IFOOD2')" [disabled]="isView()">Ifood 2</button>
-            <button mat-stroked-button type="button" (click)="addCanalPreset('BALCAO')" [disabled]="isView()">Balcão</button>
-            <button mat-stroked-button type="button" (click)="addCanalPreset('DELIVERY')" [disabled]="isView()">Delivery próprio</button>
-          </div>
-          <div class="table-wrapper">
-            <table mat-table [dataSource]="canais()" class="full-width-table">
-              <ng-container matColumnDef="canal">
-                <th mat-header-cell *matHeaderCellDef>Canal</th>
-                <td mat-cell *matCellDef="let item; let i = index">
-                  @if (isView()) {
-                    {{ item.canal }}
-                  } @else {
-                    <mat-form-field appearance="outline" style="width: 100%;">
-                      <mat-label>Selecione o canal</mat-label>
-                      <mat-select [(ngModel)]="item.canalVendaId" [ngModelOptions]="{standalone: true}" (selectionChange)="onCanalVendaSelected(i, item.canalVendaId ?? null)">
-                        <mat-option [value]="null">-- Digite manualmente --</mat-option>
-                        @for (canal of canaisVenda(); track canal.id) {
-                          <mat-option [value]="canal.id">{{ canal.nome }}@if (canal.taxaPercentualPadrao) { ({{ canal.taxaPercentualPadrao }}%)}</mat-option>
-                        }
-                      </mat-select>
-                    </mat-form-field>
-                    @if (!item.canalVendaId) {
-                      <mat-form-field appearance="outline" style="width: 100%; margin-top: 8px;">
-                        <input matInput [(ngModel)]="item.canal" [ngModelOptions]="{standalone: true}" placeholder="Ex: ifood-1, ifood-2, BALCAO" />
-                      </mat-form-field>
-                    }
-                  }
-                </td>
-              </ng-container>
-
-              <ng-container matColumnDef="nomeExibicao">
-                <th mat-header-cell *matHeaderCellDef>Nome exibição</th>
-                <td mat-cell *matCellDef="let item; let i = index">
-                  @if (isView()) {
-                    {{ item.nomeExibicao || '-' }}
-                  } @else {
-                    <mat-form-field appearance="outline" style="width: 100%;">
-                      <input matInput [(ngModel)]="item.nomeExibicao" [ngModelOptions]="{standalone: true}" placeholder="Ex: Ifood 1" />
-                    </mat-form-field>
-                  }
-                </td>
-              </ng-container>
-
-              <ng-container matColumnDef="precoVenda">
-                <th mat-header-cell *matHeaderCellDef>Preço venda</th>
-                <td mat-cell *matCellDef="let item; let i = index">
-                  @if (isView()) {
-                    {{ formatCurrency(item.precoVenda) }}
-                  } @else {
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                      <mat-form-field appearance="outline" style="flex: 1;">
-                        <input matInput type="number" [(ngModel)]="item.precoVenda" [ngModelOptions]="{standalone: true}" min="0" step="0.01" placeholder="0 = calcular automaticamente" />
-                      </mat-form-field>
-                      @if (getModoCanal(item) === 'Auto (Gross-up)') {
-                        <span style="font-size: 11px; padding: 2px 6px; background: #fff3e0; color: #e65100; border-radius: 4px;">Auto (Gross-up)</span>
-                      } @else if (getModoCanal(item) === 'Preço definido') {
-                        <span style="font-size: 11px; padding: 2px 6px; background: #e3f2fd; color: #1976d2; border-radius: 4px;">Preço definido</span>
-                      }
-                    </div>
-                  }
-                </td>
-              </ng-container>
-
-              <ng-container matColumnDef="taxas">
-                <th mat-header-cell *matHeaderCellDef>Taxas (%)</th>
-                <td mat-cell *matCellDef="let item; let i = index">
-                  @if (isView()) {
-                    <div>Taxa: {{ item.taxaPercentual ?? 0 }}%</div>
-                  } @else {
-                    <mat-form-field appearance="outline" style="width: 100%;">
-                      <mat-label>Taxa canal (%)</mat-label>
-                      <input matInput type="number" [(ngModel)]="item.taxaPercentual" [ngModelOptions]="{standalone: true}" min="0" max="100" step="0.1" />
-                    </mat-form-field>
-                  }
-                </td>
-              </ng-container>
-
-              <ng-container matColumnDef="porcentagem">
-                <th mat-header-cell *matHeaderCellDef>Porcentagem (%)</th>
-                <td mat-cell *matCellDef="let item; let i = index">
-                  {{ item.margemCalculadaPercentual ? (item.margemCalculadaPercentual | number:'1.0-2') + '%' : '-' }}
-                </td>
-              </ng-container>
-
-              <ng-container matColumnDef="acoes">
-                <th mat-header-cell *matHeaderCellDef>Ações</th>
-                <td mat-cell *matCellDef="let item; let i = index">
-                  @if (!isView()) {
-                    <button mat-icon-button type="button" (click)="removeCanal(i)" color="warn" matTooltip="Remover canal">
-                      <mat-icon>delete</mat-icon>
-                    </button>
-                  }
-                </td>
-              </ng-container>
-
-              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-              <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-            </table>
-          </div>
-
-          @if (canais().length === 0) {
-            <div class="empty-message">
-              <p>Nenhum canal adicionado. Selecione um preset acima para adicionar um canal comercial.</p>
-            </div>
-          }
-        </div>
-
-        <div class="form-toggle-wrapper">
+        <div class="footer-toggle">
           <mat-slide-toggle name="isAtivo" [(ngModel)]="model.isAtivo" [disabled]="isView()">Ativo</mat-slide-toggle>
         </div>
 
         @if (error()) {
-          <div class="form-error">{{ error() }}</div>
+          <div class="error">{{ error() }}</div>
         }
-
-        <div class="form-actions">
-          <button mat-stroked-button type="button" routerLink="/tenant/fichas-tecnicas">Voltar</button>
-          @if (isView()) {
-            <button mat-stroked-button type="button" (click)="openOperacao()">Operação</button>
-            <button mat-stroked-button type="button" (click)="printPdf()">Imprimir / PDF</button>
-          } @else {
-            <button mat-raised-button color="primary" type="submit">Salvar</button>
-          }
-        </div>
       </form>
     </mat-tab>
 
-    <!-- Tab 2: Resumo (Planilha) -->
-    <mat-tab label="Resumo (Planilha)">
-      @if (isLoadingDetalhe()) {
-        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 48px;">
-          <mat-spinner [diameter]="40"></mat-spinner>
-          <p style="margin-top: 16px;">Carregando cálculo detalhado…</p>
-        </div>
-      } @else {
-        @if (!fichaDtoCompleto() || !fichaDtoCompleto()!.itens || fichaDtoCompleto()!.itens.length === 0) {
-          <div style="padding: 24px; text-align: center;">
-            <p>Nenhum dado disponível. Adicione itens na aba "Dados e Composição".</p>
+    <!-- TAB 2: RESUMO (mantém o que você já tem) -->
+    <mat-tab label="Resumo">
+      <div class="content">
+        @if (isLoadingDetalhe()) {
+          <div class="loading">
+            <mat-spinner [diameter]="40"></mat-spinner>
+            <div class="muted">Carregando…</div>
           </div>
+        } @else if (!fichaDtoCompleto() || !fichaDtoCompleto()!.itens || fichaDtoCompleto()!.itens.length === 0) {
+          <div class="empty">Nenhum dado disponível. Adicione itens na aba "Cadastro".</div>
         } @else {
           <!-- Bloco A: Cards de topo -->
-          <div class="form-section" style="margin-top: 0;">
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; margin-bottom: 24px;">
-              <!-- Card 1: Custo Total -->
-              <mat-card>
-                <mat-card-content>
-                  <div style="font-size: 14px; color: #666; margin-bottom: 8px;">Custo Total</div>
-                  <div style="font-size: 24px; font-weight: bold;">{{ formatCurrency(fichaDtoCompleto()!.custoTotal) }}</div>
-                </mat-card-content>
-              </mat-card>
-
-              <!-- Card 2: Peso Total Base e Rendimento Final -->
-              <mat-card>
-                <mat-card-content>
-                  <div style="font-size: 14px; color: #666; margin-bottom: 8px;">Peso Total Base</div>
-                  <div style="font-size: 20px; font-weight: bold; margin-bottom: 12px;">
-                    @if (fichaDtoCompleto()!.pesoTotalBase !== null && fichaDtoCompleto()!.pesoTotalBase !== undefined) {
-                      {{ formatQuantidadeExibicao(fichaDtoCompleto()!.pesoTotalBase, getUnidadePorcao().unidade) }}
-                    } @else {
-                      -
-                    }
-                  </div>
-                  <div style="font-size: 14px; color: #666; margin-bottom: 4px;">Rendimento Final (após IC/IPC)</div>
-                  <div style="font-size: 18px; font-weight: bold;">
-                    @if (fichaDtoCompleto()!.rendimentoFinal !== null && fichaDtoCompleto()!.rendimentoFinal !== undefined) {
-                      {{ formatQuantidadeExibicao(fichaDtoCompleto()!.rendimentoFinal, getUnidadePorcao().unidade) }}
-                    } @else {
-                      -
-                    }
-                  </div>
-                </mat-card-content>
-              </mat-card>
-
-              <!-- Card 3: Custo/kg final -->
-              <mat-card>
-                <mat-card-content>
-                  <div style="font-size: 14px; color: #666; margin-bottom: 8px;">Custo/kg final</div>
-                  <div style="font-size: 24px; font-weight: bold;">
-                    @if (fichaDtoCompleto()!.custoKgL !== null && fichaDtoCompleto()!.custoKgL !== undefined) {
-                      {{ formatCurrency(fichaDtoCompleto()!.custoKgL ?? 0) }}/{{ getUnidadePorcao().unidadePreco.replace('R$/', '') }}
-                    } @else {
-                      -
-                    }
-                    @if (fichaDtoCompleto()!.custoKgBase !== null && fichaDtoCompleto()!.custoKgBase !== undefined) {
-                      <div style="margin-top: 6px; font-size: 12px; color: #666;">Custo/kg base: {{ formatCurrency(fichaDtoCompleto()!.custoKgBase ?? 0) }}/{{ getUnidadePorcao().unidadePreco.replace('R$/', '') }}</div>
-                    }
-                  </div>
-                </mat-card-content>
-              </mat-card>
-
-              <!-- Card 4: Porção / Custo por Porção / Preço Mesa -->
-              <mat-card>
-                <mat-card-content>
-                  <div style="font-size: 14px; color: #666; margin-bottom: 8px;">Porção</div>
-                  <div style="font-size: 18px; font-weight: bold; margin-bottom: 8px;">
-                    @if (fichaDtoCompleto()!.porcaoVendaQuantidade) {
-                      {{ formatQuantidadeExibicao(fichaDtoCompleto()!.porcaoVendaQuantidade, getUnidadePorcao().unidade) }}
-                    } @else {
-                      -
-                    }
-                  </div>
-                  <div style="font-size: 14px; color: #666; margin-bottom: 4px;">Custo por porção</div>
-                  <div style="font-size: 16px; font-weight: bold; margin-bottom: 8px;">
-                    @if (fichaDtoCompleto()!.custoPorPorcaoVenda !== null && fichaDtoCompleto()!.custoPorPorcaoVenda !== undefined) {
-                      {{ formatCurrency(fichaDtoCompleto()!.custoPorPorcaoVenda ?? 0) }}
-                    } @else {
-                      -
-                    }
-                  </div>
-                  <div style="font-size: 14px; color: #666; margin-bottom: 4px;">Markup mesa</div>
-                  <div style="font-size: 16px; font-weight: bold; margin-bottom: 8px;">
-                    @if (fichaDtoCompleto()!.indiceContabil) {
-                      {{ fichaDtoCompleto()!.indiceContabil | number:'1.0-2' }}
-                    } @else {
-                      -
-                    }
-                  </div>
-                  <div style="font-size: 14px; color: #666; margin-bottom: 4px;">Preço mesa</div>
-                  <div style="font-size: 20px; font-weight: bold;">
-                    @if (fichaDtoCompleto()!.precoMesaSugerido !== null && fichaDtoCompleto()!.precoMesaSugerido !== undefined) {
-                      {{ formatCurrency(fichaDtoCompleto()!.precoMesaSugerido ?? 0) }}
-                    } @else {
-                      -
-                    }
-                  </div>
-                </mat-card-content>
-              </mat-card>
-            </div>
-          </div>
-
-          <!-- Bloco B: Tabela Composição -->
-          <div class="form-section">
-            <h3>Composição</h3>
-            <div class="table-wrapper">
-              <table mat-table [dataSource]="fichaDtoCompleto()!.itens" class="mat-elevation-z1 full-width-table">
-                <ng-container matColumnDef="ordem">
-                  <th mat-header-cell *matHeaderCellDef class="col-ordem">#</th>
-                  <td mat-cell *matCellDef="let item" class="col-ordem">{{ item.ordem }}</td>
-                  <td mat-footer-cell *matFooterCellDef class="col-ordem"><strong>Total</strong></td>
-                </ng-container>
-
-                <ng-container matColumnDef="tipo">
-                  <th mat-header-cell *matHeaderCellDef>Tipo</th>
-                  <td mat-cell *matCellDef="let item">{{ item.tipoItem }}</td>
-                  <td mat-footer-cell *matFooterCellDef></td>
-                </ng-container>
-
-                <ng-container matColumnDef="item">
-                  <th mat-header-cell *matHeaderCellDef>Item</th>
-                  <td mat-cell *matCellDef="let item">{{ item.receitaNome || item.insumoNome || '-' }}</td>
-                  <td mat-footer-cell *matFooterCellDef></td>
-                </ng-container>
-
-                <ng-container matColumnDef="quantidade">
-                  <th mat-header-cell *matHeaderCellDef>Quantidade + Unidade</th>
-                  <td mat-cell *matCellDef="let item">
-                    {{ formatQuantidadeItem(item) }}
-                  </td>
-                  <td mat-footer-cell *matFooterCellDef></td>
-                </ng-container>
-
-                <ng-container matColumnDef="custoItem">
-                  <th mat-header-cell *matHeaderCellDef>Custo item (R$)</th>
-                  <td mat-cell *matCellDef="let item">{{ formatCurrency(item.custoItem || 0) }}</td>
-                  <td mat-footer-cell *matFooterCellDef><strong>{{ formatCurrency(fichaDtoCompleto()!.custoTotal) }}</strong></td>
-                </ng-container>
-
-                <ng-container matColumnDef="observacoes">
-                  <th mat-header-cell *matHeaderCellDef>Observações</th>
-                  <td mat-cell *matCellDef="let item">{{ item.observacoes || '-' }}</td>
-                  <td mat-footer-cell *matFooterCellDef></td>
-                </ng-container>
-
-                <tr mat-header-row *matHeaderRowDef="['ordem', 'tipo', 'item', 'quantidade', 'custoItem', 'observacoes']"></tr>
-                <tr mat-row *matRowDef="let row; columns: ['ordem', 'tipo', 'item', 'quantidade', 'custoItem', 'observacoes']"></tr>
-                <tr mat-footer-row *matFooterRowDef="['ordem', 'tipo', 'item', 'quantidade', 'custoItem', 'observacoes']"></tr>
-              </table>
-            </div>
-            <div style="margin-top: 8px; font-size: 14px; color: #666;">
-              <strong>Peso Total Base:</strong>
-              @if (fichaDtoCompleto()!.pesoTotalBase !== null && fichaDtoCompleto()!.pesoTotalBase !== undefined) {
-                {{ formatQuantidadeExibicao(fichaDtoCompleto()!.pesoTotalBase, getUnidadePorcao().unidade) }}
-              } @else {
-                -
-              }
-            </div>
-          </div>
-
-          <!-- Bloco C: Precificação Mesa -->
-          <div class="form-section">
-            <h3>Precificação Mesa</h3>
-            <mat-card>
+          <div class="kpis-grid">
+            <!-- Card 1: Custo Total -->
+            <mat-card class="op-card">
               <mat-card-content>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
-                  <div>
-                    <div style="font-size: 14px; color: #666; margin-bottom: 4px;">Custo por g/ml (base)</div>
-                    <div style="font-size: 18px; font-weight: bold;">{{ formatCurrency(fichaDtoCompleto()!.custoPorUnidade) }}</div>
-                  </div>
-                  <div>
-                    <div style="font-size: 14px; color: #666; margin-bottom: 4px;">Custo por porção</div>
-                    <div style="font-size: 18px; font-weight: bold;">
-                      @if (fichaDtoCompleto()!.custoPorPorcaoVenda !== null && fichaDtoCompleto()!.custoPorPorcaoVenda !== undefined) {
-                        {{ formatCurrency(fichaDtoCompleto()!.custoPorPorcaoVenda ?? 0) }}
-                      } @else {
-                        -
-                      }
-                    </div>
-                  </div>
-                  <div>
-                    <div style="font-size: 14px; color: #666; margin-bottom: 4px;">Markup</div>
-                    <div style="font-size: 18px; font-weight: bold;">
-                      @if (fichaDtoCompleto()!.indiceContabil) {
-                        {{ fichaDtoCompleto()!.indiceContabil | number:'1.0-2' }}
-                      } @else {
-                        -
-                      }
-                    </div>
-                  </div>
-                  <div>
-                    <div style="font-size: 14px; color: #666; margin-bottom: 4px;">Preço Mesa</div>
-                    <div style="font-size: 20px; font-weight: bold;">
-                      @if (fichaDtoCompleto()!.precoMesaSugerido !== null && fichaDtoCompleto()!.precoMesaSugerido !== undefined) {
-                        {{ formatCurrency(fichaDtoCompleto()!.precoMesaSugerido ?? 0) }}
-                      } @else {
-                        -
-                      }
-                    </div>
-                  </div>
+                <div class="mini-label">Custo Total</div>
+                <div class="big">{{ formatCurrency(fichaDtoCompleto()!.custoTotal) }}</div>
+              </mat-card-content>
+            </mat-card>
+
+            <!-- Card 2: Peso Total Base e Rendimento Final -->
+            <mat-card class="op-card">
+              <mat-card-content>
+                <div class="mini-label">Peso Total Base</div>
+                <div class="mid">
+                  @if (fichaDtoCompleto()!.pesoTotalBase !== null && fichaDtoCompleto()!.pesoTotalBase !== undefined) {
+                    {{ formatQuantidadeExibicao(fichaDtoCompleto()!.pesoTotalBase, getUnidadePorcao().unidade) }}
+                  } @else {
+                    -
+                  }
                 </div>
-                <div style="margin-top: 16px; padding: 12px; background: #f5f5f5; border-radius: 4px; font-size: 14px; color: #666;">
-                  <strong>Formula:</strong> Preco mesa = custo por porcao x markup
+                <div class="mini-label mt8">Rendimento Final (após IC/IPC)</div>
+                <div class="mid">
+                  @if (fichaDtoCompleto()!.rendimentoFinal !== null && fichaDtoCompleto()!.rendimentoFinal !== undefined) {
+                    {{ formatQuantidadeExibicao(fichaDtoCompleto()!.rendimentoFinal, getUnidadePorcao().unidade) }}
+                  } @else {
+                    -
+                  }
+                </div>
+              </mat-card-content>
+            </mat-card>
+
+            <!-- Card 3: Custo/kg final -->
+            <mat-card class="op-card">
+              <mat-card-content>
+                <div class="mini-label">Custo/kg final</div>
+                <div class="big">
+                  @if (fichaDtoCompleto()!.custoKgL !== null && fichaDtoCompleto()!.custoKgL !== undefined) {
+                    {{ formatCurrency(fichaDtoCompleto()!.custoKgL ?? 0) }}/{{ getUnidadePorcao().unidadePreco.replace('R$/', '') }}
+                  } @else {
+                    -
+                  }
+                </div>
+                @if (fichaDtoCompleto()!.custoKgBase !== null && fichaDtoCompleto()!.custoKgBase !== undefined) {
+                  <div class="mini-label mt8">Custo/kg base: {{ formatCurrency(fichaDtoCompleto()!.custoKgBase ?? 0) }}/{{ getUnidadePorcao().unidadePreco.replace('R$/', '') }}</div>
+                }
+              </mat-card-content>
+            </mat-card>
+
+            <!-- Card 4: Porção / Custo por Porção / Preço Mesa -->
+            <mat-card class="op-card">
+              <mat-card-content>
+                <div class="mini-label">Porção</div>
+                <div class="mid">
+                  @if (fichaDtoCompleto()!.porcaoVendaQuantidade) {
+                    {{ formatQuantidadeExibicao(fichaDtoCompleto()!.porcaoVendaQuantidade, getUnidadePorcao().unidade) }}
+                  } @else {
+                    -
+                  }
+                </div>
+                <div class="mini-label mt8">Custo por porção</div>
+                <div class="mid">
+                  @if (fichaDtoCompleto()!.custoPorPorcaoVenda !== null && fichaDtoCompleto()!.custoPorPorcaoVenda !== undefined) {
+                    {{ formatCurrency(fichaDtoCompleto()!.custoPorPorcaoVenda ?? 0) }}
+                  } @else {
+                    -
+                  }
+                </div>
+                <div class="mini-label mt8">Preço mesa</div>
+                <div class="big">
+                  @if (fichaDtoCompleto()!.precoMesaSugerido !== null && fichaDtoCompleto()!.precoMesaSugerido !== undefined) {
+                    {{ formatCurrency(fichaDtoCompleto()!.precoMesaSugerido ?? 0) }}
+                  } @else {
+                    -
+                  }
                 </div>
               </mat-card-content>
             </mat-card>
           </div>
 
+          <!-- Bloco B: Tabela Composição -->
+          <mat-card class="card">
+            <mat-card-title>Composição</mat-card-title>
+            <mat-card-content>
+              <div class="table-wrapper">
+                <table mat-table [dataSource]="fichaDtoCompleto()!.itens" class="mat-elevation-z1 full-width-table">
+                  <ng-container matColumnDef="ordem">
+                    <th mat-header-cell *matHeaderCellDef class="col-ordem">#</th>
+                    <td mat-cell *matCellDef="let item" class="col-ordem">{{ item.ordem }}</td>
+                    <td mat-footer-cell *matFooterCellDef class="col-ordem"><strong>Total</strong></td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="tipo">
+                    <th mat-header-cell *matHeaderCellDef>Tipo</th>
+                    <td mat-cell *matCellDef="let item">{{ item.tipoItem }}</td>
+                    <td mat-footer-cell *matFooterCellDef></td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="item">
+                    <th mat-header-cell *matHeaderCellDef>Item</th>
+                    <td mat-cell *matCellDef="let item">{{ item.receitaNome || item.insumoNome || '-' }}</td>
+                    <td mat-footer-cell *matFooterCellDef></td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="quantidade">
+                    <th mat-header-cell *matHeaderCellDef>Quantidade + Unidade</th>
+                    <td mat-cell *matCellDef="let item">{{ formatQuantidadeItem(item) }}</td>
+                    <td mat-footer-cell *matFooterCellDef></td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="custoItem">
+                    <th mat-header-cell *matHeaderCellDef>Custo item (R$)</th>
+                    <td mat-cell *matCellDef="let item">{{ formatCurrency(item.custoItem || 0) }}</td>
+                    <td mat-footer-cell *matFooterCellDef><strong>{{ formatCurrency(fichaDtoCompleto()!.custoTotal) }}</strong></td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="observacoes">
+                    <th mat-header-cell *matHeaderCellDef>Observações</th>
+                    <td mat-cell *matCellDef="let item">{{ item.observacoes || '-' }}</td>
+                    <td mat-footer-cell *matFooterCellDef></td>
+                  </ng-container>
+
+                  <tr mat-header-row *matHeaderRowDef="['ordem', 'tipo', 'item', 'quantidade', 'custoItem', 'observacoes']"></tr>
+                  <tr mat-row *matRowDef="let row; columns: ['ordem', 'tipo', 'item', 'quantidade', 'custoItem', 'observacoes']"></tr>
+                  <tr mat-footer-row *matFooterRowDef="['ordem', 'tipo', 'item', 'quantidade', 'custoItem', 'observacoes']"></tr>
+                </table>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
           <!-- Bloco D: Canais -->
-          <div class="form-section">
-            <h3>Canais</h3>
-            <div class="table-wrapper">
-              <table mat-table [dataSource]="fichaDtoCompleto()!.canais" class="full-width-table">
-                <ng-container matColumnDef="canal">
-                  <th mat-header-cell *matHeaderCellDef>Canal</th>
-                  <td mat-cell *matCellDef="let item">{{ item.canal }}</td>
-                </ng-container>
+          <mat-card class="card">
+            <mat-card-title>Canais</mat-card-title>
+            <mat-card-content>
+              <div class="table-wrapper">
+                <table mat-table [dataSource]="fichaDtoCompleto()!.canais" class="full-width-table">
+                  <ng-container matColumnDef="canal">
+                    <th mat-header-cell *matHeaderCellDef>Canal</th>
+                    <td mat-cell *matCellDef="let item">{{ item.canal }}</td>
+                  </ng-container>
 
-                <ng-container matColumnDef="nomeExibicao">
-                  <th mat-header-cell *matHeaderCellDef>Nome exibição</th>
-                  <td mat-cell *matCellDef="let item">{{ item.nomeExibicao || '-' }}</td>
-                </ng-container>
+                  <ng-container matColumnDef="nomeExibicao">
+                    <th mat-header-cell *matHeaderCellDef>Nome exibição</th>
+                    <td mat-cell *matCellDef="let item">{{ item.nomeExibicao || '-' }}</td>
+                  </ng-container>
 
-                <ng-container matColumnDef="modo">
-                  <th mat-header-cell *matHeaderCellDef>Modo</th>
-                  <td mat-cell *matCellDef="let item">
-                    @if (getModoCanal(item) === 'Auto (Gross-up)') {
-                      <span style="font-size: 11px; padding: 2px 6px; background: #fff3e0; color: #e65100; border-radius: 4px;">Auto (Gross-up)</span>
-                    } @else if (getModoCanal(item) === 'Preço definido') {
-                      <span style="font-size: 11px; padding: 2px 6px; background: #e3f2fd; color: #1976d2; border-radius: 4px;">Preço definido</span>
-                    } @else {
-                      <span style="font-size: 11px; padding: 2px 6px; background: #f5f5f5; color: #666; border-radius: 4px;">-</span>
-                    }
-                  </td>
-                </ng-container>
+                  <ng-container matColumnDef="precoCanal">
+                    <th mat-header-cell *matHeaderCellDef>Preço Canal</th>
+                    <td mat-cell *matCellDef="let item">{{ formatCurrency(item.precoVenda) }}</td>
+                  </ng-container>
 
-                <ng-container matColumnDef="base">
-                  <th mat-header-cell *matHeaderCellDef>Base (Preço Mesa)</th>
-                  <td mat-cell *matCellDef="let item">
-                    @if (fichaDtoCompleto()!.precoMesaSugerido !== null && fichaDtoCompleto()!.precoMesaSugerido !== undefined) {
-                      {{ formatCurrency(fichaDtoCompleto()!.precoMesaSugerido ?? 0) }}
-                    } @else {
-                      -
-                    }
-                  </td>
-                </ng-container>
+                  <ng-container matColumnDef="porcentagem">
+                    <th mat-header-cell *matHeaderCellDef>Porcentagem (%)</th>
+                    <td mat-cell *matCellDef="let item">
+                      {{ item.margemCalculadaPercentual ? (item.margemCalculadaPercentual | number:'1.0-2') + '%' : '-' }}
+                    </td>
+                  </ng-container>
 
-                <ng-container matColumnDef="precoCanal">
-                  <th mat-header-cell *matHeaderCellDef>Preço Canal</th>
-                  <td mat-cell *matCellDef="let item">{{ formatCurrency(item.precoVenda) }}</td>
-                </ng-container>
-
-                <ng-container matColumnDef="porcentagem">
-                  <th mat-header-cell *matHeaderCellDef>Porcentagem (%)</th>
-                  <td mat-cell *matCellDef="let item">
-                    {{ ((item.taxaPercentual ?? 0) + (item.comissaoPercentual ?? 0)) | number:'1.0-2' }}%
-                  </td>
-                </ng-container>
-
-                <tr mat-header-row *matHeaderRowDef="['canal', 'nomeExibicao', 'modo', 'base', 'precoCanal', 'porcentagem']"></tr>
-                <tr mat-row *matRowDef="let row; columns: ['canal', 'nomeExibicao', 'modo', 'base', 'precoCanal', 'porcentagem']"></tr>
-              </table>
-            </div>
-          </div>
+                  <tr mat-header-row *matHeaderRowDef="['canal', 'nomeExibicao', 'precoCanal', 'porcentagem']"></tr>
+                  <tr mat-row *matRowDef="let row; columns: ['canal', 'nomeExibicao', 'precoCanal', 'porcentagem']"></tr>
+                </table>
+              </div>
+            </mat-card-content>
+          </mat-card>
         }
-      }
+      </div>
+    </mat-tab>
+
+    <!-- TAB 3: OPERAÇÃO (COZINHA) -->
+    <mat-tab label="Operação">
+      <div class="content">
+        @if (isLoadingDetalhe()) {
+          <div class="loading">
+            <mat-spinner [diameter]="40"></mat-spinner>
+            <div class="muted">Carregando…</div>
+          </div>
+        } @else if (!fichaDtoCompleto()) {
+          <div class="empty">Nenhum dado disponível.</div>
+        } @else {
+          <!-- KPIs operacionais (simples) -->
+          <div class="op-kpis">
+            <mat-card class="op-card">
+              <mat-card-content>
+                <div class="op-title">{{ fichaDtoCompleto()!.nome }}</div>
+                <div class="op-subtitle" *ngIf="model.tempoPreparo">
+                  ⏱ Tempo: {{ model.tempoPreparo }} min/lote
+                </div>
+                <div class="op-subtitle" *ngIf="model.rendimentoPorcoes">
+                  📦 Lote rende: {{ model.rendimentoPorcoes }}
+                </div>
+              </mat-card-content>
+            </mat-card>
+
+            <mat-card class="op-card">
+              <mat-card-content>
+                <div class="mini-label">Peso total base</div>
+                <div class="big">
+                  {{ formatQuantidadeExibicao(fichaDtoCompleto()!.pesoTotalBase ?? null, getUnidadePorcao().unidade) }}
+                </div>
+                <div class="mini-label mt8">Peso final (IC/IPC)</div>
+                <div class="mid">
+                  {{ formatQuantidadeExibicao(fichaDtoCompleto()!.rendimentoFinal ?? null, getUnidadePorcao().unidade) }}
+                </div>
+              </mat-card-content>
+            </mat-card>
+
+            <mat-card class="op-card">
+              <mat-card-content>
+                <div class="mini-label">1 Porção de venda</div>
+                <div class="big">
+                  @if (fichaDtoCompleto()!.porcaoVendaQuantidade) {
+                    {{ formatQuantidadeExibicao(fichaDtoCompleto()!.porcaoVendaQuantidade, getUnidadePorcao().unidade) }}
+                  } @else {
+                    —
+                  }
+                </div>
+
+                <div class="mini-label mt8">Porções no lote (estimativa)</div>
+                <div class="mid">
+                  {{ getPorcoesEstimadasOperacao() }}
+                </div>
+              </mat-card-content>
+            </mat-card>
+          </div>
+
+          <!-- Lista de ingredientes/componentes (o que o cozinheiro quer ver) -->
+          <mat-card class="card">
+            <mat-card-title>Ingredientes / Componentes</mat-card-title>
+            <mat-card-content>
+
+              <div class="op-list">
+                @for (it of fichaDtoCompleto()!.itens; track it.ordem) {
+                  <mat-card class="op-item">
+                    <mat-card-content>
+                      <div class="op-item-head">
+                        <div class="name">
+                          <span class="badge">{{ it.tipoItem }}</span>
+                          <span>{{ it.receitaNome || it.insumoNome }}</span>
+                        </div>
+                        <div class="qty">
+                          {{ formatQuantidadeItem(it) }}
+                        </div>
+                      </div>
+
+                      <!-- EQUIVALÊNCIA (o pedido do cliente) -->
+                      <div class="op-item-sub" *ngIf="getEquivalenciaPeso(it) as eq">
+                        <span class="muted">Equivalência:</span>
+                        <strong>{{ eq }}</strong>
+                      </div>
+
+                      <div class="op-item-sub" *ngIf="it.observacoes">
+                        <span class="muted">Obs:</span> {{ it.observacoes }}
+                      </div>
+                    </mat-card-content>
+                  </mat-card>
+                }
+              </div>
+
+              <div class="inline-actions">
+                <button mat-stroked-button type="button" (click)="printPdf()">Imprimir / PDF</button>
+                @if (model.receitaPrincipalId) {
+                  <button mat-stroked-button type="button" (click)="openOperacao('producao')">Abrir Produção</button>
+                }
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Passo a passo (se houver receita principal, você pode renderizar descrição/instruções nessa tela depois) -->
+          <mat-card class="card" *ngIf="model.receitaPrincipalId">
+            <mat-card-title>Preparo</mat-card-title>
+            <mat-card-content class="muted">
+              Use a receita principal selecionada para o passo a passo na tela de produção.
+            </mat-card-content>
+          </mat-card>
+        }
+      </div>
     </mat-tab>
   </mat-tab-group>
 </div>
