@@ -1,0 +1,226 @@
+<mat-toolbar color="primary" class="k-toolbar">
+  <button mat-icon-button type="button" routerLink="/tenant/receitas">
+    <mat-icon>arrow_back</mat-icon>
+  </button>
+
+  @if (model(); as receita) {
+    <div class="k-title">
+      <div class="name">{{ receita.nome }}</div>
+      <div class="meta">
+        Versão {{ receita.versao }} • IC: {{ receita.icSinal }}{{ receita.icValor || 0 }}%
+      </div>
+    </div>
+  }
+
+  <span class="spacer"></span>
+
+  <!-- Meta de produção -->
+  <mat-button-toggle-group
+    class="k-toggle"
+    [ngModel]="metaTipo()"
+    (ngModelChange)="onMetaTipoChange($event)"
+    [ngModelOptions]="{standalone:true}">
+    <mat-button-toggle value="porcoes">Porções</mat-button-toggle>
+    <mat-button-toggle value="peso" [disabled]="!pesoBaseDisponivel()">Peso final</mat-button-toggle>
+  </mat-button-toggle-group>
+
+  <mat-form-field appearance="outline" class="k-meta-field">
+    <mat-label>{{ metaTipo() === 'porcoes' ? 'Produzir (porções)' : 'Produzir (g)' }}</mat-label>
+    <input matInput type="number"
+           [ngModel]="metaValor()"
+           (ngModelChange)="onMetaValorChange($event)"
+           [ngModelOptions]="{standalone:true}"
+           min="1" step="1" />
+    @if (metaTipo() === 'peso' && !pesoBaseDisponivel()) {
+      <mat-hint>Peso final indisponível (faltam itens em GR)</mat-hint>
+    }
+  </mat-form-field>
+
+  <button mat-stroked-button type="button" (click)="toggleFullscreen()">
+    <mat-icon>fullscreen</mat-icon>
+    <span class="btn-text">Tela cheia</span>
+  </button>
+
+  <button mat-stroked-button type="button" (click)="printPdf()">
+    <mat-icon>print</mat-icon>
+    <span class="btn-text">Imprimir</span>
+  </button>
+</mat-toolbar>
+
+<div class="k-shell">
+  <!-- Resumo operacional -->
+  <div class="k-summary">
+    <mat-card class="k-metric">
+      <div class="label">Porções (calculado)</div>
+      <div class="value">{{ porcoesOperacao() | number:'1.0-0' }}</div>
+    </mat-card>
+
+    <mat-card class="k-metric">
+      <div class="label">Peso final estimado</div>
+      <div class="value">
+        @if (pesoFinalOperacao() !== null) { 
+          {{ pesoFinalOperacao() | number:'1.0-0' }} g 
+        } @else { 
+          - 
+        }
+      </div>
+    </mat-card>
+
+    <mat-card class="k-metric">
+      <div class="label">Peso por porção</div>
+      <div class="value">
+        @if (pesoPorPorcaoOperacao() !== null) { 
+          {{ pesoPorPorcaoOperacao() | number:'1.0-0' }} g 
+        } @else { 
+          - 
+        }
+      </div>
+    </mat-card>
+
+    <mat-card class="k-metric">
+      <div class="label">Tempo</div>
+      <div class="value">
+        @if (model()?.tempoPreparo) { 
+          {{ model()?.tempoPreparo }} min 
+        } @else { 
+          - 
+        }
+      </div>
+    </mat-card>
+  </div>
+
+  <div class="k-grid">
+    <!-- Ingredientes -->
+    <mat-card class="k-card">
+      <mat-card-header>
+        <mat-card-title>Ingredientes (escalados)</mat-card-title>
+        <mat-card-subtitle>
+          Fator: {{ fatorEscala() | number:'1.2-2' }} • Marque como "Separado"
+        </mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <!-- Peso -->
+        @if (itensEscaladosPeso().length > 0) {
+          <h3 class="k-section-title">Peso (GR)</h3>
+          <mat-list class="k-list">
+            @for (it of itensEscaladosPeso(); track it.key) {
+              <mat-list-item class="k-item">
+                <div matListItemTitle class="k-item-title">{{ it.insumoNome }}</div>
+                <div matListItemLine class="k-item-line">
+                  <span class="qty">{{ it.qtd | number:'1.0-0' }}</span> <span class="unit">g</span>
+                  @if (it.obs) { <span class="obs">• {{ it.obs }}</span> }
+                </div>
+                <div matListItemMeta>
+                  <mat-checkbox [(ngModel)]="it.checked" [ngModelOptions]="{standalone:true}">Separado</mat-checkbox>
+                </div>
+              </mat-list-item>
+              <mat-divider></mat-divider>
+            }
+          </mat-list>
+        }
+
+        <!-- Volume -->
+        @if (itensEscaladosVolume().length > 0) {
+          <h3 class="k-section-title">Volume (ML)</h3>
+          <mat-list class="k-list">
+            @for (it of itensEscaladosVolume(); track it.key) {
+              <mat-list-item class="k-item">
+                <div matListItemTitle class="k-item-title">{{ it.insumoNome }}</div>
+                <div matListItemLine class="k-item-line">
+                  <span class="qty">{{ it.qtd | number:'1.0-0' }}</span> <span class="unit">mL</span>
+                  @if (it.obs) { <span class="obs">• {{ it.obs }}</span> }
+                </div>
+                <div matListItemMeta>
+                  <mat-checkbox [(ngModel)]="it.checked" [ngModelOptions]="{standalone:true}">Separado</mat-checkbox>
+                </div>
+              </mat-list-item>
+              <mat-divider></mat-divider>
+            }
+          </mat-list>
+        }
+
+        <!-- Unidade -->
+        @if (itensEscaladosUnidade().length > 0) {
+          <h3 class="k-section-title">Unidade (UN)</h3>
+          <mat-list class="k-list">
+            @for (it of itensEscaladosUnidade(); track it.key) {
+              <mat-list-item class="k-item">
+                <div matListItemTitle class="k-item-title">{{ it.insumoNome }}</div>
+                <div matListItemLine class="k-item-line">
+                  <span class="qty">{{ it.qtd | number:'1.0-0' }}</span> <span class="unit">un</span>
+                  @if (it.obs) { <span class="obs">• {{ it.obs }}</span> }
+                </div>
+                <div matListItemMeta>
+                  <mat-checkbox [(ngModel)]="it.checked" [ngModelOptions]="{standalone:true}">Separado</mat-checkbox>
+                </div>
+              </mat-list-item>
+              <mat-divider></mat-divider>
+            }
+          </mat-list>
+        }
+
+        <div class="k-actions">
+          <button mat-raised-button color="primary" type="button" (click)="marcarTodos(true)">Marcar tudo</button>
+          <button mat-stroked-button type="button" (click)="marcarTodos(false)">Limpar</button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Execução -->
+    <mat-card class="k-card">
+      <mat-card-header>
+        <mat-card-title>Execução</mat-card-title>
+        <mat-card-subtitle>Passos e timer</mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        @if (model(); as receita) {
+          <mat-accordion multi>
+            <mat-expansion-panel [expanded]="true">
+              <mat-expansion-panel-header>
+                <mat-panel-title>Preparo</mat-panel-title>
+                <mat-panel-description>
+                  @if (receita.tempoPreparo) { ~{{ receita.tempoPreparo }} min }
+                </mat-panel-description>
+              </mat-expansion-panel-header>
+
+              <div class="k-text">{{ receita.descricao || 'Sem descrição de preparo.' }}</div>
+
+              @if (receita.tempoPreparo) {
+                <div class="k-timer-row">
+                  <button mat-raised-button color="primary" type="button" (click)="startTimer(receita.tempoPreparo)">
+                    <mat-icon>timer</mat-icon>
+                    Iniciar timer
+                  </button>
+                  @if (timerAtivo()) {
+                    <div class="k-timer">
+                      <span class="time">{{ timerLabel() }}</span>
+                      <button mat-icon-button type="button" (click)="stopTimer()">
+                        <mat-icon>stop</mat-icon>
+                      </button>
+                    </div>
+                  }
+                </div>
+              }
+            </mat-expansion-panel>
+
+            <mat-expansion-panel>
+              <mat-expansion-panel-header>
+                <mat-panel-title>Empratamento</mat-panel-title>
+              </mat-expansion-panel-header>
+              <div class="k-text">{{ receita.instrucoesEmpratamento || 'Sem instruções.' }}</div>
+            </mat-expansion-panel>
+
+            <mat-expansion-panel>
+              <mat-expansion-panel-header>
+                <mat-panel-title>Conservação</mat-panel-title>
+              </mat-expansion-panel-header>
+              <div class="k-text">{{ receita.conservacao || 'Sem instruções.' }}</div>
+            </mat-expansion-panel>
+          </mat-accordion>
+        }
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

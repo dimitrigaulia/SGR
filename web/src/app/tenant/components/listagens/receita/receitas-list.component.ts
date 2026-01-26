@@ -158,6 +158,10 @@ export class TenantReceitasListComponent implements OnDestroy {
     this.router.navigate(['/tenant/receitas/cadastro'], { state: { id: e.id, view: true } });
   }
 
+  modoCozinha(e: ReceitaDto) {
+    this.router.navigate(['/tenant/receitas', e.id, 'cozinha'], { state: { id: e.id } });
+  }
+
   duplicar(e: ReceitaDto) {
     const dialogData: InputDialogData = {
       title: 'Duplicar Receita',

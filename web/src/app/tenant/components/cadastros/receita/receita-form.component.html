@@ -1,461 +1,519 @@
-<div class="form-container">
-  <h2 class="form-title">{{ isEdit() ? (isView() ? 'Visualizar receita' : 'Editar receita') : 'Cadastro de receita' }}</h2>
+<mat-toolbar class="page-toolbar" color="primary">
+  <button mat-icon-button type="button" routerLink="/tenant/receitas" aria-label="Voltar">
+    <mat-icon>arrow_back</mat-icon>
+  </button>
 
-  <form #f="ngForm" (ngSubmit)="save()">
-    @if (!isView()) {
-      <mat-card class="form-field-spacing">
-        <mat-card-content>
-          <div style="font-size: 13px; margin-bottom: 4px; font-weight: 500;">
-            Passos para cadastrar uma receita:
-          </div>
-          <ol style="margin: 0 0 0 16px; padding: 0; font-size: 13px;">
-            <li>Defina nome, categoria e rendimento (número de porções prontas).</li>
-            <li>Opcional: informe o peso por porção e a tolerância de peso.</li>
-            <li>Ajuste o IC (índice de cocção) para considerar perdas/ganhos de cocção. O IC ajusta o peso final e, se o cálculo automático estiver ativo, as porções. Não altera o custo dos insumos.</li>
-            <li>Adicione os insumos na tabela de itens com as quantidades usadas na receita.</li>
-          </ol>
-        </mat-card-content>
-      </mat-card>
-    }
-    <mat-form-field appearance="outline" class="form-field-spacing">
-      <mat-label>Nome</mat-label>
-      <input matInput name="nome" [(ngModel)]="model.nome" [disabled]="isView()" required maxlength="200" />
-      @if (f.controls['nome']?.errors?.['required']) {
-        <mat-error>Nome é obrigatório</mat-error>
-      }
-    </mat-form-field>
+  <div class="toolbar-title">
+    <div class="title">
+      {{ isEdit() ? (isView() ? 'Visualizar receita' : 'Editar receita') : 'Cadastro de receita' }}
+    </div>
+    <div class="subtitle" *ngIf="isEdit()">
+      ID: {{ id() }}
+    </div>
+  </div>
 
-    <mat-form-field appearance="outline" class="form-field-spacing">
-      <mat-label>Categoria</mat-label>
-      <mat-select name="categoriaId" [(ngModel)]="model.categoriaId" [disabled]="isView()" required>
-        @for (c of categorias(); track c.id) {
-          <mat-option [value]="c.id">{{ c.nome }}</mat-option>
-        }
-      </mat-select>
-      @if (f.controls['categoriaId']?.errors?.['required']) {
-        <mat-error>Categoria é obrigatória</mat-error>
-      }
-    </mat-form-field>
+  <span class="spacer"></span>
 
-    <div class="rendimento-section">
-      <h3 class="section-subtitle">Rendimento da Receita</h3>
-      
-      @if (!isView()) {
-        <div class="form-row" style="margin-bottom: 16px;">
-          <mat-slide-toggle 
-            [(ngModel)]="model.calcularRendimentoAutomatico" 
-            [ngModelOptions]="{standalone: true}"
-            (ngModelChange)="onToggleChange()"
-            [disabled]="isView() || !todosItensEmGramas">
-            Calcular rendimento automaticamente a partir do peso por porção
-          </mat-slide-toggle>
+  <mat-chip-set class="toolbar-chips" aria-label="Status">
+    <mat-chip [disabled]="isView()" [class.chip-active]="model.isAtivo" [class.chip-inactive]="!model.isAtivo">
+      {{ model.isAtivo ? 'Ativo' : 'Inativo' }}
+    </mat-chip>
+  </mat-chip-set>
+
+  @if (isView()) {
+    <button mat-stroked-button type="button" (click)="printPdf()">
+      <mat-icon>print</mat-icon>
+      Imprimir / PDF
+    </button>
+  } @else {
+    <button mat-raised-button color="accent" type="submit" form="receitaForm">
+      <mat-icon>save</mat-icon>
+      Salvar
+    </button>
+  }
+</mat-toolbar>
+
+<mat-sidenav-container class="page-shell">
+  <!-- Resumo (desktop) -->
+  <mat-sidenav #summary mode="side" position="end" [opened]="!isMobile()" class="summary-sidenav">
+    <mat-card class="summary-card">
+      <mat-card-header>
+        <mat-card-title>Resumo</mat-card-title>
+        <mat-card-subtitle>Valores e consistência</mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content class="summary-content">
+        <div class="summary-row">
+          <div class="label">Custo total</div>
+          <div class="value">{{ formatCurrency(custoTotalCalculado) }}</div>
         </div>
-        @if (!todosItensEmGramas) {
-          <div style="font-size: 12px; color: #666; margin-top: 6px; margin-bottom: 16px;">
-            Para ativar o cálculo automático, todos os itens precisam estar em GR (itens em outras unidades não participam do cálculo automático).
+        <div class="summary-row">
+          <div class="label">Custo por porção</div>
+          <div class="value">{{ formatCurrency(custoPorPorcaoCalculado) }}</div>
+        </div>
+
+        <mat-divider></mat-divider>
+
+        <div class="summary-row">
+          <div class="label">Rendimento</div>
+          <div class="value">{{ model.rendimento || '-' }}</div>
+        </div>
+
+        <div class="summary-row" *ngIf="pesoTotalAposRendimento !== null">
+          <div class="label">Peso total (após IC)</div>
+          <div class="value">{{ formatQuantidadeNumero(pesoTotalAposRendimento, 'GR') }} g</div>
+        </div>
+
+        <div class="summary-row">
+          <div class="label">Fator (IC)</div>
+          <div class="value">{{ fatorRendimentoCalculado | number:'1.2-2' }}</div>
+        </div>
+
+        <mat-divider></mat-divider>
+
+        @if (!isView()) {
+          <div class="summary-hints">
+            <mat-icon>info</mat-icon>
+            <div>
+              <div class="hint-title">Regra de unidades</div>
+              <div class="hint-text">Cadastre itens apenas em GR, ML ou UN. Dados antigos são normalizados automaticamente.</div>
+            </div>
+          </div>
+
+          <div class="summary-hints" *ngIf="!todosItensEmGramas">
+            <mat-icon>warning</mat-icon>
+            <div>
+              <div class="hint-title">Cálculo automático</div>
+              <div class="hint-text">Para habilitar, todos os itens precisam estar em GR.</div>
+            </div>
           </div>
         }
+      </mat-card-content>
+    </mat-card>
+  </mat-sidenav>
+
+  <!-- Conteúdo principal -->
+  <mat-sidenav-content class="page-content">
+    <form id="receitaForm" #f="ngForm" (ngSubmit)="save()" class="form-root">
+      @if (!isView()) {
+        <mat-card class="info-card">
+          <mat-card-content>
+            <div class="info-card-title">
+              <mat-icon>checklist</mat-icon>
+              <span>Como cadastrar</span>
+            </div>
+            <ol class="info-steps">
+              <li>Defina nome, categoria e rendimento.</li>
+              <li>Opcional: informe o peso por porção.</li>
+              <li>Configure IC (perda/ganho) para ajustar o peso final.</li>
+              <li>Adicione os itens (insumos) com quantidades.</li>
+            </ol>
+          </mat-card-content>
+        </mat-card>
       }
 
-      <div class="form-row">
-        <mat-form-field appearance="outline" class="form-field-spacing">
-          <mat-label>Rendimento (porções)</mat-label>
-          <input 
-            matInput 
-            type="number" 
-            name="rendimento" 
-            [(ngModel)]="model.rendimento" 
-            (ngModelChange)="onRendimentoChange()"
-            [disabled]="isView() || model.calcularRendimentoAutomatico" 
-            required 
-            min="0.01" 
-            step="0.01" 
-            placeholder="Ex.: 10" />
-          <mat-hint class="hint-responsive">
-            @if (model.calcularRendimentoAutomatico) {
-              Calculado automaticamente a partir do peso por porção
-            } @else {
-              Quantas porções padrão essa receita rende ao todo (ex: 10 porções)
-              @if (pesoTotalAposRendimento !== null) {
-                <br>Peso total calculado: {{ formatQuantidadeNumero(pesoTotalAposRendimento, 'GR') }} g
+      <mat-tab-group class="form-tabs" dynamicHeight>
+        <!-- TAB 1: Geral -->
+        <mat-tab label="Geral">
+          <mat-card class="section-card">
+            <mat-card-header>
+              <mat-card-title>Informações básicas</mat-card-title>
+              <mat-card-subtitle>Identificação e categoria</mat-card-subtitle>
+            </mat-card-header>
+
+            <mat-card-content class="section-grid">
+              <mat-form-field appearance="outline">
+                <mat-label>Nome</mat-label>
+                <input matInput name="nome" [(ngModel)]="model.nome" [disabled]="isView()" required maxlength="200" />
+                @if (f.controls['nome']?.errors?.['required']) { <mat-error>Nome é obrigatório</mat-error> }
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Categoria</mat-label>
+                <mat-select name="categoriaId" [(ngModel)]="model.categoriaId" [disabled]="isView()" required>
+                  @for (c of categorias(); track c.id) {
+                    <mat-option [value]="c.id">{{ c.nome }}</mat-option>
+                  }
+                </mat-select>
+                @if (f.controls['categoriaId']?.errors?.['required']) { <mat-error>Categoria é obrigatória</mat-error> }
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Versão</mat-label>
+                <input matInput name="versao" [(ngModel)]="model.versao" [disabled]="isView()" maxlength="20" />
+                <mat-hint>Ex: 1.0, 2.1, 3.0</mat-hint>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Tempo de Preparo (min)</mat-label>
+                <input matInput type="number" name="tempoPreparo" [(ngModel)]="model.tempoPreparo" [disabled]="isView()" min="1" />
+              </mat-form-field>
+            </mat-card-content>
+          </mat-card>
+        </mat-tab>
+
+        <!-- TAB 2: Rendimento -->
+        <mat-tab label="Rendimento">
+          <mat-card class="section-card">
+            <mat-card-header>
+              <mat-card-title>Rendimento e IC</mat-card-title>
+              <mat-card-subtitle>Peso final e porções</mat-card-subtitle>
+            </mat-card-header>
+
+            <mat-card-content>
+              @if (!isView()) {
+                <div class="toggle-row">
+                  <mat-slide-toggle
+                    [(ngModel)]="model.calcularRendimentoAutomatico"
+                    [ngModelOptions]="{standalone: true}"
+                    (ngModelChange)="onToggleChange()"
+                    [disabled]="isView() || !todosItensEmGramas">
+                    Calcular rendimento automaticamente (peso por porção)
+                  </mat-slide-toggle>
+
+                  <button mat-stroked-button type="button" class="help-btn" (click)="$event.preventDefault()">
+                    <mat-icon>help_outline</mat-icon>
+                    Dica
+                  </button>
+                </div>
+
+                @if (!todosItensEmGramas) {
+                  <div class="inline-callout">
+                    <mat-icon>info</mat-icon>
+                    <span>Para ativar o cálculo automático, todos os itens precisam estar em GR.</span>
+                  </div>
+                }
               }
-            }
-          </mat-hint>
-          @if (f.controls['rendimento']?.errors?.['required']) {
-            <mat-error>Rendimento é obrigatório</mat-error>
-          }
-        </mat-form-field>
 
-        <mat-form-field appearance="outline" class="form-field-spacing">
-          <mat-label>Peso por porção (g)</mat-label>
-          <input 
-            matInput 
-            type="number" 
-            name="pesoPorPorcao" 
-            [(ngModel)]="model.pesoPorPorcao" 
-            (ngModelChange)="onPesoPorPorcaoChange()"
-            [disabled]="isView() || (!model.calcularRendimentoAutomatico && pesoTotalAposRendimento === null)" 
-            min="0.01" 
-            step="0.01" 
-            placeholder="Ex.: 250" />
-          <mat-hint class="hint-responsive">
-            @if (model.calcularRendimentoAutomatico) {
-              Informe o peso por porção para calcular o rendimento automaticamente
-              @if (pesoTotalAposRendimento !== null) {
-                <br>Peso total calculado: {{ formatQuantidadeNumero(pesoTotalAposRendimento, 'GR') }} g
+              <div class="section-grid">
+                <mat-form-field appearance="outline">
+                  <mat-label>Rendimento (porções)</mat-label>
+                  <input
+                    matInput type="number" name="rendimento"
+                    [(ngModel)]="model.rendimento"
+                    (ngModelChange)="onRendimentoChange()"
+                    [disabled]="isView() || model.calcularRendimentoAutomatico"
+                    required min="0.01" step="0.01" />
+                  <mat-hint *ngIf="pesoTotalAposRendimento !== null">
+                    Peso total (após IC): {{ formatQuantidadeNumero(pesoTotalAposRendimento, 'GR') }} g
+                  </mat-hint>
+                  @if (f.controls['rendimento']?.errors?.['required']) { <mat-error>Rendimento é obrigatório</mat-error> }
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Peso por porção (g)</mat-label>
+                  <input
+                    matInput type="number" name="pesoPorPorcao"
+                    [(ngModel)]="model.pesoPorPorcao"
+                    (ngModelChange)="onPesoPorPorcaoChange()"
+                    [disabled]="isView() || (!model.calcularRendimentoAutomatico && pesoTotalAposRendimento === null)"
+                    min="0.01" step="0.01" />
+                  <mat-hint *ngIf="pesoTotalAposRendimento !== null && model.rendimento > 0">
+                    Peso por porção (calc.): {{ formatQuantidadeNumero(pesoTotalAposRendimento / model.rendimento, 'GR') }} g
+                  </mat-hint>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>IC - Sinal</mat-label>
+                  <mat-select name="icSinal" [(ngModel)]="model.icSinal" (ngModelChange)="onICChange()" [disabled]="isView()">
+                    <mat-option value="-">Perda (-)</mat-option>
+                    <mat-option value="+">Ganho (+)</mat-option>
+                  </mat-select>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>IC - Valor (%)</mat-label>
+                  <input matInput type="number" name="icValor"
+                         [(ngModel)]="model.icValor" (ngModelChange)="onICChange()"
+                         [disabled]="isView()" min="0" [max]="icValorMax" step="0.01" />
+                  <mat-hint>Ex.: "-" e 5 = perda de 5% (fator 0,95)</mat-hint>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" disabled>
+                  <mat-label>Fator (calculado)</mat-label>
+                  <input matInput [value]="fatorRendimentoCalculado | number:'1.2-2'" disabled />
+                </mat-form-field>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </mat-tab>
+
+        <!-- TAB 3: Itens -->
+        <mat-tab label="Itens">
+          <mat-card class="section-card">
+            <mat-card-header class="items-header">
+              <div>
+                <mat-card-title>Itens da receita</mat-card-title>
+                <mat-card-subtitle>Use apenas GR, ML ou UN</mat-card-subtitle>
+              </div>
+
+              @if (!isView()) {
+                <button mat-raised-button color="primary" type="button" (click)="addItem()">
+                  <mat-icon>add</mat-icon>
+                  Adicionar item
+                </button>
               }
-            } @else {
-              @if (pesoTotalAposRendimento !== null) {
-                Calculado automaticamente: {{ formatQuantidadeNumero(pesoTotalAposRendimento / model.rendimento, 'GR') }} g por porção
-                <br>Peso total: {{ formatQuantidadeNumero(pesoTotalAposRendimento, 'GR') }} g
-              } @else {
-                Peso aproximado de cada porção em gramas (ex: 250 g por porção)
-                <br>Adicione itens com unidade de peso (GR) para cálculo automático
+            </mat-card-header>
+
+            <mat-card-content>
+              @if (itens().length === 0) {
+                <div class="empty-state">
+                  <mat-icon>inbox</mat-icon>
+                  <div class="empty-title">Nenhum item adicionado</div>
+                  <div class="empty-text">Clique em “Adicionar item” para começar.</div>
+                </div>
               }
-            }
-          </mat-hint>
-          @if (f.controls['pesoPorPorcao']?.errors?.['min']) {
-            <mat-error>Peso por porção deve ser maior que zero</mat-error>
-          }
-        </mat-form-field>
-      </div>
-    </div>
 
-    <div class="form-row">
-      <mat-form-field appearance="outline" class="form-field-spacing">
-        <mat-label>IC - Sinal</mat-label>
-        <mat-select name="icSinal" [(ngModel)]="model.icSinal" (ngModelChange)="onICChange()" [disabled]="isView()">
-          <mat-option value="-">Perda (-)</mat-option>
-          <mat-option value="+">Ganho (+)</mat-option>
-        </mat-select>
-      </mat-form-field>
+              @if (!isMobile() && itens().length > 0) {
+                <div class="table-wrapper">
+                  <table mat-table [dataSource]="itens()" class="full-width-table mat-elevation-z1">
+                    <!-- Ordem -->
+                    <ng-container matColumnDef="ordem">
+                      <th mat-header-cell *matHeaderCellDef class="col-ordem">#</th>
+                      <td mat-cell *matCellDef="let item" class="col-ordem">
+                        @if (isView()) { {{ item.ordem }} }
+                        @else { <input type="number" class="input-ordem" [(ngModel)]="item.ordem" [ngModelOptions]="{standalone: true}" min="1" /> }
+                      </td>
+                    </ng-container>
 
-      <mat-form-field appearance="outline" class="form-field-spacing">
-        <mat-label>IC - Valor (%)</mat-label>
-        <input matInput type="number" name="icValor" [(ngModel)]="model.icValor" (ngModelChange)="onICChange()" [disabled]="isView()" min="0" [max]="icValorMax" step="0.01" />
-        <mat-hint class="hint-responsive">
-          <span class="hint-full">
-            IC ajusta o peso final da receita (cocção). Se o cálculo automático estiver ativo, ajusta as porções.
-            Não altera o custo dos insumos. Ex.: "-" e 5 = 5% de perda (fator ≈ 0,95).
-          </span>
-          <span class="hint-mobile">
-            IC ajusta peso final/porções (não altera custo). Ex.: "-" e 5 = 5% de perda.
-          </span>
-        </mat-hint>
-      </mat-form-field>
+                    <!-- Insumo -->
+                    <ng-container matColumnDef="insumo">
+                      <th mat-header-cell *matHeaderCellDef>Insumo</th>
+                      <td mat-cell *matCellDef="let item">
+                        @if (isView()) { {{ getInsumoNome(item.insumoId) }} }
+                        @else {
+                          <mat-form-field appearance="outline" class="cell-field">
+                            <mat-select [(ngModel)]="item.insumoId" [ngModelOptions]="{standalone: true}"
+                                        (selectionChange)="onInsumoChange(item, 0)">
+                              <mat-option [value]="null">Selecione...</mat-option>
+                              @for (i of insumos(); track i.id) {
+                                <mat-option [value]="i.id">{{ i.nome }}</mat-option>
+                              }
+                            </mat-select>
+                          </mat-form-field>
+                        }
+                      </td>
+                    </ng-container>
 
-      <mat-form-field appearance="outline" class="form-field-spacing" disabled>
-        <mat-label>Fator de Rendimento (calculado)</mat-label>
-        <input matInput [value]="fatorRendimentoCalculado | number:'1.2-2'" disabled />
-        <mat-hint class="hint-responsive">Usado para aplicar o índice de cocção nos cálculos</mat-hint>
-      </mat-form-field>
+                    <!-- Quantidade -->
+                    <ng-container matColumnDef="quantidade">
+                      <th mat-header-cell *matHeaderCellDef>Quantidade</th>
+                      <td mat-cell *matCellDef="let item">
+                        @if (isView()) { {{ formatQuantidade(item.quantidade, item.unidadeMedidaId) }} }
+                        @else {
+                          <mat-form-field appearance="outline" class="cell-field">
+                            <input matInput type="number"
+                                   [ngModel]="getQuantidadeExibicao(item)"
+                                   (ngModelChange)="onQuantidadeExibicaoChange(item, $event)"
+                                   [ngModelOptions]="{standalone: true}"
+                                   step="1" min="0" />
+                          </mat-form-field>
+                        }
+                      </td>
+                    </ng-container>
 
-      <mat-form-field appearance="outline" class="form-field-spacing">
-        <mat-label>Tempo de Preparo (minutos)</mat-label>
-        <input matInput type="number" name="tempoPreparo" [(ngModel)]="model.tempoPreparo" [disabled]="isView()" min="1" />
-      </mat-form-field>
+                    <!-- Unidade -->
+                    <ng-container matColumnDef="unidade">
+                      <th mat-header-cell *matHeaderCellDef>Unidade</th>
+                      <td mat-cell *matCellDef="let item">
+                        @if (isView()) { {{ getUnidadeSigla(item.unidadeMedidaId) }} }
+                        @else {
+                          <mat-form-field appearance="outline" class="cell-field">
+                            <mat-select [(ngModel)]="item.unidadeMedidaId" [ngModelOptions]="{standalone: true}"
+                                        (ngModelChange)="onUnidadeMedidaChangeItem(item)">
+                              <mat-option [value]="null">Selecione...</mat-option>
+                              @for (u of unidades(); track u.id) {
+                                @if (['GR','ML','UN'].includes((u.sigla || '').toUpperCase())) {
+                                  <mat-option [value]="u.id">{{ u.sigla }} - {{ u.nome }}</mat-option>
+                                }
+                              }
+                            </mat-select>
+                          </mat-form-field>
+                        }
+                      </td>
+                    </ng-container>
 
-      <mat-form-field appearance="outline" class="form-field-spacing">
-        <mat-label>Versão</mat-label>
-        <input matInput name="versao" [(ngModel)]="model.versao" [disabled]="isView()" maxlength="20" />
-        <mat-hint class="hint-responsive">Ex: 1.0, 2.1, 3.0</mat-hint>
-      </mat-form-field>
-    </div>
+                    <!-- QB -->
+                    <ng-container matColumnDef="qb">
+                      <th mat-header-cell *matHeaderCellDef class="col-qb">QB</th>
+                      <td mat-cell *matCellDef="let item" class="col-qb">
+                        @if (isView()) { {{ item.exibirComoQB ? 'Sim' : 'Não' }} }
+                        @else { <mat-checkbox [(ngModel)]="item.exibirComoQB" [ngModelOptions]="{standalone: true}"></mat-checkbox> }
+                      </td>
+                    </ng-container>
 
-    <div class="form-section">
-      <h3>Modo de Preparo</h3>
-      <mat-form-field appearance="outline" class="form-field-spacing">
-        <mat-label>Descrição do preparo</mat-label>
-        <textarea matInput name="descricao" rows="6" [(ngModel)]="model.descricao" [disabled]="isView()" maxlength="5000"></textarea>
-      </mat-form-field>
+                    <!-- Custo/un -->
+                    <ng-container matColumnDef="custoPorUnidadeUso">
+                      <th mat-header-cell *matHeaderCellDef>Custo / unidade</th>
+                      <td mat-cell *matCellDef="let item">{{ formatarCustoPorUnidadeUso(item) }}</td>
+                    </ng-container>
 
-      <mat-form-field appearance="outline" class="form-field-spacing">
-        <mat-label>Conservação (armazenamento / validade)</mat-label>
-        <textarea matInput name="conservacao" rows="4" [(ngModel)]="model.conservacao" [disabled]="isView()" maxlength="5000"></textarea>
-      </mat-form-field>
+                    <!-- Custo -->
+                    <ng-container matColumnDef="custo">
+                      <th mat-header-cell *matHeaderCellDef>Custo</th>
+                      <td mat-cell *matCellDef="let item">{{ formatCurrency(item.custoItem) }}</td>
+                    </ng-container>
 
-      <mat-form-field appearance="outline" class="form-field-spacing">
-        <mat-label>Instruções de Empratamento</mat-label>
-        <textarea matInput name="instrucoesEmpratamento" rows="4" [(ngModel)]="model.instrucoesEmpratamento" [disabled]="isView()" maxlength="2000"></textarea>
-      </mat-form-field>
-    </div>
+                    <!-- Observações -->
+                    <ng-container matColumnDef="observacoes">
+                      <th mat-header-cell *matHeaderCellDef>Obs.</th>
+                      <td mat-cell *matCellDef="let item">
+                        @if (isView()) { {{ item.observacoes || '-' }} }
+                        @else {
+                          <mat-form-field appearance="outline" class="cell-field">
+                            <input matInput [(ngModel)]="item.observacoes" [ngModelOptions]="{standalone: true}" placeholder="Opcional" />
+                          </mat-form-field>
+                        }
+                      </td>
+                    </ng-container>
 
-    <div class="form-section">
-      <div class="section-header">
-        <h3>Itens da Receita</h3>
-        @if (!isView()) {
-          <button mat-raised-button color="primary" type="button" (click)="addItem()">
-            <mat-icon>add</mat-icon>
-            <span class="button-text">Adicionar Item</span>
+                    <!-- Ações -->
+                    <ng-container matColumnDef="acoes">
+                      <th mat-header-cell *matHeaderCellDef class="col-acoes">Ações</th>
+                      <td mat-cell *matCellDef="let item; let i = index" class="col-acoes">
+                        @if (!isView()) {
+                          <div class="action-buttons">
+                            <button mat-icon-button type="button" (click)="moveItemUp(i)" [disabled]="i === 0" matTooltip="Mover para cima">
+                              <mat-icon>arrow_upward</mat-icon>
+                            </button>
+                            <button mat-icon-button type="button" (click)="moveItemDown(i)" [disabled]="i === itens().length - 1" matTooltip="Mover para baixo">
+                              <mat-icon>arrow_downward</mat-icon>
+                            </button>
+                            <button mat-icon-button type="button" (click)="removeItem(i)" color="warn" matTooltip="Remover">
+                              <mat-icon>delete</mat-icon>
+                            </button>
+                          </div>
+                        }
+                      </td>
+                    </ng-container>
+
+                    <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+                    <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+                  </table>
+                </div>
+              }
+
+              @if (isMobile() && itens().length > 0) {
+                <mat-accordion class="mobile-accordion">
+                  @for (item of itens(); track $index; let i = $index) {
+                    <mat-expansion-panel>
+                      <mat-expansion-panel-header>
+                        <mat-panel-title>
+                          #{{ item.ordem }} — {{ getInsumoNome(item.insumoId) || 'Item sem insumo' }}
+                        </mat-panel-title>
+                        <mat-panel-description>
+                          {{ formatCurrency(item.custoItem) }}
+                        </mat-panel-description>
+                      </mat-expansion-panel-header>
+
+                      <!-- Reaproveite aqui seus campos mobile (ou o mesmo do desktop em colunas) -->
+                      <!-- Mantive simples para focar no layout -->
+                      <div class="mobile-item-grid">
+                        <div class="row">
+                          <div class="label">Quantidade</div>
+                          <div class="value">{{ formatQuantidade(item.quantidade, item.unidadeMedidaId) }} {{ getUnidadeSigla(item.unidadeMedidaId) }}</div>
+                        </div>
+                      </div>
+
+                      @if (!isView()) {
+                        <div class="panel-actions">
+                          <button mat-stroked-button type="button" (click)="removeItem(i)" color="warn">
+                            <mat-icon>delete</mat-icon>
+                            Remover
+                          </button>
+                        </div>
+                      }
+                    </mat-expansion-panel>
+                  }
+                </mat-accordion>
+              }
+            </mat-card-content>
+          </mat-card>
+        </mat-tab>
+
+        <!-- TAB 4: Preparo -->
+        <mat-tab label="Preparo">
+          <mat-card class="section-card">
+            <mat-card-header>
+              <mat-card-title>Modo de preparo</mat-card-title>
+              <mat-card-subtitle>Instruções, conservação e empratamento</mat-card-subtitle>
+            </mat-card-header>
+
+            <mat-card-content class="section-stack">
+              <mat-form-field appearance="outline">
+                <mat-label>Descrição do preparo</mat-label>
+                <textarea matInput name="descricao" rows="6" [(ngModel)]="model.descricao" [disabled]="isView()" maxlength="5000"></textarea>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Conservação</mat-label>
+                <textarea matInput name="conservacao" rows="4" [(ngModel)]="model.conservacao" [disabled]="isView()" maxlength="5000"></textarea>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Instruções de empratamento</mat-label>
+                <textarea matInput name="instrucoesEmpratamento" rows="4" [(ngModel)]="model.instrucoesEmpratamento" [disabled]="isView()" maxlength="2000"></textarea>
+              </mat-form-field>
+            </mat-card-content>
+          </mat-card>
+        </mat-tab>
+
+        <!-- TAB 5: Custos -->
+        <mat-tab label="Custos">
+          <mat-card class="section-card">
+            <mat-card-header>
+              <mat-card-title>Custos</mat-card-title>
+              <mat-card-subtitle>Somente leitura</mat-card-subtitle>
+            </mat-card-header>
+
+            <mat-card-content class="costs-grid">
+              <div class="cost-tile">
+                <div class="label">Custo total</div>
+                <div class="value">{{ formatCurrency(custoTotalCalculado) }}</div>
+              </div>
+
+              <div class="cost-tile">
+                <div class="label">Custo por porção</div>
+                <div class="value">{{ formatCurrency(custoPorPorcaoCalculado) }}</div>
+              </div>
+
+              <div class="cost-note">
+                Os custos são calculados automaticamente pelo sistema.
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </mat-tab>
+      </mat-tab-group>
+
+      @if (error()) {
+        <mat-card class="error-card">
+          <mat-card-content>
+            <mat-icon>error</mat-icon>
+            <span>{{ error() }}</span>
+          </mat-card-content>
+        </mat-card>
+      }
+
+      <!-- Barra de ações sticky -->
+      <div class="sticky-actions">
+        <button mat-stroked-button type="button" routerLink="/tenant/receitas">Voltar</button>
+
+        <span class="spacer"></span>
+
+        <mat-slide-toggle name="isAtivo" [(ngModel)]="model.isAtivo" [disabled]="isView()">Ativo</mat-slide-toggle>
+
+        @if (isView()) {
+          <button mat-raised-button type="button" (click)="printPdf()">
+            <mat-icon>print</mat-icon>
+            Imprimir / PDF
+          </button>
+        } @else {
+          <button mat-raised-button color="primary" type="submit">
+            <mat-icon>save</mat-icon>
+            Salvar
           </button>
         }
       </div>
-
-      <!-- Versão Desktop: Tabela -->
-      @if (!isMobile() && itens().length > 0) {
-        <div class="table-wrapper">
-          <table mat-table [dataSource]="itens()" class="mat-elevation-z1 full-width-table">
-            <ng-container matColumnDef="ordem">
-              <th mat-header-cell *matHeaderCellDef class="col-ordem">#</th>
-              <td mat-cell *matCellDef="let item" class="col-ordem">
-                @if (isView()) {
-                  {{ item.ordem }}
-                } @else {
-                  <input type="number" class="input-ordem" [(ngModel)]="item.ordem" [ngModelOptions]="{standalone: true}" min="1" />
-                }
-              </td>
-            </ng-container>
-
-            <ng-container matColumnDef="insumo">
-              <th mat-header-cell *matHeaderCellDef>Insumo</th>
-              <td mat-cell *matCellDef="let item">
-                @if (isView()) {
-                  {{ getInsumoNome(item.insumoId) }}
-                } @else {
-                  <mat-form-field appearance="outline" class="field-insumo">
-                    <mat-select [(ngModel)]="item.insumoId" [ngModelOptions]="{standalone: true}" (selectionChange)="onInsumoChange(item, 0)">
-                      <mat-option [value]="null">Selecione...</mat-option>
-                      @for (i of insumos(); track i.id) {
-                        <mat-option [value]="i.id">{{ i.nome }}</mat-option>
-                      }
-                    </mat-select>
-                  </mat-form-field>
-                }
-              </td>
-            </ng-container>
-
-            <ng-container matColumnDef="quantidade">
-              <th mat-header-cell *matHeaderCellDef>Quantidade</th>
-              <td mat-cell *matCellDef="let item">
-                @if (isView()) {
-                  {{ formatQuantidade(item.quantidade, item.unidadeMedidaId) }}
-                } @else {
-                  <mat-form-field appearance="outline" class="field-quantidade">
-                    <input matInput type="number" [ngModel]="getQuantidadeExibicao(item)" (ngModelChange)="onQuantidadeExibicaoChange(item, $event)" [ngModelOptions]="{standalone: true}" [step]="getStepForUnidade(item.unidadeMedidaId)" [min]="getMinForUnidade(item.unidadeMedidaId)" />
-                  </mat-form-field>
-                }
-              </td>
-            </ng-container>
-
-            <ng-container matColumnDef="unidade">
-              <th mat-header-cell *matHeaderCellDef>Unidade</th>
-              <td mat-cell *matCellDef="let item">
-                @if (isView()) {
-                  {{ getUnidadeSigla(item.unidadeMedidaId) }}
-                } @else {
-                  <mat-form-field appearance="outline" class="field-unidade">
-                    <mat-select [(ngModel)]="item.unidadeMedidaId" [ngModelOptions]="{standalone: true}" (ngModelChange)="onUnidadeMedidaChangeItem(item)">
-                      <mat-option [value]="null">Selecione...</mat-option>
-                      @for (u of unidades(); track u.id) {
-                        <mat-option [value]="u.id">{{ u.sigla }} - {{ u.nome }}</mat-option>
-                      }
-                    </mat-select>
-                  </mat-form-field>
-                }
-              </td>
-            </ng-container>
-
-            <ng-container matColumnDef="qb">
-              <th mat-header-cell *matHeaderCellDef class="col-qb">QB</th>
-              <td mat-cell *matCellDef="let item" class="col-qb">
-                @if (isView()) {
-                  {{ item.exibirComoQB ? 'Sim' : 'Não' }}
-                } @else {
-                  <mat-checkbox [(ngModel)]="item.exibirComoQB" [ngModelOptions]="{standalone: true}"></mat-checkbox>
-                }
-              </td>
-            </ng-container>
-
-            <ng-container matColumnDef="custoPorUnidadeUso">
-              <th mat-header-cell *matHeaderCellDef>Custo por Unidade de Uso</th>
-              <td mat-cell *matCellDef="let item">
-                {{ formatarCustoPorUnidadeUso(item) }}
-              </td>
-            </ng-container>
-
-            <ng-container matColumnDef="custo">
-              <th mat-header-cell *matHeaderCellDef>Custo</th>
-              <td mat-cell *matCellDef="let item">
-                {{ formatCurrency(item.custoItem) }}
-              </td>
-            </ng-container>
-
-            <ng-container matColumnDef="observacoes">
-              <th mat-header-cell *matHeaderCellDef>Observações</th>
-              <td mat-cell *matCellDef="let item">
-                @if (isView()) {
-                  {{ item.observacoes || '-' }}
-                } @else {
-                  <mat-form-field appearance="outline" class="field-observacoes">
-                    <input matInput [(ngModel)]="item.observacoes" [ngModelOptions]="{standalone: true}" placeholder="Opcional" />
-                  </mat-form-field>
-                }
-              </td>
-            </ng-container>
-
-            <ng-container matColumnDef="acoes">
-              <th mat-header-cell *matHeaderCellDef class="col-acoes">Ações</th>
-              <td mat-cell *matCellDef="let item; let i = index" class="col-acoes">
-                @if (!isView()) {
-                  <div class="action-buttons">
-                    <button mat-icon-button type="button" (click)="moveItemUp(i)" [disabled]="i === 0" matTooltip="Mover para cima">
-                      <mat-icon>arrow_upward</mat-icon>
-                    </button>
-                    <button mat-icon-button type="button" (click)="moveItemDown(i)" [disabled]="i === itens().length - 1" matTooltip="Mover para baixo">
-                      <mat-icon>arrow_downward</mat-icon>
-                    </button>
-                    <button mat-icon-button type="button" (click)="removeItem(i)" color="warn" matTooltip="Remover item">
-                      <mat-icon>delete</mat-icon>
-                    </button>
-                  </div>
-                }
-              </td>
-            </ng-container>
-
-            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-            <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-          </table>
-        </div>
-      }
-
-      <!-- Versão Mobile: Cards -->
-      @if (isMobile() && itens().length > 0) {
-        <div class="items-cards-container">
-          @for (item of itens(); track $index; let i = $index) {
-            <mat-card class="item-card">
-              <mat-card-content>
-                <div class="item-card-header">
-                  <span class="item-ordem">#{{ item.ordem }}</span>
-                  @if (!isView()) {
-                    <div class="item-card-actions">
-                      <button mat-icon-button type="button" (click)="moveItemUp(i)" [disabled]="i === 0" matTooltip="Mover para cima">
-                        <mat-icon>arrow_upward</mat-icon>
-                      </button>
-                      <button mat-icon-button type="button" (click)="moveItemDown(i)" [disabled]="i === itens().length - 1" matTooltip="Mover para baixo">
-                        <mat-icon>arrow_downward</mat-icon>
-                      </button>
-                      <button mat-icon-button type="button" (click)="removeItem(i)" color="warn" matTooltip="Remover">
-                        <mat-icon>delete</mat-icon>
-                      </button>
-                    </div>
-                  }
-                </div>
-                
-                <div class="item-card-body">
-                  @if (isView()) {
-                    <div class="item-field">
-                      <span class="item-label">Insumo:</span>
-                      <span class="item-value">{{ getInsumoNome(item.insumoId) }}</span>
-                    </div>
-                    <div class="item-field">
-                      <span class="item-label">Quantidade:</span>
-                      <span class="item-value">{{ formatQuantidade(item.quantidade, item.unidadeMedidaId) }} {{ getUnidadeSigla(item.unidadeMedidaId) }}</span>
-                    </div>
-                    @if (item.exibirComoQB) {
-                      <div class="item-field">
-                        <span class="item-label">QB:</span>
-                        <span class="item-value">Sim</span>
-                      </div>
-                    }
-                    @if (item.observacoes) {
-                      <div class="item-field">
-                        <span class="item-label">Observações:</span>
-                        <span class="item-value">{{ item.observacoes }}</span>
-                      </div>
-                    }
-                    <div class="item-field">
-                      <span class="item-label">Custo por unidade de uso:</span>
-                      <span class="item-value">{{ formatarCustoPorUnidadeUso(item) }}</span>
-                    </div>
-                    <div class="item-field">
-                      <span class="item-label">Custo:</span>
-                      <span class="item-value item-custo">{{ formatCurrency(item.custoItem) }}</span>
-                    </div>
-                  } @else {
-                    <mat-form-field appearance="outline" class="field-full">
-                      <mat-label>Insumo</mat-label>
-                      <mat-select [(ngModel)]="item.insumoId" [ngModelOptions]="{standalone: true}" (selectionChange)="onInsumoChange(item, 0)">
-                        <mat-option [value]="null">Selecione...</mat-option>
-                        @for (i of insumos(); track i.id) {
-                          <mat-option [value]="i.id">{{ i.nome }}</mat-option>
-                        }
-                      </mat-select>
-                    </mat-form-field>
-                    
-                    <div class="item-row-mobile">
-                    <mat-form-field appearance="outline" class="field-quantidade-mobile">
-                      <mat-label>Quantidade</mat-label>
-                      <input matInput type="number" [ngModel]="getQuantidadeExibicao(item)" (ngModelChange)="onQuantidadeExibicaoChange(item, $event)" [ngModelOptions]="{standalone: true}" [step]="getStepForUnidade(item.unidadeMedidaId)" [min]="getMinForUnidade(item.unidadeMedidaId)" />
-                    </mat-form-field>
-                      
-                      <mat-form-field appearance="outline" class="field-unidade-mobile">
-                        <mat-label>Unidade</mat-label>
-                        <mat-select [(ngModel)]="item.unidadeMedidaId" [ngModelOptions]="{standalone: true}" (ngModelChange)="onUnidadeMedidaChangeItem(item)">
-                          <mat-option [value]="null">Selecione...</mat-option>
-                          @for (u of unidades(); track u.id) {
-                            <mat-option [value]="u.id">{{ u.sigla }}</mat-option>
-                          }
-                        </mat-select>
-                      </mat-form-field>
-                    </div>
-                    
-                    <div class="item-row-mobile">
-                      <mat-checkbox [(ngModel)]="item.exibirComoQB" [ngModelOptions]="{standalone: true}">Exibir como QB</mat-checkbox>
-                      @if (item.custoItem) {
-                        <span class="item-custo-mobile">{{ formatCurrency(item.custoItem) }}</span>
-                      }
-                    </div>
-                    
-                    <mat-form-field appearance="outline" class="field-full">
-                      <mat-label>Observações (opcional)</mat-label>
-                      <input matInput [(ngModel)]="item.observacoes" [ngModelOptions]="{standalone: true}" />
-                    </mat-form-field>
-                  }
-                </div>
-              </mat-card-content>
-            </mat-card>
-          }
-        </div>
-      }
-
-      @if (itens().length === 0) {
-        <div class="empty-message">
-          <p>Nenhum item adicionado. Clique em "Adicionar Item" para começar.</p>
-        </div>
-      }
-    </div>
-
-    <div class="form-section">
-      <h3>Custos (somente leitura)</h3>
-      <div class="custo-grid">
-        <div>
-          <div class="label">Custo Total</div>
-          <div class="value">{{ formatCurrency(custoTotalCalculado) }}</div>
-        </div>
-        <div>
-          <div class="label">Custo por Porção</div>
-          <div class="value">{{ formatCurrency(custoPorPorcaoCalculado) }}</div>
-        </div>
-      </div>
-      <p style="font-size: 12px; color: #666; margin-top: 8px;">Os custos são calculados automaticamente pelo sistema.</p>
-    </div>
-
-    <!-- Wrapper para o toggle com espaçamento consistente -->
-    <div class="form-toggle-wrapper">
-      <mat-slide-toggle name="isAtivo" [(ngModel)]="model.isAtivo" [disabled]="isView()">Ativo</mat-slide-toggle>
-    </div>
-
-    @if (error()) {
-      <div class="form-error">{{ error() }}</div>
-    }
-    
-    <div class="form-actions">
-      <button mat-stroked-button type="button" routerLink="/tenant/receitas">Voltar</button>
-      @if (isView()) {
-        <button mat-stroked-button type="button" (click)="printPdf()">Imprimir / PDF</button>
-      } @else {
-        <button mat-raised-button color="primary" type="submit">Salvar</button>
-      }
-    </div>
-  </form>
-</div>
+    </form>
+  </mat-sidenav-content>
+</mat-sidenav-container>

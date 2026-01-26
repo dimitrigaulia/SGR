@@ -23,6 +23,12 @@ import { ToastService } from '../../../../core/services/toast.service';
 import { UploadService, UploadResponse } from '../../../../features/usuarios/services/upload.service';
 import { MatCardModule } from '@angular/material/card';
 import { environment } from '../../../../../environments/environment';
+import { MatTabsModule } from '@angular/material/tabs';
+import { MatAccordion, MatExpansionModule } from '@angular/material/expansion';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatSidenavModule } from '@angular/material/sidenav';
+import { MatDividerModule } from '@angular/material/divider';
 
 type ReceitaItemFormModel = {
   insumoId: number | null;
@@ -39,7 +45,7 @@ type ReceitaItemFormModel = {
 @Component({
   standalone: true,
   selector: 'app-tenant-receita-form',
-  imports: [CommonModule, FormsModule, MatCardModule, RouterLink, MatFormFieldModule, MatInputModule, MatButtonModule, MatSelectModule, MatSlideToggleModule, MatSnackBarModule, MatTableModule, MatIconModule, MatCheckboxModule, MatTooltipModule],
+  imports: [CommonModule, FormsModule, MatCardModule, MatTabsModule, MatSidenavModule, MatDividerModule, MatAccordion, MatExpansionModule, MatToolbarModule, MatChipsModule, RouterLink, MatFormFieldModule, MatInputModule, MatButtonModule, MatSelectModule, MatSlideToggleModule, MatSnackBarModule, MatTableModule, MatIconModule, MatCheckboxModule, MatTooltipModule],
   templateUrl: './receita-form.component.html',
   styleUrls: ['./receita-form.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush

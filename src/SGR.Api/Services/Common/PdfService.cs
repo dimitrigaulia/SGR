@@ -30,77 +30,254 @@ public class PdfService
                 page.DefaultTextStyle(x => x.FontSize(10).FontFamily("Arial"));
 
                 page.Header()
-                    .Text($"Receita: {receita.Nome}")
-                    .SemiBold()
-                    .FontSize(18)
-                    .AlignCenter()
-                    .FontColor(Colors.Blue.Darken2);
+                    .Column(headerColumn =>
+                    {
+                        headerColumn.Item()
+                            .Text($"Receita: {receita.Nome}")
+                            .SemiBold()
+                            .FontSize(18)
+                            .AlignCenter()
+                            .FontColor(Colors.Blue.Darken2);
+                        
+                        if (!string.IsNullOrWhiteSpace(receita.Versao))
+                        {
+                            headerColumn.Item()
+                                .Text($"Versão {receita.Versao}")
+                                .FontSize(10)
+                                .AlignCenter()
+                                .FontColor(Colors.Grey.Darken1);
+                        }
+                    });
 
                 page.Content()
                     .Column(column =>
                     {
                         column.Spacing(10);
 
-                        // Informações gerais
-                        column.Item().PaddingBottom(5).Column(infoColumn =>
+                        // Cards de resumo operacional
+                        column.Item().PaddingBottom(5).Row(row =>
                         {
-                            infoColumn.Item().Text($"Categoria: {receita.CategoriaNome ?? "N/A"}");
-                            infoColumn.Item().Text($"Rendimento: {receita.Rendimento} porções");
-                            if (receita.PesoPorPorcao.HasValue)
+                            row.RelativeItem().BorderColor(Colors.Grey.Lighten2).Border(1).Padding(8).Column(card =>
                             {
-                                infoColumn.Item().Text($"Peso por porção: {FormatarQuantidade(receita.PesoPorPorcao.Value, "GR")}");
-                            }
+                                card.Item().Text("Categoria").FontSize(9).FontColor(Colors.Grey.Darken1);
+                                card.Item().Text(receita.CategoriaNome ?? "N/A").FontSize(11).SemiBold();
+                            });
+                            
+                            row.RelativeItem().BorderColor(Colors.Grey.Lighten2).Border(1).Padding(8).Column(card =>
+                            {
+                                card.Item().Text("Rendimento").FontSize(9).FontColor(Colors.Grey.Darken1);
+                                card.Item().Text($"{receita.Rendimento:F2} porções").FontSize(11).SemiBold();
+                            });
+                            
+                            row.RelativeItem().BorderColor(Colors.Grey.Lighten2).Border(1).Padding(8).Column(card =>
+                            {
+                                card.Item().Text("Peso por Porção").FontSize(9).FontColor(Colors.Grey.Darken1);
+                                var peso = receita.PesoPorPorcao.HasValue 
+                                    ? FormatarQuantidade(receita.PesoPorPorcao.Value, "GR") 
+                                    : "-";
+                                card.Item().Text(peso).FontSize(11).SemiBold();
+                            });
+                            
+                            row.RelativeItem().BorderColor(Colors.Grey.Lighten2).Border(1).Padding(8).Column(card =>
+                            {
+                                card.Item().Text("Tempo de Preparo").FontSize(9).FontColor(Colors.Grey.Darken1);
+                                var tempo = receita.TempoPreparo.HasValue 
+                                    ? $"{receita.TempoPreparo.Value} min" 
+                                    : "-";
+                                card.Item().Text(tempo).FontSize(11).SemiBold();
+                            });
                         });
+
+                        // IC (Índice de Cocção) - informação importante
+                        if (!string.IsNullOrWhiteSpace(receita.IcSinal) && receita.IcValor.HasValue && receita.IcValor.Value > 0)
+                        {
+                            column.Item().PaddingVertical(5).Row(row =>
+                            {
+                                row.RelativeItem().BorderColor(Colors.Orange.Lighten2).Border(1).Padding(8).Column(card =>
+                                {
+                                    card.Item().Text("Índice de Cocção (IC)").FontSize(9).FontColor(Colors.Grey.Darken1);
+                                    var icTexto = receita.IcSinal == "-" ? "Perda" : "Ganho";
+                                    card.Item().Text($"{icTexto}: {receita.IcValor.Value:F2}% (Fator: {receita.FatorRendimento:F4})").FontSize(10).SemiBold();
+                                });
+                            });
+                        }
 
                         // Custos
-                        column.Item().PaddingVertical(5).Column(custoColumn =>
+                        column.Item().PaddingVertical(5).Row(row =>
                         {
-                            custoColumn.Item().Text($"Custo total: {FormatarMoeda(receita.CustoTotal)}").SemiBold();
-                            custoColumn.Item().Text($"Custo por porção: {FormatarMoeda(receita.CustoPorPorcao)}").SemiBold();
+                            row.RelativeItem().Background(Colors.Blue.Lighten4).Padding(8).Column(card =>
+                            {
+                                card.Item().Text("Custo Total").FontSize(9).FontColor(Colors.Grey.Darken2);
+                                card.Item().Text(FormatarMoeda(receita.CustoTotal)).FontSize(14).SemiBold().FontColor(Colors.Blue.Darken2);
+                            });
+                            
+                            row.RelativeItem().Background(Colors.Green.Lighten4).Padding(8).Column(card =>
+                            {
+                                card.Item().Text("Custo por Porção").FontSize(9).FontColor(Colors.Grey.Darken2);
+                                card.Item().Text(FormatarMoeda(receita.CustoPorPorcao)).FontSize(14).SemiBold().FontColor(Colors.Green.Darken2);
+                            });
                         });
 
-                        // Tabela de itens
-                        column.Item().PaddingTop(10).Table(table =>
+                        // Ingredientes agrupados por tipo
+                        column.Item().PaddingTop(10).Text("Ingredientes").SemiBold().FontSize(14).FontColor(Colors.Blue.Darken2);
+                        
+                        // Agrupar por tipo de unidade
+                        var itensPeso = receita.Itens.Where(i => i.UnidadeMedidaSigla?.ToUpper() == "GR" || i.UnidadeMedidaSigla?.ToUpper() == "KG").OrderBy(i => i.Ordem).ToList();
+                        var itensVolume = receita.Itens.Where(i => i.UnidadeMedidaSigla?.ToUpper() == "ML" || i.UnidadeMedidaSigla?.ToUpper() == "L").OrderBy(i => i.Ordem).ToList();
+                        var itensUnidade = receita.Itens.Where(i => i.UnidadeMedidaSigla?.ToUpper() == "UN").OrderBy(i => i.Ordem).ToList();
+
+                        if (itensPeso.Any())
                         {
-                            table.ColumnsDefinition(columns =>
+                            column.Item().PaddingTop(8).Column(section =>
                             {
-                                columns.RelativeColumn(0.5f); // #
-                                columns.RelativeColumn(2.5f); // Insumo
-                                columns.RelativeColumn(1.5f); // Quantidade
-                                columns.RelativeColumn(1.5f); // Custo
+                                section.Item().Text("Peso (GR)").SemiBold().FontSize(11).FontColor(Colors.Grey.Darken2);
+                                section.Item().PaddingTop(3).Table(table =>
+                                {
+                                    table.ColumnsDefinition(columns =>
+                                    {
+                                        columns.RelativeColumn(3f);    // Insumo
+                                        columns.RelativeColumn(1.2f);  // Quantidade
+                                        columns.RelativeColumn(1.2f);  // Custo/unidade
+                                        columns.RelativeColumn(1f);    // Custo item
+                                    });
+
+                                    table.Header(header =>
+                                    {
+                                        header.Cell().Element(CellStyleLight).Text("Insumo").FontSize(9).SemiBold();
+                                        header.Cell().Element(CellStyleLight).Text("Quantidade").FontSize(9).SemiBold();
+                                        header.Cell().Element(CellStyleLight).Text("Custo/un uso").FontSize(9).SemiBold();
+                                        header.Cell().Element(CellStyleLight).Text("Custo").FontSize(9).SemiBold();
+                                    });
+
+                                    foreach (var item in itensPeso)
+                                    {
+                                        var qtdDisplay = item.ExibirComoQB ? "QB" : FormatarQuantidade(item.Quantidade, item.UnidadeMedidaSigla);
+                                        var custoPorUnidade = item.CustoPorUnidadeUso.HasValue 
+                                            ? FormatarMoeda(item.CustoPorUnidadeUso.Value) + "/g" 
+                                            : "-";
+                                        
+                                        table.Cell().Element(CellStyleLight).Text(item.InsumoNome ?? "").FontSize(9);
+                                        table.Cell().Element(CellStyleLight).Text(qtdDisplay).FontSize(9);
+                                        table.Cell().Element(CellStyleLight).Text(custoPorUnidade).FontSize(8);
+                                        table.Cell().Element(CellStyleLight).Text(FormatarMoeda(item.CustoItem)).FontSize(9);
+                                    }
+                                });
                             });
+                        }
 
-                            // Cabeçalho
-                            table.Header(header =>
+                        if (itensVolume.Any())
+                        {
+                            column.Item().PaddingTop(8).Column(section =>
                             {
-                                header.Cell().Element(CellStyle).Text("#").SemiBold();
-                                header.Cell().Element(CellStyle).Text("Insumo").SemiBold();
-                                header.Cell().Element(CellStyle).Text("Quantidade").SemiBold();
-                                header.Cell().Element(CellStyle).Text("Custo do item").SemiBold();
+                                section.Item().Text("Volume (ML)").SemiBold().FontSize(11).FontColor(Colors.Grey.Darken2);
+                                section.Item().PaddingTop(3).Table(table =>
+                                {
+                                    table.ColumnsDefinition(columns =>
+                                    {
+                                        columns.RelativeColumn(3f);
+                                        columns.RelativeColumn(1.2f);
+                                        columns.RelativeColumn(1.2f);
+                                        columns.RelativeColumn(1f);
+                                    });
+
+                                    table.Header(header =>
+                                    {
+                                        header.Cell().Element(CellStyleLight).Text("Insumo").FontSize(9).SemiBold();
+                                        header.Cell().Element(CellStyleLight).Text("Quantidade").FontSize(9).SemiBold();
+                                        header.Cell().Element(CellStyleLight).Text("Custo/un uso").FontSize(9).SemiBold();
+                                        header.Cell().Element(CellStyleLight).Text("Custo").FontSize(9).SemiBold();
+                                    });
+
+                                    foreach (var item in itensVolume)
+                                    {
+                                        var qtdDisplay = item.ExibirComoQB ? "QB" : FormatarQuantidade(item.Quantidade, item.UnidadeMedidaSigla);
+                                        var custoPorUnidade = item.CustoPorUnidadeUso.HasValue 
+                                            ? FormatarMoeda(item.CustoPorUnidadeUso.Value) + "/mL" 
+                                            : "-";
+                                        
+                                        table.Cell().Element(CellStyleLight).Text(item.InsumoNome ?? "").FontSize(9);
+                                        table.Cell().Element(CellStyleLight).Text(qtdDisplay).FontSize(9);
+                                        table.Cell().Element(CellStyleLight).Text(custoPorUnidade).FontSize(8);
+                                        table.Cell().Element(CellStyleLight).Text(FormatarMoeda(item.CustoItem)).FontSize(9);
+                                    }
+                                });
                             });
+                        }
 
-                            // Linhas de dados
-                            for (int i = 0; i < receita.Itens.Count; i++)
+                        if (itensUnidade.Any())
+                        {
+                            column.Item().PaddingTop(8).Column(section =>
                             {
-                                var item = receita.Itens[i];
-                                var quantidadeDisplay = item.ExibirComoQB 
-                                    ? "QB" 
-                                    : FormatarQuantidade(item.Quantidade, item.UnidadeMedidaSigla);
+                                section.Item().Text("Unidade (UN)").SemiBold().FontSize(11).FontColor(Colors.Grey.Darken2);
+                                section.Item().PaddingTop(3).Table(table =>
+                                {
+                                    table.ColumnsDefinition(columns =>
+                                    {
+                                        columns.RelativeColumn(3f);
+                                        columns.RelativeColumn(1.2f);
+                                        columns.RelativeColumn(1.2f);
+                                        columns.RelativeColumn(1f);
+                                    });
 
-                                table.Cell().Element(CellStyle).Text((i + 1).ToString());
-                                table.Cell().Element(CellStyle).Text(item.InsumoNome ?? "");
-                                table.Cell().Element(CellStyle).Text(quantidadeDisplay);
-                                table.Cell().Element(CellStyle).Text(FormatarMoeda(item.CustoItem));
-                            }
-                        });
+                                    table.Header(header =>
+                                    {
+                                        header.Cell().Element(CellStyleLight).Text("Insumo").FontSize(9).SemiBold();
+                                        header.Cell().Element(CellStyleLight).Text("Quantidade").FontSize(9).SemiBold();
+                                        header.Cell().Element(CellStyleLight).Text("Custo/un uso").FontSize(9).SemiBold();
+                                        header.Cell().Element(CellStyleLight).Text("Custo").FontSize(9).SemiBold();
+                                    });
+
+                                    foreach (var item in itensUnidade)
+                                    {
+                                        var qtdDisplay = item.ExibirComoQB ? "QB" : FormatarQuantidade(item.Quantidade, item.UnidadeMedidaSigla);
+                                        var custoPorUnidade = item.CustoPorUnidadeUso.HasValue 
+                                            ? FormatarMoeda(item.CustoPorUnidadeUso.Value) + "/un" 
+                                            : "-";
+                                        
+                                        table.Cell().Element(CellStyleLight).Text(item.InsumoNome ?? "").FontSize(9);
+                                        table.Cell().Element(CellStyleLight).Text(qtdDisplay).FontSize(9);
+                                        table.Cell().Element(CellStyleLight).Text(custoPorUnidade).FontSize(8);
+                                        table.Cell().Element(CellStyleLight).Text(FormatarMoeda(item.CustoItem)).FontSize(9);
+                                    }
+                                });
+                            });
+                        }
+
+                        // Observações dos itens (se houver)
+                        var itensComObs = receita.Itens.Where(i => !string.IsNullOrWhiteSpace(i.Observacoes)).ToList();
+                        if (itensComObs.Any())
+                        {
+                            column.Item().PaddingTop(10).Column(obsSection =>
+                            {
+                                obsSection.Item().Text("Observações dos Ingredientes").SemiBold().FontSize(11).FontColor(Colors.Grey.Darken2);
+                                foreach (var item in itensComObs)
+                                {
+                                    obsSection.Item().PaddingTop(3).Text(text =>
+                                    {
+                                        text.Span($"• {item.InsumoNome}: ").SemiBold().FontSize(9);
+                                        text.Span(item.Observacoes).FontSize(9);
+                                    });
+                                }
+                            });
+                        }
 
                         // Modo de preparo
                         if (!string.IsNullOrWhiteSpace(receita.Descricao))
                         {
                             column.Item().PaddingTop(15).Column(prepColumn =>
                             {
-                                prepColumn.Item().Text("Modo de preparo").SemiBold().FontSize(12);
-                                prepColumn.Item().PaddingTop(5).Text(receita.Descricao);
+                                prepColumn.Item().Text("Modo de Preparo").SemiBold().FontSize(14).FontColor(Colors.Blue.Darken2);
+                                prepColumn.Item().PaddingTop(5).Text(receita.Descricao).FontSize(10).LineHeight(1.4f);
+                            });
+                        }
+
+                        // Instruções de Empratamento
+                        if (!string.IsNullOrWhiteSpace(receita.InstrucoesEmpratamento))
+                        {
+                            column.Item().PaddingTop(10).Column(emprataColumn =>
+                            {
+                                emprataColumn.Item().Text("Empratamento").SemiBold().FontSize(12).FontColor(Colors.Grey.Darken2);
+                                emprataColumn.Item().PaddingTop(5).Text(receita.InstrucoesEmpratamento).FontSize(10).LineHeight(1.4f);
                             });
                         }
 
@@ -109,8 +286,8 @@ public class PdfService
                         {
                             column.Item().PaddingTop(10).Column(consColumn =>
                             {
-                                consColumn.Item().Text("Conservação").SemiBold().FontSize(12);
-                                consColumn.Item().PaddingTop(5).Text(receita.Conservacao);
+                                consColumn.Item().Text("Conservação / Armazenamento").SemiBold().FontSize(12).FontColor(Colors.Grey.Darken2);
+                                consColumn.Item().PaddingTop(5).Text(receita.Conservacao).FontSize(10).LineHeight(1.4f);
                             });
                         }
                     });
@@ -121,6 +298,11 @@ public class PdfService
                     {
                         x.Span("Gerado em: ").FontSize(8).FontColor(Colors.Grey.Medium);
                         x.Span(DateTime.Now.ToString("dd/MM/yyyy HH:mm")).SemiBold().FontSize(8).FontColor(Colors.Grey.Medium);
+                        if (receita.IsAtivo)
+                        {
+                            x.Span(" • ").FontSize(8).FontColor(Colors.Grey.Medium);
+                            x.Span("Ativo").FontSize(8).FontColor(Colors.Green.Medium);
+                        }
                     });
             });
         })
@@ -467,6 +649,18 @@ public class PdfService
             .BorderBottom(1)
             .BorderColor(Colors.Grey.Lighten1)
             .PaddingVertical(5)
+            .PaddingHorizontal(5);
+    }
+
+    /// <summary>
+    /// Estilo para células de tabela (versão mais leve)
+    /// </summary>
+    private static IContainer CellStyleLight(IContainer container)
+    {
+        return container
+            .BorderBottom(0.5f)
+            .BorderColor(Colors.Grey.Lighten2)
+            .PaddingVertical(4)
             .PaddingHorizontal(5);
     }
 
