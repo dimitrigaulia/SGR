@@ -82,16 +82,24 @@
           <mat-card-title>Precificação (cadastro)</mat-card-title>
           <mat-card-content class="grid">
             <mat-form-field appearance="outline">
-              <mat-label>Markup Mesa (Índice Contábil)</mat-label>
+              <mat-label>Markup (multiplicador)</mat-label>
               <input matInput type="number" name="indiceContabil" [(ngModel)]="model.indiceContabil"
                      [disabled]="isView()" required min="0.01" step="0.01" />
-              <mat-hint>Preço mesa = custo por porção × markup</mat-hint>
+              <mat-hint>Preço mesa = custo × markup</mat-hint>
               @if (f.controls['indiceContabil']?.errors?.['required']) {
-                <mat-error>Markup Mesa é obrigatório</mat-error>
+                <mat-error>Markup é obrigatório</mat-error>
               }
               @if (f.controls['indiceContabil']?.errors?.['min']) {
-                <mat-error>Markup Mesa deve ser maior que zero</mat-error>
+                <mat-error>Markup deve ser maior que zero</mat-error>
               }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Forma de venda</mat-label>
+              <mat-select name="formaVenda" [(ngModel)]="model.formaVenda" [disabled]="isView()">
+                <mat-option value="porcao">Porção em gr/ml</mat-option>
+                <mat-option value="unidade">Unidade</mat-option>
+              </mat-select>
             </mat-form-field>
 
             <mat-form-field appearance="outline">
@@ -103,7 +111,7 @@
         </mat-card>
 
         <!-- Card: Porção de venda -->
-        <mat-card class="card">
+        <mat-card class="card" *ngIf="isView() || model.formaVenda === 'porcao'">
           <mat-card-title>Porção de venda (1 venda = quanto?)</mat-card-title>
           <mat-card-content class="grid">
             <mat-form-field appearance="outline">
@@ -130,26 +138,26 @@
           </mat-card-content>
         </mat-card>
 
-        <!-- Card: Índices -->
+        <!-- Card: Perdas e cocção -->
         <mat-card class="card">
-          <mat-card-title>Índices (IC / IPC)</mat-card-title>
+          <mat-card-title>Perdas e Cocção</mat-card-title>
           <mat-card-content class="grid">
             <mat-form-field appearance="outline">
-              <mat-label>IC Operador</mat-label>
+              <mat-label>Cocção altera o peso?</mat-label>
               <mat-select name="icOperador" [(ngModel)]="model.icOperador" [disabled]="isView()">
-                <mat-option [value]="null">Nenhum</mat-option>
-                <mat-option value="+">+ (Aumenta)</mat-option>
-                <mat-option value="-">- (Diminui)</mat-option>
+                <mat-option [value]="null">Não aplicar</mat-option>
+                <mat-option value="+">Aumenta</mat-option>
+                <mat-option value="-">Diminui</mat-option>
               </mat-select>
             </mat-form-field>
 
             <mat-form-field appearance="outline">
-              <mat-label>IC Valor (%)</mat-label>
+              <mat-label>Variação na cocção (%)</mat-label>
               <input matInput type="number" name="icValor" [(ngModel)]="model.icValor" [disabled]="isView()" min="0" max="9999" step="1" />
             </mat-form-field>
 
             <mat-form-field appearance="outline">
-              <mat-label>IPC Valor (%)</mat-label>
+              <mat-label>Aproveitamento (%)</mat-label>
               <input matInput type="number" name="ipcValor" [(ngModel)]="model.ipcValor" [disabled]="isView()" min="0" max="999" step="1" />
               <mat-hint>100 = sem perda; 90 = 10% de perda (parte aproveitável)</mat-hint>
             </mat-form-field>
@@ -157,7 +165,7 @@
         </mat-card>
 
         <!-- Card: Produção -->
-        <mat-card class="card">
+        <mat-card class="card" *ngIf="isView() || model.formaVenda === 'unidade'">
           <mat-card-title>Produção (Rendimento do lote)</mat-card-title>
           <mat-card-content class="grid">
             <mat-form-field appearance="outline">
@@ -385,6 +393,10 @@
                 <div class="kpi-value">{{ formatCurrency(custoTotalCalculado) }}</div>
               </div>
               <div class="kpi">
+                <div class="kpi-label">Custo por gr/ml</div>
+                <div class="kpi-value">{{ formatNumber(custoPorGmlCalculado) }}</div>
+              </div>
+              <div class="kpi">
                 <div class="kpi-label">Preço mesa</div>
                 <div class="kpi-value">
                   @if (precoMesaCalculado === null) { — } @else { {{ formatCurrency(precoMesaCalculado) }} }
@@ -581,9 +593,17 @@
               <mat-card-content>
                 <!-- Modo unidade (rendimentoPorcoesNumero) -->
                 @if (fichaDtoCompleto()?.rendimentoPorcoesNumero && (fichaDtoCompleto()?.rendimentoPorcoesNumero ?? 0) > 0) {
-                  <div class="mini-label">1 Unidade =</div>
+                  <div class="mini-label">Rendimento do lote</div>
                   <div class="mid">
                     {{ fichaDtoCompleto()!.rendimentoPorcoesNumero }} {{ fichaDtoCompleto()!.rendimentoPorcoes || 'unidades' }}
+                  </div>
+                  <div class="mini-label mt8">1 venda</div>
+                  <div class="mid">
+                    @if (fichaDtoCompleto()!.porcaoVendaQuantidade) {
+                      {{ formatQuantidadeExibicao(fichaDtoCompleto()!.porcaoVendaQuantidade, getUnidadePorcao().unidade) }}
+                    } @else {
+                      —
+                    }
                   </div>
                   <div class="mini-label mt8">Custo por unidade</div>
                   <div class="mid">
@@ -663,7 +683,7 @@
                   </ng-container>
 
                   <ng-container matColumnDef="pesoPorUn">
-                    <th mat-header-cell *matHeaderCellDef>Peso/UN (g)</th>
+                    <th mat-header-cell *matHeaderCellDef>{{ hasReceitaItems ? 'Peso por preparo' : 'Peso/UN (gr)' }}</th>
                     <td mat-cell *matCellDef="let item">
                       @if (item.pesoPorUnidadeGml !== null && item.pesoPorUnidadeGml !== undefined) {
                         {{ formatNumber(item.pesoPorUnidadeGml) }}
@@ -675,7 +695,7 @@
                   </ng-container>
 
                   <ng-container matColumnDef="pesoItem">
-                    <th mat-header-cell *matHeaderCellDef>Peso item (g/ml)</th>
+                    <th mat-header-cell *matHeaderCellDef>{{ hasReceitaItems ? 'Peso total do preparo' : 'Peso item (gr/ml)' }}</th>
                     <td mat-cell *matCellDef="let item">{{ formatNumber(item.pesoItemGml || 0) }}</td>
                     <td mat-footer-cell *matFooterCellDef>
                       <strong>{{ formatNumber(fichaDtoCompleto()!.pesoTotalBase ?? 0) }}</strong>

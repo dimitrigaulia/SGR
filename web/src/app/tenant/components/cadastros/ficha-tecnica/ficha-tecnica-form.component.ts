@@ -107,6 +107,8 @@ export class TenantFichaTecnicaFormComponent {
     porcaoVendaUnidadeMedidaId: null as number | null,
     rendimentoPorcoes: null as string | null,
     rendimentoPorcoesNumero: null as number | null,
+    // UI-only selector to choose how the product is sold in cadastro
+    formaVenda: 'porcao' as 'porcao' | 'unidade',
     tempoPreparo: null as number | null,
     isAtivo: true
   };
@@ -244,12 +246,19 @@ export class TenantFichaTecnicaFormComponent {
     return pesoComestivel > 0 ? pesoComestivel : null;
   }
 
-  get custoPorUnidadeCalculado(): number {
+  // Renamed to clarify this is cost per gr/mL (equivalência)
+  get custoPorGmlCalculado(): number {
     const rendimentoFinal = this.rendimentoFinalCalculado;
     if (rendimentoFinal !== null && rendimentoFinal > 0) {
       return Math.round((this.custoTotalCalculado / rendimentoFinal) * 10000) / 10000;
     }
     return 0;
+  }
+
+  // Helper used by template to decide composition headers when there are Receitas
+  get hasReceitaItems(): boolean {
+    const dto = this.fichaDtoCompleto();
+    return !!(dto && dto.itens && dto.itens.some((i: any) => i.tipoItem === 'Receita'));
   }
 
   get hasPorcao(): boolean {
@@ -284,7 +293,7 @@ export class TenantFichaTecnicaFormComponent {
       return null;
     }
 
-    const custoPorUnidade = this.custoPorUnidadeCalculado;
+    const custoPorUnidade = this.custoPorGmlCalculado;
     if (this.model.indiceContabil && this.model.indiceContabil > 0 && custoPorUnidade > 0) {
       return Math.round(custoPorUnidade * this.model.indiceContabil * 10000) / 10000;
     }
@@ -486,9 +495,9 @@ export class TenantFichaTecnicaFormComponent {
 
   private obterConversaoUnidade(sigla: string): { fator: number; siglaExibicao: string } {
     const upper = sigla.toUpperCase();
-    if (upper === 'KG') return { fator: 1000, siglaExibicao: 'g' };
+    if (upper === 'KG') return { fator: 1000, siglaExibicao: 'gr' };
     if (upper === 'L') return { fator: 1000, siglaExibicao: 'mL' };
-    if (upper === 'GR') return { fator: 1, siglaExibicao: 'g' };
+    if (upper === 'GR') return { fator: 1, siglaExibicao: 'gr' };
     if (upper === 'ML') return { fator: 1, siglaExibicao: 'mL' };
     return { fator: 1, siglaExibicao: sigla || '-' };
   }
@@ -631,29 +640,29 @@ export class TenantFichaTecnicaFormComponent {
     
     // Fallback final: se não encontrou ID, retornar genérico
     if (!unidadeId) {
-      return { unidade: 'GR/ML', unidadePreco: 'R$/kg ou L' };
+      return { unidade: 'gr/ml', unidadePreco: 'R$/kg ou L' };
     }
     
     // Se unidades() ainda não carregou, retornar fallback
     if (this.unidades().length === 0) {
-      return { unidade: 'GR/ML', unidadePreco: 'R$/kg ou L' };
+      return { unidade: 'gr/ml', unidadePreco: 'R$/kg ou L' };
     }
     
     // Buscar a unidade na lista unidades() e obter a sigla
     const unidade = this.unidades().find(u => u.id === unidadeId);
     if (!unidade) {
-      return { unidade: 'GR/ML', unidadePreco: 'R$/kg ou L' };
+      return { unidade: 'gr/ml', unidadePreco: 'R$/kg ou L' };
     }
     
     const sigla = unidade.sigla.toUpperCase();
     if (sigla === 'GR') {
-      return { unidade: 'g', unidadePreco: 'R$/kg' };
+      return { unidade: 'gr', unidadePreco: 'R$/kg' };
     } else if (sigla === 'ML') {
       return { unidade: 'mL', unidadePreco: 'R$/L' };
     }
     
     // Fallback final
-    return { unidade: 'GR/ML', unidadePreco: 'R$/kg ou L' };
+    return { unidade: 'gr/ml', unidadePreco: 'R$/kg ou L' };
   }
 
   isUnidadeTravada(item: FichaTecnicaItemFormModel): boolean {
@@ -782,7 +791,7 @@ export class TenantFichaTecnicaFormComponent {
 
     // Validação: indiceContabil é obrigatório e deve ser maior que zero
     if (!v.indiceContabil || v.indiceContabil <= 0) {
-      this.toast.error('Informe o Markup Mesa (deve ser maior que zero)');
+      this.toast.error('Informe o Markup (deve ser maior que zero)');
       return;
     }
 
@@ -994,8 +1003,11 @@ export class TenantFichaTecnicaFormComponent {
             rendimentoPorcoes: e.rendimentoPorcoes ?? null,
             rendimentoPorcoesNumero: e.rendimentoPorcoesNumero ?? null,
             tempoPreparo: e.tempoPreparo ?? null,
+            // set formaVenda based on DTO content so model is fully populated
+            formaVenda: (e.porcaoVendaQuantidade && e.porcaoVendaQuantidade > 0) ? 'porcao' : 'unidade',
             isAtivo: e.isAtivo
           };
+          
           this.itens.set(e.itens.map(i => ({
             id: i.id,
             tipoItem: i.tipoItem as 'Receita' | 'Insumo',
@@ -1102,7 +1114,7 @@ export class TenantFichaTecnicaFormComponent {
         if (!pesoUn || pesoUn <= 0) return null;
 
         const total = qtd * pesoUn;
-        const un = 'g'; // se você tiver insumo.pesoPorUnidade em mL para líquidos, ajuste aqui.
+        const un = 'gr'; // se você tiver insumo.pesoPorUnidade em mL para líquidos, ajuste aqui.
         const f = (n: number) => new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 2 }).format(n);
 
         // Ex.: "1 UN = 50 g • Total: 2 UN = 100 g"
@@ -1110,8 +1122,8 @@ export class TenantFichaTecnicaFormComponent {
       }
 
       // Se já veio em GR/ML, pode exibir como "peso real"
-      if (sigla === 'GR' || sigla === 'ML' || sigla === 'G' || sigla === 'M' ) {
-        const unit = sigla === 'ML' ? 'mL' : 'g';
+      if (sigla === 'GR' || sigla === 'ML') {
+        const unit = sigla === 'ML' ? 'mL' : 'gr';
         const f = (n: number) => new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 2 }).format(n);
         return `Total: ${f(qtd)} ${unit}`;
       }
