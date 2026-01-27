@@ -98,7 +98,6 @@ export class TenantFichaTecnicaFormComponent {
     nome: '',
     codigo: '',
     descricaoComercial: '',
-    indiceContabil: 1.0 as number | null,
     icOperador: null as string | null,
     icValor: null as number | null,
     ipcValor: null as number | null,
@@ -114,8 +113,8 @@ export class TenantFichaTecnicaFormComponent {
 
   itens = signal<FichaTecnicaItemFormModel[]>([]);
   canais = signal<FichaTecnicaCanalFormModel[]>([]);
-  displayedColumnsItens = ['ordem', 'tipo', 'item', 'quantidade', 'peso', 'unidade', 'qb', 'acoes'];
-  displayedColumns = ['canal', 'nomeExibicao', 'precoVenda', 'taxas', 'porcentagem', 'acoes'];
+  displayedColumnsItens = ['ordem', 'tipo', 'item', 'quantidade', 'unidade', 'qb', 'acoes'];
+  displayedColumns = ['canal', 'nomeExibicao', 'precoVenda', 'taxas', 'acoes'];
   
   // Propriedades para uso no template
   environment = environment;
@@ -280,9 +279,13 @@ export class TenantFichaTecnicaFormComponent {
     const rendimentoPorcoesNumero = this.model.rendimentoPorcoesNumero ?? dto?.rendimentoPorcoesNumero ?? null;
     if (rendimentoPorcoesNumero && rendimentoPorcoesNumero > 0) {
       const custoTotal = this.custoTotalCalculado;
-      if (this.model.indiceContabil && this.model.indiceContabil > 0 && custoTotal > 0) {
-        const custoPorUnidadeVendida = custoTotal / rendimentoPorcoesNumero;
-        return Math.round(custoPorUnidadeVendida * this.model.indiceContabil * 10000) / 10000;
+      const custoPorUnidadeVendida = custoTotal > 0 ? custoTotal / rendimentoPorcoesNumero : null;
+      if (custoPorUnidadeVendida !== null && custoPorUnidadeVendida > 0) {
+        const margem = this.model.margemAlvoPercentual ?? dto?.margemAlvoPercentual ?? null;
+        if (margem !== null && margem > 0 && margem < 100) {
+          const divisor = 1 - (margem / 100);
+          return Math.round((custoPorUnidadeVendida / divisor) * 10000) / 10000;
+        }
       }
       return null;
     }
@@ -294,8 +297,10 @@ export class TenantFichaTecnicaFormComponent {
     }
 
     const custoPorUnidade = this.custoPorGmlCalculado;
-    if (this.model.indiceContabil && this.model.indiceContabil > 0 && custoPorUnidade > 0) {
-      return Math.round(custoPorUnidade * this.model.indiceContabil * 10000) / 10000;
+    const margem = this.model.margemAlvoPercentual ?? dto?.margemAlvoPercentual ?? null;
+    if (margem !== null && margem > 0 && margem < 100 && custoPorUnidade > 0) {
+      const divisor = 1 - (margem / 100);
+      return Math.round((custoPorUnidade / divisor) * 10000) / 10000;
     }
     return null;
   }
@@ -361,6 +366,14 @@ export class TenantFichaTecnicaFormComponent {
         next: res => {
           this.canaisVenda.set(res.items.filter(c => c.isAtivo));
           this.cdr.markForCheck();
+
+          // Inicializar canais padrão para novo cadastro (iFood1 e iFood2)
+          // Só quando estivermos criando (id == null) e não houver canais já setados
+          if (!this.id() && this.canais().length === 0) {
+            // Usar presets para garantir consistência mesmo sem registros em canaisVenda
+            this.addCanalPreset('IFOOD1');
+            this.addCanalPreset('IFOOD2');
+          }
         }
       });
 
@@ -436,6 +449,8 @@ export class TenantFichaTecnicaFormComponent {
       observacoes: ''
     }]);
     this.cdr.markForCheck();
+    // Ao adicionar item, recalcular preços dos canais automaticamente (forçar override)
+    this.recalcCanaisPreco(true);
   }
 
   removeItem(index: number) {
@@ -447,6 +462,8 @@ export class TenantFichaTecnicaFormComponent {
     });
     this.itens.set(newItens);
     this.cdr.markForCheck();
+    // Atualizar preços após remoção (forçar override)
+    this.recalcCanaisPreco(true);
   }
 
   setUnidadeGramas(item: FichaTecnicaItemFormModel) {
@@ -481,6 +498,8 @@ export class TenantFichaTecnicaFormComponent {
     // Atualizar signal para forçar recálculo dos getters
     this.itens.set([...this.itens()]);
     this.cdr.markForCheck();
+    // Recalcular preços se necessário (não forçar manualmente definidos)
+    this.recalcCanaisPreco(false);
   }
 
   onSelectReceita(item: FichaTecnicaItemFormModel) {
@@ -488,6 +507,7 @@ export class TenantFichaTecnicaFormComponent {
     // Atualizar signal para forçar recálculo dos getters
     this.itens.set([...this.itens()]);
     this.cdr.markForCheck();
+    this.recalcCanaisPreco(false);
   }
 
   onItemTipoChange(item: FichaTecnicaItemFormModel) {
@@ -501,21 +521,21 @@ export class TenantFichaTecnicaFormComponent {
     // Atualizar signal para forçar recálculo dos getters
     this.itens.set([...this.itens()]);
     this.cdr.markForCheck();
+    this.recalcCanaisPreco(false);
   }
 
   onQuantidadeChange(item: FichaTecnicaItemFormModel) {
     // Atualizar signal para forçar recálculo dos getters
     this.itens.set([...this.itens()]);
     this.cdr.markForCheck();
+    this.recalcCanaisPreco(false);
   }
 
   onICChange() {
     this.cdr.markForCheck();
   }
 
-  onIndiceContabilChange() {
-    this.cdr.markForCheck();
-  }
+
 
   getItemNome(item: FichaTecnicaItemFormModel): string {
     if (item.tipoItem === 'Receita' && item.receitaId) {
@@ -556,6 +576,8 @@ export class TenantFichaTecnicaFormComponent {
     if (!sigla) return '-';
     return this.obterConversaoUnidade(sigla).siglaExibicao;
   }
+
+
 
   getQuantidadeExibicao(item: FichaTecnicaItemFormModel): number {
     const sigla = this.obterSiglaUnidade(item.unidadeMedidaId);
@@ -781,7 +803,7 @@ export class TenantFichaTecnicaFormComponent {
         canalVendaId: canalVenda.id,
         canal: canalVenda.nome,
         nomeExibicao: canalVenda.nome,
-        precoVenda: 0,
+        precoVenda: Math.round((0) * 100) / 100,
         taxaPercentual: canalVenda.taxaPercentualPadrao ?? null,
         comissaoPercentual: null,
         multiplicador: null,
@@ -802,7 +824,7 @@ export class TenantFichaTecnicaFormComponent {
         canalVendaId: null,
         canal: preset.canal,
         nomeExibicao: preset.nomeExibicao,
-        precoVenda: 0,
+        precoVenda: Math.round((0) * 100) / 100,
         taxaPercentual: preset.taxaPercentual ?? null,
         comissaoPercentual: null,
         multiplicador: null,
@@ -811,6 +833,13 @@ export class TenantFichaTecnicaFormComponent {
         isAtivo: true
       }]);
     }
+    this.cdr.markForCheck();
+  }
+
+  onPrecoVendaChange(item: FichaTecnicaCanalFormModel, value: any) {
+    let num = typeof value === 'number' ? value : Number(value);
+    if (!Number.isFinite(num)) num = 0;
+    item.precoVenda = Math.round(num * 100) / 100;
     this.cdr.markForCheck();
   }
 
@@ -827,12 +856,6 @@ export class TenantFichaTecnicaFormComponent {
     const v = this.model;
     if (!v.categoriaId || !v.nome) {
       this.toast.error('Selecione uma categoria e informe o nome');
-      return;
-    }
-
-    // Validação: indiceContabil é obrigatório e deve ser maior que zero
-    if (!v.indiceContabil || v.indiceContabil <= 0) {
-      this.toast.error('Informe o Markup (deve ser maior que zero)');
       return;
     }
 
@@ -868,7 +891,6 @@ export class TenantFichaTecnicaFormComponent {
         nome: v.nome,
         codigo: v.codigo || undefined,
         descricaoComercial: v.descricaoComercial || undefined,
-        indiceContabil: v.indiceContabil!,
         icOperador: v.icOperador || undefined,
         icValor: v.icValor ?? undefined,
         ipcValor: v.ipcValor ?? undefined,
@@ -926,7 +948,6 @@ export class TenantFichaTecnicaFormComponent {
         nome: v.nome,
         codigo: v.codigo || undefined,
         descricaoComercial: v.descricaoComercial || undefined,
-        indiceContabil: v.indiceContabil!,
         icOperador: v.icOperador || undefined,
         icValor: v.icValor ?? undefined,
         ipcValor: v.ipcValor ?? undefined,
@@ -1023,7 +1044,7 @@ export class TenantFichaTecnicaFormComponent {
             nome: e.nome,
             codigo: e.codigo || '',
             descricaoComercial: e.descricaoComercial || '',
-            indiceContabil: e.indiceContabil ?? 1.0,
+
             icOperador: e.icOperador ?? null,
             icValor: e.icValor ?? null,
             ipcValor: e.ipcValor ?? null,
@@ -1053,7 +1074,7 @@ export class TenantFichaTecnicaFormComponent {
             canalVendaId: c.canalVendaId ?? null,
             canal: c.canal,
             nomeExibicao: c.nomeExibicao || '',
-            precoVenda: c.precoVenda,
+            precoVenda: Math.round((c.precoVenda || 0) * 100) / 100,
             taxaPercentual: c.taxaPercentual ?? null,
             comissaoPercentual: c.comissaoPercentual ?? null,
             multiplicador: c.multiplicador ?? null,
@@ -1104,6 +1125,24 @@ export class TenantFichaTecnicaFormComponent {
       return 'Preço definido';
     }
     return '-';
+  }
+
+  // Recalcula os preços dos canais com base no preço sugerido/preco mesa calculado.
+  // Se `force` for true, sobrescreve mesmo preços já definidos; caso contrário só preenche canais sem preço (>0 preservado).
+  private recalcCanaisPreco(force = false) {
+    const preco = this.precoSugeridoVendaCalculado ?? this.precoMesaCalculado ?? null;
+    if (preco === null || preco === undefined) return;
+
+    const atual = this.canais();
+    if (!atual || atual.length === 0) return;
+
+    const rounded = Math.round(preco * 100) / 100;
+    const updated = atual.map(c => {
+      const deveAtualizar = force || !c.precoVenda || c.precoVenda === 0;
+      return deveAtualizar ? { ...c, precoVenda: rounded } : { ...c, precoVenda: Math.round((c.precoVenda || 0) * 100) / 100 };
+    });
+    this.canais.set(updated);
+    this.cdr.markForCheck();
   }
 
   getPorcoesEstimadasOperacao(): string {

@@ -29,12 +29,7 @@ public class FichaTecnica
     public decimal? RendimentoFinal { get; set; }
 
     /// <summary>
-    /// Ãndice contÃ¡bil / markup base aplicado sobre o custo por unidade
-    /// </summary>
-    public decimal? IndiceContabil { get; set; }
-
-    /// <summary>
-    /// PreÃ§o sugerido de venda por unidade, calculado a partir do custo por unidade e do Ã­ndice contÃ¡bil.
+    /// Preço sugerido de venda por unidade (calculado a partir de custo e margem alvo, quando aplicável).
     /// </summary>
     public decimal? PrecoSugeridoVenda { get; set; }
 

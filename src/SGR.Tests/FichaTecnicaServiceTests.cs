@@ -116,8 +116,8 @@ public class FichaTecnicaServiceTests
         {
             CategoriaId = CategoriaReceitaId,
             Nome = "Teste Porcao",
-            IndiceContabil = 3m,
             PorcaoVendaQuantidade = 50m,
+            PrecoSugeridoVenda = 15m,
             PorcaoVendaUnidadeMedidaId = UnidadeGramaId,
             Itens = new List<CreateFichaTecnicaItemRequest>
             {
@@ -159,8 +159,8 @@ public class FichaTecnicaServiceTests
         {
             CategoriaId = CategoriaReceitaId,
             Nome = "Teste Rendimento",
-            IndiceContabil = 2m,
             RendimentoPorcoesNumero = 10m,
+            PrecoSugeridoVenda = 40m,
             Itens = new List<CreateFichaTecnicaItemRequest>
             {
                 new()
@@ -237,5 +237,163 @@ public class FichaTecnicaServiceTests
     {
         var loggerFactory = new LoggerFactory();
         return new FichaTecnicaService(context, loggerFactory.CreateLogger<FichaTecnicaService>());
+    }
+
+    [Fact]
+    public async Task GetAllAsync_preenche_custoPorPorcaoVenda_modo_unidade()
+    {
+        await using var context = CreateContext();
+        context.Insumos.Add(new Insumo
+        {
+            Id = 1,
+            Nome = "Produto",
+            CategoriaId = CategoriaInsumoId,
+            UnidadeCompraId = UnidadeGramaId,
+            QuantidadePorEmbalagem = 1m,
+            CustoUnitario = 100m,
+            IsAtivo = true
+        });
+        await context.SaveChangesAsync();
+
+        var service = CreateService(context);
+        var request = new CreateFichaTecnicaRequest
+        {
+            CategoriaId = CategoriaReceitaId,
+            Nome = "Teste CustoPorPorcaoVenda Unidade",
+            RendimentoPorcoesNumero = 1m,
+            Itens = new List<CreateFichaTecnicaItemRequest>
+            {
+                new()
+                {
+                    TipoItem = "Insumo",
+                    InsumoId = 1,
+                    Quantidade = 1m,
+                    UnidadeMedidaId = UnidadeGramaId,
+                    Ordem = 1
+                }
+            }
+        };
+
+        await service.CreateAsync(request, "teste");
+
+        // Teste GetAllAsync
+        var result = await service.GetAllAsync(null, 1, 10, null, null);
+        
+        Assert.NotEmpty(result.Items);
+        var ficha = result.Items.First();
+        Assert.NotNull(ficha.CustoPorPorcaoVenda);
+        Assert.Equal(100m, ficha.CustoPorPorcaoVenda.Value);
+    }
+
+    [Fact]
+    public async Task GetAllAsync_preenche_custoPorPorcaoVenda_modo_porcao()
+    {
+        await using var context = CreateContext();
+        context.Insumos.Add(new Insumo
+        {
+            Id = 1,
+            Nome = "Produto",
+            CategoriaId = CategoriaInsumoId,
+            UnidadeCompraId = UnidadeGramaId,
+            QuantidadePorEmbalagem = 1000m,
+            CustoUnitario = 100m,
+            IsAtivo = true
+        });
+        await context.SaveChangesAsync();
+
+        var service = CreateService(context);
+        var request = new CreateFichaTecnicaRequest
+        {
+            CategoriaId = CategoriaReceitaId,
+            Nome = "Teste CustoPorPorcaoVenda Porcao",
+            PorcaoVendaQuantidade = 400m,
+            PorcaoVendaUnidadeMedidaId = UnidadeGramaId,
+            Itens = new List<CreateFichaTecnicaItemRequest>
+            {
+                new()
+                {
+                    TipoItem = "Insumo",
+                    InsumoId = 1,
+                    Quantidade = 1000m,
+                    UnidadeMedidaId = UnidadeGramaId,
+                    Ordem = 1
+                }
+            }
+        };
+
+        await service.CreateAsync(request, "teste");
+
+        // Teste GetAllAsync
+        var result = await service.GetAllAsync(null, 1, 10, null, null);
+        
+        Assert.NotEmpty(result.Items);
+        var ficha = result.Items.First();
+        Assert.NotNull(ficha.CustoPorPorcaoVenda);
+        // Esperado: CustoUnitario/QuantidadePorEmbalagem * Quantidade = (100/1000)*1000 = 100 (CustoTotal)
+        // CustoPorPorcaoVenda = (CustoTotal / RendimentoFinal) * PorcaoVendaQuantidade = (100/1000)*400 = 40
+        Assert.Equal(40m, Math.Round(ficha.CustoPorPorcaoVenda.Value, 2));
+    }
+
+    [Fact]
+    public async Task GetAllAsync_ordena_por_custoPorPorcaoVenda_corretamente()
+    {
+        await using var context = CreateContext();
+        context.Insumos.AddRange(
+            new Insumo
+            {
+                Id = 1,
+                Nome = "Produto A",
+                CategoriaId = CategoriaInsumoId,
+                UnidadeCompraId = UnidadeGramaId,
+                QuantidadePorEmbalagem = 1m,
+                CustoUnitario = 100m,
+                IsAtivo = true
+            },
+            new Insumo
+            {
+                Id = 2,
+                Nome = "Produto B",
+                CategoriaId = CategoriaInsumoId,
+                UnidadeCompraId = UnidadeGramaId,
+                QuantidadePorEmbalagem = 1m,
+                CustoUnitario = 200m,
+                IsAtivo = true
+            }
+        );
+        await context.SaveChangesAsync();
+
+        var service = CreateService(context);
+        
+        // Ficha 1: RendimentoPorcoesNumero=1, CustoTotal=100 => custoPorPorcaoVenda=100
+        await service.CreateAsync(new CreateFichaTecnicaRequest
+        {
+            CategoriaId = CategoriaReceitaId,
+            Nome = "Ficha 1",
+            RendimentoPorcoesNumero = 1m,
+            Itens = new List<CreateFichaTecnicaItemRequest>
+            {
+                new() { TipoItem = "Insumo", InsumoId = 1, Quantidade = 1m, UnidadeMedidaId = UnidadeGramaId, Ordem = 1 }
+            }
+        }, "teste");
+
+        // Ficha 2: RendimentoPorcoesNumero=1, CustoTotal=200 => custoPorPorcaoVenda=200
+        await service.CreateAsync(new CreateFichaTecnicaRequest
+        {
+            CategoriaId = CategoriaReceitaId,
+            Nome = "Ficha 2",
+            RendimentoPorcoesNumero = 1m,
+            Itens = new List<CreateFichaTecnicaItemRequest>
+            {
+                new() { TipoItem = "Insumo", InsumoId = 2, Quantidade = 1m, UnidadeMedidaId = UnidadeGramaId, Ordem = 1 }
+            }
+        }, "teste");
+
+        // Ordenar por custoporunidade ASC
+        var result = await service.GetAllAsync(null, 1, 10, "custoporunidade", "asc");
+        
+        var items = result.Items.ToList();
+        Assert.Equal(2, items.Count);
+        Assert.Equal(100m, items[0].CustoPorPorcaoVenda.Value);
+        Assert.Equal(200m, items[1].CustoPorPorcaoVenda.Value);
     }
 }

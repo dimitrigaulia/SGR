@@ -97,7 +97,14 @@
                             <span class="type-badge">{{ item.tipoItem }}</span>
                             <span class="name">{{ item.insumoNome || item.receitaNome || '—' }}</span>
                           </div>
-                          <div class="ingredient-qty">{{ quantidadeDisplayFicha(item) }}</div>
+                          <div class="ingredient-actions">
+                            <div class="ingredient-qty">{{ quantidadeDisplayFicha(item) }}</div>
+                            @if (item.tipoItem === 'Receita' && item.receitaId) {
+                              <button mat-icon-button type="button" (click)="toggleReceitaExpand(item.receitaId!)" matTooltip="Expandir insumos da receita">
+                                <mat-icon>{{ expandedReceitaId() === item.receitaId ? 'expand_less' : 'expand_more' }}</mat-icon>
+                              </button>
+                            }
+                          </div>
                         </div>
 
                         <!-- Equivalência em g/ml (quando aplicável) -->
@@ -113,6 +120,21 @@
                           <div class="ingredient-details">
                             <span class="detail-label">Observações:</span>
                             <span class="detail-value">{{ item.observacoes }}</span>
+                          </div>
+                        }
+
+                        <!-- Expandable: Insumos da receita -->
+                        @if (expandedReceitaId() === item.receitaId && item.tipoItem === 'Receita' && receita()?.itens && receita()!.itens.length > 0) {
+                          <div class="recipe-items-expanded">
+                            <div class="recipe-label">Insumos desta receita:</div>
+                            <div class="recipe-items-table">
+                              @for (receitaItem of receita()!.itens; track receitaItem.ordem) {
+                                <div class="recipe-item-row">
+                                  <span class="recipe-item-order">#{{ receitaItem.ordem }}</span>
+                                  <span class="recipe-item-name">{{ receitaItem.insumoNome || '—' }}</span>
+                                </div>
+                              }
+                            </div>
                           </div>
                         }
                       </div>

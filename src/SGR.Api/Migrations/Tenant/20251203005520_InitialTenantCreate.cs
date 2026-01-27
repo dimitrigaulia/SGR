@@ -98,7 +98,6 @@ namespace SGR.Api.Migrations.Tenant
                     CustoTotal = table.Column<decimal>(type: "numeric", nullable: false),
                     CustoPorUnidade = table.Column<decimal>(type: "numeric", nullable: false),
                     RendimentoFinal = table.Column<decimal>(type: "numeric", nullable: true),
-                    IndiceContabil = table.Column<decimal>(type: "numeric", nullable: true),
                     PrecoSugeridoVenda = table.Column<decimal>(type: "numeric", nullable: true),
                     ICOperador = table.Column<char>(type: "character(1)", nullable: true),
                     ICValor = table.Column<int>(type: "integer", nullable: true),

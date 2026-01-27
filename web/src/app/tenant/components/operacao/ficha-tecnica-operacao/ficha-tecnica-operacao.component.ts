@@ -50,6 +50,7 @@ export class TenantFichaTecnicaOperacaoComponent {
   receita = signal<ReceitaDto | null>(null);
   isLoading = signal(false);
   error = signal<string>('');
+  expandedReceitaId = signal<number | null>(null);
 
   selectedTab = signal(0); // 0=comercial, 1=producao
 
@@ -128,6 +129,14 @@ export class TenantFichaTecnicaOperacaoComponent {
 
   get itensMiseEnPlace(): ReceitaItemDto[] {
     return (this.receita()?.itens ?? []).slice().sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0));
+  }
+
+  toggleReceitaExpand(receitaId: number) {
+    if (this.expandedReceitaId() === receitaId) {
+      this.expandedReceitaId.set(null);
+    } else {
+      this.expandedReceitaId.set(receitaId);
+    }
   }
 
   quantidadePorPorcao(item: ReceitaItemDto): number | null {

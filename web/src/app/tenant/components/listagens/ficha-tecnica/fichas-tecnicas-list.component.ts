@@ -43,7 +43,7 @@ export class TenantFichasTecnicasListComponent {
   protected environment = environment;
   protected window = typeof window !== 'undefined' ? window : null;
 
-  displayedColumns = ['nome', 'categoria', 'codigo', 'custoPorUnidade', 'precoSugerido', 'canais', 'ativo', 'acoes'];
+  displayedColumns = ['nome', 'categoria', 'codigo', 'custoPorUnidade', 'precoSugerido', 'ativo', 'acoes'];
   data = signal<FichaTecnicaDto[]>([]);
   total = signal(0);
   pageIndex = signal(0);
@@ -145,16 +145,7 @@ export class TenantFichasTecnicasListComponent {
   }
 
   operacao(e: FichaTecnicaDto, tab: 'comercial' | 'producao' = 'comercial') {
-    const url = this.router.serializeUrl(this.router.createUrlTree(
-      ['/tenant/fichas-tecnicas', e.id, 'operacao'],
-      { queryParams: { tab } }
-    ));
-
-    if (this.window) {
-      this.window.open(url, '_blank');
-    } else {
-      this.router.navigate(['/tenant/fichas-tecnicas', e.id, 'operacao'], { queryParams: { tab } });
-    }
+    this.router.navigate(['/tenant/fichas-tecnicas', e.id, 'operacao'], { queryParams: { tab } });
   }
 
   pageChanged(ev: PageEvent) {

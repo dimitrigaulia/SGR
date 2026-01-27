@@ -987,7 +987,7 @@ public class TenantService : BaseService<ApplicationDbContext, TenantEntity, Ten
                 ""CustoTotal"" DECIMAL(18, 4) NOT NULL DEFAULT 0,
                 ""CustoPorUnidade"" DECIMAL(18, 4) NOT NULL DEFAULT 0,
                 ""RendimentoFinal"" DECIMAL(18, 4),
-                ""IndiceContabil"" DECIMAL(18, 4),
+
                 ""PrecoSugeridoVenda"" DECIMAL(18, 4),
                 ""ICOperador"" CHAR(1),
                 ""ICValor"" INTEGER,

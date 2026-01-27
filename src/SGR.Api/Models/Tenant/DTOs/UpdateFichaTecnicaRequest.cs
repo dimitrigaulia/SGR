@@ -20,7 +20,7 @@ public class UpdateFichaTecnicaRequest
     public string? DescricaoComercial { get; set; }
 
     public decimal? RendimentoFinal { get; set; }
-    public decimal? IndiceContabil { get; set; }
+    public decimal? PrecoSugeridoVenda { get; set; }
     
     [RegularExpression("^[+-]$", ErrorMessage = "ICOperador deve ser '+' ou '-'")]
     public char? ICOperador { get; set; }

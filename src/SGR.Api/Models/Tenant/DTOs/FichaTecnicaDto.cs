@@ -15,7 +15,6 @@ public class FichaTecnicaDto
     public decimal CustoTotal { get; set; }
     public decimal CustoPorUnidade { get; set; }
     public decimal? RendimentoFinal { get; set; }
-    public decimal? IndiceContabil { get; set; }
     public decimal? PrecoSugeridoVenda { get; set; }
     public char? ICOperador { get; set; }
     public int? ICValor { get; set; }

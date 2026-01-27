@@ -574,14 +574,7 @@ public class PdfService
                                         : "-";
                                     item.Item().Text(custoPorcaoDisplay).FontSize(12).SemiBold();
                                 });
-                                row.RelativeItem().Column(item =>
-                                {
-                                    item.Item().Text("Markup mesa").FontSize(9).FontColor(Colors.Grey.Darken2);
-                                    var markupDisplay = ficha.IndiceContabil.HasValue 
-                                        ? ficha.IndiceContabil.Value.ToString("F2")
-                                        : "-";
-                                    item.Item().Text(markupDisplay).FontSize(12).SemiBold();
-                                });
+
                                 row.RelativeItem().Column(item =>
                                 {
                                     item.Item().Text("Preço mesa").FontSize(9).FontColor(Colors.Grey.Darken2);

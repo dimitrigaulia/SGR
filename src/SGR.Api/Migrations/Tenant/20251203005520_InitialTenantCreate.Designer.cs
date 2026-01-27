@@ -130,9 +130,6 @@ namespace SGR.Api.Migrations.Tenant
                     b.Property<int?>("IPCValor")
                         .HasColumnType("integer");
 
-                    b.Property<decimal?>("IndiceContabil")
-                        .HasColumnType("numeric");
-
                     b.Property<bool>("IsAtivo")
                         .HasColumnType("boolean");
 

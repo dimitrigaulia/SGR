@@ -50,7 +50,6 @@ export interface FichaTecnicaDto {
   custoTotal: number;
   custoPorUnidade: number;
   rendimentoFinal?: number | null;
-  indiceContabil?: number | null;
   precoSugeridoVenda?: number | null;
   icOperador?: string | null;
   icValor?: number | null;
@@ -120,7 +119,7 @@ export interface CreateFichaTecnicaRequest {
   nome: string;
   codigo?: string | null;
   descricaoComercial?: string | null;
-  indiceContabil?: number | null;
+  precoSugeridoVenda?: number | null;
   icOperador?: string | null;
   icValor?: number | null;
   ipcValor?: number | null;
@@ -140,7 +139,7 @@ export interface UpdateFichaTecnicaRequest {
   nome: string;
   codigo?: string | null;
   descricaoComercial?: string | null;
-  indiceContabil?: number | null;
+  precoSugeridoVenda?: number | null;
   icOperador?: string | null;
   icValor?: number | null;
   ipcValor?: number | null;

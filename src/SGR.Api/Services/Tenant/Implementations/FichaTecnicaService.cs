@@ -45,7 +45,26 @@ public class FichaTecnicaService : IFichaTecnicaService
             "nome" => ascending ? query.OrderBy(f => f.Nome) : query.OrderByDescending(f => f.Nome),
             "categoria" => ascending ? query.OrderBy(f => f.Categoria.Nome) : query.OrderByDescending(f => f.Categoria.Nome),
             "codigo" => ascending ? query.OrderBy(f => f.Codigo) : query.OrderByDescending(f => f.Codigo),
-            "custoporunidade" or "custo_por_unidade" => ascending ? query.OrderBy(f => f.CustoPorUnidade) : query.OrderByDescending(f => f.CustoPorUnidade),
+            // Ordenar por CustoPorPorcaoVenda (mesmo valor exibido)
+            "custoporunidade" or "custo_por_unidade" => ascending
+                ? query.OrderBy(f => 
+                    (f.RendimentoPorcoesNumero.HasValue && f.RendimentoPorcoesNumero.Value > 0)
+                      ? (decimal?)(f.CustoTotal / f.RendimentoPorcoesNumero.Value)
+                      : (f.PorcaoVendaQuantidade.HasValue && f.PorcaoVendaQuantidade.Value > 0
+                          && f.RendimentoFinal.HasValue && f.RendimentoFinal.Value > 0)
+                        ? (decimal?)((f.CustoTotal / f.RendimentoFinal.Value) * f.PorcaoVendaQuantidade.Value)
+                        : (f.CustoPorUnidade > 0)
+                          ? (decimal?)f.CustoPorUnidade
+                          : null)
+                : query.OrderByDescending(f => 
+                    (f.RendimentoPorcoesNumero.HasValue && f.RendimentoPorcoesNumero.Value > 0)
+                      ? (decimal?)(f.CustoTotal / f.RendimentoPorcoesNumero.Value)
+                      : (f.PorcaoVendaQuantidade.HasValue && f.PorcaoVendaQuantidade.Value > 0
+                          && f.RendimentoFinal.HasValue && f.RendimentoFinal.Value > 0)
+                        ? (decimal?)((f.CustoTotal / f.RendimentoFinal.Value) * f.PorcaoVendaQuantidade.Value)
+                        : (f.CustoPorUnidade > 0)
+                          ? (decimal?)f.CustoPorUnidade
+                          : null),
             "precosugerido" or "preco_sugerido" => ascending ? query.OrderBy(f => f.PrecoSugeridoVenda) : query.OrderByDescending(f => f.PrecoSugeridoVenda),
             "ativo" or "isativo" => ascending ? query.OrderBy(f => f.IsAtivo) : query.OrderByDescending(f => f.IsAtivo),
             _ => query.OrderBy(f => f.Nome)
@@ -67,7 +86,6 @@ public class FichaTecnicaService : IFichaTecnicaService
                 CustoTotal = f.CustoTotal,
                 CustoPorUnidade = f.CustoPorUnidade,
                 RendimentoFinal = f.RendimentoFinal,
-                IndiceContabil = f.IndiceContabil,
                 PrecoSugeridoVenda = f.PrecoSugeridoVenda,
                 ICOperador = f.ICOperador,
                 ICValor = f.ICValor,
@@ -82,6 +100,15 @@ public class FichaTecnicaService : IFichaTecnicaService
                 UsuarioAtualizacao = f.UsuarioAtualizacao,
                 DataCriacao = f.DataCriacao,
                 DataAtualizacao = f.DataAtualizacao,
+                // Calcular CustoPorPorcaoVenda com prioridade: RendimentoPorcoesNumero > PorcaoVendaQuantidade > CustoPorUnidade
+                CustoPorPorcaoVenda = (f.RendimentoPorcoesNumero.HasValue && f.RendimentoPorcoesNumero.Value > 0)
+                    ? (decimal?)(f.CustoTotal / f.RendimentoPorcoesNumero.Value)
+                    : (f.PorcaoVendaQuantidade.HasValue && f.PorcaoVendaQuantidade.Value > 0
+                        && f.RendimentoFinal.HasValue && f.RendimentoFinal.Value > 0)
+                      ? (decimal?)((f.CustoTotal / f.RendimentoFinal.Value) * f.PorcaoVendaQuantidade.Value)
+                      : (f.CustoPorUnidade > 0)
+                        ? (decimal?)f.CustoPorUnidade
+                        : null,
                 Itens = new List<FichaTecnicaItemDto>(),
                 Canais = f.Canais.Select(c => new FichaTecnicaCanalDto
                 {
@@ -218,7 +245,7 @@ public class FichaTecnicaService : IFichaTecnicaService
             Nome = request.Nome,
             Codigo = request.Codigo,
             DescricaoComercial = request.DescricaoComercial,
-            IndiceContabil = request.IndiceContabil,
+
             ICOperador = request.ICOperador,
             ICValor = request.ICValor,
             IPCValor = request.IPCValor,
@@ -256,6 +283,13 @@ public class FichaTecnicaService : IFichaTecnicaService
 
         CalcularRendimentoFinal(ficha, unidadesMedida, receitas, insumos);
         CalcularCustosFichaTecnica(ficha, insumos, receitas, unidadesMedida);
+
+        // If an explicit preco was provided via request, use it; otherwise pricing calculation will run
+        if (request.PrecoSugeridoVenda.HasValue && request.PrecoSugeridoVenda.Value > 0)
+        {
+            ficha.PrecoSugeridoVenda = request.PrecoSugeridoVenda;
+        }
+
         CalcularPrecoSugerido(ficha);
 
         if (request.Canais != null && request.Canais.Any())
@@ -383,7 +417,7 @@ public class FichaTecnicaService : IFichaTecnicaService
         ficha.Nome = request.Nome;
         ficha.Codigo = request.Codigo;
         ficha.DescricaoComercial = request.DescricaoComercial;
-        ficha.IndiceContabil = request.IndiceContabil;
+        // IndiceContabil removed: pricing should be provided via PrecoSugeridoVenda or computed from MargemAlvoPercentual.
         ficha.ICOperador = request.ICOperador;
         ficha.ICValor = request.ICValor;
         ficha.IPCValor = request.IPCValor;
@@ -422,6 +456,12 @@ public class FichaTecnicaService : IFichaTecnicaService
 
         CalcularRendimentoFinal(ficha, unidadesMedida, receitas, insumos);
         CalcularCustosFichaTecnica(ficha, insumos, receitas, unidadesMedida);
+
+        if (request.PrecoSugeridoVenda.HasValue && request.PrecoSugeridoVenda.Value > 0)
+        {
+            ficha.PrecoSugeridoVenda = request.PrecoSugeridoVenda;
+        }
+
         CalcularPrecoSugerido(ficha);
 
         var canaisParaRemover = ficha.Canais.ToList();
@@ -788,6 +828,17 @@ public class FichaTecnicaService : IFichaTecnicaService
 
     private static decimal? CalcularCustoPorPorcao(FichaTecnica ficha)
     {
+        // Prioridade 1: Modo unidade (RendimentoPorcoesNumero)
+        if (ficha.RendimentoPorcoesNumero.HasValue && ficha.RendimentoPorcoesNumero.Value > 0)
+        {
+            if (ficha.CustoTotal > 0)
+            {
+                return ficha.CustoTotal / ficha.RendimentoPorcoesNumero.Value;
+            }
+            return null;
+        }
+
+        // Prioridade 2: Modo porção (PorcaoVendaQuantidade)
         if (ficha.PorcaoVendaQuantidade.HasValue && ficha.PorcaoVendaQuantidade.Value > 0)
         {
             if (ficha.RendimentoFinal.HasValue && ficha.RendimentoFinal.Value > 0)
@@ -798,18 +849,9 @@ public class FichaTecnicaService : IFichaTecnicaService
             return null;
         }
 
-        if (ficha.RendimentoPorcoesNumero.HasValue && ficha.RendimentoPorcoesNumero.Value > 0)
-        {
-            if (ficha.CustoTotal > 0)
-            {
-                return ficha.CustoTotal / ficha.RendimentoPorcoesNumero.Value;
-            }
-            return null;
-        }
-
+        // Fallback legado: custo por unidade base (g/ml)
         if (ficha.CustoPorUnidade > 0)
         {
-            // Modo legado: custo por unidade base (g/ml)
             return ficha.CustoPorUnidade;
         }
 
@@ -828,9 +870,18 @@ public class FichaTecnicaService : IFichaTecnicaService
             return;
         }
 
-        if (ficha.IndiceContabil.HasValue && ficha.IndiceContabil.Value > 0)
+        // If a preco was explicitly provided in the request, keep it
+        if (ficha.PrecoSugeridoVenda.HasValue && ficha.PrecoSugeridoVenda.Value > 0)
         {
-            ficha.PrecoSugeridoVenda = custoPorPorcao.Value * ficha.IndiceContabil.Value;
+            return;
+        }
+
+        // If MargemAlvoPercentual is provided, compute price from desired margin
+        if (ficha.MargemAlvoPercentual.HasValue && ficha.MargemAlvoPercentual.Value > 0 && ficha.MargemAlvoPercentual.Value < 100)
+        {
+            var margem = ficha.MargemAlvoPercentual.Value;
+            var divisor = 1m - (margem / 100m);
+            ficha.PrecoSugeridoVenda = divisor > 0 ? Math.Round((custoPorPorcao.Value / divisor), 4) : (decimal?)null;
             return;
         }
 
@@ -999,7 +1050,7 @@ public class FichaTecnicaService : IFichaTecnicaService
             CustoTotal = ficha.CustoTotal,
             CustoPorUnidade = ficha.CustoPorUnidade,
             RendimentoFinal = ficha.RendimentoFinal,
-            IndiceContabil = ficha.IndiceContabil,
+
             PrecoSugeridoVenda = ficha.PrecoSugeridoVenda,
             ICOperador = ficha.ICOperador,
             ICValor = ficha.ICValor,
