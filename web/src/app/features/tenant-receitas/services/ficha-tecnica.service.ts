@@ -60,7 +60,6 @@ export interface FichaTecnicaDto {
   porcaoVendaUnidadeMedidaId?: number | null;
   porcaoVendaUnidadeMedidaNome?: string | null;
   porcaoVendaUnidadeMedidaSigla?: string | null;
-  rendimentoPorcoes?: string | null;
   rendimentoPorcoesNumero?: number | null;
   tempoPreparo?: number | null;
   pesoTotalBase?: number | null;
@@ -128,7 +127,6 @@ export interface CreateFichaTecnicaRequest {
   margemAlvoPercentual?: number | null;
   porcaoVendaQuantidade?: number | null;
   porcaoVendaUnidadeMedidaId?: number | null;
-  rendimentoPorcoes?: string | null;
   rendimentoPorcoesNumero?: number | null;
   tempoPreparo?: number | null;
   isAtivo: boolean;
@@ -149,7 +147,6 @@ export interface UpdateFichaTecnicaRequest {
   margemAlvoPercentual?: number | null;
   porcaoVendaQuantidade?: number | null;
   porcaoVendaUnidadeMedidaId?: number | null;
-  rendimentoPorcoes?: string | null;
   rendimentoPorcoesNumero?: number | null;
   tempoPreparo?: number | null;
   isAtivo: boolean;

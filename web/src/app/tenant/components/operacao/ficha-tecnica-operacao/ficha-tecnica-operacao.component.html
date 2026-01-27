@@ -8,8 +8,10 @@
           @if (ficha()?.tempoPreparo) {
             <span class="info-badge">⏱ {{ ficha()!.tempoPreparo }} min</span>
           }
-          @if (ficha()?.rendimentoPorcoes) {
-            <span class="info-badge">📦 {{ ficha()!.rendimentoPorcoes }}</span>
+          @if (ficha()?.rendimentoPorcoesNumero) {
+            <span class="info-badge">📦 {{ ficha()!.rendimentoPorcoesNumero }} unidades</span>
+          } @else {
+            <span class="info-badge">📦 unidades</span>
           }
         </div>
       </div>

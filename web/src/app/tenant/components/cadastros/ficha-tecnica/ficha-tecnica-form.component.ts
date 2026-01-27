@@ -105,7 +105,6 @@ export class TenantFichaTecnicaFormComponent {
     margemAlvoPercentual: null as number | null,
     porcaoVendaQuantidade: null as number | null,
     porcaoVendaUnidadeMedidaId: null as number | null,
-    rendimentoPorcoes: null as string | null,
     rendimentoPorcoesNumero: null as number | null,
     // UI-only selector to choose how the product is sold in cadastro
     formaVenda: 'porcao' as 'porcao' | 'unidade',
@@ -876,7 +875,6 @@ export class TenantFichaTecnicaFormComponent {
         margemAlvoPercentual: v.margemAlvoPercentual ?? undefined,
         porcaoVendaQuantidade: v.porcaoVendaQuantidade ?? undefined,
         porcaoVendaUnidadeMedidaId: v.porcaoVendaUnidadeMedidaId ?? undefined,
-        rendimentoPorcoes: v.rendimentoPorcoes ?? undefined,
         rendimentoPorcoesNumero: v.rendimentoPorcoesNumero ?? undefined,
         tempoPreparo: v.tempoPreparo ?? undefined,
         isAtivo: !!v.isAtivo,
@@ -935,7 +933,6 @@ export class TenantFichaTecnicaFormComponent {
         margemAlvoPercentual: v.margemAlvoPercentual ?? undefined,
         porcaoVendaQuantidade: v.porcaoVendaQuantidade ?? undefined,
         porcaoVendaUnidadeMedidaId: v.porcaoVendaUnidadeMedidaId ?? undefined,
-        rendimentoPorcoes: v.rendimentoPorcoes ?? undefined,
         rendimentoPorcoesNumero: v.rendimentoPorcoesNumero ?? undefined,
         tempoPreparo: v.tempoPreparo ?? undefined,
         isAtivo: !!v.isAtivo,
@@ -1033,7 +1030,6 @@ export class TenantFichaTecnicaFormComponent {
             margemAlvoPercentual: e.margemAlvoPercentual ?? null,
             porcaoVendaQuantidade: e.porcaoVendaQuantidade ?? null,
             porcaoVendaUnidadeMedidaId: e.porcaoVendaUnidadeMedidaId ?? null,
-            rendimentoPorcoes: e.rendimentoPorcoes ?? null,
             rendimentoPorcoesNumero: e.rendimentoPorcoesNumero ?? null,
             tempoPreparo: e.tempoPreparo ?? null,
             // set formaVenda based on DTO content so model is fully populated

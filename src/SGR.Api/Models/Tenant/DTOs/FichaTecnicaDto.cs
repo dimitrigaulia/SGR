@@ -26,7 +26,6 @@ public class FichaTecnicaDto
     public long? PorcaoVendaUnidadeMedidaId { get; set; }
     public string? PorcaoVendaUnidadeMedidaNome { get; set; }
     public string? PorcaoVendaUnidadeMedidaSigla { get; set; }
-    public string? RendimentoPorcoes { get; set; }
     public decimal? RendimentoPorcoesNumero { get; set; }
     public int? TempoPreparo { get; set; }
 

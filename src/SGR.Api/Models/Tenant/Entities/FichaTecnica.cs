@@ -69,12 +69,7 @@ public class FichaTecnica
     public long? PorcaoVendaUnidadeMedidaId { get; set; }
 
     /// <summary>
-    /// Descrição do rendimento (ex: "Porção para 3 pessoas", "4 palitos", "8 bolinhos")
-    /// </summary>
-    public string? RendimentoPorcoes { get; set; }
-
-    /// <summary>
-    /// Quantidade num?rica de por??es/unidades (para precifica??o por unidade vendida)
+    /// Quantidade numérica de porções/unidades (para precificação por unidade vendida)
     /// </summary>
     public decimal? RendimentoPorcoesNumero { get; set; }
 

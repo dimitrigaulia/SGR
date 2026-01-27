@@ -182,11 +182,7 @@
               <mat-hint>Ex.: 10 porções, 6 sanduíches, 20 coxinhas</mat-hint>
             </mat-form-field>
 
-            <mat-form-field appearance="outline" class="full">
-              <mat-label>Observação (opcional)</mat-label>
-              <input matInput type="text" name="rendimentoPorcoes" [(ngModel)]="model.rendimentoPorcoes" [disabled]="isView()" maxlength="200"
-                     placeholder="Ex.: 10 porções de 150g / 6 hot dogs completos" />
-            </mat-form-field>
+
           </mat-card-content>
         </mat-card>
 
@@ -655,7 +651,7 @@
                 @if (fichaDtoCompleto()?.rendimentoPorcoesNumero && (fichaDtoCompleto()?.rendimentoPorcoesNumero ?? 0) > 0) {
                   <div class="mini-label">Quanto rende</div>
                   <div class="mid">
-                    {{ fichaDtoCompleto()!.rendimentoPorcoesNumero }} {{ fichaDtoCompleto()!.rendimentoPorcoes || 'unidades' }}
+                    {{ fichaDtoCompleto()!.rendimentoPorcoesNumero }} unidades
                   </div>
                   <div class="mini-label mt8">1 venda</div>
                   <div class="mid">

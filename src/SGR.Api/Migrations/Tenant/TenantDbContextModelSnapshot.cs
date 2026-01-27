@@ -193,9 +193,6 @@ namespace SGR.Api.Migrations.Tenant
                     b.Property<decimal?>("RendimentoFinal")
                         .HasColumnType("numeric");
 
-                    b.Property<string>("RendimentoPorcoes")
-                        .HasColumnType("text");
-
                     b.Property<decimal?>("RendimentoPorcoesNumero")
                         .HasColumnType("numeric");
 

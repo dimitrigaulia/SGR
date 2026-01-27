@@ -478,21 +478,12 @@ public class PdfService
                                     });
                                 }
                                 
-                                if (!string.IsNullOrWhiteSpace(ficha.RendimentoPorcoes))
-                                {
-                                    row.RelativeItem(2).Column(item =>
-                                    {
-                                        item.Item().Text("Lote rende").FontSize(9).FontColor(Colors.Grey.Darken2);
-                                        item.Item().Text(ficha.RendimentoPorcoes).FontSize(11).SemiBold();
-                                    });
-                                }
-                                
                                 if (ficha.RendimentoPorcoesNumero.HasValue && ficha.RendimentoPorcoesNumero.Value > 0)
                                 {
                                     row.RelativeItem().Column(item =>
                                     {
-                                        item.Item().Text("Unidades no lote").FontSize(9).FontColor(Colors.Grey.Darken2);
-                                        item.Item().Text(ficha.RendimentoPorcoesNumero.Value.ToString("0.##")).FontSize(11).SemiBold();
+                                        item.Item().Text("Lote rende").FontSize(9).FontColor(Colors.Grey.Darken2);
+                                        item.Item().Text($"{ficha.RendimentoPorcoesNumero.Value.ToString("0.##")} unidades").FontSize(11).SemiBold();
                                     });
                                 }
                             });
@@ -562,7 +553,7 @@ public class PdfService
                                     if (isModoUnidade)
                                     {
                                         item.Item().Text("1 Unidade =").FontSize(9).FontColor(Colors.Grey.Darken2);
-                                        var unidadeDisplay = ficha.RendimentoPorcoes ?? "unidades";
+                                        var unidadeDisplay = "unidades";
                                         item.Item().Text(unidadeDisplay).FontSize(12).SemiBold();
                                     }
                                     else

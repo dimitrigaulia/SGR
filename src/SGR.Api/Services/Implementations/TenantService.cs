@@ -649,19 +649,7 @@ public class TenantService : BaseService<ApplicationDbContext, TenantEntity, Ten
                         ADD COLUMN ""PesoPorUnidade"" DECIMAL(18, 4);
                     END IF;
 
-                    -- FichaTecnica.RendimentoPorcoes: alterar de DECIMAL para VARCHAR(200) se necessário
-                    IF EXISTS (
-                        SELECT 1
-                        FROM information_schema.columns
-                        WHERE table_schema = '{schemaName}'
-                        AND table_name = 'FichaTecnica'
-                        AND column_name = 'RendimentoPorcoes'
-                        AND data_type = 'numeric'
-                    ) THEN
-                        ALTER TABLE ""{schemaName}"".""FichaTecnica""
-                        ALTER COLUMN ""RendimentoPorcoes"" TYPE VARCHAR(200) USING ""RendimentoPorcoes""::
-text;
-                    END IF;
+
 
                     -- FichaTecnica.RendimentoPorcoesNumero
                     IF EXISTS (
@@ -680,19 +668,7 @@ text;
                         ADD COLUMN ""RendimentoPorcoesNumero"" DECIMAL(18, 4);
                     END IF;
 
-                    -- Preencher RendimentoPorcoesNumero a partir do texto, quando possivel
-                    IF EXISTS (
-                        SELECT 1
-                        FROM information_schema.columns
-                        WHERE table_schema = '{schemaName}'
-                        AND table_name = 'FichaTecnica'
-                        AND column_name = 'RendimentoPorcoesNumero'
-                    ) THEN
-                        UPDATE ""{schemaName}"".""FichaTecnica""
-                        SET ""RendimentoPorcoesNumero"" = NULLIF(REPLACE(substring(""RendimentoPorcoes"" from '([0-9]+([\.,][0-9]+)?)'), ',', '.'), '')::numeric
-                        WHERE ""RendimentoPorcoesNumero"" IS NULL
-                          AND ""RendimentoPorcoes"" IS NOT NULL;
-                    END IF;
+
 
                     -- Criar tabela CanalVenda se não existir
                     IF NOT EXISTS (
@@ -1019,7 +995,6 @@ text;
                 ""MargemAlvoPercentual"" DECIMAL(18, 4),
                 ""PorcaoVendaQuantidade"" DECIMAL(18, 4),
                 ""PorcaoVendaUnidadeMedidaId"" BIGINT,
-                ""RendimentoPorcoes"" VARCHAR(200),
                 ""RendimentoPorcoesNumero"" DECIMAL(18, 4),
                 ""TempoPreparo"" INTEGER,
                 ""IsAtivo"" BOOLEAN NOT NULL DEFAULT true,

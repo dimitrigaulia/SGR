@@ -75,7 +75,6 @@ public class FichaTecnicaService : IFichaTecnicaService
                 MargemAlvoPercentual = f.MargemAlvoPercentual,
                 PorcaoVendaQuantidade = f.PorcaoVendaQuantidade,
                 PorcaoVendaUnidadeMedidaId = f.PorcaoVendaUnidadeMedidaId,
-                RendimentoPorcoes = f.RendimentoPorcoes,
                 RendimentoPorcoesNumero = f.RendimentoPorcoesNumero,
                 TempoPreparo = f.TempoPreparo,
                 IsAtivo = f.IsAtivo,
@@ -226,7 +225,6 @@ public class FichaTecnicaService : IFichaTecnicaService
             MargemAlvoPercentual = request.MargemAlvoPercentual,
             PorcaoVendaQuantidade = request.PorcaoVendaQuantidade,
             PorcaoVendaUnidadeMedidaId = request.PorcaoVendaUnidadeMedidaId,
-            RendimentoPorcoes = request.RendimentoPorcoes,
             RendimentoPorcoesNumero = request.RendimentoPorcoesNumero.HasValue && request.RendimentoPorcoesNumero.Value > 0
                 ? request.RendimentoPorcoesNumero
                 : null,
@@ -392,7 +390,6 @@ public class FichaTecnicaService : IFichaTecnicaService
         ficha.MargemAlvoPercentual = request.MargemAlvoPercentual;
         ficha.PorcaoVendaQuantidade = request.PorcaoVendaQuantidade;
         ficha.PorcaoVendaUnidadeMedidaId = request.PorcaoVendaUnidadeMedidaId;
-        ficha.RendimentoPorcoes = request.RendimentoPorcoes;
         ficha.RendimentoPorcoesNumero = request.RendimentoPorcoesNumero.HasValue && request.RendimentoPorcoesNumero.Value > 0
             ? request.RendimentoPorcoesNumero
             : null;
@@ -1012,7 +1009,6 @@ public class FichaTecnicaService : IFichaTecnicaService
             PorcaoVendaUnidadeMedidaId = ficha.PorcaoVendaUnidadeMedidaId,
             PorcaoVendaUnidadeMedidaNome = ficha.PorcaoVendaUnidadeMedida?.Nome,
             PorcaoVendaUnidadeMedidaSigla = ficha.PorcaoVendaUnidadeMedida?.Sigla,
-            RendimentoPorcoes = ficha.RendimentoPorcoes,
             RendimentoPorcoesNumero = ficha.RendimentoPorcoesNumero,
             TempoPreparo = ficha.TempoPreparo,
             PesoTotalBase = pesoTotalBase,
