@@ -31,8 +31,9 @@
   </mat-toolbar>
 
   <mat-tab-group [selectedIndex]="selectedTabIndex()" (selectedTabChange)="onTabChange($event.index)">
-    <!-- TAB 1: CADASTRO -->
-    <mat-tab label="Cadastro">
+    <!-- TAB 1: CADASTRO (only in edit/create mode) -->
+    @if (!isView()) {
+      <mat-tab label="Cadastro">
       <form #f="ngForm" (ngSubmit)="save()" class="content">
 
         <!-- Card: Identificação -->
@@ -97,7 +98,7 @@
             <mat-form-field appearance="outline">
               <mat-label>Forma de venda</mat-label>
               <mat-select name="formaVenda" [(ngModel)]="model.formaVenda" [disabled]="isView()">
-                <mat-option value="porcao">Porção em gr/ml</mat-option>
+                <mat-option value="porcao">Porção em GR/ML</mat-option>
                 <mat-option value="unidade">Unidade</mat-option>
               </mat-select>
             </mat-form-field>
@@ -164,27 +165,27 @@
           </mat-card-content>
         </mat-card>
 
-        <!-- Card: Produção -->
+        <!-- Card: Quanto rende -->
         <mat-card class="card" *ngIf="isView() || model.formaVenda === 'unidade'">
-          <mat-card-title>Produção (Rendimento do lote)</mat-card-title>
+          <mat-card-title>Quanto rende</mat-card-title>
+          <mat-card-subtitle>Preencha só se você prepara uma receita inteira de uma vez</mat-card-subtitle>
           <mat-card-content class="grid">
             <mat-form-field appearance="outline">
-              <mat-label>Tempo preparo (min)</mat-label>
+              <mat-label>Tempo para fazer tudo (min)</mat-label>
               <input matInput type="number" name="tempoPreparo" [(ngModel)]="model.tempoPreparo" [disabled]="isView()" min="0" step="1" />
-              <mat-hint>Tempo necessário para produzir 1 lote completo</mat-hint>
+              <mat-hint>Quanto tempo leva para preparar essa receita inteira (aprox.)</mat-hint>
             </mat-form-field>
 
             <mat-form-field appearance="outline">
-              <mat-label>Rendimento do lote (descrição)</mat-label>
-              <input matInput type="text" name="rendimentoPorcoes" [(ngModel)]="model.rendimentoPorcoes" [disabled]="isView()" maxlength="200"
-                     placeholder="Ex.: 10 porções, 4 palitos, 1 sanduíche, 500ml de molho" />
-              <mat-hint>Descreva quantas porções/unidades este lote produz</mat-hint>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline">
-              <mat-label>Rendimento do lote (número)</mat-label>
+              <mat-label>Quantas porções/unidades saem</mat-label>
               <input matInput type="number" name="rendimentoPorcoesNumero" [(ngModel)]="model.rendimentoPorcoesNumero" [disabled]="isView()" min="0" step="0.01" />
-              <mat-hint>Quantas unidades/porções saem deste lote? (Ex.: 1 para hot dog, 10 para molho em batch)</mat-hint>
+              <mat-hint>Ex.: 10 porções, 6 sanduíches, 20 coxinhas</mat-hint>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full">
+              <mat-label>Observação (opcional)</mat-label>
+              <input matInput type="text" name="rendimentoPorcoes" [(ngModel)]="model.rendimentoPorcoes" [disabled]="isView()" maxlength="200"
+                     placeholder="Ex.: 10 porções de 150g / 6 hot dogs completos" />
             </mat-form-field>
           </mat-card-content>
         </mat-card>
@@ -451,7 +452,7 @@
                 <div class="kpi-value">{{ formatCurrency(custoTotalCalculado) }}</div>
               </div>
               <div class="kpi">
-                <div class="kpi-label">Custo por gr/ml</div>
+                <div class="kpi-label">Custo por GR/ML</div>
                 <div class="kpi-value">{{ formatNumber(custoPorGmlCalculado) }}</div>
               </div>
               <div class="kpi">
@@ -585,6 +586,7 @@
         }
       </form>
     </mat-tab>
+    }
 
     <!-- TAB 2: RESUMO (mantém o que você já tem) -->
     <mat-tab label="Resumo">
@@ -651,7 +653,7 @@
               <mat-card-content>
                 <!-- Modo unidade (rendimentoPorcoesNumero) -->
                 @if (fichaDtoCompleto()?.rendimentoPorcoesNumero && (fichaDtoCompleto()?.rendimentoPorcoesNumero ?? 0) > 0) {
-                  <div class="mini-label">Rendimento do lote</div>
+                  <div class="mini-label">Quanto rende</div>
                   <div class="mid">
                     {{ fichaDtoCompleto()!.rendimentoPorcoesNumero }} {{ fichaDtoCompleto()!.rendimentoPorcoes || 'unidades' }}
                   </div>
@@ -744,7 +746,7 @@
                     <th mat-header-cell *matHeaderCellDef>{{ hasReceitaItems ? 'Peso por preparo' : 'Peso/UN (gr)' }}</th>
                     <td mat-cell *matCellDef="let item">
                       @if (item.pesoPorUnidadeGml !== null && item.pesoPorUnidadeGml !== undefined) {
-                        {{ formatNumber(item.pesoPorUnidadeGml) }}
+                        {{ formatNumber(item.pesoPorUnidadeGml) }} GR
                       } @else {
                         -
                       }
@@ -754,9 +756,9 @@
 
                   <ng-container matColumnDef="pesoItem">
                     <th mat-header-cell *matHeaderCellDef>{{ hasReceitaItems ? 'Peso total do preparo' : 'Peso item (gr/ml)' }}</th>
-                    <td mat-cell *matCellDef="let item">{{ formatNumber(item.pesoItemGml || 0) }}</td>
+                    <td mat-cell *matCellDef="let item">{{ formatNumber(item.pesoItemGml || 0) }} GR</td>
                     <td mat-footer-cell *matFooterCellDef>
-                      <strong>{{ formatNumber(fichaDtoCompleto()!.pesoTotalBase ?? 0) }}</strong>
+                      <strong>{{ formatNumber(fichaDtoCompleto()!.pesoTotalBase ?? 0) }} GR</strong>
                     </td>
                   </ng-container>
 
@@ -814,116 +816,20 @@
               </div>
             </mat-card-content>
           </mat-card>
-        }
-      </div>
-    </mat-tab>
 
-    <!-- TAB 3: OPERAÇÃO (COZINHA) -->
-    <mat-tab label="Operação">
-      <div class="content">
-        @if (isLoadingDetalhe()) {
-          <div class="loading">
-            <mat-spinner [diameter]="40"></mat-spinner>
-            <div class="muted">Carregando…</div>
-          </div>
-        } @else if (!fichaDtoCompleto()) {
-          <div class="empty">Nenhum dado disponível.</div>
-        } @else {
-          <!-- KPIs operacionais (simples) -->
-          <div class="op-kpis">
-            <mat-card class="op-card">
+          <!-- CTA: Abrir Operação (Cozinha) -->
+          @if (isView()) {
+            <mat-card class="card cta-card">
               <mat-card-content>
-                <div class="op-title">{{ fichaDtoCompleto()!.nome }}</div>
-                <div class="op-subtitle" *ngIf="model.tempoPreparo">
-                  ⏱ Tempo: {{ model.tempoPreparo }} min/lote
-                </div>
-                <div class="op-subtitle" *ngIf="model.rendimentoPorcoes">
-                  📦 Lote rende: {{ model.rendimentoPorcoes }}
-                </div>
+                <div class="cta-title">Pronto para a cozinha?</div>
+                <div class="cta-subtitle">Acesse a visualização otimizada para execução na cozinha.</div>
+                <button mat-raised-button color="primary" type="button" (click)="openOperacao('comercial')" class="cta-button">
+                  <mat-icon>restaurant</mat-icon>
+                  Abrir Operação (Cozinha)
+                </button>
               </mat-card-content>
             </mat-card>
-
-            <mat-card class="op-card">
-              <mat-card-content>
-                <div class="mini-label">Peso total base</div>
-                <div class="big">
-                  {{ formatQuantidadeExibicao(fichaDtoCompleto()!.pesoTotalBase ?? null, getUnidadePorcao().unidade) }}
-                </div>
-                <div class="mini-label mt8">Peso final (IC/IPC)</div>
-                <div class="mid">
-                  {{ formatQuantidadeExibicao(fichaDtoCompleto()!.rendimentoFinal ?? null, getUnidadePorcao().unidade) }}
-                </div>
-              </mat-card-content>
-            </mat-card>
-
-            <mat-card class="op-card">
-              <mat-card-content>
-                <div class="mini-label">1 Porção de venda</div>
-                <div class="big">
-                  @if (fichaDtoCompleto()!.porcaoVendaQuantidade) {
-                    {{ formatQuantidadeExibicao(fichaDtoCompleto()!.porcaoVendaQuantidade, getUnidadePorcao().unidade) }}
-                  } @else {
-                    —
-                  }
-                </div>
-
-                <div class="mini-label mt8">Porções no lote (estimativa)</div>
-                <div class="mid">
-                  {{ getPorcoesEstimadasOperacao() }}
-                </div>
-              </mat-card-content>
-            </mat-card>
-          </div>
-
-          <!-- Lista de ingredientes/componentes (o que o cozinheiro quer ver) -->
-          <mat-card class="card">
-            <mat-card-title>Ingredientes / Componentes</mat-card-title>
-            <mat-card-content>
-
-              <div class="op-list">
-                @for (it of fichaDtoCompleto()!.itens; track it.ordem) {
-                  <mat-card class="op-item">
-                    <mat-card-content>
-                      <div class="op-item-head">
-                        <div class="name">
-                          <span class="badge">{{ it.tipoItem }}</span>
-                          <span>{{ it.receitaNome || it.insumoNome }}</span>
-                        </div>
-                        <div class="qty">
-                          {{ formatQuantidadeItem(it) }}
-                        </div>
-                      </div>
-
-                      <!-- EQUIVALÊNCIA (o pedido do cliente) -->
-                      <div class="op-item-sub" *ngIf="getEquivalenciaPeso(it) as eq">
-                        <span class="muted">Equivalência:</span>
-                        <strong>{{ eq }}</strong>
-                      </div>
-
-                      <div class="op-item-sub" *ngIf="it.observacoes">
-                        <span class="muted">Obs:</span> {{ it.observacoes }}
-                      </div>
-                    </mat-card-content>
-                  </mat-card>
-                }
-              </div>
-
-              <div class="inline-actions">
-                <button mat-stroked-button type="button" (click)="printPdf()">Imprimir / PDF</button>
-                @if (model.receitaPrincipalId) {
-                  <button mat-stroked-button type="button" (click)="openOperacao('producao')">Abrir Produção</button>
-                }
-              </div>
-            </mat-card-content>
-          </mat-card>
-
-          <!-- Passo a passo (se houver receita principal, você pode renderizar descrição/instruções nessa tela depois) -->
-          <mat-card class="card" *ngIf="model.receitaPrincipalId">
-            <mat-card-title>Preparo</mat-card-title>
-            <mat-card-content class="muted">
-              Use a receita principal selecionada para o passo a passo na tela de produção.
-            </mat-card-content>
-          </mat-card>
+          }
         }
       </div>
     </mat-tab>

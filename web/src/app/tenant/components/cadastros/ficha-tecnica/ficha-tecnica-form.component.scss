@@ -180,6 +180,7 @@
 .empty {
   padding: 16px;
   text-align: center;
+  color: var(--mat-app-text-color);
   opacity: 0.65;
   background: var(--mat-surface-variant);
   border-radius: 8px;
@@ -187,105 +188,98 @@
 
 .error {
   margin-top: 8px;
-  color: #c62828;
+  color: var(--mat-error);
 }
 
-/* ===== OPERAÇÃO (COZINHA) ===== */
-.loading {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  align-items: center;
-  justify-content: center;
-  padding: 48px;
-
-  .muted { opacity: 0.7; }
-}
-
-.op-kpis {
+/* KPIs Grid - Resumo */
+.kpis-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(220px, 1fr));
-  gap: 12px;
-  margin-bottom: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
 
   @media (max-width: 899px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: 599px) {
     grid-template-columns: 1fr;
   }
 }
 
-.kpis-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 12px;
-  margin-bottom: 16px;
-}
-
 .op-card {
-  .op-title {
+  border-radius: 12px;
+  background-color: var(--mat-surface);
+  border: 1px solid var(--mat-divider-color);
+  box-shadow: var(--mat-elevation-1);
+  transition: box-shadow 0.3s ease, transform 0.2s ease, border-color 0.3s ease;
+
+  &:hover {
+    box-shadow: var(--mat-elevation-2);
+    transform: translateY(-2px);
+    border-color: var(--mat-primary);
+  }
+
+  mat-card-content {
+    padding: 20px;
+  }
+
+  .mini-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--mat-app-text-color);
+    opacity: 0.6;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+
+  .big {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--mat-primary);
+    line-height: 1.2;
+    margin-bottom: 12px;
+  }
+
+  .mid {
     font-size: 18px;
     font-weight: 700;
+    color: var(--mat-app-text-color);
+    line-height: 1.3;
   }
-  .op-subtitle {
-    margin-top: 6px;
-    opacity: 0.75;
+
+  .mt8 {
+    margin-top: 16px;
   }
-  .mini-label {
-    font-size: 12px;
-    opacity: 0.7;
-  }
-  .big {
-    font-size: 22px;
-    font-weight: 800;
-  }
-  .mid {
-    font-size: 16px;
+}
+
+.muted { opacity: 0.7; }
+
+/* CTA: Operação (Cozinha) */
+.cta-card {
+  background: linear-gradient(135deg, var(--mat-primary) 0%, var(--mat-primary-container) 100%);
+  color: var(--mat-on-primary);
+  margin-top: 24px;
+  box-shadow: var(--mat-elevation-2);
+
+  .cta-title {
+    font-size: 18px;
     font-weight: 700;
-  }
-  .mt8 { margin-top: 8px; }
-}
-
-.op-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.op-item {
-  .op-item-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 10px;
-
-    .name {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      font-weight: 700;
-    }
-
-    .qty {
-      font-weight: 800;
-      white-space: nowrap;
-    }
-
-    .badge {
-      font-size: 11px;
-      padding: 2px 6px;
-      border-radius: 999px;
-      background: var(--mat-surface-variant);
-      opacity: 0.9;
-      font-weight: 700;
-    }
+    margin-bottom: 8px;
+    color: var(--mat-on-primary);
   }
 
-  .op-item-sub {
-    margin-top: 6px;
-    font-size: 13px;
+  .cta-subtitle {
+    font-size: 14px;
+    opacity: 0.9;
+    margin-bottom: 16px;
+    color: var(--mat-on-primary);
+  }
 
-    .muted {
-      opacity: 0.7;
-      margin-right: 6px;
-    }
+  .cta-button {
+    min-height: 48px;
+    font-size: 16px;
+    width: 100%;
   }
 }

@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, comp
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { HttpClient } from '@angular/common/http';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatCardModule } from '@angular/material/card';
 import { MatTableModule } from '@angular/material/table';
@@ -12,6 +13,7 @@ import { ToastService } from '../../../../core/services/toast.service';
 import { LoadingComponent } from '../../../../shared/components/loading/loading.component';
 import { FichaTecnicaDto, FichaTecnicaItemDto, FichaTecnicaService } from '../../../../features/tenant-receitas/services/ficha-tecnica.service';
 import { ReceitaDto, ReceitaItemDto, ReceitaService } from '../../../../features/tenant-receitas/services/receita.service';
+import { environment } from '../../../../../environments/environment';
 
 @Component({
   standalone: true,
@@ -39,6 +41,9 @@ export class TenantFichaTecnicaOperacaoComponent {
   private toast = inject(ToastService);
   private cdr = inject(ChangeDetectorRef);
   private destroyRef = inject(DestroyRef);
+  private http = inject(HttpClient);
+  
+  environment = environment;
 
   id = signal<number | null>(null);
   ficha = signal<FichaTecnicaDto | null>(null);
@@ -227,6 +232,58 @@ export class TenantFichaTecnicaOperacaoComponent {
 
   getItemNomeFicha(item: FichaTecnicaItemDto): string {
     return item.insumoNome || item.receitaNome || '-';
+  }
+
+  getEquivalenciaPeso(item: FichaTecnicaItemDto): string | null {
+    // Implementado para exibir equivalência de peso/volume na operação
+    // Cálculo similar ao do form component
+    const tipo = (item.tipoItem || '').toString();
+    const qtd = Number(item.quantidade ?? 0);
+    if (!Number.isFinite(qtd) || qtd <= 0) return null;
+
+    if (tipo === 'Insumo') {
+      const sigla = (item.unidadeMedidaSigla || '').toUpperCase();
+      // Mostrar equivalência se for unidade ou tiver detalhes relevantes
+      if (sigla === 'UN') {
+        // Para unidades, não temos acesso direto ao pesoPorUnidade aqui
+        // A DTO deveria trazer essa info
+        return null;
+      }
+      if (sigla === 'GR' || sigla === 'ML') {
+        const unit = sigla === 'ML' ? 'mL' : 'g';
+        const f = (n: number) => new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 2 }).format(n);
+        return `Total: ${f(qtd)} ${unit}`;
+      }
+    }
+
+    if (tipo === 'Receita') {
+      // Receitas mostram quantidade em porções
+      return null;
+    }
+
+    return null;
+  }
+
+  printPdf() {
+    const currentId = this.id();
+    if (!currentId) return;
+
+    this.http.get(`${this.environment.apiUrl}/tenant/fichas-tecnicas/${currentId}/pdf`, {
+      responseType: 'blob'
+    })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (blob) => {
+          const url = window.URL.createObjectURL(blob);
+          const link = window.open(url, '_blank');
+          if (link) {
+            link.onload = () => window.URL.revokeObjectURL(url);
+          }
+        },
+        error: (err) => {
+          this.toast.error('Erro ao gerar PDF');
+        }
+      });
   }
 }
 

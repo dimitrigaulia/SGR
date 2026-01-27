@@ -119,7 +119,6 @@ export class TenantFichaTecnicaFormComponent {
   displayedColumns = ['canal', 'nomeExibicao', 'precoVenda', 'taxas', 'porcentagem', 'acoes'];
   
   // Propriedades para uso no template
-  window = typeof window !== 'undefined' ? window : null;
   environment = environment;
 
   // Métodos auxiliares de cálculo
@@ -375,9 +374,11 @@ export class TenantFichaTecnicaFormComponent {
     const tabParam = this.route.snapshot.queryParams['tab'];
     let initialTab = 0;
     if (view) {
-      initialTab = 1; // View sempre abre no Resumo
+      initialTab = 0; // View mode: Resumo sempre index 0 (única tab)
     } else if (tabParam === 'resumo') {
-      initialTab = 1; // QueryParam resumo abre na Tab Resumo
+      initialTab = 1; // Edit mode: Cadastro=0, Resumo=1
+    } else {
+      initialTab = 0; // Edit mode default: abre no Cadastro
     }
     this.selectedTabIndex.set(initialTab);
 
@@ -1009,16 +1010,7 @@ export class TenantFichaTecnicaFormComponent {
     const currentId = this.id();
     if (!currentId) return;
 
-    const url = this.router.serializeUrl(this.router.createUrlTree(
-      ['/tenant/fichas-tecnicas', currentId, 'operacao'],
-      { queryParams: { tab } }
-    ));
-
-    if (this.window) {
-      this.window.open(url, '_blank');
-    } else {
-      this.router.navigate(['/tenant/fichas-tecnicas', currentId, 'operacao'], { queryParams: { tab } });
-    }
+    this.router.navigate(['/tenant/fichas-tecnicas', currentId, 'operacao'], { queryParams: { tab } });
   }
 
   loadFichaDetalhe(id: number) {
