@@ -114,7 +114,7 @@ export class TenantFichaTecnicaFormComponent {
 
   itens = signal<FichaTecnicaItemFormModel[]>([]);
   canais = signal<FichaTecnicaCanalFormModel[]>([]);
-  displayedColumnsItens = ['ordem', 'tipo', 'item', 'quantidade', 'unidade', 'qb', 'observacoes', 'acoes'];
+  displayedColumnsItens = ['ordem', 'tipo', 'item', 'quantidade', 'peso', 'unidade', 'qb', 'acoes'];
   displayedColumns = ['canal', 'nomeExibicao', 'precoVenda', 'taxas', 'porcentagem', 'acoes'];
   
   // Propriedades para uso no template

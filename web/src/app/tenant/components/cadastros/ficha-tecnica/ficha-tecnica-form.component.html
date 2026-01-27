@@ -283,11 +283,40 @@
                           <div class="cell-hint">
                             <small class="muted">
                               @if (receita.pesoPorPorcao) {
-                                Peso: {{ (item.quantidade * receita.pesoPorPorcao) | number:'1.0-0' }}g •
+                                Peso: {{ (item.quantidade * receita.pesoPorPorcao) | number:'1.0-0' }}GR •
                               }
                               Custo: {{ formatCurrency(item.quantidade * (receita.custoPorPorcao || 0)) }}
                             </small>
                           </div>
+                        }
+                      }
+                    </td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="peso">
+                    <th mat-header-cell *matHeaderCellDef>Peso (GR)</th>
+                    <td mat-cell *matCellDef="let item">
+                      @if (item.tipoItem === 'Receita' && item.receitaId) {
+                        @if (getReceitaItem(item); as receita) {
+                          @if (receita.pesoPorPorcao) {
+                            {{ (item.quantidade * receita.pesoPorPorcao) | number:'1.0-0' }}GR
+                          } @else {
+                            -
+                          }
+                        }
+                      } @else {
+                        @if (item.tipoItem === 'Insumo' && item.insumoId) {
+                          @if (getInsumoItem(item); as ins) {
+                            @if (ins.pesoPorUnidade && ins.pesoPorUnidade > 0) {
+                              {{ (ajustarPesoPorUnidadePublic(ins.pesoPorUnidade, ins.unidadeCompraSigla)) | number:'1.0-0' }}GR
+                            } @else {
+                              -
+                            }
+                          } @else {
+                            -
+                          }
+                        } @else {
+                          -
                         }
                       }
                     </td>
@@ -314,15 +343,6 @@
                             </mat-form-field>
                           }
                         }
-                        @if (item.tipoItem === 'Insumo' && item.insumoId && getUnidadeSigla(item.unidadeMedidaId) === 'UN') {
-                          @if (getInsumoItem(item); as ins) {
-                            @if (ins.pesoPorUnidade && ins.pesoPorUnidade > 0) {
-                              <div class="cell-hint">
-                                <small class="muted">1 UN = {{ (ajustarPesoPorUnidadePublic(ins.pesoPorUnidade, ins.unidadeCompraSigla)) | number:'1.0-0' }}g</small>
-                              </div>
-                            }
-                          }
-                        }
                       }
                     </td>
                   </ng-container>
@@ -335,17 +355,7 @@
                     </td>
                   </ng-container>
 
-                  <ng-container matColumnDef="observacoes">
-                    <th mat-header-cell *matHeaderCellDef>Observações</th>
-                    <td mat-cell *matCellDef="let item">
-                      @if (isView()) { {{ item.observacoes || '-' }} }
-                      @else {
-                        <mat-form-field appearance="outline" class="cell-field">
-                          <input matInput [(ngModel)]="item.observacoes" [ngModelOptions]="{standalone: true}" placeholder="Opcional" />
-                        </mat-form-field>
-                      }
-                    </td>
-                  </ng-container>
+                  <!-- Observações column removed as requested -->
 
                   <ng-container matColumnDef="acoes">
                     <th mat-header-cell *matHeaderCellDef class="col-acoes">Ações</th>
@@ -358,8 +368,8 @@
                     </td>
                   </ng-container>
 
-                  <tr mat-header-row *matHeaderRowDef="displayedColumnsItens"></tr>
-                  <tr mat-row *matRowDef="let row; columns: displayedColumnsItens"></tr>
+                  <tr mat-header-row *matHeaderRowDef="['ordem','tipo','item','quantidade','peso','unidade','qb','acoes']"></tr>
+                  <tr mat-row *matRowDef="let row; columns: ['ordem','tipo','item','quantidade','peso','unidade','qb','acoes']"></tr>
                 </table>
               </div>
             }
@@ -396,6 +406,27 @@
                           </div>
                         </div>
 
+                        <div class="row">
+                          <div class="label">Peso</div>
+                          <div class="value">
+                            @if (item.tipoItem === 'Receita' && item.receitaId) {
+                              @if (getReceitaItem(item); as receita) {
+                                @if (receita.pesoPorPorcao) {
+                                  {{ (item.quantidade * receita.pesoPorPorcao) | number:'1.0-0' }}GR
+                                } @else { - }
+                              }
+                            } @else {
+                              @if (item.tipoItem === 'Insumo' && item.insumoId) {
+                                @if (getInsumoItem(item); as ins) {
+                                  @if (ins.pesoPorUnidade && ins.pesoPorUnidade > 0) {
+                                    {{ (ajustarPesoPorUnidadePublic(ins.pesoPorUnidade, ins.unidadeCompraSigla)) | number:'1.0-0' }}g
+                                  } @else { - }
+                                } @else { - }
+                              } @else { - }
+                            }
+                          </div>
+                        </div>
+
                         @if (item.tipoItem === 'Receita' && item.receitaId) {
                           @if (getReceitaItem(item); as receita) {
                             <div class="row">
@@ -415,16 +446,13 @@
                             @if (ins.pesoPorUnidade && ins.pesoPorUnidade > 0) {
                               <div class="row">
                                 <div class="label">Conversão UN</div>
-                                <div class="value small">1 UN = {{ (ajustarPesoPorUnidadePublic(ins.pesoPorUnidade, ins.unidadeCompraSigla)) | number:'1.0-0' }}g</div>
+                                <div class="value small">1 UN = {{ (ajustarPesoPorUnidadePublic(ins.pesoPorUnidade, ins.unidadeCompraSigla)) | number:'1.0-0' }}GR</div>
                               </div>
                             }
                           }
                         }
 
-                        <div class="row" *ngIf="item.observacoes">
-                          <div class="label">Observações</div>
-                          <div class="value">{{ item.observacoes }}</div>
-                        </div>
+                        <!-- Observações row removed from mobile card -->
                       </div>
                     </mat-card-content>
                   </mat-card>
@@ -438,32 +466,7 @@
           </mat-card-content>
         </mat-card>
 
-        <!-- Card: Custos (somente leitura) + CTA para Resumo -->
-        <mat-card class="card">
-          <mat-card-title>Custos e preços (somente leitura)</mat-card-title>
-          <mat-card-content>
-            <div class="kpis">
-              <div class="kpi">
-                <div class="kpi-label">Custo total</div>
-                <div class="kpi-value">{{ formatCurrency(custoTotalCalculado) }}</div>
-              </div>
-              <div class="kpi">
-                <div class="kpi-label">Custo por GR/ML</div>
-                <div class="kpi-value">{{ formatNumber(custoPorGmlCalculado) }}</div>
-              </div>
-              <div class="kpi">
-                <div class="kpi-label">Preço mesa</div>
-                <div class="kpi-value">
-                  @if (precoMesaCalculado === null) { — } @else { {{ formatCurrency(precoMesaCalculado) }} }
-                </div>
-              </div>
-            </div>
-
-            <div class="inline-actions">
-              <button mat-stroked-button type="button" (click)="goToPlanilhaTab()">Ver resumo</button>
-            </div>
-          </mat-card-content>
-        </mat-card>
+        <!-- Custos card moved to Resumo only -->
 
         <!-- Card: Canais -->
         <mat-card class="card">
@@ -739,7 +742,7 @@
                   </ng-container>
 
                   <ng-container matColumnDef="pesoPorUn">
-                    <th mat-header-cell *matHeaderCellDef>{{ hasReceitaItems ? 'Peso por preparo' : 'Peso/UN (gr)' }}</th>
+                    <th mat-header-cell *matHeaderCellDef>{{ hasReceitaItems ? 'Peso por preparo' : 'Peso/UN (GR)' }}</th>
                     <td mat-cell *matCellDef="let item">
                       @if (item.pesoPorUnidadeGml !== null && item.pesoPorUnidadeGml !== undefined) {
                         {{ formatNumber(item.pesoPorUnidadeGml) }} GR
@@ -751,7 +754,7 @@
                   </ng-container>
 
                   <ng-container matColumnDef="pesoItem">
-                    <th mat-header-cell *matHeaderCellDef>{{ hasReceitaItems ? 'Peso total do preparo' : 'Peso item (gr/ml)' }}</th>
+                    <th mat-header-cell *matHeaderCellDef>{{ hasReceitaItems ? 'Peso total do preparo' : 'Peso item (GR/ML)' }}</th>
                     <td mat-cell *matCellDef="let item">{{ formatNumber(item.pesoItemGml || 0) }} GR</td>
                     <td mat-footer-cell *matFooterCellDef>
                       <strong>{{ formatNumber(fichaDtoCompleto()!.pesoTotalBase ?? 0) }} GR</strong>
@@ -764,15 +767,10 @@
                     <td mat-footer-cell *matFooterCellDef><strong>{{ formatCurrency(fichaDtoCompleto()!.custoTotal) }}</strong></td>
                   </ng-container>
 
-                  <ng-container matColumnDef="observacoes">
-                    <th mat-header-cell *matHeaderCellDef>Observações</th>
-                    <td mat-cell *matCellDef="let item">{{ item.observacoes || '-' }}</td>
-                    <td mat-footer-cell *matFooterCellDef></td>
-                  </ng-container>
-
-                  <tr mat-header-row *matHeaderRowDef="['ordem', 'tipo', 'item', 'quantidade', 'pesoPorUn', 'pesoItem', 'custoItem', 'observacoes']"></tr>
-                  <tr mat-row *matRowDef="let row; columns: ['ordem', 'tipo', 'item', 'quantidade', 'pesoPorUn', 'pesoItem', 'custoItem', 'observacoes']"></tr>
-                  <tr mat-footer-row *matFooterRowDef="['ordem', 'tipo', 'item', 'quantidade', 'pesoPorUn', 'pesoItem', 'custoItem', 'observacoes']"></tr>
+                  <!-- Observações column removed from Resumo -->
+                  <tr mat-header-row *matHeaderRowDef="['ordem', 'tipo', 'item', 'quantidade', 'pesoPorUn', 'pesoItem', 'custoItem']"></tr>
+                  <tr mat-row *matRowDef="let row; columns: ['ordem', 'tipo', 'item', 'quantidade', 'pesoPorUn', 'pesoItem', 'custoItem']"></tr>
+                  <tr mat-footer-row *matFooterRowDef="['ordem', 'tipo', 'item', 'quantidade', 'pesoPorUn', 'pesoItem', 'custoItem']"></tr>
                 </table>
               </div>
             </mat-card-content>
