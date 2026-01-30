@@ -695,15 +695,20 @@ export class TenantReceitaFormComponent {
 
   atualizarCustosItens(): void {
     const currentItens = this.itens();
-    const updatedItens = currentItens.map(item => {
+    let houveMudanca = false;
+
+    currentItens.forEach(item => {
       const custoItem = this.calcularCustoItem(item);
-      return {
-        ...item,
-        custoItem: custoItem > 0 ? custoItem : undefined
-      };
+      const novoValor = custoItem > 0 ? custoItem : undefined;
+      if (item.custoItem !== novoValor) {
+        item.custoItem = novoValor;
+        houveMudanca = true;
+      }
     });
-    this.itens.set(updatedItens);
-    this.cdr.markForCheck();
+
+    if (houveMudanca) {
+      this.cdr.markForCheck();
+    }
   }
 
   onFileSelected(event: Event) {
