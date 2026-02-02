@@ -68,6 +68,10 @@
           <div class="label">Fator (IC)</div>
           <div class="value">{{ fatorRendimentoCalculado | number:'1.2-2' }}</div>
         </div>
+        <div class="summary-row">
+          <div class="label">Fator custo (calculado)</div>
+          <div class="value">{{ fatorCustoCalculado | number:'1.2-2' }}</div>
+        </div>
 
         <mat-divider></mat-divider>
 
@@ -80,11 +84,11 @@
             </div>
           </div>
 
-          <div class="summary-hints" *ngIf="!todosItensEmGramas">
+          <div class="summary-hints" *ngIf="!todosItensComPesoBase">
             <mat-icon>warning</mat-icon>
             <div>
               <div class="hint-title">Cálculo automático</div>
-              <div class="hint-text">Para habilitar, todos os itens precisam estar em GR.</div>
+              <div class="hint-text">Para habilitar, os itens precisam estar em GR/ML ou em UN com peso por unidade.</div>
             </div>
           </div>
         }
@@ -167,7 +171,7 @@
                     [(ngModel)]="model.calcularRendimentoAutomatico"
                     [ngModelOptions]="{standalone: true}"
                     (ngModelChange)="onToggleChange()"
-                    [disabled]="isView() || !todosItensEmGramas">
+                    [disabled]="isView() || !todosItensComPesoBase">
                     Calcular rendimento automaticamente (peso por porção)
                   </mat-slide-toggle>
 
@@ -177,10 +181,10 @@
                   </button>
                 </div>
 
-                @if (!todosItensEmGramas) {
+                @if (!todosItensComPesoBase) {
                   <div class="inline-callout">
                     <mat-icon>info</mat-icon>
-                    <span>Para ativar o cálculo automático, todos os itens precisam estar em GR.</span>
+                    <span>Para ativar o cálculo automático, os itens precisam estar em GR/ML ou em UN com peso por unidade.</span>
                   </div>
                 }
               }

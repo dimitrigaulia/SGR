@@ -497,18 +497,93 @@ public class ReceitaService : IReceitaService
 
     private void CalcularCustos(Receita receita, List<Insumo> insumos, IReadOnlyDictionary<long, string> unidadesSigla)
     {
-        decimal custoTotal = 0;
+        decimal custoTotal = 0m;
+        decimal pesoTotalItensGr = 0m; // somente massa (GR + UN convertido em g)
+        bool temMl = false;
 
         foreach (var item in receita.Itens)
         {
             var insumo = insumos.First(i => i.Id == item.InsumoId);
             var unidadeSigla = unidadesSigla.TryGetValue(item.UnidadeMedidaId, out var sigla) ? sigla : null;
+
+            // custo (como já é hoje)
             var custoItem = CalcularCustoItem(item, insumo, unidadeSigla);
             custoTotal += custoItem;
+
+            // peso base (cru/seco) - SOMENTE em gramas (massa)
+            var siglaUso = (unidadeSigla ?? string.Empty).Trim().ToUpperInvariant();
+
+            if (siglaUso == "GR")
+            {
+                pesoTotalItensGr += item.Quantidade;
+            }
+            else if (siglaUso == "ML")
+            {
+                // Não dá para somar volume como massa sem densidade
+                temMl = true;
+            }
+            else if (siglaUso == "UN")
+            {
+                if (insumo.PesoPorUnidade.HasValue && insumo.PesoPorUnidade.Value > 0)
+                {
+                    var compraSigla = (insumo.UnidadeCompra?.Sigla ?? string.Empty).Trim().ToUpperInvariant();
+
+                    // UN que representa volume por unidade (ex.: 50 mL/un) -> não entra em massa
+                    if (compraSigla == "ML" || compraSigla == "L")
+                    {
+                        temMl = true;
+                    }
+                    else
+                    {
+                        // Massa por unidade (g/un)
+                        pesoTotalItensGr += item.Quantidade * insumo.PesoPorUnidade.Value;
+                    }
+                }
+                // Se não tiver PesoPorUnidade, não soma peso (não dá para calcular por peso)
+            }
+            else if (siglaUso == "KG" || siglaUso == "L")
+            {
+                // defensivo (idealmente não deveria chegar aqui pois UI normaliza)
+                // KG -> g é ok, L -> mL não é massa; então:
+                if (siglaUso == "KG")
+                {
+                    pesoTotalItensGr += item.Quantidade * 1000m;
+                }
+                else
+                {
+                    temMl = true; // L é volume
+                }
+            }
         }
 
         receita.CustoTotal = custoTotal;
-        receita.CustoPorPorcao = receita.Rendimento > 0 ? custoTotal / receita.Rendimento : 0;
+
+        var fator = receita.FatorRendimento > 0 ? receita.FatorRendimento : 1m;
+        var pesoFinalGr = pesoTotalItensGr > 0 ? pesoTotalItensGr * fator : 0m;
+
+        // NOVA REGRA (cliente) — só aplica se:
+        // - Usuário informou PesoPorPorcao
+        // - Temos peso final em gramas
+        // - NÃO há itens em ML/L (volume) na receita (sem densidade)
+        if (!temMl &&
+            receita.PesoPorPorcao.HasValue && receita.PesoPorPorcao.Value > 0 &&
+            pesoFinalGr > 0)
+        {
+            receita.CustoPorPorcao = custoTotal * (receita.PesoPorPorcao.Value / pesoFinalGr);
+            return;
+        }
+
+        // (Opcional) logar para rastrear por que caiu no fallback
+        if (temMl && receita.PesoPorPorcao.HasValue && receita.PesoPorPorcao.Value > 0)
+        {
+            _logger.LogWarning(
+                "Receita {ReceitaId}: contém itens em ML/L; cálculo de custo por porção por peso (g) não aplicado (sem densidade). Usando fallback por rendimento.",
+                receita.Id
+            );
+        }
+
+        // fallback legado
+        receita.CustoPorPorcao = receita.Rendimento > 0 ? custoTotal / receita.Rendimento : 0m;
     }
 
     private decimal? CalcularCustoUnitario(Insumo insumo)
@@ -603,21 +678,9 @@ public class ReceitaService : IReceitaService
             };
         }).ToList();
 
-        // Calcular peso total dos itens
-        var pesoTotalItens = itensDto.Sum(i => i.PesoItemGml);
-        
-        // Calcular peso por porção: se temos peso total > 0 e rendimento > 0, calcular
-        // Caso contrário, manter o valor do banco (pode ser null ou configurado manualmente)
+        // Manter PesoPorPorcao como está no banco (não recalcular automaticamente)
+        // O usuário pode informar o valor manualmente; o backend calcula o custo por porção com base nele
         decimal? pesoPorPorcaoCalculado = receita.PesoPorPorcao;
-        if (pesoTotalItens > 0 && receita.Rendimento > 0)
-        {
-            pesoPorPorcaoCalculado = pesoTotalItens / receita.Rendimento;
-        }
-        else if (pesoTotalItens == 0)
-        {
-            // Se não conseguimos calcular peso (itens sem peso), deixar como null
-            pesoPorPorcaoCalculado = null;
-        }
 
         return new ReceitaDto
         {

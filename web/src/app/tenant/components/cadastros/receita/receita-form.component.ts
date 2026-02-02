@@ -126,6 +126,25 @@ export class TenantReceitaFormComponent {
     });
   }
 
+  get temItensEmMl(): boolean {
+    for (const item of this.itens()) {
+      if (!item.unidadeMedidaId || item.quantidade <= 0) continue;
+
+      const unidade = this.unidades().find(u => u.id === item.unidadeMedidaId);
+      const sigla = (unidade?.sigla || '').toUpperCase();
+
+      if (sigla === 'ML' || sigla === 'L') return true;
+
+      if (sigla === 'UN') {
+        const insumo = this.insumos().find(i => i.id === item.insumoId);
+        // Usa fallback: se unidadeCompraSigla vier null, tenta via unidadeCompraId
+        const baseSigla = this.obterSiglaUnidadeCompra(insumo);
+        if (baseSigla === 'ML' || baseSigla === 'L') return true;
+      }
+    }
+    return false;
+  }
+
   get icValorMax(): number {
     // Se perda (-): máximo 99.99% (evitar 100% que zera)
     // Se ganho (+): máximo 300% (permitir ganhos maiores)
@@ -322,6 +341,16 @@ export class TenantReceitaFormComponent {
     return u?.id ?? null;
   }
 
+  private obterSiglaUnidadeCompra(insumo: InsumoDto | undefined): string {
+    if (!insumo) return '';
+    // Primeiro tenta usar unidadeCompraSigla direto (ja normalizado do backend)
+    if (insumo.unidadeCompraSigla) {
+      return insumo.unidadeCompraSigla.toUpperCase();
+    }
+    // Fallback: se unidadeCompraSigla vier null, usa unidadeCompraId para buscar na lista
+    return (this.obterSiglaUnidade(insumo.unidadeCompraId ?? null) || '').toUpperCase();
+  }
+
   private normalizarUnidadeItemParaBase(item: ReceitaItemFormModel): void {
     // Legado: receitas antigas podem vir em KG/L/G; normalizar para GR/ML/UN
     const sigla = (this.obterSiglaUnidade(item.unidadeMedidaId) || '').toUpperCase();
@@ -501,7 +530,7 @@ export class TenantReceitaFormComponent {
   }
 
   get pesoTotalItens(): number | null {
-    // Somar peso considerando GR/ML direto e UN via PesoPorUnidade
+    // Somar peso considerando SOMENTE GR e UN via PesoPorUnidade (não incluir ML - volume)
     let total = 0;
     let temItensPeso = false;
 
@@ -515,23 +544,35 @@ export class TenantReceitaFormComponent {
 
       const sigla = unidade.sigla.toUpperCase();
       
-      // Se é GR/ML, somar direto
-      if (sigla === 'GR' || sigla === 'ML') {
+      // Se é GR, somar direto (massa)
+      if (sigla === 'GR') {
         total += item.quantidade;
         temItensPeso = true;
         continue;
       }
 
-      // Se é UN, usar PesoPorUnidade para converter
+      // Se é ML, ignorar (volume, sem densidade)
+      if (sigla === 'ML') {
+        // volume não entra no peso (sem densidade)
+        continue;
+      }
+
+      // Se eh UN, usar PesoPorUnidade para converter
       if (sigla === 'UN') {
         const insumo = this.insumos().find(i => i.id === item.insumoId);
         if (insumo && insumo.pesoPorUnidade && insumo.pesoPorUnidade > 0) {
+          // Usa fallback: se unidadeCompraSigla vier null, tenta via unidadeCompraId
+          const baseSigla = this.obterSiglaUnidadeCompra(insumo);
+          // UN que representa volume por unidade (ex.: 50 mL/un) -> nao soma em massa
+          if (baseSigla === 'ML' || baseSigla === 'L') {
+            continue;
+          }
           // Ajustar PesoPorUnidade se o insumo foi comprado em KG/L
           const pesoPorUnidade = this.ajustarPesoPorUnidade(insumo.pesoPorUnidade, insumo.unidadeCompraSigla);
           total += item.quantidade * pesoPorUnidade;
           temItensPeso = true;
         }
-        // Se não tiver PesoPorUnidade, não somar (avisar ao usuário depois)
+        // Se nao tiver PesoPorUnidade, nao somar (avisar ao usuario depois)
       }
     }
 
@@ -688,8 +729,19 @@ export class TenantReceitaFormComponent {
   // Preview para UI; fonte da verdade = backend
   get custoPorPorcaoCalculado(): number | null {
     const custoTotal = this.custoTotalCalculado;
+    if (custoTotal === null) return null;
+
+    const pesoFinal = this.pesoTotalAposRendimento; // agora só massa (GR + UN em g) * IC
+    const pesoPorPorcao = this.model.pesoPorPorcao;
+
+    // NOVA REGRA (cliente) só se NÃO houver ML/L (volume sem densidade)
+    if (!this.temItensEmMl && pesoFinal !== null && pesoFinal > 0 && pesoPorPorcao && pesoPorPorcao > 0) {
+      return custoTotal * (pesoPorPorcao / pesoFinal);
+    }
+
+    // fallback legado (se houver ML ou sem peso para calcular)
     const rendimento = this.model.rendimento;
-    if (custoTotal === null || rendimento <= 0) return null;
+    if (rendimento <= 0) return null;
     return custoTotal / rendimento;
   }
 
