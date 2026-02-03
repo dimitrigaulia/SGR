@@ -668,7 +668,7 @@ export class TenantReceitaFormComponent {
       return;
     }
 
-    if (origem === 'RENDIMENTO' && this.model.rendimento > 0) {
+    if (origem === 'RENDIMENTO' && this.model.calcularRendimentoAutomatico && this.model.rendimento > 0) {
       this.model.pesoPorPorcao = arred2(pesoFinal / this.model.rendimento);
       return;
     }
