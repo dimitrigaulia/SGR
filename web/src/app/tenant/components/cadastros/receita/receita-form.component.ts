@@ -662,7 +662,7 @@ export class TenantReceitaFormComponent {
     if (origem === 'IC') {
       if (this.model.calcularRendimentoAutomatico && this.model.pesoPorPorcao && this.model.pesoPorPorcao > 0) {
         this.model.rendimento = arred2(pesoFinal / this.model.pesoPorPorcao);
-      } else if (this.model.rendimento > 0) {
+      } else if (this.model.calcularRendimentoAutomatico && this.model.rendimento > 0) {
         this.model.pesoPorPorcao = arred2(pesoFinal / this.model.rendimento);
       }
       return;
@@ -685,11 +685,21 @@ export class TenantReceitaFormComponent {
   }
 
   onRendimentoChange(): void {
+    if (!this.model.calcularRendimentoAutomatico) {
+      // Toggle desligado: usuário manda (não sincronizar automaticamente)
+      this.cdr.markForCheck();
+      return;
+    }
     this.sincronizarPesoERendimento('RENDIMENTO');
     this.cdr.markForCheck();
   }
 
   onPesoPorPorcaoChange(): void {
+    if (!this.model.calcularRendimentoAutomatico) {
+      // Toggle desligado: usuário manda (não sincronizar automaticamente)
+      this.cdr.markForCheck();
+      return;
+    }
     this.sincronizarPesoERendimento('PESO');
     this.cdr.markForCheck();
   }
