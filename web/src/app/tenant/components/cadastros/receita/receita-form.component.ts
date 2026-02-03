@@ -111,6 +111,22 @@ export class TenantReceitaFormComponent {
     return sinal === '-' ? 1 - delta : 1 + delta;
   }
 
+  // Fator de custo (coeficiente financeiro)
+  // Ex:
+  // IC +100%  -> fatorRendimento = 2.00 -> fatorCusto = 0.50
+  // IC -12%   -> fatorRendimento = 0.88 -> fatorCusto ≈ 1.136
+  //
+  // Importante:
+  // NAO usar esse fator para calculo real. Ele e apenas explicativo/visual.
+  // A fonte da verdade continua sendo o backend.
+  get fatorCustoCalculado(): number {
+    const fatorPeso = this.fatorRendimentoCalculado;
+    if (!fatorPeso || fatorPeso <= 0) {
+      return 1.0;
+    }
+    return 1 / fatorPeso;
+  }
+
   get todosItensEmGramas(): boolean {
     const validItens = this.itens().filter(i =>
       i.insumoId !== null &&
@@ -124,6 +140,54 @@ export class TenantReceitaFormComponent {
       const sigla = (unidade?.sigla || '').toUpperCase();
       return sigla === 'GR';
     });
+  }
+
+  // Itens elegiveis para calculo automatico baseado em peso:
+  // - GR sempre contribui com massa
+  // - ML e aceito (volume), mas nao entra no peso total (sem densidade)
+  // - UN exige PesoPorUnidade (em massa); UN que representa volume (mL/un) nao e aceito
+  get todosItensComPesoBase(): boolean {
+    const validItens = this.itens().filter(i =>
+      i.insumoId !== null &&
+      i.unidadeMedidaId !== null &&
+      i.quantidade > 0
+    );
+    if (validItens.length === 0) return false;
+
+    let temAlgumItemComPeso = false;
+
+    for (const item of validItens) {
+      const unidade = this.unidades().find(u => u.id === item.unidadeMedidaId);
+      const sigla = (unidade?.sigla || '').toUpperCase();
+
+      if (sigla === 'GR') {
+        temAlgumItemComPeso = true;
+        continue;
+      }
+
+      if (sigla === 'ML') {
+        continue;
+      }
+
+      if (sigla === 'UN') {
+        const insumo = this.insumos().find(i => i.id === item.insumoId);
+        if (!insumo || !insumo.pesoPorUnidade || insumo.pesoPorUnidade <= 0) {
+          return false;
+        }
+
+        const baseSigla = this.obterSiglaUnidadeCompra(insumo);
+        if (baseSigla === 'ML' || baseSigla === 'L') {
+          return false;
+        }
+
+        temAlgumItemComPeso = true;
+        continue;
+      }
+
+      return false;
+    }
+
+    return temAlgumItemComPeso;
   }
 
   get temItensEmMl(): boolean {
@@ -499,10 +563,10 @@ export class TenantReceitaFormComponent {
   }
 
   onUnidadeMedidaChange(): void {
-    // Se toggle está ligado e agora não todos itens estão em GR, desligar toggle
-    if (this.model.calcularRendimentoAutomatico && !this.todosItensEmGramas) {
+    // Se toggle está ligado e agora itens não são elegíveis, desligar toggle
+    if (this.model.calcularRendimentoAutomatico && !this.todosItensComPesoBase) {
       this.model.calcularRendimentoAutomatico = false;
-      this.toast.info('Cálculo automático desativado: todos os itens precisam estar em GR.');
+      this.toast.info('Cálculo automático desativado: itens precisam estar em GR/ML ou em UN com peso por unidade.');
       this.cdr.markForCheck();
     }
   }
@@ -510,9 +574,9 @@ export class TenantReceitaFormComponent {
   onUnidadeMedidaChangeItem(item: ReceitaItemFormModel): void {
     this.normalizarUnidadeItemParaBase(item);
 
-    if (this.model.calcularRendimentoAutomatico && !this.todosItensEmGramas) {
+    if (this.model.calcularRendimentoAutomatico && !this.todosItensComPesoBase) {
       this.model.calcularRendimentoAutomatico = false;
-      this.toast.info('Cálculo automático desativado: todos os itens precisam estar em GR.');
+      this.toast.info('Cálculo automático desativado: itens precisam estar em GR/ML ou em UN com peso por unidade.');
     }
 
     this.atualizarCalculosAutomaticos();
@@ -634,9 +698,9 @@ export class TenantReceitaFormComponent {
 
   onToggleChange(): void {
     // Se tentar ativar sem pré-condição, desfaz e orienta
-    if (this.model.calcularRendimentoAutomatico && !this.todosItensEmGramas) {
+    if (this.model.calcularRendimentoAutomatico && !this.todosItensComPesoBase) {
       this.model.calcularRendimentoAutomatico = false;
-      this.toast.error('Cálculo automático de rendimento só funciona quando todos os itens estão em GR.');
+      this.toast.error('Cálculo automático de rendimento precisa de itens em GR/ML ou em UN com peso por unidade.');
       this.cdr.markForCheck();
       return;
     }

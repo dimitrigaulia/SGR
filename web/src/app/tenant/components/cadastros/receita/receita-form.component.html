@@ -65,11 +65,11 @@
         </div>
 
         <div class="summary-row">
-          <div class="label">Fator (IC)</div>
+          <div class="label">Fator IC (peso)</div>
           <div class="value">{{ fatorRendimentoCalculado | number:'1.2-2' }}</div>
         </div>
         <div class="summary-row">
-          <div class="label">Fator custo (calculado)</div>
+          <div class="label">Fator de custo (coeficiente)</div>
           <div class="value">{{ fatorCustoCalculado | number:'1.2-2' }}</div>
         </div>
 
@@ -230,11 +230,13 @@
                   <input matInput type="number" name="icValor"
                          [(ngModel)]="model.icValor" (ngModelChange)="onICChange()"
                          [disabled]="isView()" min="0" [max]="icValorMax" step="0.01" />
-                  <mat-hint>Ex.: "-" e 5 = perda de 5% (fator 0,95)</mat-hint>
+                  <mat-hint>
+                    IC ajusta o peso final. Ganho (+) reduz o custo por porção. Perda (-) aumenta o custo por porção.
+                  </mat-hint>
                 </mat-form-field>
 
                 <mat-form-field appearance="outline" disabled>
-                  <mat-label>Fator (calculado)</mat-label>
+                  <mat-label>Fator IC (peso)</mat-label>
                   <input matInput [value]="fatorRendimentoCalculado | number:'1.2-2'" disabled />
                 </mat-form-field>
               </div>
