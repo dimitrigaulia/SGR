@@ -213,7 +213,7 @@
                     [disabled]="isView() || (!model.calcularRendimentoAutomatico && pesoTotalAposRendimento === null)"
                     min="0.01" step="0.01" />
                   <mat-hint *ngIf="pesoTotalAposRendimento !== null && model.rendimento > 0">
-                    Peso por porção (calc.): {{ formatQuantidadeNumero(pesoTotalAposRendimento / model.rendimento, 'GR') }} g
+                    Peso por porção (calculado a partir do peso final): {{ formatQuantidadeNumero(pesoTotalAposRendimento / model.rendimento, 'GR') }} g
                   </mat-hint>
                 </mat-form-field>
 

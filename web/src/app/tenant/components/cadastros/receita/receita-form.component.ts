@@ -51,6 +51,10 @@ type ReceitaItemFormModel = {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class TenantReceitaFormComponent {
+  // REGRA DE NEGÓCIO (UX):
+  // O peso final (após IC) é a fonte da verdade.
+  // Rendimento e peso por porção são apenas divisões desse peso.
+  // Nunca permitir: rendimento * pesoPorPorcao !== pesoTotalAposIC
   private router = inject(Router);
   private service = inject(ReceitaService);
   private categoriaService = inject(CategoriaReceitaService);
@@ -649,51 +653,51 @@ export class TenantReceitaFormComponent {
     return pesoTotal * this.fatorRendimentoCalculado;
   }
 
-  calcularPesoPorPorcaoAutomatico(): void {
-    if (this.model.calcularRendimentoAutomatico) return; // Não calcular se toggle estiver ativo
-    const pesoTotal = this.pesoTotalAposRendimento;
-    const rendimento = this.model.rendimento;
-    if (pesoTotal !== null && rendimento > 0) {
-      this.model.pesoPorPorcao = Math.round(pesoTotal / rendimento * 100) / 100; // Arredondar para 2 casas
-      this.cdr.markForCheck();
-    }
-  }
+  private sincronizarPesoERendimento(origem: 'IC' | 'RENDIMENTO' | 'PESO'): void {
+    const pesoFinal = this.pesoTotalAposRendimento;
+    if (pesoFinal === null || pesoFinal <= 0) return;
 
-  calcularRendimentoAutomatico(): void {
-    if (!this.model.calcularRendimentoAutomatico) return;
-    const pesoTotal = this.pesoTotalAposRendimento;
-    const pesoPorPorcao = this.model.pesoPorPorcao;
-    if (pesoTotal !== null && pesoPorPorcao && pesoPorPorcao > 0) {
-      this.model.rendimento = Math.round(pesoTotal / pesoPorPorcao * 100) / 100; // Arredondar para 2 casas
-      this.cdr.markForCheck();
+    const arred2 = (n: number) => Math.round(n * 100) / 100;
+
+    if (origem === 'IC') {
+      if (this.model.calcularRendimentoAutomatico && this.model.pesoPorPorcao && this.model.pesoPorPorcao > 0) {
+        this.model.rendimento = arred2(pesoFinal / this.model.pesoPorPorcao);
+      } else if (this.model.rendimento > 0) {
+        this.model.pesoPorPorcao = arred2(pesoFinal / this.model.rendimento);
+      }
+      return;
+    }
+
+    if (origem === 'RENDIMENTO' && this.model.rendimento > 0) {
+      this.model.pesoPorPorcao = arred2(pesoFinal / this.model.rendimento);
+      return;
+    }
+
+    if (origem === 'PESO' && this.model.pesoPorPorcao && this.model.pesoPorPorcao > 0) {
+      this.model.rendimento = arred2(pesoFinal / this.model.pesoPorPorcao);
     }
   }
 
   atualizarCalculosAutomaticos(): void {
-    if (this.model.calcularRendimentoAutomatico) {
-      this.calcularRendimentoAutomatico();
-    } else {
-      this.calcularPesoPorPorcaoAutomatico();
-    }
+    // Quando itens/unidades/IC mudam indiretamente o peso final, sincronizar mantendo a regra de UX.
+    this.sincronizarPesoERendimento('IC');
+    this.cdr.markForCheck();
   }
 
   onRendimentoChange(): void {
-    if (!this.model.calcularRendimentoAutomatico) {
-      this.calcularPesoPorPorcaoAutomatico();
-    }
-    // Os custos são recalculados automaticamente pelos getters
+    this.sincronizarPesoERendimento('RENDIMENTO');
     this.cdr.markForCheck();
   }
 
   onPesoPorPorcaoChange(): void {
-    if (this.model.calcularRendimentoAutomatico) {
-      this.calcularRendimentoAutomatico();
-    }
+    this.sincronizarPesoERendimento('PESO');
+    this.cdr.markForCheck();
   }
 
   onICChange(): void {
-    this.atualizarCalculosAutomaticos();
+    this.sincronizarPesoERendimento('IC');
     this.atualizarCustosItens();
+    this.cdr.markForCheck();
   }
 
   onToggleChange(): void {
